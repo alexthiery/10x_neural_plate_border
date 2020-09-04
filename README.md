@@ -1,2 +1,2 @@
-# 10x_NPB
-repository to run 10x neural plate border analysis through a nextflow pipeline
+# 10x Neural Plate Border
+Repository to run 10x neural plate border analysis through a nextflow pipeline
