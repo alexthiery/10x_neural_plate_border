@@ -64,10 +64,18 @@ process cellranger_filter_gtf {
 
 process cellranger_mkref {
 
+    publishDir "${params.outdir}/${opts.publish_dir}",
+    mode: "copy",
+    overwrite: true,
+    saveAs: { filename ->
+                    if (opts.publish_results == "none") null
+                    else filename }
 
-    container "alexthiery/10x_mod_cellranger:latest"
+
+    container "alexthiery/10x_neural_tube:v1.0"
 
     input:
+        val(opts)
         path(filt_genome)
         path(fasta)
 
