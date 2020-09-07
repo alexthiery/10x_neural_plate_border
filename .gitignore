@@ -1,0 +1,17 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+.local
+.rstudio
+.conda
+output
+html_files
+.nextflow*
+work
+data
+.cache
+results
+temp
+nf-testData
+testData
