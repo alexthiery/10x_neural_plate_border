@@ -8,6 +8,8 @@ process cellranger_count {
     publishDir "${params.alignment_outDir}/cellrangerCounts",
         mode: "copy", overwrite: true
 
+    container "alexthiery/10x_mod_cellranger:latest"
+
     input:
         tuple val(sample_id), val(sample_name), path('dir1/*'), path('dir2/*'), path(reference_genome)
 
@@ -32,24 +34,38 @@ process cellranger_count {
 
 process cellranger_filter_gtf {
 
+    publishDir "${params.outdir}/${opts.publish_dir}",
+    mode: "copy",
+    overwrite: true,
+    saveAs: { filename ->
+                    if (opts.publish_results == "none") null
+                    else filename }
+
+
+    container "alexthiery/10x_neural_tube:v1.0"
+
     input:
+        val(opts)
         path(gtf)
 
     output:
-        path("filtered_genome.gtf")
+        path("${opts.outfile}")
 
     """
     #!/bin/bash
 
     # this step filters out genes based on the gene biotypes listed in attributes.
-    cellranger mkgtf ${gtf} filtered_genome.gtf \
-    --attribute=gene_biotype:protein_coding \
+    cellranger mkgtf ${gtf} ${opts.outfile} \
+    --attribute=gene_biotype:protein_coding,  \
     --attribute=gene_biotype:lncRNA \
     --attribute=gene_biotype:pseudogene
     """
 }
 
 process cellranger_mkref {
+
+
+    container "alexthiery/10x_mod_cellranger:latest"
 
     input:
         path(filt_genome)
