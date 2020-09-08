@@ -17,4 +17,3 @@ RUN cd /opt/ && \
 
 # Set path
 ENV PATH /opt/cellranger-4.0.0:$PATH
-
