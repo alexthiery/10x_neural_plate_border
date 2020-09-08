@@ -1,4 +1,4 @@
-name: docker-push-master
+name: docker-build-push
 
 # Only runs on pushes to master
 on:
