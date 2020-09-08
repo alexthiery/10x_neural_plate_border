@@ -3,6 +3,7 @@ name: docker-push
 on:
   push:
     branches: [ master ]
+    paths: [ 'Dockerfile' ]
 
 jobs:
   build-push-docker:
