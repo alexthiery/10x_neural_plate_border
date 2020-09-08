@@ -5,8 +5,12 @@ nextflow.preview.dsl=2
 
 process cellranger_count {
 
-    publishDir "${params.alignment_outDir}/cellrangerCounts",
-        mode: "copy", overwrite: true
+    publishDir "${params.outdir}/${opts.publish_dir}",
+    mode: "copy",
+    overwrite: true,
+    saveAs: { filename ->
+                    if (opts.publish_results == "none") null
+                    else filename }
 
     container "alexthiery/10x-modules-cellranger:latest"
 
