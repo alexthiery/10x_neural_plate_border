@@ -2,11 +2,11 @@
 
 nextflow.enable.dsl=2
 
-include {cellranger_filter_gtf; cellranger_mkref; cellranger_count} from "$baseDir/modules/cellranger/main.nf"
+include {cellranger_filter_gtf; cellranger_mkref; cellranger_count} from "$baseDir/../main.nf"
 
-params.gtf = "$baseDir/test_data/genome/chr1.gtf"
-params.fasta = "$baseDir/test_data/genome/chr1.fa"
-params.metadata = "$baseDir/sampleInfo.csv"
+params.gtf = "$baseDir/../../../test_data/genome/chr1.gtf"
+params.fasta = "$baseDir/../../../test_data/genome/chr1.fa"
+params.metadata = "$baseDir/../../../sampleInfo.csv"
 
 Channel
     .from(params.gtf)
@@ -24,8 +24,9 @@ Channel
 
 workflow {
     cellranger_filter_gtf(params.modules['cellranger_filter_gtf'], ch_gtf)
+    cellranger_filter_gtf.out.view()
+
     cellranger_mkref(params.modules['cellranger_mkref'], cellranger_filter_gtf.out, ch_fasta)
-    // ch_fastq.combine(cellranger_mkref.out).view()
     cellranger_count( ch_fastq, cellranger_mkref.out.collect() )
 }
 
