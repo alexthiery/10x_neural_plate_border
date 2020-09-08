@@ -4,9 +4,9 @@ nextflow.enable.dsl=2
 
 include {cellranger_filter_gtf; cellranger_mkref; cellranger_count} from "$baseDir/../main.nf"
 
-params.gtf = "$baseDir/../../../test_data/genome/chr1.gtf"
-params.fasta = "$baseDir/../../../test_data/genome/chr1.fa"
-params.metadata = "$baseDir/../../../sampleInfo.csv"
+params.gtf = "$baseDir/../../../test_data/cellranger/genome/chr1.gtf"
+params.fasta = "$baseDir/../../../test_data/cellranger/genome/chr1.fa"
+params.metadata = "$baseDir/../../../test_data/cellranger/sampleInfo.csv"
 
 Channel
     .from(params.gtf)
