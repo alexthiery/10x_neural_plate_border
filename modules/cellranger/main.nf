@@ -8,10 +8,11 @@ process cellranger_count {
     publishDir "${params.alignment_outDir}/cellrangerCounts",
         mode: "copy", overwrite: true
 
-    container "alexthiery/10x_mod_cellranger:latest"
+    container "alexthiery/10x-modules-cellranger:latest"
 
     input:
-        tuple val(sample_id), val(sample_name), path('dir1/*'), path(reference_genome)
+        tuple val(sample_id), val(sample_name), path('dir1/*')
+        path reference_genome
 
     output:
         val sample_name, emit: sampleName
@@ -23,7 +24,8 @@ process cellranger_count {
     cellranger count --id="cellrangerOut_${sample_name}" \
     --fastqs="dir1/${sample_id}"\
     --sample=${sample_id} \
-    --transcriptome=${reference_genome}
+    --transcriptome=${reference_genome} \
+    --chemistry=SC3Pv3
 
     mkdir ${sample_name}
 
@@ -42,7 +44,7 @@ process cellranger_filter_gtf {
                     else filename }
 
 
-    container "alexthiery/10x_neural_tube:v1.0"
+    container "alexthiery/10x-modules-cellranger:latest"
 
     input:
         val(opts)
@@ -72,7 +74,7 @@ process cellranger_mkref {
                     else filename }
 
 
-    container "alexthiery/10x_neural_tube:v1.0"
+    container "alexthiery/10x-modules-cellranger:latest"
 
     input:
         val(opts)
