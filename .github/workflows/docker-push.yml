@@ -1,22 +1,26 @@
 name: docker-push
 
-# Only runs on pushes to master
 on:
   push:
-    branches:
-      - master
-    paths:
-      - 'Dockerfile'
+    branches: [ master ]
 
 jobs:
   build-push-docker:
     runs-on: ubuntu-latest
+    strategy:
+        matrix:
+            tag: ['latest']
+            docker-file: ['Dockerfile']
+            module-name: ['cellranger']
+
     steps:
       - uses: actions/checkout@v2
-      - name: Build and push master image
-        uses: docker/build-push-action@v1.0.1
+      - name: Build and push image
+        uses: docker/build-push-action@v1.1.0
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-          repository: alexthiery/10x_mod_cellranger
-          tags: v1.0
+          repository: alexthiery/10x-modules-${{matrix.module-name}}
+          path: modules/${{matrix.module-name}}
+          dockerfile: modules/${{matrix.module-name}}/${{matrix.docker-file}}
+          tags:  ${{matrix.tag}}
