@@ -15,6 +15,7 @@ process cellranger_count {
     container "alexthiery/10x-modules-cellranger:latest"
 
     input:
+        val opts
         tuple val(sample_id), val(sample_name), path('dir1/*')
         path reference_genome
 

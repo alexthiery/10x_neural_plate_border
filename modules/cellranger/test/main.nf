@@ -25,6 +25,6 @@ Channel
 workflow {
     cellranger_filter_gtf(params.modules['cellranger_filter_gtf'], ch_gtf)
     cellranger_mkref(params.modules['cellranger_mkref'], cellranger_filter_gtf.out, ch_fasta)
-    cellranger_count( ch_fastq, cellranger_mkref.out.collect() )
+    cellranger_count(params.modules['cellranger_count'], ch_fastq, cellranger_mkref.out.collect() )
 }
 
