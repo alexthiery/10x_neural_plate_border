@@ -16,25 +16,28 @@ process cellranger_count {
 
     input:
         val opts
-        tuple val(sample_id), val(sample_name), path('dir1/*')
+        tuple val(meta), path(reads)
         path reference_genome
 
     output:
-        val sample_name, emit: sampleName
-        path sample_name, emit: countFiles
+        val "${meta.sample_name}", emit: sampleName
+        path "${meta.sample_name}", emit: countFiles
+
+    script:
+        println "${meta.sample_name}"
 
     """
     #!/bin/bash
     
-    cellranger count --id="cellrangerOut_${sample_name}" \
-    --fastqs="dir1/${sample_id}"\
-    --sample=${sample_id} \
+    cellranger count --id="cellrangerOut_${meta.sample_name}" \
+    --fastqs=./\
+    --sample=${meta.sample_id} \
     --transcriptome=${reference_genome} \
     --chemistry=SC3Pv3
 
-    mkdir ${sample_name}
+    mkdir ${meta.sample_name}
 
-    mv cellrangerOut_${sample_name}/outs/filtered_feature_bc_matrix/*.gz ${sample_name}
+    mv cellrangerOut_${meta.sample_name}/outs/filtered_feature_bc_matrix/*.gz ${meta.sample_name}
     """
 }
 
