@@ -96,14 +96,19 @@ process cellranger_mkref {
     output:
         path("reference_genome")
 
-    """
-    #!/bin/bash
-
-    # make reference
-    cellranger mkref --genome=reference_genome \
+    script:
+        mkref_command = "cellranger mkref --genome=reference_genome \
     --genes=${filt_genome} \
     --fasta=${fasta} \
-    --nthreads=${task.cpus}
+    --nthreads=${task.cpus}"
+        // Log
+        if (params.verbose){
+            println ("[MODULE] mkref command: " + mkref_command)
+        }
 
-    """
+    //SHELL
+        """
+        ${mkref_command}
+        """
+
 }
