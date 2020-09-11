@@ -23,14 +23,22 @@ process cellranger_count {
         val sample_name, emit: sampleName
         path sample_name, emit: countFiles
 
+    script:
+    args = ""
+        if(opts.args && opts.args != '') {
+            ext_args = opts.args
+            args += ext_args.trim()
+        }
+
     """
     #!/bin/bash
-    
+
     cellranger count --id="cellrangerOut_${sample_name}" \
     --fastqs="dir1/${sample_id}"\
     --sample=${sample_id} \
     --transcriptome=${reference_genome} \
-    --chemistry=SC3Pv3
+     ${args}
+    
 
     mkdir ${sample_name}
 
