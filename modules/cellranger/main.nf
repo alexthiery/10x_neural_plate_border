@@ -101,10 +101,8 @@ process cellranger_mkref {
         path("reference_genome")
 
     script:
-        mkref_command = "cellranger mkref --genome=reference_genome \
-    --genes=${filt_genome} \
-    --fasta=${fasta} \
-    --nthreads=${task.cpus}"
+        mkref_command = "cellranger mkref --genome=reference_genome --genes=${filt_genome} --fasta=${fasta} --nthreads=${task.cpus}"
+        
         // Log
         if (params.verbose){
             println ("[MODULE] mkref command: " + mkref_command)
