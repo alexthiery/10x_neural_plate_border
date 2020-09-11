@@ -58,15 +58,22 @@ process cellranger_filter_gtf {
     output:
         path("${opts.outfile}")
 
-    """
-    #!/bin/bash
+    script:
+        filter_gtf_command = "cellranger mkgtf ${gtf} ${opts.outfile} \
+        --attribute=gene_biotype:protein_coding,  \
+        --attribute=gene_biotype:lncRNA \
+        --attribute=gene_biotype:pseudogene"
+        // Log
+        if (params.verbose){
+            println ("[MODULE] filter_gtf command: " + filter_gtf_command)
+        }
 
-    # this step filters out genes based on the gene biotypes listed in attributes.
-    cellranger mkgtf ${gtf} ${opts.outfile} \
-    --attribute=gene_biotype:protein_coding,  \
-    --attribute=gene_biotype:lncRNA \
-    --attribute=gene_biotype:pseudogene
-    """
+    //SHELL
+        """
+        ${filter_gtf_command}
+        """
+
+   
 }
 
 process cellranger_mkref {
