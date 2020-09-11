@@ -24,16 +24,21 @@ process cellranger_count {
         path "${meta.sample_name}", emit: countFiles
 
     script:
-        println "${meta.sample_name}"
+    args = ""
+        if(opts.args && opts.args != '') {
+            ext_args = opts.args
+            args += ext_args.trim()
+        }
 
     """
     #!/bin/bash
-    
-    cellranger count --id="cellrangerOut_${meta.sample_name}" \
-    --fastqs=./\
-    --sample=${meta.sample_id} \
+
+    cellranger count --id="cellrangerOut_${sample_name}" \
+    --fastqs="dir1/${sample_id}"\
+    --sample=${sample_id} \
     --transcriptome=${reference_genome} \
-    --chemistry=SC3Pv3
+     ${args}
+    
 
     mkdir ${meta.sample_name}
 
@@ -61,15 +66,26 @@ process cellranger_filter_gtf {
     output:
         path("${opts.outfile}")
 
-    """
-    #!/bin/bash
+    script:
+        args = ""
+        if(opts.args && opts.args != '') {
+            ext_args = opts.args
+            args += ext_args.trim()
+        }
 
-    # this step filters out genes based on the gene biotypes listed in attributes.
-    cellranger mkgtf ${gtf} ${opts.outfile} \
-    --attribute=gene_biotype:protein_coding,  \
-    --attribute=gene_biotype:lncRNA \
-    --attribute=gene_biotype:pseudogene
-    """
+        filter_gtf_command = "cellranger mkgtf ${gtf} ${opts.outfile} ${args}"
+        
+        // Log
+        if (params.verbose){
+            println ("[MODULE] filter_gtf command: " + filter_gtf_command)
+        }
+
+    //SHELL
+        """
+        ${filter_gtf_command}
+        """
+
+   
 }
 
 process cellranger_mkref {
@@ -92,14 +108,17 @@ process cellranger_mkref {
     output:
         path("reference_genome")
 
-    """
-    #!/bin/bash
+    script:
+        mkref_command = "cellranger mkref --genome=reference_genome --genes=${filt_genome} --fasta=${fasta} --nthreads=${task.cpus}"
+        
+        // Log
+        if (params.verbose){
+            println ("[MODULE] mkref command: " + mkref_command)
+        }
 
-    # make reference
-    cellranger mkref --genome=reference_genome \
-    --genes=${filt_genome} \
-    --fasta=${fasta} \
-    --nthreads=${task.cpus}
+    //SHELL
+        """
+        ${mkref_command}
+        """
 
-    """
 }
