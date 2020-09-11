@@ -59,10 +59,14 @@ process cellranger_filter_gtf {
         path("${opts.outfile}")
 
     script:
-        filter_gtf_command = "cellranger mkgtf ${gtf} ${opts.outfile} \
-        --attribute=gene_biotype:protein_coding,  \
-        --attribute=gene_biotype:lncRNA \
-        --attribute=gene_biotype:pseudogene"
+        args = ""
+        if(opts.args && opts.args != '') {
+            ext_args = opts.args
+            args += ext_args.trim()
+        }
+
+        filter_gtf_command = "cellranger mkgtf ${gtf} ${opts.outfile} ${args}"
+        
         // Log
         if (params.verbose){
             println ("[MODULE] filter_gtf command: " + filter_gtf_command)
