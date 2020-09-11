@@ -20,30 +20,28 @@ process cellranger_count {
         path reference_genome
 
     output:
-        val "${meta.sample_name}", emit: sampleName
-        path "${meta.sample_name}", emit: countFiles
+        tuple val("${meta.sample_name}"), path("${meta.sample_name}"), emit: cellrangerCounts
 
     script:
-    args = ""
-        if(opts.args && opts.args != '') {
-            ext_args = opts.args
-            args += ext_args.trim()
+        args = ""
+            if(opts.args && opts.args != '') {
+                ext_args = opts.args
+                args += ext_args.trim()
+            }
+
+        cellranger_count_command = "cellranger count --id='cellrangerOut_${meta.sample_name}' --fastqs='./' --sample=${meta.sample_id} --transcriptome=${reference_genome} ${args}"
+        
+        // Log
+        if (params.verbose){
+            println ("[MODULE] cellranger count command: " + cellranger_count_command)
         }
 
-    """
-    #!/bin/bash
-
-    cellranger count --id="cellrangerOut_${sample_name}" \
-    --fastqs="dir1/${sample_id}"\
-    --sample=${sample_id} \
-    --transcriptome=${reference_genome} \
-     ${args}
-    
-
-    mkdir ${meta.sample_name}
-
-    mv cellrangerOut_${meta.sample_name}/outs/filtered_feature_bc_matrix/*.gz ${meta.sample_name}
-    """
+       //SHELL
+        """
+        ${cellranger_count_command}
+        mkdir ${meta.sample_name}
+        mv cellrangerOut_${meta.sample_name}/outs/filtered_feature_bc_matrix/*.gz ${meta.sample_name}
+        """
 }
 
 
@@ -77,10 +75,10 @@ process cellranger_filter_gtf {
         
         // Log
         if (params.verbose){
-            println ("[MODULE] filter_gtf command: " + filter_gtf_command)
+            println ("[MODULE] filter gtf command: " + filter_gtf_command)
         }
 
-    //SHELL
+       //SHELL
         """
         ${filter_gtf_command}
         """
@@ -116,7 +114,7 @@ process cellranger_mkref {
             println ("[MODULE] mkref command: " + mkref_command)
         }
 
-    //SHELL
+        //SHELL
         """
         ${mkref_command}
         """
