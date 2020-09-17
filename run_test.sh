@@ -12,7 +12,7 @@ ml Nextflow/20.07.1
 ml Singularity/3.4.2
 ml Graphviz
 
-nextflow pull alexthiery/otic-reprogramming -r dev
+nextflow pull alexthiery/10x_neural_plate_border -r dev
 
 export NXF_VER=20.07.1
 
