@@ -23,5 +23,5 @@ workflow {
     cellranger_alignment( ch_gtf, ch_genome, tenx_fastq_metadata.out.metadata )
 
     // run velocyto on cellranger output
-    velocyto_run_10x( params.modules['velocyto_run_10x'], cellranger_alignment.out.cellranger_out )
+    velocyto_run_10x( params.modules['velocyto_run_10x'], cellranger_alignment.out.cellranger_out, ch_gtf )
 }
