@@ -3,7 +3,6 @@ name: docker-push
 on:
   push:
     branches: [ master ]
-    paths: modules/${{matrix.module-name}}/${{matrix.docker-file}}
 
 jobs:
   build-push-docker:
