@@ -1,5 +1,4 @@
 #!/usr/bin/env nextflow
-
 nextflow.enable.dsl=2
 
 process modifyGTF {
@@ -17,8 +16,8 @@ process modifyGTF {
         path('./modified.gtf')
 
     """
-
-    #!/Users/evahamrud/opt/anaconda3/bin python
+    #!/usr/bin/env python
+    
     import pandas as pd
     import re
     import sys
@@ -51,20 +50,4 @@ process modifyGTF {
         outfile.write(line)
 
     """
-}
-
-//params.python = "$baseDir/modifyGTF.py"
-params.gtf = "$baseDir/test.gtf"
-
-
-//Channel
-//    .from(params.python)
-//    .set {ch_python}
-
-Channel
-    .from(params.gtf)
-    .set {ch_gtf}
-    
-workflow {
-    modifyGTF(ch_gtf)
 }
