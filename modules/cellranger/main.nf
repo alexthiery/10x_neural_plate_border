@@ -1,6 +1,6 @@
 #!/usr/bin/env nextflow
 
-nextflow.preview.dsl=2
+nextflow.enable.dsl=2
 
 
 process cellranger_count {
@@ -20,7 +20,8 @@ process cellranger_count {
         path reference_genome
 
     output:
-        tuple val("${meta.sample_name}"), path("${meta.sample_name}"), emit: cellrangerCounts
+        tuple val("${meta.sample_name}"), path("${meta.sample_name}"), emit: readCounts
+        tuple val("${meta.sample_name}"), path("cellrangerOut_${meta.sample_name}"), emit: cellrangerOut
 
     script:
         args = ""
