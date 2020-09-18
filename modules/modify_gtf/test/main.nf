@@ -9,5 +9,5 @@ Channel
     .set {ch_gtf}
     
 workflow {
-    modifyGTF(ch_gtf)
+    modifyGTF(params.modules['modify_GTF'], ch_gtf)
 }
