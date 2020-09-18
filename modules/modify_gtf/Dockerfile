@@ -1,4 +1,4 @@
-FROM conda/miniconda3
+FROM nfcore/base:1.10.2
 
 LABEL authors="alex.thiery@crick.ac.uk" \
       description="Docker image containing python and pandas"
