@@ -20,7 +20,7 @@ process modify_gtf {
         path "${opts.filename}.gtf", emit: GTF
 
     """
-    #!/usr/bin/env python
+    #!/opt/conda/bin/python
     
     import pandas as pd
     import re
