@@ -10,6 +10,8 @@ process modify_gtf {
                     if (opts.publish_results == "none") null
                     else filename }
 
+    container "alexthiery/10x-modules-modify_gtf:latest"
+
     input:
         val opts
         path gtf
