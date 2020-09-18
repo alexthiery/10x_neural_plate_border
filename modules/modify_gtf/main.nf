@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-process modifyGTF {
+process modify_gtf {
 
     publishDir "${params.outdir}/${opts.publish_dir}",
     mode: "copy",
@@ -22,10 +22,9 @@ process modifyGTF {
     
     import pandas as pd
     import re
-    import os
   
     # make list of chromosomes to edit
-    lab = [${opts.edit_chromes}]
+    lab = [${opts.edit_chroms}]
 
     # create output file to write to
     outfile = open("./modified.gtf", 'a')
