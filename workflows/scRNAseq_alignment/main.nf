@@ -18,6 +18,6 @@ workflow cellranger_alignment {
         cellranger_count(params.modules['cellranger_count'], tenx_fastq_metadata.out, cellranger_mkref.out.collect() )
     
     emit:
-        cellranger_count.out.readCounts
-        cellranger_count.out.cellrangerOut
+        read_counts = cellranger_count.out.readCounts
+        cellranger_out = cellranger_count.out.cellrangerOut
 }
