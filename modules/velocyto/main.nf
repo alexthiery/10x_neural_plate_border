@@ -27,7 +27,7 @@ process velocyto_run_10x {
             args += ext_args.trim()
         }
 
-        velocyto_command = "velocyto run10x ${args} ${reads} ${gtf}"
+        velocyto_command = "velocyto run10x ${args} --samtools-threads ${task.cpus} --samtools-threads ${task.memory} ${reads} ${gtf}"
         if (params.verbose){
             println ("[MODULE] velocyto/run_10x command: " + velocyto_command)
         }
