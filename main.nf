@@ -1,7 +1,6 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-// include {modify_gtf} from "$baseDir/modules/modify_gtf/main.nf"
 include {cellranger_alignment} from "$baseDir/workflows/scRNAseq_alignment/main.nf"
 include {velocyto_run_10x; velocyto_samtools} from "$baseDir/modules/velocyto/main.nf"
 include {modify_gtf} from "$baseDir/modules/modify_gtf/main.nf"
