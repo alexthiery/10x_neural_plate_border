@@ -18,7 +18,7 @@ process velocyto_run_10x {
         path gtf
 
     output:
-        tuple val(meta), path("*[loomhdf5]"), emit: velocytoCounts
+        tuple val(meta), path("${reads}/velocyto/${reads}.loom"), emit: velocytoCounts
 
     script:
         args = ""
