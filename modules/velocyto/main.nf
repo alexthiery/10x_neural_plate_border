@@ -18,7 +18,7 @@ process velocyto_run_10x {
         path gtf
 
     output:
-        // tuple val(meta), path("*[loomhdf5]"), emit: velocyto
+        tuple val(meta), path("*[loomhdf5]"), emit: velocytoCounts
 
     script:
         args = ""
@@ -52,7 +52,7 @@ process velocyto_samtools {
         tuple val(meta), path(reads)
 
     output:
-        tuple val(meta), path(reads), emit: sorted_cellrangerOut
+        tuple val(meta), path(reads), emit: sortedCellrangerOut
 
     script:
         velocyto_samtools_command = "samtools sort -t CB -O BAM -o cellsorted_possorted_genome_bam.bam possorted_genome_bam.bam"
