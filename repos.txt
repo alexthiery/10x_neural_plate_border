@@ -1,2 +1,3 @@
 alexthiery/10x-modules-cellranger:latest
 alexthiery/10x-modules-modify_gtf:latest
+alexthiery/10x-modules-R_analysis:latest
