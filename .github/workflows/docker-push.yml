@@ -11,7 +11,7 @@ jobs:
         matrix:
             tag: ['latest']
             docker-file: ['Dockerfile']
-            module-name: ['modify_gtf', 'R_analysis']
+            module-name: ['modify_gtf', 'r_analysis']
 
     steps:
       - uses: actions/checkout@v2
