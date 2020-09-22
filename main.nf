@@ -26,7 +26,7 @@ Channel
 // }
 
 homerData = [
-    [[sample_id:'S1'], "/camp/home/thierya/scratch/10x_neural_plate_border/work/f0/0291b794d2877e1a550a016d19c3ae"]
+    [[sample_id:'S1'], "/camp/home/thierya/scratch/10x_neural_plate_border/work/f0/0291b794d2877e1a550a016d19c3ae/cellrangerOut_hh4"]
 ]
 
 Channel
