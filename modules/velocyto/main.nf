@@ -18,7 +18,7 @@ process velocyto_run_10x {
         path gtf
 
     output:
-        tuple val(meta), path("${reads}/velocyto/${reads}.loom"), emit: velocytoCounts
+        tuple val(meta), path("cellrangerOut_${meta.sample_name}/velocyto/cellrangerOut_${meta.sample_name}.loom"), emit: velocytoCounts
 
     script:
         args = ""
