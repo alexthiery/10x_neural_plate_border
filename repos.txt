@@ -1,3 +1,2 @@
 alexthiery/10x-modules-cellranger:latest
-alexthiery/10x-modules-velocyto:latest
 alexthiery/10x-modules-modify_gtf:latest

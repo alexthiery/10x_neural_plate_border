@@ -20,8 +20,8 @@ process cellranger_count {
         path reference_genome
 
     output:
-        tuple val("${meta.sample_name}"), path("${meta.sample_name}"), emit: readCounts
-        tuple val("${meta.sample_name}"), path("cellrangerOut_${meta.sample_name}"), emit: cellrangerOut
+        tuple val(meta), path("${meta.sample_name}_filtered_feature_bc_matrix"), emit: readCounts
+        tuple val(meta), path("cellrangerOut_${meta.sample_name}"), emit: cellrangerOut
 
     script:
         args = ""
@@ -40,8 +40,8 @@ process cellranger_count {
        //SHELL
         """
         ${cellranger_count_command}
-        mkdir ${meta.sample_name}
-        mv cellrangerOut_${meta.sample_name}/outs/filtered_feature_bc_matrix/*.gz ${meta.sample_name}
+        mkdir ${meta.sample_name}_filtered_feature_bc_matrix
+        cp cellrangerOut_${meta.sample_name}/outs/filtered_feature_bc_matrix/*.gz ${meta.sample_name}_filtered_feature_bc_matrix
         """
 }
 
