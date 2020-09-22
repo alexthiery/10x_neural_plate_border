@@ -27,7 +27,7 @@ process velocyto_run_10x {
             args += ext_args.trim()
         }
 
-        velocyto_command = "velocyto run10x ${args} ${task.memory} ${reads} ${gtf}"
+        velocyto_command = "velocyto run10x ${args} ${reads} ${gtf}"
         if (params.verbose){
             println ("[MODULE] velocyto/run_10x command: " + velocyto_command)
         }
@@ -63,6 +63,5 @@ process velocyto_samtools {
         """
         cd cellrangerOut_${meta.sample_name}/outs/
         ${velocyto_samtools_command}
-        cd ../../
         """
 }
