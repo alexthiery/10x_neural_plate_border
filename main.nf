@@ -37,7 +37,7 @@ Channel
 
 workflow {
     // tag MT, W and Z genes in GTF
-    // modify_gtf( params.modules['modify_GTF'], ch_gtf )
+    modify_gtf( params.modules['modify_GTF'], ch_gtf )
 
     // run cellranger
     // cellranger_alignment( modify_gtf.out.GTF, ch_genome, params.sample_csv )
