@@ -159,6 +159,9 @@ plan("multiprocess", workers = ncores)
 options(future.globals.maxSize = 2000 * 1024^2)
 norm.data <- ScaleData(norm.data, features = rownames(norm.data), vars.to.regress = "percent.mt")
 
+# Remove merged data object
+rm(merged.data)
+
 # Save RDS after scaling as this step takes time
 saveRDS(norm.data, paste0(rds.path, "norm.data.RDS"))
 
