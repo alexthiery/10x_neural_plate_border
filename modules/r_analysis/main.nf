@@ -3,12 +3,12 @@
 nextflow.enable.dsl=2
 
 process r_analysis {
-    // publishDir "${params.outdir}/${opts.publish_dir}",
-    // mode: "copy",
-    // overwrite: true,
-    // saveAs: { filename ->
-    //                 if (opts.publish_results == "none") null
-    //                 else filename }
+    publishDir "${params.outdir}/${opts.publish_dir}",
+    mode: "copy",
+    overwrite: true,
+    saveAs: { filename ->
+                    if (opts.publish_results == "none") null
+                    else filename }
 
     container "alexthiery/10x-modules-r_analysis:latest"
 
@@ -17,8 +17,8 @@ process r_analysis {
         path input
 
     output:
-        // path("plots")
-        // path("RDS.files")
+        path("plots")
+        path("RDS.files")
 
     script:
 
