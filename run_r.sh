@@ -12,10 +12,10 @@ ml Nextflow/20.07.1
 ml Singularity/3.4.2
 ml Graphviz
 
-nextflow pull alexthiery/10x_neural_plate_border -r r
+nextflow pull alexthiery/10x_neural_plate_border -r R
 
 export NXF_VER=20.07.1
 
 nextflow run alexthiery/10x_neural_plate_border \
--r r \
+-r R \
 -profile crick
