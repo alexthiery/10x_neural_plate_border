@@ -57,7 +57,7 @@ if (opt$runtype == "user"){
   sample = c("THI300A1", "THI300A3", "THI300A4", "THI300A6", "THI725A1", "THI725A2", "THI725A3", "THI725A4")
   matches <- sapply(sample, function(x) file.path[grep(pattern = x, x = file.path)])
   sample.paths <- data.frame(sample = names(matches), path = matches, row.names = NULL)
-
+  
 } else if (opt$runtype == "nextflow"){
   cat('pipeling running through nextflow\n')
   
@@ -81,7 +81,7 @@ if (opt$runtype == "user"){
   network_genes <- list.files(opt$networkGenes, full.names = T)
   hh4_genes <- read.table(network_genes[grepl("HH4", network_genes)], stringsAsFactors = F)[,1]
   hh6_genes <- read.table(network_genes[grepl("HH6", network_genes)], stringsAsFactors = F)[,1]
-
+  
 } else if (opt$runtype == "docker"){
   cat('R script running through docker\n')
   
@@ -109,7 +109,7 @@ if (opt$runtype == "user"){
 }
 
 # set number of cores to use for parallelisation
-if(is.null(opt$cores)){ncores = 4}else{ncores= opt$cores}
+if(is.null(opt$cores)){ncores = 8}else{ncores= opt$cores}
 cat(paste0("script ran with ", ncores, " cores\n"))
 
 # Load packages - packages are stored within renv in the repository
@@ -133,7 +133,7 @@ for(i in 1:nrow(sample.paths["path"])){
 
 # The four Seurat objects are then merged, before running CreateSeuratObject again on the output in order to apply the min.cells parameter on the final merged dataset.
 temp <- merge(THI300A1, y = c(THI300A3, THI300A4, THI300A6, THI725A1, THI725A2, THI725A3, THI725A4), add.cell.ids = c("hh4-1", "hh6-1", "ss4-1", "ss8-1", "hh5-2", "hh6-2", "hh7-2", "ss4-2"), project = "chick.10x")
-merged.data<-CreateSeuratObject(GetAssayData(temp), min.cells = 3, project = "chick.10x.mincells3")
+merged.data <- CreateSeuratObject(GetAssayData(temp), min.cells = 3, project = "chick.10x.mincells3")
 
 # The original Seurat objects are then removed from the global environment
 rm(THI300A1, THI300A3, THI300A4, THI300A6, THI725A1, THI725A2, THI725A3, THI725A4, sample.paths, temp)
@@ -149,21 +149,33 @@ merged.data <- PercentageFeatureSet(merged.data, pattern = "^MT-", col.name = "p
 # Remove data which do not pass filter threshold
 merged.data <- subset(merged.data, subset = c(nFeature_RNA > 1000 & nFeature_RNA < 6000 & percent.mt < 15))
 
+
+# Split object by run and find integration points
+merged.data@meta.data[["seq_run"]] <- gsub(".*-","",as.character(merged.data@meta.data$orig.ident))
+merged.data.integrated <- SplitObject(merged.data, split.by = "seq_run")
+# Remove merged data object
+rm(merged.data)
+
 # Log normalize data and find variable features
-norm.data <- NormalizeData(merged.data, normalization.method = "LogNormalize", scale.factor = 10000)
-norm.data <- FindVariableFeatures(norm.data, selection.method = "vst", nfeatures = 2000)
+merged.data.integrated <- lapply(merged.data.integrated, function(x) NormalizeData(x, normalization.method = "LogNormalize", scale.factor = 10000))
+merged.data.integrated <- lapply(merged.data.integrated, function(x) FindVariableFeatures(x, selection.method = "vst", nfeatures = 2000))
+
+plan("multiprocess", workers = ncores)
+options(future.globals.maxSize = 3000 * 1024^2)
+merged.data.integrated <- FindIntegrationAnchors(object.list = merged.data.integrated, dims = 1:30)
+merged.data.integrated <- IntegrateData(anchorset = merged.data.integrated, dims = 1:30)
+
+# set inegrated count data as default
+DefaultAssay(merged.data.integrated) <- "integrated"
 
 # Scale data and regress out MT content
 # Enable parallelisation
 plan("multiprocess", workers = ncores)
 options(future.globals.maxSize = 2000 * 1024^2)
-norm.data <- ScaleData(norm.data, features = rownames(norm.data), vars.to.regress = "percent.mt")
-
-# Remove merged data object
-rm(merged.data)
+merged.data.integrated <- ScaleData(merged.data.integrated, features = rownames(merged.data.integrated), vars.to.regress = "percent.mt")
 
 # Save RDS after scaling as this step takes time
-saveRDS(norm.data, paste0(rds.path, "norm.data.RDS"))
+saveRDS(merged.data.integrated, paste0(rds.path, "merged.data.integrated.RDS"))
 
 #####################################################################################################
 #                    Perform dimensionality reduction by PCA and UMAP embedding                    #
@@ -407,8 +419,8 @@ graphics.off()
 # Clust 9 = Late mesoderm - expresses twist1, six1, eya2
 # Clust 10 = PGC's - expresses dazl very highly
 norm.data.contamfilt <- rownames(norm.data.sexscale@meta.data)[norm.data.sexscale@meta.data$seurat_clusters ==  8 |
-                                                                norm.data.sexscale@meta.data$seurat_clusters == 9 |
-                                                                norm.data.sexscale@meta.data$seurat_clusters == 10]
+                                                                 norm.data.sexscale@meta.data$seurat_clusters == 9 |
+                                                                 norm.data.sexscale@meta.data$seurat_clusters == 10]
 
 norm.data.contamfilt <- subset(norm.data.sexscale, cells = norm.data.contamfilt, invert = T)
 
