@@ -193,7 +193,7 @@ seurat_data@meta.data[["seq_run"]] <- gsub(".*_", "", as.character(seurat_data@m
 #####################################################################################################
 #                               Run scaling on non integrated object                                #
 #####################################################################################################
-
+cat('normalising data\n')
 # Log normalize data and find variable features
 norm.data <- NormalizeData(seurat_data, normalization.method = "LogNormalize", scale.factor = 10000)
 norm.data <- FindVariableFeatures(norm.data, selection.method = "vst", nfeatures = 2000)
@@ -202,7 +202,7 @@ norm.data <- FindVariableFeatures(norm.data, selection.method = "vst", nfeatures
 plan("multiprocess", workers = ncores)
 options(future.globals.maxSize = 2000 * 1024^2)
 
-print('scaling')
+print('scaling\n')
 # Scale data and regress out MT content
 norm.data <- ScaleData(norm.data, features = rownames(norm.data), vars.to.regress = "percent.mt")
 
