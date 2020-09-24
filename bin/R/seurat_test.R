@@ -114,7 +114,7 @@ seurat_data <- PercentageFeatureSet(seurat_data, pattern = "^MT-", col.name = "p
 seurat_data <- subset(seurat_data, subset = c(nFeature_RNA > 1000 & nFeature_RNA < 6000 & percent.mt < 15))
 
 # Add metadata col for seq run
-seurat_data@meta.data[["seq_run"]] <- gsub(".*_", "", as.character(seurat_data@meta.data$orig.ident))
+seurat_data@meta.data[["seq_run"]] <- gsub(".*-", "", as.character(seurat_data@meta.data$orig.ident))
 
 # Convert metadata character cols to factors
 seurat_data@meta.data[sapply(seurat_data@meta.data, is.character)] <- lapply(seurat_data@meta.data[sapply(seurat_data@meta.data, is.character)], as.factor)
@@ -698,7 +698,7 @@ seurat_data <- PercentageFeatureSet(seurat_data, pattern = "^MT-", col.name = "p
 seurat_data <- subset(seurat_data, subset = c(nFeature_RNA > 1000 & nFeature_RNA < 6000 & percent.mt < 15))
 
 # Add metadata col for seq run
-seurat_data@meta.data[["seq_run"]] <- gsub(".*_", "", as.character(seurat_data@meta.data$orig.ident))
+seurat_data@meta.data[["seq_run"]] <- gsub(".*-", "", as.character(seurat_data@meta.data$orig.ident))
 
 # Convert metadata character cols to factors
 seurat_data@meta.data[sapply(seurat_data@meta.data, is.character)] <- lapply(seurat_data@meta.data[sapply(seurat_data@meta.data, is.character)], as.factor)
