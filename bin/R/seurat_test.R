@@ -191,18 +191,18 @@ QC.plot(seurat_data_integrated)
 graphics.off()
 
 
-# Find differentially expressed genes and plot heatmap of top DE genes for each cluster
-markers <- FindAllMarkers(seurat_data_integrated, only.pos = T, logfc.threshold = 0.25)
-# get automated cluster order based on percentage of cells in adjacent stages
-cluster.order = order.cell.stage.clust(seurat_object = seurat_data_integrated, col.to.sort = seurat_clusters, sort.by = orig.ident)
+# # Find differentially expressed genes and plot heatmap of top DE genes for each cluster
+# markers <- FindAllMarkers(seurat_data_integrated, only.pos = T, logfc.threshold = 0.25)
+# # get automated cluster order based on percentage of cells in adjacent stages
+# cluster.order = order.cell.stage.clust(seurat_object = seurat_data_integrated, col.to.sort = seurat_clusters, sort.by = orig.ident)
 
-# Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
-top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC) %>% arrange(factor(cluster, levels = cluster.order))
+# # Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
+# top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC) %>% arrange(factor(cluster, levels = cluster.order))
 
-png(paste0(curr.plot.path, 'HM.top15.DE.png'), height = 50, width = 75, units = 'cm', res = 700)
-tenx.pheatmap(data = seurat_data_integrated, metadata = c("seurat_clusters", "orig.ident"), custom_order_column = "seurat_clusters",
-              custom_order = cluster.order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters", assay = 'integrated')
-graphics.off()
+# png(paste0(curr.plot.path, 'HM.top15.DE.png'), height = 50, width = 75, units = 'cm', res = 700)
+# tenx.pheatmap(data = seurat_data_integrated, metadata = c("seurat_clusters", "orig.ident"), custom_order_column = "seurat_clusters",
+#               custom_order = cluster.order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters", assay = 'integrated')
+# graphics.off()
 
 #####################################################################################################
 #     Heatmap clearly shows clusters segregate by sex - check this and regress out the sex effect   #
@@ -345,17 +345,17 @@ png(paste0(curr.plot.path, "cluster.QC.png"), width=40, height=14, units = 'cm',
 QC.plot(seurat_data_integrated.sexscale)
 graphics.off()
 
-# Find differentially expressed genes and plot heatmap of top DE genes for each cluster
-markers <- FindAllMarkers(seurat_data_integrated.sexscale, only.pos = T, logfc.threshold = 0.25)
-# get automated cluster order based on percentage of cells in adjacent stages
-cluster.order = order.cell.stage.clust(seurat_object = seurat_data_integrated.sexscale, col.to.sort = seurat_clusters, sort.by = orig.ident)
-# Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
-top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC) %>% arrange(factor(cluster, levels = cluster.order))
+# # Find differentially expressed genes and plot heatmap of top DE genes for each cluster
+# markers <- FindAllMarkers(seurat_data_integrated.sexscale, only.pos = T, logfc.threshold = 0.25)
+# # get automated cluster order based on percentage of cells in adjacent stages
+# cluster.order = order.cell.stage.clust(seurat_object = seurat_data_integrated.sexscale, col.to.sort = seurat_clusters, sort.by = orig.ident)
+# # Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
+# top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC) %>% arrange(factor(cluster, levels = cluster.order))
 
-png(paste0(curr.plot.path, 'HM.top15.DE.post-sexfilt.png'), height = 75, width = 100, units = 'cm', res = 500)
-tenx.pheatmap(data = seurat_data_integrated.sexscale, metadata = c("seurat_clusters", "orig.ident"), custom_order_column = "seurat_clusters",
-              custom_order = cluster.order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters", assay = 'integrated')
-graphics.off()
+# png(paste0(curr.plot.path, 'HM.top15.DE.post-sexfilt.png'), height = 75, width = 100, units = 'cm', res = 500)
+# tenx.pheatmap(data = seurat_data_integrated.sexscale, metadata = c("seurat_clusters", "orig.ident"), custom_order_column = "seurat_clusters",
+#               custom_order = cluster.order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters", assay = 'integrated')
+# graphics.off()
 
 #####################################################################################################
 #                           Identify and remove contamination (mesoderm and PGCs)                   #
