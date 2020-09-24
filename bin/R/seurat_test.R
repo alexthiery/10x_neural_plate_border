@@ -99,72 +99,72 @@ seurat_data@meta.data[["seq_run"]] <- gsub(".*_", "", as.character(seurat_data@m
 #                           Integrate data from different 10x runs                                  #
 #####################################################################################################
 
-# Split object by run and find integration points
-seurat_data_integrated <- SplitObject(seurat_data, split.by = "seq_run")
+# # Split object by run and find integration points
+# seurat_data_integrated <- SplitObject(seurat_data, split.by = "seq_run")
 
-# Log normalize data and find variable features
-seurat_data_integrated <- lapply(seurat_data_integrated, function(x) NormalizeData(x, normalization.method = "LogNormalize", scale.factor = 10000))
-seurat_data_integrated <- lapply(seurat_data_integrated, function(x) FindVariableFeatures(x, selection.method = "vst", nfeatures = 2000))
+# # Log normalize data and find variable features
+# seurat_data_integrated <- lapply(seurat_data_integrated, function(x) NormalizeData(x, normalization.method = "LogNormalize", scale.factor = 10000))
+# seurat_data_integrated <- lapply(seurat_data_integrated, function(x) FindVariableFeatures(x, selection.method = "vst", nfeatures = 2000))
 
-plan("multiprocess", workers = ncores)
-options(future.globals.maxSize = 3000 * 1024^2)
-seurat_data_integrated <- FindIntegrationAnchors(object.list = seurat_data_integrated, dims = 1:30)
-seurat_data_integrated <- IntegrateData(anchorset = seurat_data_integrated, dims = 1:30)
+# plan("multiprocess", workers = ncores)
+# options(future.globals.maxSize = 3000 * 1024^2)
+# seurat_data_integrated <- FindIntegrationAnchors(object.list = seurat_data_integrated, dims = 1:30)
+# seurat_data_integrated <- IntegrateData(anchorset = seurat_data_integrated, dims = 1:30)
 
-# set inegrated count data as default
-DefaultAssay(seurat_data_integrated) <- "integrated"
+# # set inegrated count data as default
+# DefaultAssay(seurat_data_integrated) <- "integrated"
 
-# Scale data and regress out MT content
-# Enable parallelisation
-plan("multiprocess", workers = ncores)
-options(future.globals.maxSize = 2000 * 1024^2)
-seurat_data_integrated <- ScaleData(seurat_data_integrated, features = rownames(seurat_data_integrated), vars.to.regress = "percent.mt")
+# # Scale data and regress out MT content
+# # Enable parallelisation
+# plan("multiprocess", workers = ncores)
+# options(future.globals.maxSize = 2000 * 1024^2)
+# seurat_data_integrated <- ScaleData(seurat_data_integrated, features = rownames(seurat_data_integrated), vars.to.regress = "percent.mt")
 
-# Save RDS after scaling as this step takes time
-saveRDS(seurat_data_integrated, paste0(rds.path, "seurat_data_integrated.RDS"))
+# # Save RDS after scaling as this step takes time
+# saveRDS(seurat_data_integrated, paste0(rds.path, "seurat_data_integrated.RDS"))
 
 
-# Change plot path
-curr.plot.path <- paste0(plot.path, '0_seurat_data_integrated/')
-dir.create(curr.plot.path)
+# # Change plot path
+# curr.plot.path <- paste0(plot.path, '0_seurat_data_integrated/')
+# dir.create(curr.plot.path)
 
-# Run PCA analysis on the each set of data
-seurat_data_integrated <- RunPCA(object = seurat_data_integrated, verbose = FALSE)
+# # Run PCA analysis on the each set of data
+# seurat_data_integrated <- RunPCA(object = seurat_data_integrated, verbose = FALSE)
 
-#####################################################################################################
-#   Seurat's clustering algorithm is based on principle components, so we need to ensure that only the informative PCs are kept!                   #
-#####################################################################################################
+# #####################################################################################################
+# #   Seurat's clustering algorithm is based on principle components, so we need to ensure that only the informative PCs are kept!                   #
+# #####################################################################################################
 
-# Plot heatmap of top variable genes across top principle components
-png(paste0(curr.plot.path, "dimHM.png"), width=30, height=50, units = 'cm', res = 200)
-DimHeatmap(seurat_data_integrated, dims = 1:30, balanced = TRUE, cells = 500)
-graphics.off()
+# # Plot heatmap of top variable genes across top principle components
+# png(paste0(curr.plot.path, "dimHM.png"), width=30, height=50, units = 'cm', res = 200)
+# DimHeatmap(seurat_data_integrated, dims = 1:30, balanced = TRUE, cells = 500)
+# graphics.off()
 
-# another heuristic method is ElbowPlot which ranks PCs based on the % variance explained by each PC
-png(paste0(curr.plot.path, "elbowplot.png"), width=24, height=20, units = 'cm', res = 200)
-print(ElbowPlot(seurat_data_integrated, ndims = 40))
-graphics.off()
+# # another heuristic method is ElbowPlot which ranks PCs based on the % variance explained by each PC
+# png(paste0(curr.plot.path, "elbowplot.png"), width=24, height=20, units = 'cm', res = 200)
+# print(ElbowPlot(seurat_data_integrated, ndims = 40))
+# graphics.off()
 
-# Run clustering and UMAP at different PCA cutoffs - save this output to compare the optimal number of PCs to be used
-png(paste0(curr.plot.path, "UMAP_PCA_comparison.png"), width=40, height=30, units = 'cm', res = 200)
-PCA.level.comparison(seurat_data_integrated, PCA.levels = c(7, 10, 15, 20), cluster_res = 0.5)
-graphics.off()
+# # Run clustering and UMAP at different PCA cutoffs - save this output to compare the optimal number of PCs to be used
+# png(paste0(curr.plot.path, "UMAP_PCA_comparison.png"), width=40, height=30, units = 'cm', res = 200)
+# PCA.level.comparison(seurat_data_integrated, PCA.levels = c(7, 10, 15, 20), cluster_res = 0.5)
+# graphics.off()
 
-# Use PCA=15 as elbow plot is relatively stable across stages
-# Use clustering resolution = 0.5 for filtering
-seurat_data_integrated <- FindNeighbors(seurat_data_integrated, dims = 1:15, verbose = FALSE)
-seurat_data_integrated <- RunUMAP(seurat_data_integrated, dims = 1:15, verbose = FALSE)
-seurat_data_integrated <- FindClusters(seurat_data_integrated, resolution = 0.5, verbose = FALSE)
+# # Use PCA=15 as elbow plot is relatively stable across stages
+# # Use clustering resolution = 0.5 for filtering
+# seurat_data_integrated <- FindNeighbors(seurat_data_integrated, dims = 1:15, verbose = FALSE)
+# seurat_data_integrated <- RunUMAP(seurat_data_integrated, dims = 1:15, verbose = FALSE)
+# seurat_data_integrated <- FindClusters(seurat_data_integrated, resolution = 0.5, verbose = FALSE)
 
-# Plot UMAP for clusters and developmental stage
-png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
-clust.stage.plot(seurat_data_integrated)
-graphics.off()
+# # Plot UMAP for clusters and developmental stage
+# png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
+# clust.stage.plot(seurat_data_integrated)
+# graphics.off()
 
-# Plot QC for each cluster
-png(paste0(curr.plot.path, "cluster.QC.png"), width=40, height=14, units = 'cm', res = 200)
-QC.plot(seurat_data_integrated)
-graphics.off()
+# # Plot QC for each cluster
+# png(paste0(curr.plot.path, "cluster.QC.png"), width=40, height=14, units = 'cm', res = 200)
+# QC.plot(seurat_data_integrated)
+# graphics.off()
 
 
 
@@ -202,6 +202,7 @@ norm.data <- FindVariableFeatures(norm.data, selection.method = "vst", nfeatures
 plan("multiprocess", workers = ncores)
 options(future.globals.maxSize = 2000 * 1024^2)
 
+print('scaling')
 # Scale data and regress out MT content
 norm.data <- ScaleData(norm.data, features = rownames(norm.data), vars.to.regress = "percent.mt")
 
