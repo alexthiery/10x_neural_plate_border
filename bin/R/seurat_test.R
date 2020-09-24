@@ -73,18 +73,39 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
 files <- list.files(data.path, recursive = T, full.names = T)
 # remove file suffix
 file.path <- dirname(files)[!duplicated(dirname(files))]
+# # make dataframe with tissue matching directory
+# sample = c("THI300A1" = "hh4_1", "THI300A3" = "ss4_1", "THI300A4" = "ss8_1", "THI300A6" = "hh6_1",
+#            "THI725A1" = "hh5_2", "THI725A2" = "hh6_2", "THI725A3" = "hh7_2", "THI725A4" = "ss4_2")
+# matches <- sapply(names(sample), function(x) file.path[grep(pattern = x, x = file.path)])
+# sample.paths <- data.frame(row.names = sample, sample = sample, tissue = names(matches), path = matches, run = gsub(".*_", "", sample))
+# 
+# # Make Seurat objects for each of the different samples and then merge
+# seurat_data <- apply(sample.paths, 1, function(x) CreateSeuratObject(counts= Read10X(data.dir = x[["path"]]), project = x[["sample"]]))
+# seurat_data <- merge(x = seurat_data[[1]], y=seurat_data[-1], add.cell.ids = names(seurat_data), project = "chick.10x")
+# 
+# # Remove genes expressed in fewer than 3 cells
+# seurat_data <- DietSeurat(seurat_data, features = names(which(Matrix::rowSums(GetAssayData(seurat_data) > 0) >=3)))
+# 
+# 
+
 # make dataframe with tissue matching directory
-sample = c("THI300A1" = "hh4_1", "THI300A3" = "ss4_1", "THI300A4" = "ss8_1", "THI300A6" = "hh6_1",
-           "THI725A1" = "hh5_2", "THI725A2" = "hh6_2", "THI725A3" = "hh7_2", "THI725A4" = "ss4_2")
-matches <- sapply(names(sample), function(x) file.path[grep(pattern = x, x = file.path)])
-sample.paths <- data.frame(row.names = sample, sample = sample, tissue = names(matches), path = matches, run = gsub(".*_", "", sample))
+sample = c("THI300A1", "THI300A3", "THI300A4", "THI300A6", "THI725A1", "THI725A2", "THI725A3", "THI725A4")
+matches <- sapply(sample, function(x) file.path[grep(pattern = x, x = file.path)])
+sample.paths <- data.frame(sample = names(matches), path = matches, row.names = NULL)
 
-# Make Seurat objects for each of the different samples and then merge
-seurat_data <- apply(sample.paths, 1, function(x) CreateSeuratObject(counts= Read10X(data.dir = x[["path"]]), project = x[["sample"]]))
-seurat_data <- merge(x = seurat_data[[1]], y=seurat_data[-1], add.cell.ids = gsub("_.*", "", names(seurat_data)), project = "chick.10x")
+# Make Seurat objects for each of the different samples.
+for(i in 1:nrow(sample.paths["path"])){
+  name<-paste(sample.paths[i,"sample"])
+  assign(name, CreateSeuratObject(counts= Read10X(data.dir = paste(sample.paths[i,"path"])), project = paste(sample.paths[i, "sample"])))
+}
 
-# Remove genes expressed in fewer than 3 cells
-seurat_data <- DietSeurat(seurat_data, features = names(which(Matrix::rowSums(GetAssayData(seurat_data) > 0) >=3)))
+# The four Seurat objects are then merged, before running CreateSeuratObject again on the output in order to apply the min.cells parameter on the final merged dataset.
+seurat_data <- merge(THI300A1, y = c(THI300A3, THI300A4, THI300A6, THI725A1, THI725A2, THI725A3, THI725A4), add.cell.ids = c("hh4-1", "ss4-1", "ss8-1", "hh6-1", "hh5-2", "hh6-2", "hh7-2", "ss4-2"), project = "chick.10x")
+seurat_data <- CreateSeuratObject(GetAssayData(seurat_data), min.cells = 3, project = "chick.10x.mincells3")
+
+# The original Seurat objects are then removed from the global environment
+rm(THI300A1, THI300A3, THI300A4, THI300A6, THI725A1, THI725A2, THI725A3, THI725A4, sample.paths)
+
 
 # Store mitochondrial percentage in object meta data
 seurat_data <- PercentageFeatureSet(seurat_data, pattern = "^MT-", col.name = "percent.mt")
@@ -94,6 +115,7 @@ seurat_data <- subset(seurat_data, subset = c(nFeature_RNA > 1000 & nFeature_RNA
 
 # Add metadata col for seq run
 seurat_data@meta.data[["seq_run"]] <- gsub(".*_", "", as.character(seurat_data@meta.data$orig.ident))
+
 # Convert metadata character cols to factors
 seurat_data@meta.data[sapply(seurat_data@meta.data, is.character)] <- lapply(seurat_data@meta.data[sapply(seurat_data@meta.data, is.character)], as.factor)
 
@@ -195,7 +217,6 @@ seurat_data@meta.data[sapply(seurat_data@meta.data, is.character)] <- lapply(seu
 #####################################################################################################
 #                               Run scaling on non integrated object                                #
 #####################################################################################################
-cat('normalising data\n')
 # Log normalize data and find variable features
 norm.data <- NormalizeData(seurat_data, normalization.method = "LogNormalize", scale.factor = 10000)
 norm.data <- FindVariableFeatures(norm.data, selection.method = "vst", nfeatures = 2000)
@@ -204,7 +225,6 @@ norm.data <- FindVariableFeatures(norm.data, selection.method = "vst", nfeatures
 plan("multiprocess", workers = ncores)
 options(future.globals.maxSize = 4000 * 1024^2)
 
-print('scaling\n')
 # Scale data and regress out MT content
 norm.data <- ScaleData(norm.data, features = rownames(norm.data), vars.to.regress = "percent.mt")
 
@@ -263,6 +283,7 @@ graphics.off()
 markers <- FindAllMarkers(norm.data, only.pos = T, logfc.threshold = 0.25)
 # get automated cluster order based on percentage of cells in adjacent stages
 cluster.order = order.cell.stage.clust(seurat_object = norm.data, col.to.sort = seurat_clusters, sort.by = orig.ident)
+
 # Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
 top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC) %>% arrange(factor(cluster, levels = cluster.order))
 
@@ -270,6 +291,9 @@ png(paste0(curr.plot.path, 'HM.top15.DE.png'), height = 50, width = 75, units = 
 tenx.pheatmap(data = norm.data, metadata = c("seurat_clusters", "orig.ident"), custom_order_column = "seurat_clusters",
               custom_order = cluster.order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters")
 graphics.off()
+
+
+norm.data@meta.data[sapply(norm.data@meta.data, is.character)] <- lapply(norm.data@meta.data[sapply(norm.data@meta.data, is.character)], as.factor)
 
 #####################################################################################################
 #     Heatmap clearly shows clusters segregate by sex - check this and regress out the sex effect   #
