@@ -94,6 +94,8 @@ seurat_data <- subset(seurat_data, subset = c(nFeature_RNA > 1000 & nFeature_RNA
 
 # Add metadata col for seq run
 seurat_data@meta.data[["seq_run"]] <- gsub(".*_", "", as.character(seurat_data@meta.data$orig.ident))
+# Convert metadata character cols to factors
+seurat_data@meta.data[sapply(seurat_data@meta.data, is.character)] <- lapply(seurat_data@meta.data[sapply(seurat_data@meta.data, is.character)], as.factor)
 
 #####################################################################################################
 #                           Integrate data from different 10x runs                                  #

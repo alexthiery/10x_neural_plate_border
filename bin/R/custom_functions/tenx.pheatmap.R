@@ -19,6 +19,9 @@ tenx.pheatmap <- function(data, metadata, col_order = metadata, custom_order = N
   if(!is.null(cell_subset)){
     data <- subset(data, cells = cell_subset)
   } else {}
+
+  # if there are any character cols in metadata convert to factor
+  data@meta.data[sapply(data@meta.data, is.character)] <- lapply(data@meta.data[sapply(data@meta.data, is.character)], as.factor)
   
   # reset levels in seurat_clusters metadata to default numerical order as default
   if("seurat_clusters" %in% metadata){

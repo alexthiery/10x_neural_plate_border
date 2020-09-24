@@ -10,6 +10,9 @@ order.cell.stage.clust = function(seurat_object, col.to.sort, sort.by){
   
   enquo_col.to.sort = enquo(col.to.sort)
   enquo_sort.by = enquo(sort.by)
+
+  # if there are any character cols in metadata convert to factor
+  seurat_object@meta.data[sapply(seurat_object@meta.data, is.character)] <- lapply(seurat_object@meta.data[sapply(seurat_object@meta.data, is.character)], as.factor)
   
   dat <- seurat_object@meta.data %>%
     group_by(!! enquo_sort.by) %>%
