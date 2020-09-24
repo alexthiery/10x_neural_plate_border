@@ -201,11 +201,8 @@ top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC) %>% arr
 
 png(paste0(curr.plot.path, 'HM.top15.DE.png'), height = 50, width = 75, units = 'cm', res = 700)
 tenx.pheatmap(data = seurat_data_integrated, metadata = c("seurat_clusters", "orig.ident"), custom_order_column = "seurat_clusters",
-              custom_order = cluster.order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters")
+              custom_order = cluster.order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters", assay = 'integrated')
 graphics.off()
-
-
-seurat_data_integrated@meta.data[sapply(seurat_data_integrated@meta.data, is.character)] <- lapply(seurat_data_integrated@meta.data[sapply(seurat_data_integrated@meta.data, is.character)], as.factor)
 
 #####################################################################################################
 #     Heatmap clearly shows clusters segregate by sex - check this and regress out the sex effect   #
@@ -357,7 +354,7 @@ top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC) %>% arr
 
 png(paste0(curr.plot.path, 'HM.top15.DE.post-sexfilt.png'), height = 75, width = 100, units = 'cm', res = 500)
 tenx.pheatmap(data = seurat_data_integrated.sexscale, metadata = c("seurat_clusters", "orig.ident"), custom_order_column = "seurat_clusters",
-              custom_order = cluster.order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters")
+              custom_order = cluster.order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters", assay = 'integrated')
 graphics.off()
 
 #####################################################################################################
