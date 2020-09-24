@@ -360,7 +360,7 @@ norm.data.sexscale <- norm.data
 norm.data.sexscale <- FindVariableFeatures(norm.data.sexscale, selection.method = "vst", nfeatures = 2000)
 # Enable parallelisation
 plan("multiprocess", workers = ncores)
-options(future.globals.maxSize = 2000 * 1024^2)
+options(future.globals.maxSize = 4000 * 1024^2)
 
 norm.data.sexscale <- ScaleData(norm.data.sexscale, features = rownames(norm.data.sexscale), vars.to.regress = c("percent.mt", "sex"))
 
