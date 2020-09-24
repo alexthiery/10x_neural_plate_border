@@ -212,12 +212,12 @@ graphics.off()
 curr.plot.path <- paste0(plot.path, '1_sex_filt_integrated/')
 dir.create(curr.plot.path)
 
-# There is a strong sex effect - this plot shows DE genes between clusters 1 and 2 which are preodominantly hh4 clusters. Clustering is driven by sex genes
-png(paste0(curr.plot.path, 'HM.top15.DE.pre-sexfilt.png'), height = 40, width = 70, units = 'cm', res = 500)
-tenx.pheatmap(data = seurat_data_integrated[,rownames(seurat_data_integrated@meta.data[seurat_data_integrated$seurat_clusters == 1 | seurat_data_integrated$seurat_clusters == 2,])],
-              metadata = c("seurat_clusters", "orig.ident"), selected_genes = rownames(FindMarkers(seurat_data_integrated, ident.1 = 1, ident.2 = 2)),
-              hclust_rows = T, gaps_col = "seurat_clusters")
-graphics.off()
+# # There is a strong sex effect - this plot shows DE genes between clusters 1 and 2 which are preodominantly hh4 clusters. Clustering is driven by sex genes
+# png(paste0(curr.plot.path, 'HM.top15.DE.pre-sexfilt.png'), height = 40, width = 70, units = 'cm', res = 500)
+# tenx.pheatmap(data = seurat_data_integrated[,rownames(seurat_data_integrated@meta.data[seurat_data_integrated$seurat_clusters == 1 | seurat_data_integrated$seurat_clusters == 2,])],
+#               metadata = c("seurat_clusters", "orig.ident"), selected_genes = rownames(FindMarkers(seurat_data_integrated, ident.1 = 1, ident.2 = 2)),
+#               hclust_rows = T, gaps_col = "seurat_clusters")
+# graphics.off()
 
 # Use W chromosome genes to K-means cluster the cells into male (zz) and female (zw)
 W_genes <- as.matrix(seurat_data_integrated@assays$RNA[grepl("W-", rownames(seurat_data_integrated@assays$RNA)),])
