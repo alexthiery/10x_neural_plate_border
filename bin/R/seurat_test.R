@@ -200,7 +200,7 @@ norm.data <- FindVariableFeatures(norm.data, selection.method = "vst", nfeatures
 
 # Enable parallelisation
 plan("multiprocess", workers = ncores)
-options(future.globals.maxSize = 2000 * 1024^2)
+options(future.globals.maxSize = 4000 * 1024^2)
 
 print('scaling\n')
 # Scale data and regress out MT content
