@@ -260,13 +260,13 @@ graphics.off()
 
 # Run clustering and UMAP at different PCA cutoffs - save this output to compare the optimal number of PCs to be used
 png(paste0(curr.plot.path, "UMAP_PCA_comparison.png"), width=40, height=30, units = 'cm', res = 200)
-PCA.level.comparison(norm.data, PCA.levels = c(7, 10, 15, 20), cluster_res = 0.5)
+PCA.level.comparison(norm.data, PCA.levels = c(10, 20, 30, 40), cluster_res = 0.5)
 graphics.off()
 
 # Use PCA=15 as elbow plot is relatively stable across stages
 # Use clustering resolution = 0.5 for filtering
-norm.data <- FindNeighbors(norm.data, dims = 1:15, verbose = FALSE)
-norm.data <- RunUMAP(norm.data, dims = 1:15, verbose = FALSE)
+norm.data <- FindNeighbors(norm.data, dims = 1:30, verbose = FALSE)
+norm.data <- RunUMAP(norm.data, dims = 1:30, verbose = FALSE)
 norm.data <- FindClusters(norm.data, resolution = 0.5, verbose = FALSE)
 
 # Plot UMAP for clusters and developmental stage
@@ -411,12 +411,12 @@ print(ElbowPlot(norm.data.sexscale, ndims = 40))
 graphics.off()
 
 png(paste0(curr.plot.path, "UMAP_PCA_comparison.png"), width=40, height=30, units = 'cm', res = 200)
-PCA.level.comparison(norm.data.sexscale, PCA.levels = c(7, 10, 15, 20), cluster_res = 0.5)
+PCA.level.comparison(norm.data.sexscale, PCA.levels = c(10, 20, 30, 40), cluster_res = 0.5)
 graphics.off()
 
 # Use PCA=15 as elbow plot is relatively stable across stages
-norm.data.sexscale <- FindNeighbors(norm.data.sexscale, dims = 1:15, verbose = FALSE)
-norm.data.sexscale <- RunUMAP(norm.data.sexscale, dims = 1:15, verbose = FALSE)
+norm.data.sexscale <- FindNeighbors(norm.data.sexscale, dims = 1:30, verbose = FALSE)
+norm.data.sexscale <- RunUMAP(norm.data.sexscale, dims = 1:30, verbose = FALSE)
 
 # Find optimal cluster resolution
 png(paste0(curr.plot.path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
