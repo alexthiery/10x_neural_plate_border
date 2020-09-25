@@ -85,8 +85,9 @@ seurat_data <- apply(sample.paths, 1, function(x) CreateSeuratObject(counts= Rea
 seurat_data <- merge(x = seurat_data[[1]], y=seurat_data[-1], add.cell.ids = names(seurat_data), project = "chick.10x")
 
 # Remove genes expressed in fewer than 3 cells
-seurat_data <- DietSeurat(seurat_data, features = names(which(Matrix::rowSums(GetAssayData(seurat_data) > 0) >=3))
+seurat_data <- DietSeurat(seurat_data, features = names(which(Matrix::rowSums(GetAssayData(seurat_data) > 0) >=3)))
 
+# Store mitochondrial percentage in object meta data
 seurat_data <- PercentageFeatureSet(seurat_data, pattern = "^MT-", col.name = "percent.mt")
 
 # Remove data which do not pass filter threshold
