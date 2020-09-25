@@ -73,39 +73,19 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
 files <- list.files(data.path, recursive = T, full.names = T)
 # remove file suffix
 file.path <- dirname(files)[!duplicated(dirname(files))]
-# # make dataframe with tissue matching directory
-# sample = c("THI300A1" = "hh4_1", "THI300A3" = "ss4_1", "THI300A4" = "ss8_1", "THI300A6" = "hh6_1",
-#            "THI725A1" = "hh5_2", "THI725A2" = "hh6_2", "THI725A3" = "hh7_2", "THI725A4" = "ss4_2")
-# matches <- sapply(names(sample), function(x) file.path[grep(pattern = x, x = file.path)])
-# sample.paths <- data.frame(row.names = sample, sample = sample, tissue = names(matches), path = matches, run = gsub(".*_", "", sample))
-# 
-# # Make Seurat objects for each of the different samples and then merge
-# seurat_data <- apply(sample.paths, 1, function(x) CreateSeuratObject(counts= Read10X(data.dir = x[["path"]]), project = x[["sample"]]))
-# seurat_data <- merge(x = seurat_data[[1]], y=seurat_data[-1], add.cell.ids = names(seurat_data), project = "chick.10x")
-# 
-# # Remove genes expressed in fewer than 3 cells
-# seurat_data <- DietSeurat(seurat_data, features = names(which(Matrix::rowSums(GetAssayData(seurat_data) > 0) >=3)))
-# 
-# 
-
 # make dataframe with tissue matching directory
-sample = c("THI300A1", "THI300A3", "THI300A4", "THI300A6", "THI725A1", "THI725A2", "THI725A3", "THI725A4")
-matches <- sapply(sample, function(x) file.path[grep(pattern = x, x = file.path)])
-sample.paths <- data.frame(sample = names(matches), path = matches, row.names = NULL)
+sample = c("THI300A1" = "hh4-1", "THI300A3" = "ss4-1", "THI300A4" = "ss8-1", "THI300A6" = "hh6-1",
+           "THI725A1" = "hh5-2", "THI725A2" = "hh6-2", "THI725A3" = "hh7-2", "THI725A4" = "ss4-2")
+matches <- sapply(names(sample), function(x) file.path[grep(pattern = x, x = file.path)])
 
-# Make Seurat objects for each of the different samples.
-for(i in 1:nrow(sample.paths["path"])){
-  name<-paste(sample.paths[i,"sample"])
-  assign(name, CreateSeuratObject(counts= Read10X(data.dir = paste(sample.paths[i,"path"])), project = paste(sample.paths[i, "sample"])))
-}
+sample.paths <- data.frame(row.names = sample, sample = sample, tissue = names(matches), path = matches, run = gsub(".*-", "", sample))
 
-# The four Seurat objects are then merged, before running CreateSeuratObject again on the output in order to apply the min.cells parameter on the final merged dataset.
-seurat_data <- merge(THI300A1, y = c(THI300A3, THI300A4, THI300A6, THI725A1, THI725A2, THI725A3, THI725A4), add.cell.ids = c("hh4-1", "ss4-1", "ss8-1", "hh6-1", "hh5-2", "hh6-2", "hh7-2", "ss4-2"), project = "chick.10x")
-seurat_data <- CreateSeuratObject(GetAssayData(seurat_data), min.cells = 3, project = "chick.10x.mincells3")
+# Make Seurat objects for each of the different samples and then merge
+seurat_data <- apply(sample.paths, 1, function(x) CreateSeuratObject(counts= Read10X(data.dir = x[["path"]]), project = x[["sample"]]))
+seurat_data <- merge(x = seurat_data[[1]], y=seurat_data[-1], add.cell.ids = names(seurat_data), project = "chick.10x")
 
-# The original Seurat objects are then removed from the global environment
-rm(THI300A1, THI300A3, THI300A4, THI300A6, THI725A1, THI725A2, THI725A3, THI725A4, sample.paths)
-
+# Remove genes expressed in fewer than 3 cells
+seurat_data <- DietSeurat(seurat_data, features = names(which(Matrix::rowSums(GetAssayData(seurat_data) > 0) >=3))
 
 # Store mitochondrial percentage in object meta data
 seurat_data <- PercentageFeatureSet(seurat_data, pattern = "^MT-", col.name = "percent.mt")
@@ -115,6 +95,7 @@ seurat_data <- subset(seurat_data, subset = c(nFeature_RNA > 1000 & nFeature_RNA
 
 # Add metadata col for seq run
 seurat_data@meta.data[["seq_run"]] <- gsub(".*-", "", as.character(seurat_data@meta.data$orig.ident))
+seurat_data@meta.data[["tissue"]] <- gsub("-.*", "", as.character(seurat_data@meta.data$orig.ident))
 
 # Convert metadata character cols to factors
 seurat_data@meta.data[sapply(seurat_data@meta.data, is.character)] <- lapply(seurat_data@meta.data[sapply(seurat_data@meta.data, is.character)], as.factor)
