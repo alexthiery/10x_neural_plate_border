@@ -32,5 +32,5 @@ Channel
     .set { ch_read_counts }
 
 workflow {
-    r_analysis( params.modules['seurat_full'], ch_read_counts )
+    r_analysis( params.modules['seurat_all'], ch_read_counts )
 }
