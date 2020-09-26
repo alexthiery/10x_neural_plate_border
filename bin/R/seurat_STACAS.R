@@ -66,11 +66,8 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
   library(grid)
   library(pheatmap)
   library(RColorBrewer)
+  library(STACAS)
 }
-
-remotes::install_github("carmonalab/STACAS")
-library(STACAS)
-
 
 
 # read all files from dir
@@ -115,14 +112,10 @@ seurat_data_integrated <- SplitObject(seurat_data, split.by = "seq_run")
 seurat_data_integrated <- lapply(seurat_data_integrated, function(x) NormalizeData(x, normalization.method = "LogNormalize", scale.factor = 10000))
 seurat_data_integrated <- lapply(seurat_data_integrated, function(x) FindVariableFeatures(x, selection.method = "vst", nfeatures = 2000))
 
-plan("multiprocess", workers = ncores)
-options(future.globals.maxSize = 3000 * 1024^2)
-
-
 ref.anchors.filtered <- Run.STACAS(seurat_data_integrated, dims = 1:30, anchor.features = 2000)
 
 plan("multiprocess", workers = ncores)
-options(future.globals.maxSize = 3000 * 1024^2)
+options(future.globals.maxSize = 4000 * 1024^2)
 seurat_data_integrated <- IntegrateData(anchorset = ref.anchors.filtered, dims = 1:30)
 
 # set inegrated count data as default
@@ -131,7 +124,7 @@ DefaultAssay(seurat_data_integrated) <- "integrated"
 # Scale data and regress out MT content
 # Enable parallelisation
 plan("multiprocess", workers = ncores)
-options(future.globals.maxSize = 2000 * 1024^2)
+options(future.globals.maxSize = 4000 * 1024^2)
 seurat_data_integrated <- ScaleData(seurat_data_integrated, features = rownames(seurat_data_integrated), vars.to.regress = "percent.mt")
 
 # Save RDS after scaling as this step takes time
