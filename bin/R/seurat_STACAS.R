@@ -130,7 +130,7 @@ seurat_data_integrated <- ScaleData(seurat_data_integrated, features = rownames(
 # Save RDS after scaling as this step takes time
 saveRDS(seurat_data_integrated, paste0(rds.path, "seurat_data_integrated.RDS"))
 
-seurat_data_integrated <- readRDS("/home/rstudio/output/plots/seurat_STACAS/RDS.files/seurat_data_integrated.RDS")
+# seurat_data_integrated <- readRDS("/home/rstudio/output/plots/seurat_STACAS/RDS.files/seurat_data_integrated.RDS")
 
 
 # Change plot path
