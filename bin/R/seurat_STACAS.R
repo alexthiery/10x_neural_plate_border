@@ -165,7 +165,6 @@ seurat_data_integrated <- FindNeighbors(seurat_data_integrated, dims = 1:30, ver
 seurat_data_integrated <- RunUMAP(seurat_data_integrated, dims = 1:30, verbose = FALSE)
 seurat_data_integrated <- FindClusters(seurat_data_integrated, resolution = 0.5, verbose = FALSE)
 
-Idents(seurat_data_integrated) <- 
 # Plot UMAP for clusters and developmental stage
 png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
 clust.stage.plot(seurat_data_integrated)
