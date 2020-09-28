@@ -32,8 +32,8 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
 {
   if (opt$runtype == "user"){
     sapply(list.files('./bin/R/custom_functions/', full.names = T), source)
-    plot.path = "./results/plots/"
-    rds.path = "./results/RDS.files/"
+    plot.path = "./output/plots/seurat_STACAS/"
+    rds.path = "./output/RDS.files/seurat_STACAS/"
     data.path = "./alignment_out"
     
     ncores = 8
@@ -362,7 +362,7 @@ graphics.off()
 
 # Dotplot for identifying PGCs, Early mesoderm and Late mesoderm
 png(paste0(curr.plot.path, "dotplot.GOI.png"), width = 20, height = 12, units = "cm", res = 200)
-DotPlot(seurat_data_integrated.sexscale, features = c( "SOX17", "CXCR4","EYA2", "TWIST1", "SIX1",  "PITX2", "DAZL"))
+DotPlot(seurat_data_integrated.sexscale, features = c( "SOX17", "CXCR4","EYA2", "TWIST1", "SIX1",  "PITX2", "DAZL", "CDH5", "TAL1", "HBZ"))
 graphics.off()
 
 
@@ -380,7 +380,8 @@ seurat_data_integrated.sexscale.contamfilt <- rownames(seurat_data_integrated.se
                                                                                                     seurat_data_integrated.sexscale@meta.data$seurat_clusters == 10 |
                                                                                                     seurat_data_integrated.sexscale@meta.data$seurat_clusters == 11 |
                                                                                                     seurat_data_integrated.sexscale@meta.data$seurat_clusters == 12 |
-                                                                                                    seurat_data_integrated.sexscale@meta.data$seurat_clusters == 13]
+                                                                                                    seurat_data_integrated.sexscale@meta.data$seurat_clusters == 13 |
+                                                                                                    seurat_data_integrated.sexscale@meta.data$seurat_clusters == 14]
 
 norm.data.contamfilt <- subset(seurat_data_integrated.sexscale, cells = seurat_data_integrated.sexscale.contamfilt, invert = T)
 
@@ -419,11 +420,11 @@ norm.data.contamfilt <- RunUMAP(norm.data.contamfilt, dims = 1:30, verbose = FAL
 
 # Find optimal cluster resolution
 png(paste0(curr.plot.path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
-clust.res(seurat.obj = norm.data.contamfilt, by = 0.2)
+clust.res(seurat.obj = norm.data.contamfilt, by = 0.2, prefix = "integrated_snn_res.")
 graphics.off()
 
 # Use clustering resolution = 1.6 in order to make lots of clusters and identify any remaining poor quality cells
-norm.data.contamfilt <- FindClusters(norm.data.contamfilt, resolution = 1.6)
+norm.data.contamfilt <- FindClusters(norm.data.contamfilt, resolution = 0.2)
 
 # Plot UMAP for clusters and developmental stage
 png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
