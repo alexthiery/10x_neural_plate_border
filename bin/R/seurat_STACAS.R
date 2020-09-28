@@ -493,11 +493,11 @@ norm.data.clustfilt <- RunUMAP(norm.data.clustfilt, dims = 1:30, verbose = FALSE
 
 # Find optimal cluster resolution
 png(paste0(curr.plot.path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
-clust.res(seurat.obj = norm.data.clustfilt, by = 0.2)
+clust.res(seurat.obj = norm.data.clustfilt, by = 0.2, prefix = "integrated_snn_res.")
 graphics.off()
 
-# Use clustering resolution = 0.8
-norm.data.clustfilt <- FindClusters(norm.data.clustfilt, resolution = 0.8)
+# Use clustering resolution = 1.2
+norm.data.clustfilt <- FindClusters(norm.data.clustfilt, resolution = 1.2)
 
 # Plot UMAP for clusters and developmental stage
 png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
@@ -512,8 +512,79 @@ cluster.order = order.cell.stage.clust(seurat_object = norm.data.clustfilt, col.
 top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC) %>% arrange(factor(cluster, levels = cluster.order))
 
 png(paste0(curr.plot.path, 'HM.top15.norm.data.clustfilt.png'), height = 75, width = 100, units = 'cm', res = 500)
-tenx.pheatmap(data = norm.data.contamfilt, metadata = c("seurat_clusters", "stage"), custom_order_column = "seurat_clusters",
+tenx.pheatmap(data = norm.data.clustfilt, metadata = c("seurat_clusters", "stage"), custom_order_column = "seurat_clusters",
               custom_order = cluster.order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters", assay = 'integrated')
 graphics.off()
 
-saveRDS(norm.data.contamfilt, paste0(rds.path, "seurat_out.RDS"))
+saveRDS(norm.data.clustfilt, paste0(rds.path, "seurat_out.RDS"))
+
+# norm.data.clustfilt <- readRDS(paste0(rds.path, "seurat_out.RDS"))
+
+############################### Cluster without HH4 ########################################
+
+norm.data.hh4filt <- rownames(norm.data.clustfilt@meta.data)[grepl('hh4', rownames(norm.data.clustfile@meta.data)), ]
+
+norm.data.hh4filt <- subset(norm.data.clustfilt, cells = norm.data.hh4filt, invert = T)
+
+# Re-run findvariablefeatures and scaling
+norm.data.hh4filt <- FindVariableFeatures(norm.data.hh4filt, selection.method = "vst", nfeatures = 2000, assay = 'RNA')
+
+# Enable parallelisation
+plan("multiprocess", workers = ncores)
+options(future.globals.maxSize = 2000 * 1024^2)
+
+norm.data.hh4filt <- ScaleData(norm.data.hh4filt, features = rownames(norm.data.hh4filt), vars.to.regress = c("percent.mt", "sex"))
+saveRDS(norm.data.hh4filt, paste0(rds.path, "norm.data.hh4filt.RDS"))
+
+# Read in RDS data if needed
+# norm.data.hh4filt <- readRDS(paste0(rds.path, "norm.data.hh4filt.RDS"))
+
+# Change plot path
+curr.plot.path <- paste0(plot.path, "4_hh4_filt/")
+dir.create(curr.plot.path)
+
+# PCA
+norm.data.hh4filt <- RunPCA(object = norm.data.hh4filt, verbose = FALSE)
+
+png(paste0(curr.plot.path, "dimHM.png"), width=30, height=50, units = 'cm', res = 200)
+DimHeatmap(norm.data.hh4filt, dims = 1:30, balanced = TRUE, cells = 500)
+graphics.off()
+
+png(paste0(curr.plot.path, "elbowplot.png"), width=24, height=20, units = 'cm', res = 200)
+print(ElbowPlot(norm.data.hh4filt, ndims = 40))
+graphics.off()
+
+png(paste0(curr.plot.path, "UMAP_PCA_comparison.png"), width=40, height=30, units = 'cm', res = 200)
+PCA.level.comparison(norm.data.hh4filt, PCA.levels = c(10, 20, 30, 40), cluster_res = 0.5)
+graphics.off()
+
+# Use PCA=15 as elbow plot is relatively stable across stages
+norm.data.hh4filt <- FindNeighbors(norm.data.hh4filt, dims = 1:30, verbose = FALSE)
+norm.data.hh4filt <- RunUMAP(norm.data.hh4filt, dims = 1:30, verbose = FALSE)
+
+# Find optimal cluster resolution
+png(paste0(curr.plot.path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
+clust.res(seurat.obj = norm.data.hh4filt, by = 0.2, prefix = "integrated_snn_res.")
+graphics.off()
+
+# Use clustering resolution = 1.2
+norm.data.hh4filt <- FindClusters(norm.data.hh4filt, resolution = 1.2)
+
+# Plot UMAP for clusters and developmental stage
+png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
+clust.stage.plot(norm.data.hh4filt, stage.col = "stage")
+graphics.off()
+
+# Find differentially expressed genes and plot heatmap of top DE genes for each cluster
+markers <- FindAllMarkers(norm.data.hh4filt, only.pos = T, logfc.threshold = 0.25)
+# get automated cluster order based on percentage of cells in adjacent stages
+cluster.order = order.cell.stage.clust(seurat_object = norm.data.hh4filt, col.to.sort = seurat_clusters, sort.by = stage)
+# Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
+top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC) %>% arrange(factor(cluster, levels = cluster.order))
+
+png(paste0(curr.plot.path, 'HM.top15.norm.data.hh4filt.png'), height = 75, width = 100, units = 'cm', res = 500)
+tenx.pheatmap(data = norm.data.hh4filt, metadata = c("seurat_clusters", "stage"), custom_order_column = "seurat_clusters",
+              custom_order = cluster.order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters", assay = 'integrated')
+graphics.off()
+
+saveRDS(norm.data.hh4filt, paste0(rds.path, "seurat_out_hh4filt.RDS"))
