@@ -126,7 +126,7 @@ saveRDS(antler, paste0(rds.path, "antler_all.RDS"))
 # antler <- readRDS(paste0(rds.path, "antler_all.RDS"))
 
 # plot all gene modules
-png(paste0(plot.path, 'allmodules.png'), height = 100, width = 80, units = 'cm', res = 400)
+png(paste0(plot.path, 'allmodules.200.png'), height = 100, width = 80, units = 'cm', res = 400)
 GM.plot(data = seurat_out, metadata = c("stage", "seurat_clusters"), gene_modules = antler$gene_modules$lists$unbiasedGMs$content,
         show_rownames = F, col_order = c("stage", "seurat_clusters"))
 graphics.off()
@@ -135,7 +135,40 @@ graphics.off()
 bait.genes = c("PAX7", "SOX2", "SOX21", "SOX10", "EYA2", "GBX2", "PAX6", "PAX2", "SIX3", "FRZB", "MSX1", "WNT1", "DLX5", "TFAP2A", "TFAP2B", "AXUD1", "GATA2", "HOMER2", "SIX1", "EYA2", "ETS1")
 temp.gms = lapply(antler$gene_modules$lists$unbiasedGMs$content, function(x) if(any(bait.genes %in% x)){x})
 
-png(paste0(plot.path, 'DE.GM.temp2.png'), height = 50, width = 80, units = 'cm', res = 400)
+png(paste0(plot.path, 'DE.GM.200.png'), height = 50, width = 80, units = 'cm', res = 400)
+GM.plot(data = seurat_out, metadata = c("stage", "orig.ident", "seurat_clusters"), gene_modules = temp.gms, gaps_col = "stage",
+        show_rownames = T, col_order = c("stage", "seurat_clusters"))
+graphics.off()
+
+
+
+
+
+
+
+
+antler$gene_modules$identify(
+  name                  = "unbiasedGMs",
+  corr_t                = 0.3,  # the Spearman correlation treshold
+  corr_min              = 3,    # min. number of genes a gene must correlate with
+  mod_min_cell          = 10,   # min. number of cells expressing the module
+  mod_consistency_thres = 0.4,  # ratio of expressed genes among "positive" cells
+  process_plots         = TRUE)
+
+saveRDS(antler, paste0(rds.path, "antler_all.RDS"))
+# antler <- readRDS(paste0(rds.path, "antler_all.RDS"))
+
+# plot all gene modules
+png(paste0(plot.path, 'allmodules.unbiased.png'), height = 100, width = 80, units = 'cm', res = 400)
+GM.plot(data = seurat_out, metadata = c("stage", "seurat_clusters"), gene_modules = antler$gene_modules$lists$unbiasedGMs$content,
+        show_rownames = F, col_order = c("stage", "seurat_clusters"))
+graphics.off()
+
+# use bait genes to filter mods
+bait.genes = c("PAX7", "SOX2", "SOX21", "SOX10", "EYA2", "GBX2", "PAX6", "PAX2", "SIX3", "FRZB", "MSX1", "WNT1", "DLX5", "TFAP2A", "TFAP2B", "AXUD1", "GATA2", "HOMER2", "SIX1", "EYA2", "ETS1")
+temp.gms = lapply(antler$gene_modules$lists$unbiasedGMs$content, function(x) if(any(bait.genes %in% x)){x})
+
+png(paste0(plot.path, 'DE.GM.unbiased.png'), height = 50, width = 80, units = 'cm', res = 400)
 GM.plot(data = seurat_out, metadata = c("stage", "orig.ident", "seurat_clusters"), gene_modules = temp.gms, gaps_col = "stage",
         show_rownames = T, col_order = c("stage", "seurat_clusters"))
 graphics.off()
