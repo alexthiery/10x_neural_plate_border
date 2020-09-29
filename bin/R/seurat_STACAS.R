@@ -522,7 +522,7 @@ saveRDS(norm.data.clustfilt, paste0(rds.path, "seurat_out.RDS"))
 
 ############################### Cluster without HH4 ########################################
 
-norm.data.hh4filt <- rownames(norm.data.clustfilt@meta.data)[grepl('hh4', rownames(norm.data.clustfilt@meta.data)), ]
+norm.data.hh4filt <- rownames(norm.data.clustfilt@meta.data)[grepl('hh4', rownames(norm.data.clustfilt@meta.data))]
 
 norm.data.hh4filt <- subset(norm.data.clustfilt, cells = norm.data.hh4filt, invert = T)
 
