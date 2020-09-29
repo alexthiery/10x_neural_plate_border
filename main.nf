@@ -24,13 +24,20 @@ nextflow.enable.dsl=2
 //     velocyto_10x( cellranger_alignment.out.cellranger_out, modify_gtf.out.GTF )
 // }
 
-include {r_analysis} from "$baseDir/modules/r_analysis/main.nf"
+include {r_analysis as r_analysis_antler} from "$baseDir/modules/r_analysis/main.nf"
+
+// Channel
+//     .fromPath("$baseDir/alignment_out/*matrix", type: 'dir')
+//     .collect()
+//     .set { ch_read_counts }
+
 
 Channel
-    .fromPath("$baseDir/alignment_out/*matrix", type: 'dir')
-    .collect()
-    .set { ch_read_counts }
+    .fromPath(params.seurat_rds)
+    .set { ch_RDS }
+
 
 workflow {
-    r_analysis( params.modules['seurat_STACAS'], ch_read_counts )
+    // r_analysis_seurat( params.modules['seurat_full'], ch_read_counts )
+    r_analysis_antler( params.modules['antler'], ch_RDS )
 }
