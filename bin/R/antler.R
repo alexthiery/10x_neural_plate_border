@@ -32,8 +32,8 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
 {
   if (opt$runtype == "user"){
     sapply(list.files('./bin/R/custom_functions/', full.names = T), source)
-    plot.path = "./output/plots/seurat_STACAS/"
-    rds.path = "./output/RDS.files/seurat_STACAS/"
+    plot.path = "./output/plots/antler/"
+    rds.path = "./output/RDS.files/antler/"
     antler.path = "./output/antler/"
     data.path = "./output/RDS.files/seurat_STACAS/"
     
@@ -75,6 +75,13 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
 
 # read in seurat data
 seurat_out <- readRDS(paste0(data.path, "seurat_out_hh4filt.RDS"))
+DefaultAssay(seurat_out) <- "RNA"
+
+# Enable parallelisation
+plan("multiprocess", workers = ncores)
+options(future.globals.maxSize = 4000 * 1024^2)
+norm.data.contamfilt <- ScaleData(seurat_out, features = rownames(seurat_out), vars.to.regress = c("percent.mt", "sex"))
+saveRDS(seurat_out, paste0(rds.path, "seurat_out_RNA.RDS"))
 
 # strip end of cell names as this is incorrectly reformated in Antler
 seurat_out <- RenameCells(seurat_out, new.names = sub('-', '_', colnames(seurat_out)))
@@ -98,10 +105,7 @@ write.table(GetAssayData(seurat_out, assay = "RNA", slot = "counts"), file = pas
 ########################################################################################################
 
 # Change plot path
-curr.plot.path <- paste0(plot.path, 'antler/')
-dir.create(curr.plot.path)
-
-antler <- Antler$new(output_folder = curr.plot.path, num_cores = ncores)
+antler <- Antler$new(output_folder = plot.path, num_cores = ncores)
 antler$load_dataset(folder_path = antler.path)
 antler$exclude_unexpressed_genes(min_cells=10, min_level=1, verbose=T, data_status='Raw')
 
@@ -116,12 +120,13 @@ antler$gene_modules$identify(
   process_plots         = TRUE)
 
 saveRDS(antler, paste0(rds.path, "antler_all.RDS"))
+# antler <- readRDS(paste0(rds.path, "antler_all.RDS"))
 
 # get automated cluster order based on percentage of cells in adjacent stages
 cluster.order = order.cell.stage.clust(seurat_object = seurat_out, col.to.sort = seurat_clusters, sort.by = stage)
 
 # plot all gene modules
-png(paste0(curr.plot.path, 'allmodules.png'), height = 100, width = 80, units = 'cm', res = 400)
+png(paste0(plot.path, 'allmodules.png'), height = 100, width = 80, units = 'cm', res = 400)
 GM.plot(data = seurat_out, metadata = c("seurat_clusters", "stage"), gene_modules = antler$gene_modules$lists$unbiasedGMs$content,
         show_rownames = F, custom_order = cluster.order, custom_order_column = "seurat_clusters")
 graphics.off()
@@ -130,8 +135,11 @@ graphics.off()
 DEgenes <- FindAllMarkers(seurat_out, only.pos = T, logfc.threshold = 0.25) %>% filter(p_val_adj < 0.001)
 gms <- subset.gm(antler$gene_modules$lists$unbiasedGMs$content, selected_genes = DEgenes$gene, keep_mod_ID = T, selected_gene_ratio = 0.5)
 
-png(paste0(curr.plot.path, 'DE.GM.png'), height = 120, width = 80, units = 'cm', res = 400)
-GM.plot(data = seurat_out, metadata = c("seurat_clusters", "stage"), gene_modules = gms, gaps_col = "seurat_clusters",
-        show_rownames = T, custom_order = cluster.order, custom_order_column = "seurat_clusters")
+
+png(paste0(plot.path, 'DE.GM.png'), height = 120, width = 80, units = 'cm', res = 400)
+GM.plot(data = seurat_out, metadata = c("seurat_clusters", "stage", "orig.ident"), gene_modules = gms, gaps_col = "stage",
+        show_rownames = T, assay = 'RNA')
+
 graphics.off()
+
 
