@@ -74,7 +74,7 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
 }
 
 # read in seurat data
-seurat_out <- readRDS(paste0(data.path, "norm.data.clustfilt.RDS"))
+seurat_out <- readRDS(paste0(data.path, "seurat_out_hh4filt.RDS"))
 
 # strip end of cell names as this is incorrectly reformated in Antler
 seurat_out <- RenameCells(seurat_out, new.names = sub('-', '_', colnames(seurat_out)))
