@@ -80,8 +80,10 @@ DefaultAssay(seurat_out) <- "RNA"
 # Enable parallelisation
 plan("multiprocess", workers = ncores)
 options(future.globals.maxSize = 4000 * 1024^2)
-norm.data.contamfilt <- ScaleData(seurat_out, features = rownames(seurat_out), vars.to.regress = c("percent.mt", "sex"))
+seurat_out <- ScaleData(seurat_out, features = rownames(seurat_out), vars.to.regress = c("percent.mt", "sex"))
+
 saveRDS(seurat_out, paste0(rds.path, "seurat_out_RNA.RDS"))
+# seurat_out <- readRDS(paste0(rds.path, "seurat_out_RNA.RDS"))
 
 # strip end of cell names as this is incorrectly reformated in Antler
 seurat_out <- RenameCells(seurat_out, new.names = sub('-', '_', colnames(seurat_out)))
@@ -141,5 +143,4 @@ GM.plot(data = seurat_out, metadata = c("seurat_clusters", "stage", "orig.ident"
         show_rownames = T, assay = 'RNA')
 
 graphics.off()
-
 
