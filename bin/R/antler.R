@@ -119,28 +119,23 @@ antler$gene_modules$identify(
   corr_min              = 3,    # min. number of genes a gene must correlate with
   mod_min_cell          = 10,   # min. number of cells expressing the module
   mod_consistency_thres = 0.4,  # ratio of expressed genes among "positive" cells
+  num_initial_gms       = 200,
   process_plots         = TRUE)
 
 saveRDS(antler, paste0(rds.path, "antler_all.RDS"))
 # antler <- readRDS(paste0(rds.path, "antler_all.RDS"))
 
-# get automated cluster order based on percentage of cells in adjacent stages
-cluster.order = order.cell.stage.clust(seurat_object = seurat_out, col.to.sort = seurat_clusters, sort.by = stage)
-
 # plot all gene modules
 png(paste0(plot.path, 'allmodules.png'), height = 100, width = 80, units = 'cm', res = 400)
-GM.plot(data = seurat_out, metadata = c("seurat_clusters", "stage"), gene_modules = antler$gene_modules$lists$unbiasedGMs$content,
-        show_rownames = F, custom_order = cluster.order, custom_order_column = "seurat_clusters")
+GM.plot(data = seurat_out, metadata = c("stage", "seurat_clusters"), gene_modules = antler$gene_modules$lists$unbiasedGMs$content,
+        show_rownames = F, col_order = c("stage", "seurat_clusters"))
 graphics.off()
 
-# Plot gene modules with at least 50% of genes DE > 0.25 logFC & FDR < 0.001
-DEgenes <- FindAllMarkers(seurat_out, only.pos = T, logfc.threshold = 0.25) %>% filter(p_val_adj < 0.001)
-gms <- subset.gm(antler$gene_modules$lists$unbiasedGMs$content, selected_genes = DEgenes$gene, keep_mod_ID = T, selected_gene_ratio = 0.5)
+# use bait genes to filter mods
+bait.genes = c("PAX7", "SOX2", "SOX21", "SOX10", "EYA2", "GBX2", "PAX6", "PAX2", "SIX3", "FRZB", "MSX1", "WNT1", "DLX5", "TFAP2A", "TFAP2B", "AXUD1", "GATA2", "HOMER2", "SIX1", "EYA2", "ETS1")
+temp.gms = lapply(antler$gene_modules$lists$unbiasedGMs$content, function(x) if(any(bait.genes %in% x)){x})
 
-
-png(paste0(plot.path, 'DE.GM.png'), height = 120, width = 80, units = 'cm', res = 400)
-GM.plot(data = seurat_out, metadata = c("seurat_clusters", "stage", "orig.ident"), gene_modules = gms, gaps_col = "stage",
-        show_rownames = T, assay = 'RNA')
-
+png(paste0(plot.path, 'DE.GM.temp2.png'), height = 50, width = 80, units = 'cm', res = 400)
+GM.plot(data = seurat_out, metadata = c("stage", "orig.ident", "seurat_clusters"), gene_modules = temp.gms, gaps_col = "stage",
+        show_rownames = T, col_order = c("stage", "seurat_clusters"))
 graphics.off()
-
