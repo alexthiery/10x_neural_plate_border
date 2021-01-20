@@ -10,19 +10,24 @@ process r_analysis {
                     if (opts.publish_results == "none") null
                     else filename }
 
-    container "alexthiery/10x-modules-r_analysis:latest"
+    container "alexthiery/otic-reprogramming-r_analysis:latest"
 
     input:
         val opts
         path input
 
     output:
-        path("plots")
-        path("RDS.files")
+        path("output")
 
     script:
 
+    args = ""
+        if(opts.args && opts.args != '') {
+            ext_args = opts.args
+            args += ext_args.trim()
+        }
+
     """
-    Rscript ${opts.script} --cores ${task.cpus} --custom_functions ${opts.custom_functions} --runtype nextflow 
+    Rscript ${opts.script} --cores ${task.cpus} --runtype nextflow ${args}
     """
 }
