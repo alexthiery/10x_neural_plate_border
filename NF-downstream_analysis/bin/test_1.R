@@ -52,10 +52,10 @@ output_path = "./output/NF-downstream_analysis/test"
 #     ncores = opt$cores
 #   }
   
-#   dir.create(output_path, recursive = T)
+dir.create(output_path, recursive = T)
 #   dir.create(plot_path, recursive = T)
 
 
 t <- c(1:10, 1:10)
 
-write.csv(t, paste0(output_path, "test_1_output.csv")
+write.csv(t, paste0(output_path, "/test_1_output.csv"))
