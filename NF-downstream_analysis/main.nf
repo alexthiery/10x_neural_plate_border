@@ -6,7 +6,7 @@ nextflow.enable.dsl=2
 /*------------------------------------------------------------------------------------*/
 /* Module inclusions
 --------------------------------------------------------------------------------------*/
-include {r_analysis} from "$baseDir/../modules/r_analysis/main.nf"
+include {r_analysis as test_1; r_analysis as test_2} from "$baseDir/../modules/r_analysis/main.nf"
 
 
 /*------------------------------------------------------------------------------------*/
@@ -31,8 +31,11 @@ metadata
 // --------------------------------------------------------------------------------------*/
 
 workflow {
-    //  Run test script
-    r_analysis( params.modules['test_1'], ch_scRNA )
+    //  Run test script 1
+    test_1( params.modules['test_1'], ch_scRNA )
+
+    //  Run test script 2
+    test_2( params.modules['test_2'], ch_scRNA )
 }
 
 

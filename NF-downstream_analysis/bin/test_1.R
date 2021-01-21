@@ -58,6 +58,6 @@
 output_path = "./output/"
 dir.create(output_path, recursive = T)
 
-t <- c(1:10, 1:10)
+t <- matrix(1:9, nrow = 3, ncol = 3)
 
 write.csv(t, paste0(output_path, "test_1_output.csv"))
