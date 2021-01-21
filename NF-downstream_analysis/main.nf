@@ -31,8 +31,8 @@ metadata
 // --------------------------------------------------------------------------------------*/
 
 workflow {
-    //  Run differential expression analysis for lmx1a vs sox3U3
-    r_analysis( params.modules['test'], ch_scRNA )
+    //  Run test script
+    r_analysis( params.modules['test_1'], ch_scRNA )
 }
 
 
