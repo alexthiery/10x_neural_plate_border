@@ -6,7 +6,7 @@ nextflow.enable.dsl=2
 /*------------------------------------------------------------------------------------*/
 /* Module inclusions
 --------------------------------------------------------------------------------------*/
-include {r_analysis as test} from "$baseDir/../modules/r_analysis/main.nf"
+include {r_analysis} from "$baseDir/../modules/r_analysis/main.nf"
 
 
 /*------------------------------------------------------------------------------------*/
@@ -20,19 +20,11 @@ Channel
     .map { row -> processRow(row) } //passing each row of the csv at a time into processRow, which makes dictionary linking sample id and path
     .set { metadata } //name of channel is metadata
 
+
 metadata
     .filter{ it[0].sample_id == 'scRNA_alignment_out' }
-    .map { row -> [row[0], row[1].collect{ file(it) }] }
+    .map { row -> row[1].collect{file(it)} }
     .set { ch_scRNA }
-
-// metadata
-//     .filter{ it[0].sample_id == '10x_alignment_out' }
-//     .map { row -> row[1].collect{ file(it+"/velocyto/onefilepercell_ss8-TSS_P2_C10_75_and_others_TVIUH.loom", checkIfExists: true) } }
-//     .set { ch_10x_velocyto }
-
-    // need to sort out the reading in from the metadata, reading it both counts and velocity from the same sample??
-
-
 
 // /*------------------------------------------------------------------------------------*/
 // /* Workflow to full downstream analysis
@@ -40,8 +32,12 @@ metadata
 
 workflow {
     //  Run differential expression analysis for lmx1a vs sox3U3
-    test( params.modules['test'], ch_scRNA )
+    r_analysis( params.modules['test'], ch_scRNA )
 }
+
+
+
+
 
 
 

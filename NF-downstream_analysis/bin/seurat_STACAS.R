@@ -91,8 +91,17 @@ seurat_data <- DietSeurat(seurat_data, features = names(which(Matrix::rowSums(Ge
 # Store mitochondrial percentage in object meta data
 seurat_data <- PercentageFeatureSet(seurat_data, pattern = "^MT-", col.name = "percent.mt")
 
+
+##### PRE-QC
+
+
 # Remove data which do not pass filter threshold
 seurat_data <- subset(seurat_data, subset = c(nFeature_RNA > 1000 & nFeature_RNA < 6000 & percent.mt < 15))
+
+
+#### POST-QC
+
+
 
 # Add metadata col for seq run
 seurat_data@meta.data[["seq_run"]] <- gsub(".*-", "", as.character(seurat_data@meta.data$orig.ident))
