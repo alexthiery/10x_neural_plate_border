@@ -28,7 +28,6 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
 }
 
 # Set paths and load data
-{
   if (opt$runtype == "user"){
 
     # load custom functions
@@ -43,18 +42,12 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
     
     # load custom functions
     sapply(list.files(opt$custom_functions, full.names = T), source)
-    output_path = "./output/"
     
     # set cores
     ncores = opt$cores
   }
   
-dir.create(output_path, recursive = T)
-
-
-# output_path = "./output/"
-# dir.create(output_path, recursive = T)
 
 t <- matrix(1:9, nrow = 3, ncol = 3)
 
-write.csv(t, paste0(output_path, "test_1_output.csv"))
+write.csv(t, "test_1_output.csv")

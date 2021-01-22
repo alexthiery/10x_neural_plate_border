@@ -6,7 +6,7 @@ nextflow.enable.dsl=2
 /*------------------------------------------------------------------------------------*/
 /* Module inclusions
 --------------------------------------------------------------------------------------*/
-include {r_analysis as test_1; r_analysis as test_2} from "$baseDir/../modules/r_analysis/main.nf"
+include {r_analysis as test_1; r_analysis as test_2} from "$baseDir/../custom-nf-modules/tools/r_analysis/main.nf"
 
 
 /*------------------------------------------------------------------------------------*/
