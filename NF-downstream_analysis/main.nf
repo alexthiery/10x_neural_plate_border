@@ -35,7 +35,7 @@ workflow {
     test_1( params.modules['test_1'], ch_scRNA )
 
     //  Run test script 2
-    test_2( params.modules['test_2'], ch_scRNA )
+    test_2( params.modules['test_2'], test_1.out )
 }
 
 
