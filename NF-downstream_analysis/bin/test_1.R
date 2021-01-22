@@ -48,6 +48,27 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
   }
   
 
-t <- matrix(1:9, nrow = 3, ncol = 3)
+# t <- matrix(1:9, nrow = 3, ncol = 3)
+# write.csv(t, "test_1_output.csv")
 
-write.csv(t, "test_1_output.csv")
+data.path = ("./input")
+
+# reticulate::use_python('/usr/bin/python3.7') //dont have the right container loaded only the default tidyverse one so cant load these packages
+# library(Seurat)
+
+# read all files from dir
+files <- list.files(data.path, recursive = T, full.names = T)
+# remove file suffix
+file.path <- dirname(files)[!duplicated(dirname(files))]
+# make dataframe with stage matching directory
+sample = c("THI300A1" = "hh4-1", "THI300A3" = "ss4-1", "THI300A4" = "ss8-1", "THI300A6" = "hh6-1",
+           "THI725A1" = "hh5-2", "THI725A2" = "hh6-2", "THI725A3" = "hh7-2", "THI725A4" = "ss4-2")
+matches <- sapply(names(sample), function(x) file.path[grep(pattern = x, x = file.path)])
+
+sample.paths <- data.frame(row.names = sample, sample = sample, stage = names(matches), path = matches, run = gsub(".*-", "", sample))
+
+write.csv(sample.paths, "test_1_output.csv")
+
+# # Make Seurat objects for each of the different samples and then merge
+# seurat_data <- apply(sample.paths, 1, function(x) CreateSeuratObject(counts= Read10X(data.dir = x[["path"]]), project = x[["sample"]]))
+# seurat_data <- merge(x = seurat_data[[1]], y=seurat_data[-1], add.cell.ids = names(seurat_data), project = "chick.10x")
