@@ -2,3 +2,8 @@
 	path = luslab-nf-modules
 	url = https://github.com/luslab/luslab-nf-modules.git
 	branch = master
+
+[submodule "custom-nf-modules"]
+	path = custom-nf-modules
+	url = https://github.com/Streit-lab/custom-nf-modules.git
+	branch = master
