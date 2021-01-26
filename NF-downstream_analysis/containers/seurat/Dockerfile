@@ -9,8 +9,6 @@ RUN apt-get update \
  git=1:2.20.1-2+deb10u3 \
  apt-utils=1.8.2.2
 
-
-
 RUN   R -e "install.packages('Seurat', dependencies=TRUE, repos='http://cran.rstudio.com/')" && \
       R -e "install.packages('future', dependencies=TRUE, repos='http://cran.rstudio.com/'))" && \
       R -e "install.packages('cowplot', dependencies=TRUE, repos='http://cran.rstudio.com/'))"  && \
