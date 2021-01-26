@@ -16,9 +16,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Set version and tags
-        id: ver
-        shell: bash
       - name: Build and push image
         uses: docker/build-push-action@v1.1.0
         with:
