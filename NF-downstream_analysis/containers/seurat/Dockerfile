@@ -10,11 +10,12 @@ RUN apt-get update \
  apt-utils=1.8.2.2
 
 
-RUN R -e "install.packages('Seurat')"
-RUN R -e "install.packages('future')"
-RUN R -e "install.packages('cowplot')"
-RUN R -e "install.packages('clustree')"
-RUN R -e "install.packages('gridExtra')"
-RUN R -e "install.packages('getopt')"
-RUN R -e "install.packages('pheatmap')"
-RUN R -e "remotes::install_github('carmonalab/STACAS')"
+
+RUN   R -e "install.packages('Seurat', dependencies=TRUE, repos='http://cran.rstudio.com/')" && \
+      R -e "install.packages('future', dependencies=TRUE, repos='http://cran.rstudio.com/'))" && \
+      R -e "install.packages('cowplot', dependencies=TRUE, repos='http://cran.rstudio.com/'))"  && \
+      R -e "install.packages('clustree', dependencies=TRUE, repos='http://cran.rstudio.com/'))" && \
+      R -e "install.packages('gridExtra', dependencies=TRUE, repos='http://cran.rstudio.com/'))" && \
+      R -e "install.packages('getopt', dependencies=TRUE, repos='http://cran.rstudio.com/'))" && \
+      R -e "install.packages('pheatmap', dependencies=TRUE, repos='http://cran.rstudio.com/'))" && \
+      R -e "remotes::install_github('carmonalab/STACAS')"
