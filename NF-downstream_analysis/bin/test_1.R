@@ -53,8 +53,8 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
 
 data.path = ("./input")
 
-# reticulate::use_python('/usr/bin/python3.7') //dont have the right container loaded only the default tidyverse one so cant load these packages
-# library(Seurat)
+reticulate::use_python('/usr/bin/python3.7')
+library(Seurat)
 
 # read all files from dir
 files <- list.files(data.path, recursive = T, full.names = T)
