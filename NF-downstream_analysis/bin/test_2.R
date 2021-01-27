@@ -50,3 +50,5 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
 t <- matrix(1:4, nrow = 2, ncol = 2)
 
 write.csv(t, "test_2_output.csv")
+
+library(Seurat)
