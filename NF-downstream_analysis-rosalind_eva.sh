@@ -12,5 +12,5 @@ module load apps/singularity/3.5.3
 export NXF_VER=20.07.1
 
 nextflow run ./NF-downstream_analysis/main.nf \
-    -profile rosalind \
+    -profile rosalind_eva \
     --input ./NF-downstream_analysis/local_samplesheet.csv
