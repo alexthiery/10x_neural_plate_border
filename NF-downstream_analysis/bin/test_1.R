@@ -51,7 +51,7 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
 # t <- matrix(1:9, nrow = 3, ncol = 3)
 # write.csv(t, "test_1_output.csv")
 
-data.path = ("./input")
+data.path = ("./input/")
 
 reticulate::use_python('/usr/bin/python3.7')
 library(Seurat)

@@ -47,8 +47,11 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
     ncores = opt$cores
   }
 
-t <- matrix(1:4, nrow = 2, ncol = 2)
-
-write.csv(t, "test_2_output.csv")
-
 library(Seurat)
+data.path = ("./input/")
+
+seurat <- readRDS(paste0(data.path, "test_1_output.RDS"))
+
+png("test_plots.png", width=40, height=14, units = 'cm', res = 200)
+VlnPlot(seurat, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+graphics.off()
