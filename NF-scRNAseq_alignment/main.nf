@@ -22,5 +22,5 @@ workflow {
     cellranger_alignment( ch_genome, modify_gtf.out.gtf, params.sample_csv )
 
     // run velocyto on cellranger output
-    velocyto_cellranger( cellranger_alignment.out.cellranger_out, modify_gtf.out.gtf )
+    velocyto_cellranger( modify_gtf.out.gtf, cellranger_alignment.out.cellranger_out )
 }
