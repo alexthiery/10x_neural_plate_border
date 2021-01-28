@@ -7,11 +7,11 @@ include {velocyto_cellranger} from "$baseDir/../custom-nf-modules/workflows/velo
 
 
 Channel
-    .from(params.gtf)
+    .value(file(params.gtf, checkIfExists: true))
     .set {ch_gtf}
 
 Channel
-    .from(params.genome)
+    .value(file(params.genome, checkIfExists: true))
     .set {ch_genome}
     
 workflow {
