@@ -72,4 +72,4 @@ sample.paths <- data.frame(row.names = sample, sample = sample, stage = names(ma
 seurat_data <- apply(sample.paths, 1, function(x) CreateSeuratObject(counts= Read10X(data.dir = x[["path"]]), project = x[["sample"]]))
 seurat_data <- merge(x = seurat_data[[1]], y=seurat_data[-1], add.cell.ids = names(seurat_data), project = "chick.10x")
 
-# saveRDS(seurat_data, "test_1_output.RDS"))
+saveRDS(seurat_data, "test_1_output.RDS")

@@ -1,2 +1,2 @@
 sample_id,data
-scRNA_alignment_out,/Users/evahamrud/dev/repos/10x_neural_plate_border/alignment_out
+scRNA_alignment_out,./alignment_out
