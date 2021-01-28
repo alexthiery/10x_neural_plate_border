@@ -15,5 +15,4 @@ ml Graphviz
 export NXF_VER=20.07.1
 
 nextflow run ./NF-scRNAseq_alignment/main.nf \
--r R \
 -profile crick_test
