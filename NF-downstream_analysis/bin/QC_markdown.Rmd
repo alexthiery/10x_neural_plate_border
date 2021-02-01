@@ -1,0 +1,181 @@
+---
+title: "QC_markdown"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+# !/usr/bin/env Rscript
+
+# Define arguments for Rscript
+library(getopt)
+spec = matrix(c(
+  'runtype', 'l', 2, "character",
+  'cores'   , 'c', 2, "integer",
+  'custom_functions', 'm', 2, "character"
+), byrow=TRUE, ncol=4)
+opt = getopt(spec)
+
+# Set run location
+if(length(commandArgs(trailingOnly = TRUE)) == 0){
+  cat('No command line arguments provided, user defaults paths are set for running interactively in Rstudio on docker\n')
+  opt$runtype = "user"
+} else {
+  if(is.null(opt$runtype)){
+    stop("--runtype must be either 'user' or 'nextflow'")
+  }
+  if(tolower(opt$runtype) != "user" & tolower(opt$runtype) != "nextflow"){
+    stop("--runtype must be either 'user' or 'nextflow'")
+  }
+  if(tolower(opt$runtype) == "nextflow"){
+    if(is.null(opt$custom_functions) | opt$custom_functions == "null"){
+      stop("--custom_functions path must be specified in process params config")
+    }
+  }
+}
+
+# Set paths and load data
+if (opt$runtype == "user"){
+  
+  # load custom functions
+  sapply(list.files('./NF-downstream_analysis/bin/custom_functions/', full.names = T), source) 
+  output_path = "./output/NF-downstream_analysis/test/" #we would want this to match the final ouput path that is made when we run in nf
+  
+  # set cores
+  ncores = 8
+  
+} else if (opt$runtype == "nextflow"){
+  cat('pipeline running through nextflow\n')
+  
+  # load custom functions
+  sapply(list.files(opt$custom_functions, full.names = T), source)
+  
+  # set cores
+  ncores = opt$cores
+}
+
+library(Seurat)
+library(cowplot)
+library(ggplot2)
+library(RColorBrewer)
+#library(rlist) #dont have this package
+library(dplyr)
+library(pheatmap)
+library(gridExtra)
+library(grid)
+library(reshape2)
+library(viridis)
+#data.path = ("./input")
+
+knitr::opts_chunk$set(echo = TRUE)
+``` 
+
+## Reading in the data
+
+Read in the alignment output for all the different samples, merge them together and make them one Seurat object. 
+Need to adjust this to make the reading in of the data and sample names generalisable. 
+Should also adjust so only print sample names or something
+Caution: I can't seem to change the workdir in the code, so workdir is always where the rmarkdown file is
+
+```{r read_in, echo=FALSE}
+data.path = "../../alignment_out/10x_scRNAseq/"
+files <- list.files(data.path, recursive = T, full.names = T)
+# remove file suffix
+file.path <- dirname(files)[!duplicated(dirname(files))]
+# make dataframe with stage matching directory 
+### NEED TO MAKE THIS BIT GENERIC
+sample = c("THI300A1" = "hh4-1", "THI300A3" = "ss4-1", "THI300A4" = "ss8-1", "THI300A6" = "hh6-1",
+           "THI725A1" = "hh5-2", "THI725A2" = "hh6-2", "THI725A3" = "hh7-2", "THI725A4" = "ss4-2")
+print(sample)
+matches <- sapply(names(sample), function(x) file.path[grep(pattern = x, x = file.path)])
+
+sample.paths <- data.frame(row.names = sample, sample = sample, stage = names(matches), path = matches, run = gsub(".*-", "", sample))
+
+seurat <- apply(sample.paths, 1, function(x) CreateSeuratObject(counts= Read10X(data.dir = x[["path"]]), project = x[["sample"]]))
+seurat <- merge(x = seurat[[1]], y=seurat[-1], add.cell.ids = names(seurat), project = "chick.10x")
+# store mitochondrial percentage in object meta data
+seurat <- PercentageFeatureSet(seurat, pattern = "^MT-", col.name = "percent.mt")
+seurat
+```
+
+## Seurat Tutorial QC Plots
+
+Looking at:
+1) The number of unique genes detected in each cell (nFeature_RNA)
+      - Low-quality cells or empty droplets will often have very few genes
+      - Cell doublets or multiplets may exhibit an aberrantly high gene count
+2) The total number of molecules detected within a cell (nCount_RNA)
+      - correlates strongly with unique genes
+3) The percentage of reads that map to the mitochondrial genome (percent.mt)
+      - Low-quality / dying cells often exhibit extensive mitochondrial contamination
+
+
+```{r Vln, echo=FALSE, fig.width = 20, fig.height = 11}
+VlnPlot(seurat, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+```
+
+FeatureScatter is typically used to visualize feature-feature relationships, but can be used for anything calculated by the object, i.e. columns in object metadata, PC scores etc.
+
+
+```{r FeatureScatter, echo=FALSE, fig.width = 20, fig.height = 11}
+plot1 <- FeatureScatter(seurat, feature1 = "nCount_RNA", feature2 = "percent.mt")
+plot2 <- FeatureScatter(seurat, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+CombinePlots(plots = list(plot1, plot2))
+```
+
+## Identification of highly variable features (feature selection)
+We next calculate a subset of features that exhibit high cell-to-cell variation in the dataset (i.e, they are highly expressed in some cells, and lowly expressed in others). We and others have found that focusing on these genes in downstream analysis helps to highlight biological signal in single-cell datasets.
+
+Our procedure in Seurat3 is described in detail here, and improves on previous versions by directly modeling the mean-variance relationship inherent in single-cell data, and is implemented in the FindVariableFeatures function. By default, we return 2,000 features per dataset. These will be used in downstream analysis, like PCA.
+
+```{r VariableGenes, echo=FALSE, fig.width = 20, fig.height = 11}
+seurat <- FindVariableFeatures(seurat, selection.method = "vst", nfeatures = 2000)
+
+# Identify the 10 most highly variable genes
+top10 <- head(VariableFeatures(seurat), 10)
+
+# plot variable features with and without labels
+plot1 <- VariableFeaturePlot(seurat)
+plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE)
+CombinePlots(plots = list(plot1, plot2))
+```
+
+##Scaling the data
+Next, we apply a linear transformation (‘scaling’) that is a standard pre-processing step prior to dimensional reduction techniques like PCA. The ScaleData function:
+
+Shifts the expression of each gene, so that the mean expression across cells is 0
+Scales the expression of each gene, so that the variance across cells is 1
+This step gives equal weight in downstream analyses, so that highly-expressed genes do not dominate
+The results of this are stored in pbmc[["RNA"]]@scale.data
+
+```{r Scale, echo=FALSE}
+all.genes <- rownames(seurat)
+seurat <- ScaleData(seurat, features = all.genes)
+```
+
+
+##Perform linear dimensional reduction
+Next we perform PCA on the scaled data. By default, only the previously determined variable features are used as input, but can be defined using features argument if you wish to choose a different subset.
+
+```{r PCA_run, echo=FALSE, fig.width = 16, fig.height = 8}
+seurat <- RunPCA(seurat, features = VariableFeatures(object = seurat))
+
+# Examine and visualize PCA results a few different ways
+print(seurat[["pca"]], dims = 1:5, nfeatures = 5)
+
+VizDimLoadings(seurat, dims = 1:2, reduction = "pca")
+```
+
+Make a PCA plot
+```{r PCA_plot, echo=FALSE, fig.width = 10, fig.height = 10}
+DimPlot(seurat, reduction = "pca")
+```
+
+In particular DimHeatmap allows for easy exploration of the primary sources of heterogeneity in a dataset, and can be useful when trying to decide which PCs to include for further downstream analyses. Both cells and features are ordered according to their PCA scores. Setting cells to a number plots the ‘extreme’ cells on both ends of the spectrum, which dramatically speeds plotting for large datasets. Though clearly a supervised analysis, we find this to be a valuable tool for exploring correlated feature sets.
+
+```{r DimHeatmap, echo=FALSE, fig.width = 20, fig.height = 30}
+DimHeatmap(seurat, dims = 1:15, cells = 500, balanced = TRUE)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
