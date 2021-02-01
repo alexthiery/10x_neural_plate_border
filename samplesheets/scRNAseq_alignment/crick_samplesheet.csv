@@ -1,0 +1,9 @@
+sample_id,data1,data2,sample_name,run
+THI300A1,/camp/home/thierya/working/raw_data/10x_2019/scRNA_Alex_raw/SC19040/190524_K00102_0343_AH7MYHBBXY/fastq/THI300A1,/camp/home/thierya/working/raw_data/10x_2019/scRNA_Alex_raw/SC19040/190614_K00102_0353_BH7T3WBBXY/fastq/THI300A1,hh4,1
+THI300A3,/camp/home/thierya/working/raw_data/10x_2019/scRNA_Alex_raw/SC19040/190524_K00102_0343_AH7MYHBBXY/fastq/THI300A3,/camp/home/thierya/working/raw_data/10x_2019/scRNA_Alex_raw/SC19040/190614_K00102_0353_BH7T3WBBXY/fastq/THI300A3,ss4,1
+THI300A4,/camp/home/thierya/working/raw_data/10x_2019/scRNA_Alex_raw/SC19040/190524_K00102_0343_AH7MYHBBXY/fastq/THI300A4,/camp/home/thierya/working/raw_data/10x_2019/scRNA_Alex_raw/SC19040/190614_K00102_0353_BH7T3WBBXY/fastq/THI300A4,ss8,1
+THI300A6,/camp/home/thierya/working/raw_data/10x_2019/scRNA_Alex_raw/SC19040/190524_K00102_0343_AH7MYHBBXY/fastq/THI300A6,/camp/home/thierya/working/raw_data/10x_2019/scRNA_Alex_raw/SC19040/190614_K00102_0353_BH7T3WBBXY/fastq/THI300A6,hh6,1
+THI725A1,/camp/home/thierya/working/raw_data/10x_2020/sc20062/200807_K00102_0496_AHH5WVBBXY/fastq/THI725A1,/camp/home/thierya/working/raw_data/10x_2020/sc20062/200527_K00102_0481_AHGG23BBXY/fastq/THI725A1,hh5,2
+THI725A2,/camp/home/thierya/working/raw_data/10x_2020/sc20062/200807_K00102_0496_AHH5WVBBXY/fastq/THI725A2,/camp/home/thierya/working/raw_data/10x_2020/sc20062/200527_K00102_0481_AHGG23BBXY/fastq/THI725A2,hh6,2
+THI725A3,/camp/home/thierya/working/raw_data/10x_2020/sc20062/200807_K00102_0496_AHH5WVBBXY/fastq/THI725A3,/camp/home/thierya/working/raw_data/10x_2020/sc20062/200527_K00102_0481_AHGG23BBXY/fastq/THI725A3,hh7,2
+THI725A4,/camp/home/thierya/working/raw_data/10x_2020/sc20062/200807_K00102_0496_AHH5WVBBXY/fastq/THI725A4,/camp/home/thierya/working/raw_data/10x_2020/sc20062/200527_K00102_0481_AHGG23BBXY/fastq/THI725A4,ss4,2

@@ -1,26 +1,27 @@
 #!/usr/bin/env nextflow
+
 nextflow.enable.dsl=2
 
-include {modify_gtf} from "$baseDir/../custom-nf-modules/tools/modify_gtf/main.nf"
-include {cellranger_alignment} from "$baseDir/../custom-nf-modules/workflows/cellranger_flows/main.nf"
-include {velocyto_cellranger} from "$baseDir/../custom-nf-modules/workflows/cellranger_flows/main.nf"
+// Don't overwrite global params.modules, create a copy instead and use that within the main script.
+def modules = params.modules.clone()
 
+//  include whole alignment workflow
+include { scRNAseq_alignment } from '../custom-nf-modules/workflows/scRNAseq_alignment/main.nf' addParams(  gtf_tag_chroms_options: modules['gtf_tag_chroms'],
+                                                                                                            cellranger_mkgtf_options: modules['cellranger_mkgtf'],
+                                                                                                            cellranger_mkref_options: modules['cellranger_mkref'],
+                                                                                                            cellranger_count_options: modules['cellranger_count'],
+                                                                                                            velocyto_samtools_options: modules['velocyto_samtools'],
+                                                                                                            velocyto_run_10x_options: modules['velocyto_run_10x'] )
 
 Channel
     .from(params.gtf)
     .set {ch_gtf}
 
 Channel
-    .from(params.genome)
-    .set {ch_genome}
-    
+    .from(params.fasta)
+    .set {ch_fasta}
+
+
 workflow {
-    // tag MT, W and Z genes in GTF
-    modify_gtf( params.modules['modify_gtf'], ch_gtf )
-
-    // run cellranger
-    cellranger_alignment( modify_gtf.out.gtf, ch_genome, params.sample_csv )
-
-    // run velocyto on cellranger output
-    // velocyto_cellranger( cellranger_alignment.out.cellranger_out, modify_gtf.out.gtf )
+    scRNAseq_alignment( ch_fasta, ch_gtf, params.samplesheet )
 }
