@@ -79,21 +79,20 @@ Should also adjust so only print sample names or something
 Caution: I can't seem to change the workdir in the code, so workdir is always where the rmarkdown file is
 
 ```{r read_in, echo=FALSE}
-data.path = "../../alignment_out/10x_scRNAseq/"
+data.path = "../../alignment_out_renamed/10x_scRNAseq/"
 files <- list.files(data.path, recursive = T, full.names = T)
 # remove file suffix
-file.path <- dirname(files)[!duplicated(dirname(files))]
-# make dataframe with stage matching directory 
-### NEED TO MAKE THIS BIT GENERIC
-sample = c("THI300A1" = "hh4-1", "THI300A3" = "ss4-1", "THI300A4" = "ss8-1", "THI300A6" = "hh6-1",
-           "THI725A1" = "hh5-2", "THI725A2" = "hh6-2", "THI725A3" = "hh7-2", "THI725A4" = "ss4-2")
-print(sample)
-matches <- sapply(names(sample), function(x) file.path[grep(pattern = x, x = file.path)])
+file_path <- dirname(files)[!duplicated(dirname(files))]
 
-sample.paths <- data.frame(row.names = sample, sample = sample, stage = names(matches), path = matches, run = gsub(".*-", "", sample))
+sample = substr(file_path, 43, 47)
 
-seurat <- apply(sample.paths, 1, function(x) CreateSeuratObject(counts= Read10X(data.dir = x[["path"]]), project = x[["sample"]]))
+samples_table <- data.frame(row.names = sample, sample = sample, 
+                      stage = substr(sample, 1, 3), run = gsub(".*-", "", sample), 
+                      path = file_path)
+
+seurat <- apply(samples_table, 1, function(x) CreateSeuratObject(counts= Read10X(data.dir = x[["path"]]), project = x[["sample"]]))
 seurat <- merge(x = seurat[[1]], y=seurat[-1], add.cell.ids = names(seurat), project = "chick.10x")
+
 # store mitochondrial percentage in object meta data
 seurat <- PercentageFeatureSet(seurat, pattern = "^MT-", col.name = "percent.mt")
 seurat
