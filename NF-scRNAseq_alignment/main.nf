@@ -14,12 +14,12 @@ include { scRNAseq_alignment } from '../custom-nf-modules/workflows/scRNAseq_ali
                                                                                                             velocyto_run_10x_options: modules['velocyto_run_10x'] )
 
 Channel
-    .from(params.gtf)
-    .set {ch_gtf}
+    .value(file(params.fasta, checkIfExists: true))
+    .set {ch_fasta}
 
 Channel
-    .from(params.fasta)
-    .set {ch_fasta}
+    .value(file(params.gtf, checkIfExists: true))
+    .set {ch_gtf}
 
 
 workflow {
