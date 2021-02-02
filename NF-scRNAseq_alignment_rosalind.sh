@@ -4,13 +4,8 @@
 #SBATCH --mail-type=ALL,ARRAY_TASKS
 #SBATCH --mail-user=alex.thiery@crick.ac.uk
 
-export TERM=xterm
-
 ## LOAD REQUIRED MODULES
-ml purge
-ml Nextflow/20.07.1
-ml Singularity/3.4.2
-ml Graphviz
+module load apps/singularity/3.5.3
 
 export NXF_VER=20.07.1
 
