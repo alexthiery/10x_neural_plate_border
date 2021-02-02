@@ -31,9 +31,9 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
 {
   if (opt$runtype == "user"){
     sapply(list.files('./bin/R/custom_functions/', full.names = T), source)
-    plot.path = "./output/NF-downstream_analysis/1_seurat_integrate/plots/"
-    rds.path = "./output/downstream_analysis/1_seurat_integrate/rds_files/"
-    data.path = "./alignment_out"
+    plot_path = "./output/NF-downstream_analysis/1_seurat_integrate/plots/"
+    rds_path = "./output/downstream_analysis/1_seurat_integrate/rds_files/"
+    data_path = "./output/cellranger/count/filtered_feature_bc_matrix"
     
     ncores = 8
     
@@ -41,17 +41,17 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
     cat('pipeline running through nextflow\n')
     
     sapply(list.files(opt$custom_functions, full.names = T), source)
-    plot.path = "./plots/"
-    rds.path = "./rds_files/"
-    data.path = "."
+    plot_path = "./plots/"
+    rds_path = "./rds_files/"
+    data_path = "."
     
     ncores = opt$cores
   }
   
   cat(paste0("script ran with ", ncores, " cores\n"))
   
-  dir.create(plot.path, recursive = T)
-  dir.create(rds.path, recursive = T)
+  dir.create(plot_path, recursive = T)
+  dir.create(rds_path, recursive = T)
   
   # Load packages - packages are stored within renv in the repository
   reticulate::use_python('/usr/bin/python3.7')
@@ -66,4 +66,23 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
   library(pheatmap)
   library(RColorBrewer)
   library(STACAS)
+  library(tidyverse)
 }
+
+# make dataframe with stage and replicate taken from path
+files <- list.files(data_path, recursive = T, full.names = T)
+meta <- str_split(basename(files), pattern = "_", simplify = T)[,1:2]
+files_meta <- data.frame(stage = meta[,1], rep = meta[,2], path = files)
+
+
+ 
+
+
+sample.paths <- data.frame(row.names = sample, sample = sample, stage = names(matches), path = matches, run = gsub(".*-", "", sample))
+
+seurat <- apply(sample.paths, 1, function(x) CreateSeuratObject(counts= Read10X(data.dir = x[["path"]]), project = x[["sample"]]))
+seurat <- merge(x = seurat[[1]], y=seurat[-1], add.cell.ids = names(seurat), project = "chick.10x")
+
+# store mitochondrial percentage in object meta data
+seurat <- PercentageFeatureSet(seurat, pattern = "^MT-", col.name = "percent.mt")
+
