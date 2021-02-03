@@ -6,7 +6,6 @@ LABEL authors="alex.thiery@crick.ac.uk" \
 # Install apt packages
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
- git=1:2.20.1-2+deb10u3 \
  apt-utils=1.8.2.2
 
 RUN   R -e "install.packages('Seurat', dependencies=TRUE, repos='http://cran.rstudio.com/')" && \
