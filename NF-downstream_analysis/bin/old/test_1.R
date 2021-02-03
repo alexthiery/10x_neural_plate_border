@@ -51,10 +51,10 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
 # t <- matrix(1:9, nrow = 3, ncol = 3)
 # write.csv(t, "test_1_output.csv")
 
-data.path = ("./input")
+data.path = ("./input/")
 
-# reticulate::use_python('/usr/bin/python3.7') //dont have the right container loaded only the default tidyverse one so cant load these packages
-# library(Seurat)
+reticulate::use_python('/usr/bin/python3.7')
+library(Seurat)
 
 # read all files from dir
 files <- list.files(data.path, recursive = T, full.names = T)
@@ -67,8 +67,9 @@ matches <- sapply(names(sample), function(x) file.path[grep(pattern = x, x = fil
 
 sample.paths <- data.frame(row.names = sample, sample = sample, stage = names(matches), path = matches, run = gsub(".*-", "", sample))
 
-write.csv(sample.paths, "test_1_output.csv")
 
-# # Make Seurat objects for each of the different samples and then merge
-# seurat_data <- apply(sample.paths, 1, function(x) CreateSeuratObject(counts= Read10X(data.dir = x[["path"]]), project = x[["sample"]]))
-# seurat_data <- merge(x = seurat_data[[1]], y=seurat_data[-1], add.cell.ids = names(seurat_data), project = "chick.10x")
+# Make Seurat objects for each of the different samples and then merge
+seurat_data <- apply(sample.paths, 1, function(x) CreateSeuratObject(counts= Read10X(data.dir = x[["path"]]), project = x[["sample"]]))
+seurat_data <- merge(x = seurat_data[[1]], y=seurat_data[-1], add.cell.ids = names(seurat_data), project = "chick.10x")
+
+saveRDS(seurat_data, "test_1_output.RDS")
