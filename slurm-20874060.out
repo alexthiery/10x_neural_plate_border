@@ -1,0 +1,431 @@
+
+The following have been reloaded with a version change:
+  1) Java/11.0.2 => Java/1.8.0_92
+
+tput: unknown terminal "xterm"
+tput: unknown terminal "xterm"
+tput: unknown terminal "xterm"
+tput: unknown terminal "xterm"
+tput: unknown terminal "xterm"
+N E X T F L O W  ~  version 20.07.1
+Launching `./NF-scRNAseq_alignment/main.nf` [maniac_lavoisier] - revision: 6c16015922
+WARN: It appears you have never run this project before -- Option `-resume` is ignored
+[-        ] process > scRNAseq_alignment:gtf_tag_... -
+
+[-        ] process > scRNAseq_alignment:gtf_tag_... -
+[-        ] process > scRNAseq_alignment:scRNAseq... -
+
+[-        ] process > scRNAseq_alignment:gtf_tag_... -
+[-        ] process > scRNAseq_alignment:scRNAseq... -
+[-        ] process > scRNAseq_alignment:scRNAseq... -
+
+[-        ] process > scRNAseq_alignment:gtf_tag_... -
+[-        ] process > scRNAseq_alignment:scRNAseq... -
+[-        ] process > scRNAseq_alignment:scRNAseq... -
+[-        ] process > scRNAseq_alignment:scRNAseq... -
+
+[-        ] process > scRNAseq_alignment:gtf_tag_... -
+[-        ] process > scRNAseq_alignment:scRNAseq... -
+[-        ] process > scRNAseq_alignment:scRNAseq... -
+[-        ] process > scRNAseq_alignment:scRNAseq... -
+[-        ] process > scRNAseq_alignment:velocyto... -
+[-        ] process > scRNAseq_alignment:velocyto... -
+
+[-        ] process > scRNAseq_alignment:gtf_tag_... [  0%] 0 of 1
+[-        ] process > scRNAseq_alignment:scRNAseq... -
+[-        ] process > scRNAseq_alignment:scRNAseq... -
+[-        ] process > scRNAseq_alignment:scRNAseq... -
+[-        ] process > scRNAseq_alignment:velocyto... -
+[-        ] process > scRNAseq_alignment:velocyto... -
+
+executor >  slurm (1)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [  0%] 0 of 1
+[-        ] process > scRNAseq_alignment:scRNAseq... -
+[-        ] process > scRNAseq_alignment:scRNAseq... -
+[-        ] process > scRNAseq_alignment:scRNAseq... -
+[-        ] process > scRNAseq_alignment:velocyto... -
+[-        ] process > scRNAseq_alignment:velocyto... -
+
+executor >  slurm (1)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [  0%] 0 of 1
+[-        ] process > scRNAseq_alignment:scRNAseq... -
+[-        ] process > scRNAseq_alignment:scRNAseq... -
+[-        ] process > scRNAseq_alignment:scRNAseq... -
+[-        ] process > scRNAseq_alignment:velocyto... -
+[-        ] process > scRNAseq_alignment:velocyto... -
+
+executor >  slurm (1)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[-        ] process > scRNAseq_alignment:scRNAseq... -
+[-        ] process > scRNAseq_alignment:scRNAseq... -
+[-        ] process > scRNAseq_alignment:scRNAseq... -
+[-        ] process > scRNAseq_alignment:velocyto... -
+[-        ] process > scRNAseq_alignment:velocyto... -
+
+executor >  slurm (2)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [  0%] 0 of 1
+[-        ] process > scRNAseq_alignment:scRNAseq... -
+[-        ] process > scRNAseq_alignment:scRNAseq... -
+[-        ] process > scRNAseq_alignment:velocyto... -
+[-        ] process > scRNAseq_alignment:velocyto... -
+
+executor >  slurm (2)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [  0%] 0 of 1
+[-        ] process > scRNAseq_alignment:scRNAseq... -
+[-        ] process > scRNAseq_alignment:scRNAseq... -
+[-        ] process > scRNAseq_alignment:velocyto... -
+[-        ] process > scRNAseq_alignment:velocyto... -
+
+executor >  slurm (2)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[-        ] process > scRNAseq_alignment:scRNAseq... -
+[-        ] process > scRNAseq_alignment:scRNAseq... -
+[-        ] process > scRNAseq_alignment:velocyto... -
+[-        ] process > scRNAseq_alignment:velocyto... -
+
+executor >  slurm (3)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [  0%] 0 of 1
+[-        ] process > scRNAseq_alignment:scRNAseq... -
+[-        ] process > scRNAseq_alignment:velocyto... -
+[-        ] process > scRNAseq_alignment:velocyto... -
+
+executor >  slurm (3)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [  0%] 0 of 1
+[-        ] process > scRNAseq_alignment:scRNAseq... -
+[-        ] process > scRNAseq_alignment:velocyto... -
+[-        ] process > scRNAseq_alignment:velocyto... -
+
+executor >  slurm (3)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[-        ] process > scRNAseq_alignment:scRNAseq... -
+[-        ] process > scRNAseq_alignment:velocyto... -
+[-        ] process > scRNAseq_alignment:velocyto... -
+
+executor >  slurm (3)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[-        ] process > scRNAseq_alignment:scRNAseq... [  0%] 0 of 8
+[-        ] process > scRNAseq_alignment:velocyto... -
+[-        ] process > scRNAseq_alignment:velocyto... -
+
+executor >  slurm (4)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[04/6680d5] process > scRNAseq_alignment:scRNAseq... [  0%] 0 of 8
+[-        ] process > scRNAseq_alignment:velocyto... -
+[-        ] process > scRNAseq_alignment:velocyto... -
+
+executor >  slurm (5)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[eb/438725] process > scRNAseq_alignment:scRNAseq... [  0%] 0 of 8
+[-        ] process > scRNAseq_alignment:velocyto... -
+[-        ] process > scRNAseq_alignment:velocyto... -
+
+executor >  slurm (6)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7d/91acdb] process > scRNAseq_alignment:scRNAseq... [  0%] 0 of 8
+[-        ] process > scRNAseq_alignment:velocyto... -
+[-        ] process > scRNAseq_alignment:velocyto... -
+
+executor >  slurm (7)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[d1/9f9bda] process > scRNAseq_alignment:scRNAseq... [  0%] 0 of 8
+[-        ] process > scRNAseq_alignment:velocyto... -
+[-        ] process > scRNAseq_alignment:velocyto... -
+
+executor >  slurm (8)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[57/b1a508] process > scRNAseq_alignment:scRNAseq... [  0%] 0 of 8
+[-        ] process > scRNAseq_alignment:velocyto... -
+[-        ] process > scRNAseq_alignment:velocyto... -
+
+executor >  slurm (9)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7a/4c0ca6] process > scRNAseq_alignment:scRNAseq... [  0%] 0 of 8
+[-        ] process > scRNAseq_alignment:velocyto... -
+[-        ] process > scRNAseq_alignment:velocyto... -
+
+executor >  slurm (10)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[0a/919dc3] process > scRNAseq_alignment:scRNAseq... [  0%] 0 of 8
+[-        ] process > scRNAseq_alignment:velocyto... -
+[-        ] process > scRNAseq_alignment:velocyto... -
+
+executor >  slurm (11)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[31/3b12b0] process > scRNAseq_alignment:scRNAseq... [  0%] 0 of 8
+[-        ] process > scRNAseq_alignment:velocyto... -
+[-        ] process > scRNAseq_alignment:velocyto... -
+
+executor >  slurm (11)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[31/3b12b0] process > scRNAseq_alignment:scRNAseq... [  0%] 0 of 8
+[-        ] process > scRNAseq_alignment:velocyto... -
+[-        ] process > scRNAseq_alignment:velocyto... -
+
+executor >  slurm (11)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[31/3b12b0] process > scRNAseq_alignment:scRNAseq... [  0%] 0 of 8
+[-        ] process > scRNAseq_alignment:velocyto... -
+[-        ] process > scRNAseq_alignment:velocyto... -
+
+executor >  slurm (11)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[31/3b12b0] process > scRNAseq_alignment:scRNAseq... [  0%] 0 of 8
+[-        ] process > scRNAseq_alignment:velocyto... -
+[-        ] process > scRNAseq_alignment:velocyto... -
+
+executor >  slurm (11)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[0a/919dc3] process > scRNAseq_alignment:scRNAseq... [ 13%] 1 of 8
+[-        ] process > scRNAseq_alignment:velocyto... -
+[-        ] process > scRNAseq_alignment:velocyto... -
+
+executor >  slurm (12)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[0a/919dc3] process > scRNAseq_alignment:scRNAseq... [ 13%] 1 of 8
+[d2/7b88ad] process > scRNAseq_alignment:velocyto... [  0%] 0 of 1
+[-        ] process > scRNAseq_alignment:velocyto... -
+
+executor >  slurm (12)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[0a/919dc3] process > scRNAseq_alignment:scRNAseq... [ 13%] 1 of 8
+[d2/7b88ad] process > scRNAseq_alignment:velocyto... [  0%] 0 of 1
+[-        ] process > scRNAseq_alignment:velocyto... -
+
+executor >  slurm (12)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[eb/438725] process > scRNAseq_alignment:scRNAseq... [ 25%] 2 of 8
+[d2/7b88ad] process > scRNAseq_alignment:velocyto... [  0%] 0 of 1
+[-        ] process > scRNAseq_alignment:velocyto... -
+
+executor >  slurm (13)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[eb/438725] process > scRNAseq_alignment:scRNAseq... [ 25%] 2 of 8
+[7e/9b02df] process > scRNAseq_alignment:velocyto... [  0%] 0 of 2
+[-        ] process > scRNAseq_alignment:velocyto... -
+
+executor >  slurm (13)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[eb/438725] process > scRNAseq_alignment:scRNAseq... [ 25%] 2 of 8
+[7e/9b02df] process > scRNAseq_alignment:velocyto... [  0%] 0 of 2
+[-        ] process > scRNAseq_alignment:velocyto... -
+
+executor >  slurm (13)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[d1/9f9bda] process > scRNAseq_alignment:scRNAseq... [ 38%] 3 of 8
+[7e/9b02df] process > scRNAseq_alignment:velocyto... [  0%] 0 of 3
+[-        ] process > scRNAseq_alignment:velocyto... -
+
+executor >  slurm (14)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[d1/9f9bda] process > scRNAseq_alignment:scRNAseq... [ 38%] 3 of 8
+[78/9068c8] process > scRNAseq_alignment:velocyto... [  0%] 0 of 3
+[-        ] process > scRNAseq_alignment:velocyto... -
+
+executor >  slurm (14)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[d1/9f9bda] process > scRNAseq_alignment:scRNAseq... [ 38%] 3 of 8
+[78/9068c8] process > scRNAseq_alignment:velocyto... [  0%] 0 of 3
+[-        ] process > scRNAseq_alignment:velocyto... -
+
+executor >  slurm (14)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[31/3b12b0] process > scRNAseq_alignment:scRNAseq... [ 50%] 4 of 8
+[78/9068c8] process > scRNAseq_alignment:velocyto... [  0%] 0 of 3
+[-        ] process > scRNAseq_alignment:velocyto... -
+
+executor >  slurm (15)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[31/3b12b0] process > scRNAseq_alignment:scRNAseq... [ 50%] 4 of 8
+[59/e5be88] process > scRNAseq_alignment:velocyto... [  0%] 0 of 4
+[-        ] process > scRNAseq_alignment:velocyto... -
+
+executor >  slurm (15)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[31/3b12b0] process > scRNAseq_alignment:scRNAseq... [ 50%] 4 of 8
+[59/e5be88] process > scRNAseq_alignment:velocyto... [  0%] 0 of 4
+[-        ] process > scRNAseq_alignment:velocyto... -
+
+executor >  slurm (15)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[31/3b12b0] process > scRNAseq_alignment:scRNAseq... [ 50%] 4 of 8
+[d2/7b88ad] process > scRNAseq_alignment:velocyto... [ 25%] 1 of 4
+[-        ] process > scRNAseq_alignment:velocyto... -
+
+executor >  slurm (16)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[31/3b12b0] process > scRNAseq_alignment:scRNAseq... [ 50%] 4 of 8
+[d2/7b88ad] process > scRNAseq_alignment:velocyto... [ 25%] 1 of 4
+[b4/c448ba] process > scRNAseq_alignment:velocyto... [  0%] 0 of 1
+
+executor >  slurm (16)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[31/3b12b0] process > scRNAseq_alignment:scRNAseq... [ 50%] 4 of 8
+[d2/7b88ad] process > scRNAseq_alignment:velocyto... [ 25%] 1 of 4
+[b4/c448ba] process > scRNAseq_alignment:velocyto... [  0%] 0 of 1
+
+executor >  slurm (16)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[04/6680d5] process > scRNAseq_alignment:scRNAseq... [ 63%] 5 of 8
+[d2/7b88ad] process > scRNAseq_alignment:velocyto... [ 20%] 1 of 5
+[b4/c448ba] process > scRNAseq_alignment:velocyto... [  0%] 0 of 1
+
+executor >  slurm (17)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[04/6680d5] process > scRNAseq_alignment:scRNAseq... [ 63%] 5 of 8
+[6a/02cdcd] process > scRNAseq_alignment:velocyto... [ 20%] 1 of 5
+[b4/c448ba] process > scRNAseq_alignment:velocyto... [  0%] 0 of 1
+
+executor >  slurm (17)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[04/6680d5] process > scRNAseq_alignment:scRNAseq... [ 63%] 5 of 8
+[6a/02cdcd] process > scRNAseq_alignment:velocyto... [ 20%] 1 of 5
+[b4/c448ba] process > scRNAseq_alignment:velocyto... [  0%] 0 of 1
+
+executor >  slurm (17)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7a/4c0ca6] process > scRNAseq_alignment:scRNAseq... [ 75%] 6 of 8
+[6a/02cdcd] process > scRNAseq_alignment:velocyto... [ 17%] 1 of 6
+[b4/c448ba] process > scRNAseq_alignment:velocyto... [  0%] 0 of 1
+
+executor >  slurm (18)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7a/4c0ca6] process > scRNAseq_alignment:scRNAseq... [ 75%] 6 of 8
+[eb/fed8f9] process > scRNAseq_alignment:velocyto... [ 17%] 1 of 6
+[b4/c448ba] process > scRNAseq_alignment:velocyto... [  0%] 0 of 1
+
+executor >  slurm (18)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7a/4c0ca6] process > scRNAseq_alignment:scRNAseq... [ 75%] 6 of 8
+[7e/9b02df] process > scRNAseq_alignment:velocyto... [ 33%] 2 of 6
+[b4/c448ba] process > scRNAseq_alignment:velocyto... [  0%] 0 of 2
+
+executor >  slurm (19)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7a/4c0ca6] process > scRNAseq_alignment:scRNAseq... [ 75%] 6 of 8
+[7e/9b02df] process > scRNAseq_alignment:velocyto... [ 33%] 2 of 6
+[e4/c996ba] process > scRNAseq_alignment:velocyto... [  0%] 0 of 2
+
+executor >  slurm (19)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7a/4c0ca6] process > scRNAseq_alignment:scRNAseq... [ 75%] 6 of 8
+[7e/9b02df] process > scRNAseq_alignment:velocyto... [ 33%] 2 of 6
+[e4/c996ba] process > scRNAseq_alignment:velocyto... [  0%] 0 of 2
+
+executor >  slurm (19)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7a/4c0ca6] process > scRNAseq_alignment:scRNAseq... [ 75%] 6 of 8
+[78/9068c8] process > scRNAseq_alignment:velocyto... [ 50%] 3 of 6
+[e4/c996ba] process > scRNAseq_alignment:velocyto... [  0%] 0 of 3
+
+executor >  slurm (20)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7a/4c0ca6] process > scRNAseq_alignment:scRNAseq... [ 75%] 6 of 8
+[78/9068c8] process > scRNAseq_alignment:velocyto... [ 50%] 3 of 6
+[4b/3c5d20] process > scRNAseq_alignment:velocyto... [  0%] 0 of 3
+
+executor >  slurm (20)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7a/4c0ca6] process > scRNAseq_alignment:scRNAseq... [ 75%] 6 of 8
+[78/9068c8] process > scRNAseq_alignment:velocyto... [ 50%] 3 of 6
+[4b/3c5d20] process > scRNAseq_alignment:velocyto... [  0%] 0 of 3
+
+executor >  slurm (21)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7a/4c0ca6] process > scRNAseq_alignment:scRNAseq... [ 75%] 6 of 8
+[59/e5be88] process > scRNAseq_alignment:velocyto... [ 67%] 4 of 6
+[33/19da90] process > scRNAseq_alignment:velocyto... [  0%] 0 of 4
+
+executor >  slurm (21)
+[a7/1320db] process > scRNAseq_alignment:gtf_tag_... [100%] 1 of 1 ✔
+[0a/5046e1] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7e/170b7b] process > scRNAseq_alignment:scRNAseq... [100%] 1 of 1 ✔
+[7a/4c0ca6] process > scRNAseq_alignment:scRNAseq... [ 75%] 6 of 8
+[59/e5be88] process > scRNAseq_alignment:velocyto... [ 67%] 4 of 6
+[33/19da90] process > scRNAseq_alignment:velocyto... [  0%] 0 of 4
