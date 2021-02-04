@@ -1,0 +1,33 @@
+{
+    "panes": {
+        "quadrants": [
+            "Source",
+            "Console",
+            "TabSet1",
+            "TabSet2"
+        ],
+        "tabSet1": [
+            "Environment",
+            "History",
+            "Connections",
+            "Build",
+            "VCS",
+            "Presentation"
+        ],
+        "tabSet2": [
+            "Files",
+            "Plots",
+            "Packages",
+            "Help",
+            "Viewer"
+        ],
+        "console_left_on_top": false,
+        "console_right_on_top": true
+    },
+    "show_margin": false,
+    "show_diagnostics_other": true,
+    "editor_theme": "Idle Fingers",
+    "default_project_location": "~",
+    "wrap_tab_navigation": false,
+    "reuse_sessions_for_project_links": true
+}

@@ -32,8 +32,8 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
   if (opt$runtype == "user"){
     sapply(list.files('./NF-downstream_analysis/bin/custom_functions/', full.names = T), source)
     plot_path = "./output/NF-downstream_analysis/1_seurat_integrate/plots/"
-    rds_path = "./output/downstream_analysis/1_seurat_integrate/rds_files/"
-    data_path = "./output/NF-scRNAseq_alignment/cellranger/count/filtered_feature_bc_matrix"
+    rds_path = "./output/NF-downstream_analysis/1_seurat_integrate/rds_files/"
+    data_path = "./alignment_counts/NF-scRNAseq_alignment/cellranger/count/filtered_feature_bc_matrix"
     
     ncores = 8
     
@@ -43,8 +43,7 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
     sapply(list.files(opt$custom_functions, full.names = T), source)
     plot_path = "./plots/"
     rds_path = "./rds_files/"
-    data_path = "."
-    
+    data_path = "./input/NF-scRNAseq_alignment/cellranger/count/filtered_feature_bc_matrix"
     ncores = opt$cores
   }
   
@@ -97,23 +96,23 @@ seurat_all <- subset(seurat_all, subset = c(nFeature_RNA > 1000 & nFeature_RNA <
 
 
 
-#####################################################################################################
-#                           Integrate data from different 10x runs                                  #
-#####################################################################################################
+# #####################################################################################################
+# #                           Integrate data from different 10x runs                                  #
+# #####################################################################################################
 
-# Split object by run and find integration points
-seurat_integrated <- SplitObject(seurat_all, split.by = "run")
+# # Split object by run and find integration points
+# seurat_integrated <- SplitObject(seurat_all, split.by = "run")
 
-# Multi-core when running from command line
-if(opt$runtype == "nextflow"){
-  plan("multiprocess", workers = ncores)
-  options(future.globals.maxSize = 5* 1024^3) # 5gb
-}
+# # Multi-core when running from command line
+# if(opt$runtype == "nextflow"){
+#   plan("multiprocess", workers = ncores)
+#   options(future.globals.maxSize = 5* 1024^3) # 5gb
+# }
 
-# SCTransform replaces NormalizeData(), ScaleData(), and FindVariableFeatures()
-seurat_integrated <- lapply(seurat_integrated, function(x) SCTransform(x, vars.to.regress = "percent.mt", verbose = TRUE))
+# # SCTransform replaces NormalizeData(), ScaleData(), and FindVariableFeatures()
+# seurat_integrated <- lapply(seurat_integrated, function(x) SCTransform(x, vars.to.regress = "percent.mt", verbose = TRUE))
 
-saveRDS(paste0(rds_path, 'seurat_integrated.RDS'))
+# saveRDS(paste0(rds_path, 'seurat_integrated.RDS'))
 
 
 

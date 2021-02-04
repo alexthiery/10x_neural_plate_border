@@ -1,8 +1,8 @@
 #!/bin/bash
-#SBATCH --job-name=otic-reprogamming
+#SBATCH --job-name=10x-NPB
 #SBATCH -t 72:00:00
+#SBATCH -p brc
 #SBATCH --mail-type=ALL,ARRAY_TASKS
-#SBATCH --mail-user=alex.thiery@crick.ac.uk
 
 
 ## LOAD REQUIRED MODULES

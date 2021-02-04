@@ -20,14 +20,12 @@ Channel
     .fromPath( params.input ) //passed in as a param in the command line - path to local_samplesheet.csv
     .splitCsv(header:true)
     .map { row -> processRow(row) } //passing each row of the csv at a time into processRow, which makes dictionary linking sample id and path
-    .view()
     .set { metadata } //name of channel is metadata
 
 
 metadata
     .filter{ it[0].sample_id == 'NF-scRNAseq_alignment_out' }
     .map { row -> row[1].collect{file(it)} }
-    .view()
     .set { ch_scRNA }
 
 // /*------------------------------------------------------------------------------------*/

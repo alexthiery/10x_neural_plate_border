@@ -15,5 +15,7 @@ ml Graphviz
 export NXF_VER=20.07.1
 
 nextflow run ./NF-downstream_analysis/workflows/seurat/main.nf \
---input NF-downstream_analysis/samplesheet.csv \
--profile local
+--input ./NF-downstream_analysis/samplesheet.csv \
+--outdir ./output/NF-downstream_analysis \
+-profile crick \
+-resume
