@@ -6,7 +6,7 @@ nextflow.enable.dsl=2
 def modules = params.modules.clone()
 
 //  include whole alignment workflow
-include { scRNAseq_alignment } from '../custom-nf-modules/workflows/scRNAseq_alignment/main.nf' addParams(  gtf_tag_chroms_options: modules['gtf_tag_chroms'],
+include { scRNAseq_alignment } from '../modules/workflows/scRNAseq_alignment/main.nf' addParams(  gtf_tag_chroms_options: modules['gtf_tag_chroms'],
                                                                                                             cellranger_mkgtf_options: modules['cellranger_mkgtf'],
                                                                                                             cellranger_mkref_options: modules['cellranger_mkref'],
                                                                                                             cellranger_count_options: modules['cellranger_count'],
