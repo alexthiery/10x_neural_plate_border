@@ -100,20 +100,73 @@ seurat_all <- subset(seurat_all, subset = c(nFeature_RNA > 1000 & nFeature_RNA <
 # #                           Integrate data from different 10x runs                                  #
 # #####################################################################################################
 
-# # Split object by run and find integration points
-# seurat_integrated <- SplitObject(seurat_all, split.by = "run")
+# Split object by run and find integration points
+seurat_integrated <- SplitObject(seurat_all, split.by = "run")
 
-# # Multi-core when running from command line
-# if(opt$runtype == "nextflow"){
-#   plan("multiprocess", workers = ncores)
-#   options(future.globals.maxSize = 5* 1024^3) # 5gb
-# }
+# Multi-core when running from command line
+if(opt$runtype == "nextflow"){
+  plan("multiprocess", workers = ncores)
+  options(future.globals.maxSize = 5* 1024^3) # 5gb
+}
 
-# # SCTransform replaces NormalizeData(), ScaleData(), and FindVariableFeatures()
-# seurat_integrated <- lapply(seurat_integrated, function(x) SCTransform(x, vars.to.regress = "percent.mt", verbose = TRUE))
+# SCTransform replaces NormalizeData(), ScaleData(), and FindVariableFeatures()
+seurat_integrated_SCTransform <- lapply(seurat_integrated, function(x) SCTransform(x, vars.to.regress = "percent.mt", verbose = TRUE))
 
-# saveRDS(paste0(rds_path, 'seurat_integrated.RDS'))
+saveRDS(paste0(rds_path, 'seurat_integrated_SCTransform.RDS'))
+
+
+# Log normalize data and find variable features
+seurat_integrated_scale <- lapply(seurat_integrated, function(x) NormalizeData(x, normalization.method = "LogNormalize", scale.factor = 10000))
+seurat_integrated_scale <- lapply(seurat_integrated_scale, function(x) FindVariableFeatures(x, selection.method = "vst", nfeatures = 2000))
+
+saveRDS(paste0(rds_path, 'seurat_integrated_SCTransform.RDS'))
 
 
 
+ref.anchors.filtered <- Run.STACAS(seurat_integrated_SCTransform, dims = 1:30, anchor.features = 2000)
+
+# Multi-core when running from command line
+if(opt$runtype == "nextflow"){
+  plan("multiprocess", workers = ncores)
+  options(future.globals.maxSize = 5* 1024^3) # 5gb
+}
+
+seurat_integrated_SCTransform <- IntegrateData(anchorset = ref.anchors.filtered, dims = 1:30)
+
+# set inegrated count data as default
+DefaultAssay(seurat_integrated_SCTransform) <- "integrated"
+
+# Scale data and regress out MT content
+# Enable parallelisation
+# Multi-core when running from command line
+if(opt$runtype == "nextflow"){
+  plan("multiprocess", workers = ncores)
+  options(future.globals.maxSize = 5* 1024^3) # 5gb
+}
+
+seurat_integrated_SCTransform <- ScaleData(seurat_integrated_SCTransform, features = rownames(seurat_integrated_SCTransform), vars.to.regress = "percent.mt")
+
+# Save RDS after scaling as this step takes time
+saveRDS(seurat_integrated_SCTransform, paste0(rds.path, "seurat_integrated_SCTransform_STACAS.RDS"))
+
+# seurat_data_integrated <- readRDS(paste0(rds.path, "seurat_data_integrated.RDS"))
+
+
+ref.anchors.filtered <- Run.STACAS(seurat_integrated_scale, dims = 1:30, anchor.features = 2000)
+
+plan("multiprocess", workers = ncores)
+options(future.globals.maxSize = 4000 * 1024^2)
+seurat_integrated_scale <- IntegrateData(anchorset = ref.anchors.filtered, dims = 1:30)
+
+# set inegrated count data as default
+DefaultAssay(seurat_integrated_scale) <- "integrated"
+
+# Scale data and regress out MT content
+# Enable parallelisation
+plan("multiprocess", workers = ncores)
+options(future.globals.maxSize = 4000 * 1024^2)
+seurat_integrated_scale <- ScaleData(seurat_integrated_scale, features = rownames(seurat_integrated_scale), vars.to.regress = "percent.mt")
+
+# Save RDS after scaling as this step takes time
+saveRDS(seurat_integrated_scale, paste0(rds.path, "seurat_integrated_scale_STACAS.RDS"))
 
