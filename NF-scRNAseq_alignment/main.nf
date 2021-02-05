@@ -23,5 +23,5 @@ Channel
 
 
 workflow {
-    scRNAseq_alignment( ch_fasta, ch_gtf, params.samplesheet )
+    scRNAseq_alignment( ch_fasta, ch_gtf, params.input )
 }
