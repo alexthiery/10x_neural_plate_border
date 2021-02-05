@@ -1,9 +1,9 @@
-[submodule "custom-nf-modules"]
-	path = custom-nf-modules
+[submodule "modules"]
+	path = modules
 	url = https://github.com/Streit-lab/custom-nf-modules.git
 	branch = master
 
-[submodule "custom-nf-modules/luslab-nf-modules"]
-	path = custom-nf-modules/luslab-nf-modules
+[submodule "modules/luslab-nf-modules"]
+	path = modules/luslab-nf-modules
 	url = https://github.com/luslab/luslab-nf-modules.git
 	branch = master
