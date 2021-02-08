@@ -127,7 +127,7 @@ seurat_split_SCTransform <- FindAnchors.STACAS(seurat_split_SCTransform, anchor.
 seurat_split_SCTransform <- FilterAnchors.STACAS(seurat_split_SCTransform)
 
 # Run seurat integrate on SCT data
-seurat_integrated_SCTransform <- IntegrateData(anchorset=anchors.sct.filtered, dims=1:30, normalization.method = "SCT", preserve.order=T)
+seurat_integrated_SCTransform <- IntegrateData(anchorset=seurat_split_SCTransform, dims=1:30, normalization.method = "SCT", preserve.order=T)
 
 # Save RDS after integration
 saveRDS(seurat_integrated_SCTransform, paste0(rds_path, "seurat_integrated_SCTransform.RDS"))
