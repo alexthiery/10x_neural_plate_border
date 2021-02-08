@@ -121,10 +121,10 @@ features.sct <- SelectIntegrationFeatures(seurat_split_SCTransform, nfeatures = 
 seurat_split_SCTransform <- PrepSCTIntegration(seurat_split_SCTransform, anchor.features = features.sct)
 seurat_split_SCTransform <- lapply(seurat_split_SCTransform, FUN = RunPCA, features = features.sct)
 
-anchors.sct <- FindAnchors.STACAS(ref.list, anchor.features=features.sct, 
+seurat_split_SCTransform <- FindAnchors.STACAS(ref.seurat_split_SCTransform, anchor.features=features.sct, 
                                   normalization.method = "SCT")
 
-anchors.sct.filtered <- FilterAnchors.STACAS(anchors.sct)
+seurat_split_SCTransform <- FilterAnchors.STACAS(seurat_split_SCTransform)
 
 # Run seurat integrate on SCT data
 seurat_integrated_SCTransform <- IntegrateData(anchorset=anchors.sct.filtered, dims=1:30, normalization.method = "SCT", preserve.order=T)
