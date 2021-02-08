@@ -112,14 +112,14 @@ if(opt$runtype == "nextflow"){
 # SCTransform replaces NormalizeData(), ScaleData(), and FindVariableFeatures()
 seurat_integrated_SCTransform <- lapply(seurat_integrated, function(x) SCTransform(x, vars.to.regress = "percent.mt", verbose = TRUE))
 
-saveRDS(paste0(rds_path, 'seurat_integrated_SCTransform.RDS'))
+saveRDS(seurat_integrated_SCTransform, paste0(rds_path, 'seurat_integrated_SCTransform.RDS'))
 
 
 # Log normalize data and find variable features
 seurat_integrated_scale <- lapply(seurat_integrated, function(x) NormalizeData(x, normalization.method = "LogNormalize", scale.factor = 10000))
 seurat_integrated_scale <- lapply(seurat_integrated_scale, function(x) FindVariableFeatures(x, selection.method = "vst", nfeatures = 2000))
 
-saveRDS(paste0(rds_path, 'seurat_integrated_SCTransform.RDS'))
+saveRDS(seurat_integrated_scale, paste0(rds_path, 'seurat_integrated_SCTransform.RDS'))
 
 
 
