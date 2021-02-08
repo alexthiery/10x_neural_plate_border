@@ -106,7 +106,7 @@ seurat_integrated <- SplitObject(seurat_all, split.by = "run")
 # Multi-core when running from command line
 if(opt$runtype == "nextflow"){
   plan("multiprocess", workers = ncores)
-  options(future.globals.maxSize = 5* 1024^3) # 5gb
+  options(future.globals.maxSize = 8* 1024^3) # 8gb
 }
 
 # SCTransform replaces NormalizeData(), ScaleData(), and FindVariableFeatures()
@@ -128,7 +128,7 @@ ref.anchors.filtered <- Run.STACAS(seurat_integrated_SCTransform, dims = 1:30, a
 # Multi-core when running from command line
 if(opt$runtype == "nextflow"){
   plan("multiprocess", workers = ncores)
-  options(future.globals.maxSize = 5* 1024^3) # 5gb
+  options(future.globals.maxSize = 8* 1024^3) # 8gb
 }
 
 seurat_integrated_SCTransform <- IntegrateData(anchorset = ref.anchors.filtered, dims = 1:30)
@@ -141,7 +141,7 @@ DefaultAssay(seurat_integrated_SCTransform) <- "integrated"
 # Multi-core when running from command line
 if(opt$runtype == "nextflow"){
   plan("multiprocess", workers = ncores)
-  options(future.globals.maxSize = 5* 1024^3) # 5gb
+  options(future.globals.maxSize = 8* 1024^3) # 8gb
 }
 
 seurat_integrated_SCTransform <- ScaleData(seurat_integrated_SCTransform, features = rownames(seurat_integrated_SCTransform), vars.to.regress = "percent.mt")
@@ -154,8 +154,10 @@ saveRDS(seurat_integrated_SCTransform, paste0(rds.path, "seurat_integrated_SCTra
 
 ref.anchors.filtered <- Run.STACAS(seurat_integrated_scale, dims = 1:30, anchor.features = 2000)
 
-plan("multiprocess", workers = ncores)
-options(future.globals.maxSize = 4000 * 1024^2)
+if(opt$runtype == "nextflow"){
+  plan("multiprocess", workers = ncores)
+  options(future.globals.maxSize = 8* 1024^3) # 8gb
+}
 seurat_integrated_scale <- IntegrateData(anchorset = ref.anchors.filtered, dims = 1:30)
 
 # set inegrated count data as default
@@ -163,8 +165,10 @@ DefaultAssay(seurat_integrated_scale) <- "integrated"
 
 # Scale data and regress out MT content
 # Enable parallelisation
-plan("multiprocess", workers = ncores)
-options(future.globals.maxSize = 4000 * 1024^2)
+if(opt$runtype == "nextflow"){
+  plan("multiprocess", workers = ncores)
+  options(future.globals.maxSize = 8* 1024^3) # 8gb
+}
 seurat_integrated_scale <- ScaleData(seurat_integrated_scale, features = rownames(seurat_integrated_scale), vars.to.regress = "percent.mt")
 
 # Save RDS after scaling as this step takes time
