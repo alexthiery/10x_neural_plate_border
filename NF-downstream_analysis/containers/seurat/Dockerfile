@@ -16,3 +16,6 @@ RUN   R -e "install.packages('Seurat', dependencies=TRUE, repos='http://cran.rst
       R -e "install.packages('getopt', dependencies=TRUE, repos='http://cran.rstudio.com/')" && \
       R -e "install.packages('pheatmap', dependencies=TRUE, repos='http://cran.rstudio.com/')" && \
       R -e "remotes::install_github('carmonalab/STACAS')"
+
+RUN chown -R root:root /var/lib/rstudio-server \
+&& chmod -R g=u /var/lib/rstudio-server
