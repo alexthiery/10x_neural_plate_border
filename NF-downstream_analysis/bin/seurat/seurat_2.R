@@ -31,8 +31,8 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
 {
   if (opt$runtype == "user"){
     sapply(list.files('./NF-downstream_analysis/bin/custom_functions/', full.names = T), source)
-    plot_path = "./output/NF-downstream_analysis/1_seurat_integrate/plots/"
-    rds_path = "./output/NF-downstream_analysis/1_seurat_integrate/rds_files/"
+    plot_path = "./output/NF-downstream_analysis/2_seurat/plots/"
+    rds_path = "./output/NF-downstream_analysis/2_seurat/rds_files/"
     data_path = "./output/NF-downstream_analysis/scRNAseq/seurat_integrate/rds_files/"
     
     ncores = 8
@@ -71,4 +71,34 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
 
 
 seurat_integrated_SCTransform <- readRDS(paste0(data_path, "seurat_integrated_SCTransform.RDS"))
+
+# set integrated count data as default
+# DefaultAssay(seurat_integrated_SCTransform) <- "integrated"
+
+
+seurat_integrated_SCTransform <- RunPCA(object = seurat_integrated_SCTransform, verbose = FALSE)
+seurat_integrated_SCTransform <- FindNeighbors(seurat_integrated_SCTransform, dims = 1:30, verbose = FALSE)
+seurat_integrated_SCTransform <- RunUMAP(seurat_integrated_SCTransform, dims = 1:30, verbose = FALSE)
+seurat_integrated_SCTransform <- FindClusters(seurat_integrated_SCTransform, resolution = 0.5, verbose = FALSE)
+
+png(paste0(plot_path, "UMAP_sctransform.png"), width=40, height=20, units = 'cm', res = 200)
+clust.stage.plot(seurat_integrated_SCTransform)
+graphics.off()
+
+
+
+seurat_integrated_scale <- readRDS(paste0(data_path, "seurat_integrated_scale.RDS"))
+
+# set integrated count data as default
+DefaultAssay(seurat_integrated_scale) <- "integrated"
+
+
+seurat_integrated_scale <- RunPCA(object = seurat_integrated_scale, verbose = FALSE)
+seurat_integrated_scale <- FindNeighbors(seurat_integrated_scale, dims = 1:30, verbose = FALSE)
+seurat_integrated_scale <- RunUMAP(seurat_integrated_scale, dims = 1:30, verbose = FALSE)
+seurat_integrated_scale <- FindClusters(seurat_integrated_scale, resolution = 0.5, verbose = FALSE)
+
+png(paste0(plot_path, "UMAP_scale.png"), width=40, height=20, units = 'cm', res = 200)
+clust.stage.plot(seurat_integrated_scale)
+graphics.off()
 
