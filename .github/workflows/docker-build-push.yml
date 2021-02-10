@@ -16,6 +16,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - name: Set version and tags
+        id: ver
+        run: |
+          VERSION=`cat NF-downstream_analysis/containers/${{matrix.module-name}}/VERSION`
+          echo "version: $VERSION"
+          echo "::set-output name=version::$(echo $VERSION)"
+        shell: bash
       - name: Build and push image
         uses: docker/build-push-action@v1.1.0
         with:
@@ -24,4 +31,4 @@ jobs:
           repository: alexthiery/10x-npb-${{matrix.module-name}}
           path: NF-downstream_analysis/containers/${{matrix.module-name}}
           dockerfile: NF-downstream_analysis/containers/${{matrix.module-name}}/${{matrix.docker-file}}
-          tags: latest
+          tags: latest,${{matrix.tag}}-${{steps.ver.outputs.version}}
