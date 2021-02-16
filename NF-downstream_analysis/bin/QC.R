@@ -58,9 +58,11 @@ library(gridExtra)
 library(grid)
 library(reshape2)
 library(viridis)
+library(tidyr)
 #data.path = ("./input")
 
-setwd("/home/rstudio/NF-downstream_analysis")
+#setwd("/home/rstudio/NF-downstream_analysis")
+setwd("~/dev/repos/10x_neural_plate_border/NF-downstream_analysis") 
 data.path = "../alignment_out/10x_scRNAseq"
 
 
@@ -69,8 +71,7 @@ files <- list.files(data.path, recursive = T, full.names = T)
 file.path <- dirname(files)[!duplicated(dirname(files))]
 # make dataframe with stage matching directory 
 ### NEED TO MAKE THIS BIT GENERIC
-sample = c("THI300A1" = "hh4-1", "THI300A3" = "ss4-1", "THI300A4" = "ss8-1", "THI300A6" = "hh6-1",
-           "THI725A1" = "hh5-2", "THI725A2" = "hh6-2", "THI725A3" = "hh7-2", "THI725A4" = "ss4-2")
+sample = c("THI300A1" = "hh4-1", "THI300A3" = "ss4-1")
 matches <- sapply(names(sample), function(x) file.path[grep(pattern = x, x = file.path)])
 
 sample.paths <- data.frame(row.names = sample, sample = sample, stage = names(matches), path = matches, run = gsub(".*-", "", sample))
@@ -82,17 +83,55 @@ seurat <- merge(x = seurat[[1]], y=seurat[-1], add.cell.ids = names(seurat), pro
 seurat <- PercentageFeatureSet(seurat, pattern = "^MT-", col.name = "percent.mt")
 
 
-############# QC plots - Seurat Guided Clustering Tutorial ############
-# Visualize QC metrics as a violin plot
-png("VlnPlots.png", width=90, height=40, units = 'cm', res = 200)
-VlnPlot(seurat, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
-graphics.off()
 
-# FeatureScatter is typically used to visualize feature-feature relationships, but can be used
-# for anything calculated by the object, i.e. columns in object metadata, PC scores etc.
-png("VlnPlots.png", width=90, height=40, units = 'cm', res = 200)
-plot1 <- FeatureScatter(seurat, feature1 = "nCount_RNA", feature2 = "percent.mt")
-plot2 <- FeatureScatter(seurat, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
-CombinePlots(plots = list(plot1, plot2))
-graphics.off()
+######################################### Filtering  ##################################################################
+
+seurat_filtered_low <- subset(seurat, subset = c(nFeature_RNA > 600 & nFeature_RNA < 8000 & percent.mt < 30))
+seurat_filtered_med <- subset(seurat, subset = c(nFeature_RNA > 1000 & nFeature_RNA < 6000 & percent.mt < 15))
+seurat_filtered_high <- subset(seurat, subset = c(nFeature_RNA > 1500 & nFeature_RNA < 10000 & percent.mt < 8))
+
+seurat_filtered_low@meta.data["filtering"] <- "low"
+seurat_filtered_med@meta.data["filtering"] <- "med"
+seurat_filtered_high@meta.data["filtering"] <- "high"
+seurat@meta.data["filtering"] <- "unfiltered"
+seurat_list <- list(seurat, seurat_filtered_low, seurat_filtered_med, seurat_filtered_high)
+
+######################################### QC plots  ##################################################################
+
+############### Violin plots of QC stats
+
+extract_md <- function(x){
+  seurat_meta <- x@meta.data
+  md <- seurat_meta[, c("nCount_RNA", "nFeature_RNA", "percent.mt", "filtering")]
+  rownames(md) <- c()
+  return(md)
+}
+meta_data_list <- lapply(seurat_list, extract_md)
+meta_data_df <- do.call("rbind", meta_data_list)
+meta_data_long <- gather(meta_data_df, QC_metric, value, nCount_RNA:percent.mt, factor_key = TRUE)
+meta_data_long$filtering <- factor(meta_data_long$filtering)
+meta_data_long$filtering <- factor(meta_data_long$filtering, levels = c("unfiltered", "low", "med", "high"))
+
+nCount_RNA <- subset(meta_data_long, QC_metric = "nCount_RNA")
+ggplot(nCount_RNA, aes(x = filtering, y = value, fill = filtering)) + 
+  geom_violin(trim = TRUE) + theme(legend.position = "none")
+
+nFeature_RNA <- subset(meta_data_long, QC_metric = "nFeature_RNA")
+ggplot(nFeature_RNA, aes(x = filtering, y = value, fill = filtering)) + 
+  geom_violin() + theme(legend.position = "none")
+
+percent.mt <- subset(meta_data_long, QC_metric = "percent.mt")
+ggplot(percent.mt, aes(x = filtering, y = value, fill = filtering)) + 
+  geom_violin() + theme(legend.position = "none")
+
+## need to make prettier - trim top??
+
+
+
+
+
+
+
+
+
 
