@@ -98,11 +98,11 @@ seurat_list <- list(seurat, seurat_filtered_low, seurat_filtered_med, seurat_fil
 
 ######################################### QC plots  ##################################################################
 
-############### Violin plots of QC stats
+############### Violin plots of QC stats ###############
 
 extract_md <- function(x){
   seurat_meta <- x@meta.data
-  md <- seurat_meta[, c("nCount_RNA", "nFeature_RNA", "percent.mt", "filtering")]
+  md <- seurat_meta[, c("nCount_RNA", "nFeature_RNA", "percent.mt", "filtering", "orig.ident")]
   rownames(md) <- c()
   return(md)
 }
@@ -112,25 +112,135 @@ meta_data_long <- gather(meta_data_df, QC_metric, value, nCount_RNA:percent.mt, 
 meta_data_long$filtering <- factor(meta_data_long$filtering)
 meta_data_long$filtering <- factor(meta_data_long$filtering, levels = c("unfiltered", "low", "med", "high"))
 
-nCount_RNA <- subset(meta_data_long, QC_metric = "nCount_RNA")
+nCount_RNA <-  filter(meta_data_long, QC_metric == "nCount_RNA")
 ggplot(nCount_RNA, aes(x = filtering, y = value, fill = filtering)) + 
-  geom_violin(trim = TRUE) + theme(legend.position = "none")
+  geom_violin(trim = TRUE) + 
+  scale_fill_viridis(discrete = T) +
+  ggtitle("Number of RNA transcripts after filtering") +
+  xlab("Filtering threshold") +
+  ylab("Number of RNA transcripts") +
+  theme_classic() +
+  theme(legend.position = "none")
 
-nFeature_RNA <- subset(meta_data_long, QC_metric = "nFeature_RNA")
+nFeature_RNA <-  filter(meta_data_long, QC_metric == "nFeature_RNA")
 ggplot(nFeature_RNA, aes(x = filtering, y = value, fill = filtering)) + 
-  geom_violin() + theme(legend.position = "none")
+  geom_violin() + 
+  scale_fill_viridis(discrete = T) +
+  ggtitle("Number of genes after filtering") +
+  xlab("Filtering threshold") +
+  ylab("Number of genes") +
+  theme_classic() +
+  theme(legend.position = "none")
 
-percent.mt <- subset(meta_data_long, QC_metric = "percent.mt")
+percent.mt <-  filter(meta_data_long, QC_metric == "percent.mt")
 ggplot(percent.mt, aes(x = filtering, y = value, fill = filtering)) + 
-  geom_violin() + theme(legend.position = "none")
+  geom_violin() + 
+  scale_fill_viridis(discrete = T) +
+  ggtitle("Percentage of genes which are mitochondrial after filtering") +
+  xlab("Filtering threshold") +
+  ylab("% mitochondrial genes") +
+  theme_classic() +
+  theme(legend.position = "none")
 
-## need to make prettier - trim top??
+## also have stage information so can put that in if of interest
+
+############### Bar charts of cell counts ###############
+
+extract_cell_count <- function(x){
+  m <- as.data.frame(table(x$orig.ident))
+  m$filtering <- x@meta.data$filtering[1]
+  return(m)
+}
+cell_counts_list <- lapply(seurat_list, extract_cell_count)
+cell_counts_df <- do.call("rbind", cell_counts_list)
+cell_counts_df$filtering <- factor(cell_counts_df$filtering)
+cell_counts_df$filtering <- factor(cell_counts_df$filtering, levels = c("unfiltered", "low", "med", "high"))
+
+ggplot(cell_counts_df, aes(x = filtering, y = Freq, fill = Var1)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_viridis(discrete = T) +
+  ggtitle("Cell counts after filtering") +
+  xlab("Filtering threshold") +
+  ylab("Cell Count") +
+  theme_classic() +
+  theme(legend.position = "none")
+
+
+
+############### Median gene counts per cell ###############
+means <- aggregate(nFeature_RNA, by = list(nFeature_RNA$filtering, nFeature_RNA$orig.ident), FUN = mean)
+ggplot(means, aes(x=means$Group.1, y=means$value, color = means$Group.2)) +
+  geom_line()
+
+means %>%
+  tail(10) %>%
+  ggplot( aes(x=Group.1, y=value, color=Group.2)) +
+  geom_line(aes(group = Group.2)) +
+  geom_point() +
+  scale_color_viridis(discrete = T) +
+  ggtitle("Mean gene counts per cell after filtering") +
+  xlab("Filtering threshold") +
+  ylab("Mean gene count") +
+  theme_classic() +
+  theme(legend.position = "none")
 
 
 
 
+##############    Scaling, PCA and clustering     #####################
 
+# PCA
+seurat_process_PCA <- function(x){
+  x <- NormalizeData(x)
+  x <- FindVariableFeatures(x, selection.method = "vst", nfeatures = 2000)
+  x <- ScaleData(x)
+  x <- RunPCA(x, feature = VariableFeatures(object = x))
+  return(x)
+}
 
+seurat_list_PCAs <- lapply(seurat_list, seurat_process_PCA)
+
+#might want to make some plots at this point to compare the PCA, PC loadings, etc
+DimPlot(seurat_list_PCAs[[1]], reduction = "pca")
+DimPlot(seurat_list_PCAs[[2]], reduction = "pca")
+DimPlot(seurat_list_PCAs[[3]], reduction = "pca")
+DimPlot(seurat_list_PCAs[[4]], reduction = "pca")
+
+VizDimLoadings(seurat_list_PCAs[[1]], dims = 1:2, reduction = "pca")
+VizDimLoadings(seurat_list_PCAs[[2]], dims = 1:2, reduction = "pca")
+VizDimLoadings(seurat_list_PCAs[[3]], dims = 1:2, reduction = "pca")
+VizDimLoadings(seurat_list_PCAs[[4]], dims = 1:2, reduction = "pca")
+
+DimPlot(seurat, reduction = "pca")
+DimHeatmap(seurat, dims = 1:10, cells = 500, balanced = TRUE)
+ElbowPlot(seurat)
+
+# Clustering and differential expression
+seurat_process_cluster <- function(x){
+  x <- FindNeighbors(x, dims = 1:10)
+  x <- FindClusters(x, resolution = 0.5)
+  x <- RunUMAP(x, dims = 1:10)
+  return(x)
+}
+
+seurat_list_clusters <- lapply(seurat_list_PCAs, seurat_process_cluster)
+
+#might want some UMAPs before get onto the heatmaps
+DimPlot(seurat_list_clusters[[1]], reduction = "umap")
+DimPlot(seurat_list_clusters[[2]], reduction = "umap")
+DimPlot(seurat_list_clusters[[3]], reduction = "umap")
+DimPlot(seurat_list_clusters[[4]], reduction = "umap")
+
+# Differential expression
+seurat_process_top_10 <- function(x){
+  seurat.markers <- FindAllMarkers(x, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
+  top10 <- seurat.markers %>% group_by(cluster) %>% top_n(n = 10, wt = avg_logFC)
+  return(top10)
+}
+
+top10_list <- lapply(seurat_list_clusters, seurat_process_top_10)
+
+DoHeatmap(seurat_list_clusters[[1]], features = top10_list[[1]]$gene) + NoLegend()
 
 
 
