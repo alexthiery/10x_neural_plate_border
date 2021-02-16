@@ -2,8 +2,3 @@
 	path = modules
 	url = https://github.com/Streit-lab/streitlab-nf-modules.git
 	branch = master
-
-# [submodule "modules/luslab-nf-modules"]
-# 	path = modules/luslab-nf-modules
-# 	url = https://github.com/luslab/luslab-nf-modules.git
-# 	branch = master
