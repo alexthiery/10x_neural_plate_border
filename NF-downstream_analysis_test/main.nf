@@ -9,8 +9,8 @@ def modules = params.modules.clone()
 /*------------------------------------------------------------------------------------*/
 /* Module inclusions
 --------------------------------------------------------------------------------------*/
-include {r_analysis as test_1} from "$baseDir/../../../modules/tools/r_analysis/main.nf" addParams(options: modules['test_1'])
-include {r_analysis as test_2} from "$baseDir/../../../modules/tools/r_analysis/main.nf" addParams(options: modules['test_2'])
+include {r_analysis as test_1} from "$baseDir/../modules/tools/r_analysis/main.nf" addParams(options: modules['test_1'])
+include {r_analysis as test_2} from "$baseDir/../modules/tools/r_analysis/main.nf" addParams(options: modules['test_2'])
 
 
 /*------------------------------------------------------------------------------------*/
@@ -35,6 +35,7 @@ metadata
 
 workflow {
     test_1 (ch_test_data_1)
+    test_2 (test_1.out)
 }
 
 
