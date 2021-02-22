@@ -31,8 +31,8 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
 if (opt$runtype == "user"){
   
   # load custom functions
-  sapply(list.files('./NF-downstream_analysis/bin/custom_functions/', full.names = T), source) 
-  output_path = "./output/NF-downstream_analysis/test/" #we would want this to match the final ouput path that is made when we run in nf
+  sapply(list.files('./bin/custom_functions/', full.names = T), source) 
+  output_path = "./output/" #we would want this to match the final ouput path that is made when we run in nf
   
   # set cores
   ncores = 8
@@ -64,6 +64,7 @@ library(tidyr)
 #setwd("/home/rstudio/NF-downstream_analysis")
 setwd("~/dev/repos/10x_neural_plate_border/NF-downstream_analysis") 
 data.path = "../alignment_out/10x_scRNAseq"
+sapply(list.files('./bin/custom_functions/', full.names = T), source) 
 
 
 files <- list.files(data.path, recursive = T, full.names = T)
@@ -113,6 +114,7 @@ meta_data_long$filtering <- factor(meta_data_long$filtering)
 meta_data_long$filtering <- factor(meta_data_long$filtering, levels = c("unfiltered", "low", "med", "high"))
 
 nCount_RNA <-  filter(meta_data_long, QC_metric == "nCount_RNA")
+png("nCount_RNA_violin.png", width=30, height=20, units = 'cm', res = 200)
 ggplot(nCount_RNA, aes(x = filtering, y = value, fill = filtering)) + 
   geom_violin(trim = TRUE) + 
   scale_fill_viridis(discrete = T) +
@@ -121,8 +123,10 @@ ggplot(nCount_RNA, aes(x = filtering, y = value, fill = filtering)) +
   ylab("Number of RNA transcripts") +
   theme_classic() +
   theme(legend.position = "none")
+graphics.off()
 
 nFeature_RNA <-  filter(meta_data_long, QC_metric == "nFeature_RNA")
+png("nFeature_RNA_violin.png", width=30, height=20, units = 'cm', res = 200)
 ggplot(nFeature_RNA, aes(x = filtering, y = value, fill = filtering)) + 
   geom_violin() + 
   scale_fill_viridis(discrete = T) +
@@ -131,8 +135,10 @@ ggplot(nFeature_RNA, aes(x = filtering, y = value, fill = filtering)) +
   ylab("Number of genes") +
   theme_classic() +
   theme(legend.position = "none")
+graphics.off()
 
 percent.mt <-  filter(meta_data_long, QC_metric == "percent.mt")
+png("percent.mt_violin.png", width=30, height=20, units = 'cm', res = 200)
 ggplot(percent.mt, aes(x = filtering, y = value, fill = filtering)) + 
   geom_violin() + 
   scale_fill_viridis(discrete = T) +
@@ -141,6 +147,12 @@ ggplot(percent.mt, aes(x = filtering, y = value, fill = filtering)) +
   ylab("% mitochondrial genes") +
   theme_classic() +
   theme(legend.position = "none")
+graphics.off()
+
+## can facet wrap all the violin plots but because of different scales doesnt look good
+# ggplot(data = meta_data_long, aes(filtering, value)) +
+#   geom_violin() + 
+#   facet_wrap(~ QC_metric)
 
 ## also have stage information so can put that in if of interest
 
@@ -156,22 +168,21 @@ cell_counts_df <- do.call("rbind", cell_counts_list)
 cell_counts_df$filtering <- factor(cell_counts_df$filtering)
 cell_counts_df$filtering <- factor(cell_counts_df$filtering, levels = c("unfiltered", "low", "med", "high"))
 
+png("cell_counts_barchart.png", width=30, height=20, units = 'cm', res = 200)
 ggplot(cell_counts_df, aes(x = filtering, y = Freq, fill = Var1)) +
   geom_bar(stat = "identity", position = "dodge") +
   scale_fill_viridis(discrete = T) +
   ggtitle("Cell counts after filtering") +
   xlab("Filtering threshold") +
   ylab("Cell Count") +
-  theme_classic() +
-  theme(legend.position = "none")
+  theme_classic()
+graphics.off()
 
 
-
-############### Median gene counts per cell ###############
+############### Mean gene counts per cell ###############
 means <- aggregate(nFeature_RNA, by = list(nFeature_RNA$filtering, nFeature_RNA$orig.ident), FUN = mean)
-ggplot(means, aes(x=means$Group.1, y=means$value, color = means$Group.2)) +
-  geom_line()
 
+png("mean_gene_counts_linechart.png", width=30, height=20, units = 'cm', res = 200)
 means %>%
   tail(10) %>%
   ggplot( aes(x=Group.1, y=value, color=Group.2)) +
@@ -183,7 +194,11 @@ means %>%
   ylab("Mean gene count") +
   theme_classic() +
   theme(legend.position = "none")
+graphics.off()
 
+
+## cant get this to work for medians too??
+#medians <- aggregate(nFeature_RNA, by = list(nFeature_RNA$filtering, nFeature_RNA$orig.ident), FUN = median)
 
 
 
@@ -200,20 +215,50 @@ seurat_process_PCA <- function(x){
 
 seurat_list_PCAs <- lapply(seurat_list, seurat_process_PCA)
 
-#might want to make some plots at this point to compare the PCA, PC loadings, etc
-DimPlot(seurat_list_PCAs[[1]], reduction = "pca")
-DimPlot(seurat_list_PCAs[[2]], reduction = "pca")
-DimPlot(seurat_list_PCAs[[3]], reduction = "pca")
-DimPlot(seurat_list_PCAs[[4]], reduction = "pca")
+# PCA plots
+PCA1 <- DimPlot(seurat_list_PCAs[[1]], reduction = "pca") +
+  theme(legend.position = "none") +
+  ggtitle("Unfiltered")
+PCA2 <- DimPlot(seurat_list_PCAs[[2]], reduction = "pca") +
+  theme(legend.position = "none") +
+  ggtitle("Low")
+PCA3 <- DimPlot(seurat_list_PCAs[[3]], reduction = "pca") +
+  theme(legend.position = "none") +
+  ggtitle("Med")
+PCA4 <- DimPlot(seurat_list_PCAs[[4]], reduction = "pca") +
+  theme(legend.position = "none") +
+  ggtitle("High")
 
-VizDimLoadings(seurat_list_PCAs[[1]], dims = 1:2, reduction = "pca")
-VizDimLoadings(seurat_list_PCAs[[2]], dims = 1:2, reduction = "pca")
-VizDimLoadings(seurat_list_PCAs[[3]], dims = 1:2, reduction = "pca")
-VizDimLoadings(seurat_list_PCAs[[4]], dims = 1:2, reduction = "pca")
+gPCA <- DimPlot(seurat_list_PCAs[[4]], reduction = "pca")
+g_legend<-function(a.gplot){
+  tmp <- ggplot_gtable(ggplot_build(a.gplot))
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  return(legend)}
+mylegend<-g_legend(gPCA)
 
-DimPlot(seurat, reduction = "pca")
-DimHeatmap(seurat, dims = 1:10, cells = 500, balanced = TRUE)
-ElbowPlot(seurat)
+png("PCA_plots.png", width=30, height=30, units = 'cm', res = 200)
+grid.arrange(arrangeGrob(PCA1, PCA2, PCA3, PCA4, nrow=2), mylegend, nrow = 2,
+             heights=c(13, 1))
+graphics.off()
+
+# PCA loadings
+Load1 <- VizDimLoadings(seurat_list_PCAs[[1]], dims = 1, reduction = "pca") +
+  ggtitle("Unfiltered")
+Load2 <- VizDimLoadings(seurat_list_PCAs[[2]], dims = 1, reduction = "pca") +
+  ggtitle("Low")
+Load3 <- VizDimLoadings(seurat_list_PCAs[[3]], dims = 1, reduction = "pca") +
+  ggtitle("Med")
+Load4 <- VizDimLoadings(seurat_list_PCAs[[4]], dims = 1, reduction = "pca") +
+  ggtitle("High")
+
+png("PCA_loadings.png", width=30, height=30, units = 'cm', res = 200)
+grid.arrange(Load1, Load2, Load3, Load4, nrow = 2)
+graphics.off()
+
+# Other plots that might be of interest
+#DimHeatmap(seurat, dims = 1:10, cells = 500, balanced = TRUE)
+#ElbowPlot(seurat)
 
 # Clustering and differential expression
 seurat_process_cluster <- function(x){
@@ -226,22 +271,33 @@ seurat_process_cluster <- function(x){
 seurat_list_clusters <- lapply(seurat_list_PCAs, seurat_process_cluster)
 
 #might want some UMAPs before get onto the heatmaps
-DimPlot(seurat_list_clusters[[1]], reduction = "umap")
-DimPlot(seurat_list_clusters[[2]], reduction = "umap")
-DimPlot(seurat_list_clusters[[3]], reduction = "umap")
-DimPlot(seurat_list_clusters[[4]], reduction = "umap")
+UMAP1 <- DimPlot(seurat_list_clusters[[1]], reduction = "umap") +
+  ggtitle("Unfiltered")
+UMAP2 <- DimPlot(seurat_list_clusters[[2]], reduction = "umap") +
+  ggtitle("Low")
+UMAP3 <- DimPlot(seurat_list_clusters[[3]], reduction = "umap") +
+  ggtitle("Med")
+UMAP4 <- DimPlot(seurat_list_clusters[[4]], reduction = "umap") +
+  ggtitle("High")
+
+png("UMAP_plots.png", width=30, height=30, units = 'cm', res = 200)
+grid.arrange(UMAP1, UMAP2, UMAP3, UMAP4, nrow = 2)
+graphics.off()
 
 # Differential expression
-seurat_process_top_10 <- function(x){
-  seurat.markers <- FindAllMarkers(x, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
-  top10 <- seurat.markers %>% group_by(cluster) %>% top_n(n = 10, wt = avg_logFC)
-  return(top10)
-}
-
-top10_list <- lapply(seurat_list_clusters, seurat_process_top_10)
-
-DoHeatmap(seurat_list_clusters[[1]], features = top10_list[[1]]$gene) + NoLegend()
-
+# seurat_process_top_10 <- function(x){
+#   seurat.markers <- FindAllMarkers(x, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
+#   top10 <- seurat.markers %>% group_by(cluster) %>% top_n(n = 10, wt = avg_logFC)
+#   return(top10)
+# }
+# 
+# top10_list <- lapply(seurat_list_clusters, seurat_process_top_10)
+# 
+# DoHeatmap(seurat_list_clusters[[1]], features = top10_list[[1]]$gene) + NoLegend()
+# 
+# 
+# 
+# tenx.pheatmap(seurat_list_clusters[[1]], metadata = "orig.ident")
 
 
 
