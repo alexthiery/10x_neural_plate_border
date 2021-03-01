@@ -9,7 +9,7 @@ def modules = params.modules.clone()
 /*------------------------------------------------------------------------------------*/
 /* Module inclusions
 --------------------------------------------------------------------------------------*/
-include {r_analysis as QC} from "$baseDir/../modules/tools/r_analysis/main.nf" addParams(options: modules['seurat_QC'])
+include {r_analysis as seurat_QC} from "$baseDir/../modules/tools/r_analysis/main.nf" addParams(options: modules['seurat_QC'])
 
 
 /*------------------------------------------------------------------------------------*/
@@ -33,7 +33,7 @@ metadata
 // --------------------------------------------------------------------------------------*/
 
 workflow {
-    QC (ch_scRNA)
+    seurat_QC (ch_scRNA)
 }
 
 

@@ -25,9 +25,11 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
 # Set paths and load data
 {
   if (opt$runtype == "user"){
+    
+    # work dir is base of repo
       
-    input_path = "../alignment_out/10x_scRNAseq/"
-    output_path = "./output/NF-downstream_analysis/QC/"
+    input_path = "./output/NF-scRNAseq_alignment/" #through nf this is read in using the samplesheet.csv
+    output_path = "./results/scRNAseq/seurat_QC/"
     dir.create(output_path, recursive = T)
 
     sapply(list.files('./NF-downstream_analysis_test/bin/custom_functions/', full.names = T), source)
@@ -60,16 +62,16 @@ library(tidyr)
 
 #setwd("/home/rstudio/NF-downstream_analysis")
 
-files <- list.files(data.path, recursive = T, full.names = T)
+files <- list.files(input_path, recursive = T, full.names = T)
 # remove file suffix
 file.path <- dirname(files)[!duplicated(dirname(files))]
 # make dataframe with stage matching directory 
 ### NEED TO MAKE THIS BIT GENERIC
+
+### Non-generic version:
 sample = c("THI300A1" = "hh4-1", "THI300A3" = "ss4-1")
 matches <- sapply(names(sample), function(x) file.path[grep(pattern = x, x = file.path)])
-
 sample.paths <- data.frame(row.names = sample, sample = sample, stage = names(matches), path = matches, run = gsub(".*-", "", sample))
-
 seurat <- apply(sample.paths, 1, function(x) CreateSeuratObject(counts= Read10X(data.dir = x[["path"]]), project = x[["sample"]]))
 seurat <- merge(x = seurat[[1]], y=seurat[-1], add.cell.ids = names(seurat), project = "chick.10x")
 
@@ -107,7 +109,7 @@ meta_data_long$filtering <- factor(meta_data_long$filtering)
 meta_data_long$filtering <- factor(meta_data_long$filtering, levels = c("unfiltered", "low", "med", "high"))
 
 nCount_RNA <-  filter(meta_data_long, QC_metric == "nCount_RNA")
-png("nCount_RNA_violin.png", width=30, height=20, units = 'cm', res = 200)
+png(paste0(output_path, "nCount_RNA_violin.png"), width=30, height=20, units = 'cm', res = 200)
 ggplot(nCount_RNA, aes(x = filtering, y = value, fill = filtering)) + 
   geom_violin(trim = TRUE) + 
   scale_fill_viridis(discrete = T) +
@@ -119,7 +121,7 @@ ggplot(nCount_RNA, aes(x = filtering, y = value, fill = filtering)) +
 graphics.off()
 
 nFeature_RNA <-  filter(meta_data_long, QC_metric == "nFeature_RNA")
-png("nFeature_RNA_violin.png", width=30, height=20, units = 'cm', res = 200)
+png(paste0(output_path, "nFeature_RNA_violin.png"), width=30, height=20, units = 'cm', res = 200)
 ggplot(nFeature_RNA, aes(x = filtering, y = value, fill = filtering)) + 
   geom_violin() + 
   scale_fill_viridis(discrete = T) +
@@ -131,7 +133,7 @@ ggplot(nFeature_RNA, aes(x = filtering, y = value, fill = filtering)) +
 graphics.off()
 
 percent.mt <-  filter(meta_data_long, QC_metric == "percent.mt")
-png("percent.mt_violin.png", width=30, height=20, units = 'cm', res = 200)
+png(paste0(output_path, "percent.mt_violin.png"), width=30, height=20, units = 'cm', res = 200)
 ggplot(percent.mt, aes(x = filtering, y = value, fill = filtering)) + 
   geom_violin() + 
   scale_fill_viridis(discrete = T) +
@@ -161,7 +163,7 @@ cell_counts_df <- do.call("rbind", cell_counts_list)
 cell_counts_df$filtering <- factor(cell_counts_df$filtering)
 cell_counts_df$filtering <- factor(cell_counts_df$filtering, levels = c("unfiltered", "low", "med", "high"))
 
-png("cell_counts_barchart.png", width=30, height=20, units = 'cm', res = 200)
+png(paste0(output_path,"cell_counts_barchart.png"), width=30, height=20, units = 'cm', res = 200)
 ggplot(cell_counts_df, aes(x = filtering, y = Freq, fill = Var1)) +
   geom_bar(stat = "identity", position = "dodge") +
   scale_fill_viridis(discrete = T) +
@@ -175,7 +177,7 @@ graphics.off()
 ############### Mean gene counts per cell ###############
 means <- aggregate(nFeature_RNA, by = list(nFeature_RNA$filtering, nFeature_RNA$orig.ident), FUN = mean)
 
-png("mean_gene_counts_linechart.png", width=30, height=20, units = 'cm', res = 200)
+png(paste0(output_path, "mean_gene_counts_linechart.png"), width=30, height=20, units = 'cm', res = 200)
 means %>%
   tail(10) %>%
   ggplot( aes(x=Group.1, y=value, color=Group.2)) +
@@ -230,7 +232,7 @@ g_legend<-function(a.gplot){
   return(legend)}
 mylegend<-g_legend(gPCA)
 
-png("PCA_plots.png", width=30, height=30, units = 'cm', res = 200)
+png(paste0(output_path, "PCA_plots.png"), width=30, height=30, units = 'cm', res = 200)
 grid.arrange(arrangeGrob(PCA1, PCA2, PCA3, PCA4, nrow=2), mylegend, nrow = 2,
              heights=c(13, 1))
 graphics.off()
@@ -245,7 +247,7 @@ Load3 <- VizDimLoadings(seurat_list_PCAs[[3]], dims = 1, reduction = "pca") +
 Load4 <- VizDimLoadings(seurat_list_PCAs[[4]], dims = 1, reduction = "pca") +
   ggtitle("High")
 
-png("PCA_loadings.png", width=30, height=30, units = 'cm', res = 200)
+png(paste0(output_path,"PCA_loadings.png"), width=30, height=30, units = 'cm', res = 200)
 grid.arrange(Load1, Load2, Load3, Load4, nrow = 2)
 graphics.off()
 
@@ -273,24 +275,25 @@ UMAP3 <- DimPlot(seurat_list_clusters[[3]], reduction = "umap") +
 UMAP4 <- DimPlot(seurat_list_clusters[[4]], reduction = "umap") +
   ggtitle("High")
 
-png("UMAP_plots.png", width=30, height=30, units = 'cm', res = 200)
+png(paste0(output_path, "UMAP_plots.png"), width=30, height=30, units = 'cm', res = 200)
 grid.arrange(UMAP1, UMAP2, UMAP3, UMAP4, nrow = 2)
 graphics.off()
 
 # Differential expression
-# seurat_process_top_10 <- function(x){
-#   seurat.markers <- FindAllMarkers(x, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
-#   top10 <- seurat.markers %>% group_by(cluster) %>% top_n(n = 10, wt = avg_logFC)
-#   return(top10)
-# }
-# 
-# top10_list <- lapply(seurat_list_clusters, seurat_process_top_10)
-# 
-# DoHeatmap(seurat_list_clusters[[1]], features = top10_list[[1]]$gene) + NoLegend()
-# 
-# 
-# 
-# tenx.pheatmap(seurat_list_clusters[[1]], metadata = "orig.ident")
+seurat_process_top_10 <- function(x){
+  seurat.markers <- FindAllMarkers(x, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
+  top10 <- seurat.markers %>% group_by(cluster) %>% top_n(n = 10, wt = avg_logFC)
+  return(top10)
+  }
+ 
+top10_list <- lapply(seurat_list_clusters, seurat_process_top_10)
+ 
+#DoHeatmap(seurat_list_clusters[[1]], features = top10_list[[1]]$gene) + NoLegend()
+
+#GM.plot(seurat_list_clusters[[1]], features = top10_list[[1]]$gene)
+ 
+ 
+#tenx.pheatmap(seurat_list_clusters[[1]], metadata = "orig.ident", selected_genes = top10_list[[1]]$gene)
 
 
 
