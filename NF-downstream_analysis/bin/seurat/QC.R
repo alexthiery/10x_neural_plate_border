@@ -1,4 +1,4 @@
-# !/usr/bin/env Rscript
+#!/usr/bin/env Rscript
 
 # Define arguments for Rscript
 library(getopt)
@@ -20,31 +20,29 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
   if(tolower(opt$runtype) != "user" & tolower(opt$runtype) != "nextflow"){
     stop("--runtype must be either 'user' or 'nextflow'")
   }
-  if(tolower(opt$runtype) == "nextflow"){
-    if(is.null(opt$custom_functions) | opt$custom_functions == "null"){
-      stop("--custom_functions path must be specified in process params config")
-    }
-  }
 }
 
 # Set paths and load data
-if (opt$runtype == "user"){
+{
+  if (opt$runtype == "user"){
+      
+    input_path = "../alignment_out/10x_scRNAseq/"
+    output_path = "./output/NF-downstream_analysis/QC/"
+    dir.create(output_path, recursive = T)
+
+    sapply(list.files('./NF-downstream_analysis_test/bin/custom_functions/', full.names = T), source)
+
+
+  } else if (opt$runtype == "nextflow"){
+    cat('pipeline running through nextflow\n')
+    
+    input_path = "./input/"
+    output_path = "./"
+
+    sapply(list.files(opt$custom_functions, full.names = T), source)
+
+  }
   
-  # load custom functions
-  sapply(list.files('./bin/custom_functions/', full.names = T), source) 
-  output_path = "./output/" #we would want this to match the final ouput path that is made when we run in nf
-  
-  # set cores
-  ncores = 8
-  
-} else if (opt$runtype == "nextflow"){
-  cat('pipeline running through nextflow\n')
-  
-  # load custom functions
-  sapply(list.files(opt$custom_functions, full.names = T), source)
-  
-  # set cores
-  ncores = opt$cores
 }
 
 library(Seurat)
@@ -59,13 +57,8 @@ library(grid)
 library(reshape2)
 library(viridis)
 library(tidyr)
-#data.path = ("./input")
 
 #setwd("/home/rstudio/NF-downstream_analysis")
-setwd("~/dev/repos/10x_neural_plate_border/NF-downstream_analysis") 
-data.path = "../alignment_out/10x_scRNAseq"
-sapply(list.files('./bin/custom_functions/', full.names = T), source) 
-
 
 files <- list.files(data.path, recursive = T, full.names = T)
 # remove file suffix
