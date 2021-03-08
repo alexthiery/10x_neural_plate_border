@@ -5,7 +5,14 @@
 .local
 .rstudio
 .conda
-output
+!output
+output/*
+!output/NF-scRNAseq_alignment
+output/NF-scRNAseq_alignment/*
+!output/NF-scRNAseq_alignment/cellranger
+output/NF-scRNAseq_alignment/cellranger/*
+!output/NF-scRNAseq_alignment/cellranger/count
+!output/NF-scRNAseq_alignment/velocyto
 html_files
 .nextflow*
 work
