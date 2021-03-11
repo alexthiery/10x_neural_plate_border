@@ -15,4 +15,5 @@ RUN   R -e "install.packages('Seurat', dependencies=TRUE, repos='http://cran.rst
       R -e "install.packages('gridExtra', dependencies=TRUE, repos='http://cran.rstudio.com/')" && \
       R -e "install.packages('getopt', dependencies=TRUE, repos='http://cran.rstudio.com/')" && \
       R -e "install.packages('pheatmap', dependencies=TRUE, repos='http://cran.rstudio.com/')" && \
-      R -e "remotes::install_github('carmonalab/STACAS')"
+      R -e "remotes::install_github('carmonalab/STACAS')" \
+      R -e "BiocManager::install('limma')"
