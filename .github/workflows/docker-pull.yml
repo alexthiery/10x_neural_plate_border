@@ -19,7 +19,7 @@ jobs:
               images+=("${image}")
           done
 
-          for module in NF-downstream_analysis/container/*; do
+          for module in NF-downstream_analysis/containers/*; do
               if [ -f "$module"/Dockerfile ]; then
                   images+=($(echo "alexthiery/10x-NPB-${module##*/}:$(cat "$module"/VERSION)"))
               fi
