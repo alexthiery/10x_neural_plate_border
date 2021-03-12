@@ -70,19 +70,19 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
 }
 
 
-integrated_data <- readRDS(paste0(data_path, "seurat_integrated_SCTransform.RDS"))
+integrated_data <- readRDS(paste0(data_path, "integrated_data.RDS"))
 
 # set integrated count data as default
-# DefaultAssay(seurat_integrated_SCTransform) <- "integrated"
+# DefaultAssay(integrated_data) <- "integrated"
 
 
-seurat_integrated_SCTransform <- RunPCA(object = seurat_integrated_SCTransform, verbose = FALSE)
-seurat_integrated_SCTransform <- FindNeighbors(seurat_integrated_SCTransform, dims = 1:30, verbose = FALSE)
-seurat_integrated_SCTransform <- RunUMAP(seurat_integrated_SCTransform, dims = 1:30, verbose = FALSE)
-seurat_integrated_SCTransform <- FindClusters(seurat_integrated_SCTransform, resolution = 0.5, verbose = FALSE)
+integrated_data <- RunPCA(object = integrated_data, verbose = FALSE)
+integrated_data <- FindNeighbors(integrated_data, dims = 1:30, verbose = FALSE)
+integrated_data <- RunUMAP(integrated_data, dims = 1:30, verbose = FALSE)
+integrated_data <- FindClusters(integrated_data, resolution = 0.5, verbose = FALSE)
 
 png(paste0(plot_path, "UMAP_sctransform.png"), width=40, height=20, units = 'cm', res = 200)
-clust.stage.plot(seurat_integrated_SCTransform)
+clust.stage.plot(integrated_data)
 graphics.off()
 
 
@@ -225,71 +225,73 @@ graphics.off()
 #####################################################################################################
 
 # Init sexscale object 
-integrated_data.sexscale <- integrated_data
+sexscale_data <- integrated_data
 
 # Re-run findvariablefeatures and scaling
-integrated_data.sexscale <- FindVariableFeatures(integrated_data.sexscale, selection.method = "vst", nfeatures = 2000)
+# sexscale_data <- FindVariableFeatures(sexscale_data, selection.method = "vst", nfeatures = 2000)
 # Enable parallelisation
 plan("multiprocess", workers = ncores)
 options(future.globals.maxSize = 4000 * 1024^2)
 
-integrated_data.sexscale <- ScaleData(integrated_data.sexscale, features = rownames(integrated_data.sexscale), vars.to.regress = c("percent.mt", "sex"))
+sexscale_data <- SCTransform(sexscale_data, verbose = TRUE, vars.to.regress = c("percent.mt", "sex"))
+
+# sexscale_data <- ScaleData(sexscale_data, features = rownames(sexscale_data), vars.to.regress = c("percent.mt", "sex"))
 
 # Save RDS
-saveRDS(integrated_data.sexscale, paste0(rds.path, "integrated_data.sexscale.RDS"))
+saveRDS(sexscale_data, paste0(rds.path, "sexscale_data.RDS"))
 
 # Read in RDS data if needed
-# integrated_data.sexscale <- readRDS(paste0(rds.path, "integrated_data.sexscale.RDS"))
+# sexscale_data <- readRDS(paste0(rds.path, "sexscale_data.RDS"))
 
 # Set plot path
 curr_plot_path <- paste0(plot_path, '1_sex_filt_integrated/')
 
 # PCA
-integrated_data.sexscale <- RunPCA(object = integrated_data.sexscale, verbose = FALSE)
+sexscale_data <- RunPCA(object = sexscale_data, verbose = FALSE)
 
 png(paste0(curr_plot_path, "dimHM.png"), width=30, height=50, units = 'cm', res = 200)
-DimHeatmap(integrated_data.sexscale, dims = 1:30, balanced = TRUE, cells = 500)
+DimHeatmap(sexscale_data, dims = 1:30, balanced = TRUE, cells = 500)
 graphics.off()
 
 png(paste0(curr_plot_path, "elbowplot.png"), width=24, height=20, units = 'cm', res = 200)
-print(ElbowPlot(integrated_data.sexscale, ndims = 40))
+print(ElbowPlot(sexscale_data, ndims = 40))
 graphics.off()
 
 png(paste0(curr_plot_path, "UMAP_PCA_comparison.png"), width=40, height=30, units = 'cm', res = 200)
-PCA.level.comparison(integrated_data.sexscale, PCA.levels = c(10, 20, 30, 40), cluster_res = 0.5)
+PCA.level.comparison(sexscale_data, PCA.levels = c(10, 20, 30, 40), cluster_res = 0.5)
 graphics.off()
 
 # Use PCA=15 as elbow plot is relatively stable across stages
-integrated_data.sexscale <- FindNeighbors(integrated_data.sexscale, dims = 1:30, verbose = FALSE)
-integrated_data.sexscale <- RunUMAP(integrated_data.sexscale, dims = 1:30, verbose = FALSE)
+sexscale_data <- FindNeighbors(sexscale_data, dims = 1:30, verbose = FALSE)
+sexscale_data <- RunUMAP(sexscale_data, dims = 1:30, verbose = FALSE)
 
 # Find optimal cluster resolution
 png(paste0(curr_plot_path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
-clust.res(seurat.obj = integrated_data.sexscale, by = 0.1, prefix = "integrated_snn_res.")
+clust.res(seurat.obj = sexscale_data, by = 0.1, prefix = "integrated_snn_res.")
 graphics.off()
 
 # Use clustering resolution = 0.5 to look for contamination clusters
-integrated_data.sexscale <- FindClusters(integrated_data.sexscale, resolution = 0.5, verbose = FALSE)
+sexscale_data <- FindClusters(sexscale_data, resolution = 0.5, verbose = FALSE)
 
 # Plot UMAP for clusters and developmental stage
 png(paste0(curr_plot_path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
-clust.stage.plot(integrated_data.sexscale)
+clust.stage.plot(sexscale_data)
 graphics.off()
 
 # Plot QC for each cluster
 png(paste0(curr_plot_path, "cluster.QC.png"), width=40, height=14, units = 'cm', res = 200)
-QC.plot(integrated_data.sexscale)
+QC.plot(sexscale_data)
 graphics.off()
 
-# # Find differentially expressed genes and plot heatmap of top DE genes for each cluster
-# markers <- FindAllMarkers(integrated_data.sexscale, only.pos = T, logfc.threshold = 0.25)
-# # get automated cluster order based on percentage of cells in adjacent stages
-# cluster.order = order.cell.stage.clust(seurat_object = integrated_data.sexscale, col.to.sort = seurat_clusters, sort.by = orig.ident)
-# # Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
-# top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC) %>% arrange(factor(cluster, levels = cluster.order))
+# Find differentially expressed genes and plot heatmap of top DE genes for each cluster
+markers <- FindAllMarkers(sexscale_data, only.pos = T, logfc.threshold = 0.25)
+# get automated cluster order based on percentage of cells in adjacent stages
+cluster.order = order.cell.stage.clust(seurat_object = sexscale_data, col.to.sort = seurat_clusters, sort.by = orig.ident)
+# Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
+top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC) %>% arrange(factor(cluster, levels = cluster.order))
 
-# png(paste0(curr_plot_path, 'HM.top15.DE.post-sexfilt.png'), height = 75, width = 100, units = 'cm', res = 500)
-# tenx.pheatmap(data = integrated_data.sexscale, metadata = c("seurat_clusters", "orig.ident"), custom_order_column = "seurat_clusters",
-#               custom_order = cluster.order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters", assay = 'integrated')
-# graphics.off()
+png(paste0(curr_plot_path, 'HM.top15.DE.post-sexfilt.png'), height = 75, width = 100, units = 'cm', res = 500)
+tenx.pheatmap(data = sexscale_data, metadata = c("seurat_clusters", "orig.ident"), custom_order_column = "seurat_clusters",
+              custom_order = cluster.order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters", assay = 'integrated')
+graphics.off()
 
