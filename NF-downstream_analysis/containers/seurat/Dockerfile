@@ -7,7 +7,7 @@ LABEL authors="alex.thiery@crick.ac.uk" \
 RUN apt-get update \
       && apt-get install -y --no-install-recommends \
       apt-utils \
-      libhdf5-dev=1.10.4+repack-10 \
+      libhdf5-dev \
       libboost-filesystem1.67-dev \
       libxtst6
 
