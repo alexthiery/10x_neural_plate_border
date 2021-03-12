@@ -4,6 +4,7 @@ name: docker-build-push
 on:
   push:
     branches: [master]
+    path: ['**/Dockerfile']
 
 jobs:
   build-push-docker:

@@ -112,13 +112,20 @@ graphics.off()
 
 # Run clustering and UMAP at different PCA cutoffs - save this output to compare the optimal number of PCs to be used
 png(paste0(curr_plot_path, "UMAP_PCA_comparison.png"), width=40, height=30, units = 'cm', res = 200)
-PCA.level.comparison(integrated_data, PCA.levels = c(10, 20, 30, 40), cluster_res = 0.5)
+PCA.level.comparison(integrated_data, PCA.levels = c(5, 10, 20, 40), cluster_res = 0.5)
 graphics.off()
 
-# Use PCA=15 as elbow plot is relatively stable across stages
+# Use PCA=20 as elbow plot is relatively stable across stages
 # Use clustering resolution = 0.5 for filtering
-integrated_data <- FindNeighbors(integrated_data, dims = 1:30, verbose = FALSE)
-integrated_data <- RunUMAP(integrated_data, dims = 1:30, verbose = FALSE)
+integrated_data <- FindNeighbors(integrated_data, dims = 1:20, verbose = FALSE)
+integrated_data <- RunUMAP(integrated_data, dims = 1:20, verbose = FALSE)
+
+# Find optimal cluster resolution
+png(paste0(curr_plot_path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
+clust.res(seurat.obj = integrated_data, by = 0.1, prefix = 'integrated_snn_res.')
+graphics.off()
+
+# Use clustering resolution = 0.5
 integrated_data <- FindClusters(integrated_data, resolution = 0.5, verbose = FALSE)
 
 # Plot UMAP for clusters and developmental stage
@@ -131,21 +138,9 @@ png(paste0(curr_plot_path, "cluster.QC.png"), width=40, height=14, units = 'cm',
 QC.plot(integrated_data)
 graphics.off()
 
+# plot dimplot for main W gene
 
-# # Find differentially expressed genes and plot heatmap of top DE genes for each cluster
-# markers <- FindAllMarkers(integrated_data, only.pos = T, logfc.threshold = 0.25)
-# # get automated cluster order based on percentage of cells in adjacent stages
-# cluster.order = order.cell.stage.clust(seurat_object = integrated_data, col.to.sort = seurat_clusters, sort.by = orig.ident)
-
-# # Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
-# top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC) %>% arrange(factor(cluster, levels = cluster.order))
-
-# png(paste0(curr_plot_path, 'HM.top15.DE.png'), height = 50, width = 75, units = 'cm', res = 700)
-# tenx.pheatmap(data = integrated_data, metadata = c("seurat_clusters", "orig.ident"), custom_order_column = "seurat_clusters",
-#               custom_order = cluster.order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters", assay = 'integrated')
-# graphics.off()
-
-#####################################################################################################
+#_####################################################################################################
 #     Heatmap clearly shows clusters segregate by sex - check this and regress out the sex effect   #
 #####################################################################################################
 
@@ -153,12 +148,12 @@ graphics.off()
 curr_plot_path <- paste0(plot_path, '1_sex_filt_integrated/')
 dir.create(curr_plot_path)
 
-# # There is a strong sex effect - this plot shows DE genes between clusters 1 and 2 which are preodominantly hh4 clusters. Clustering is driven by sex genes
-# png(paste0(curr_plot_path, 'HM.top15.DE.pre-sexfilt.png'), height = 40, width = 70, units = 'cm', res = 500)
-# tenx.pheatmap(data = integrated_data[,rownames(integrated_data@meta.data[integrated_data$seurat_clusters == 1 | integrated_data$seurat_clusters == 2,])],
-#               metadata = c("seurat_clusters", "orig.ident"), selected_genes = rownames(FindMarkers(integrated_data, ident.1 = 1, ident.2 = 2)),
-#               hclust_rows = T, gaps_col = "seurat_clusters")
-# graphics.off()
+# There is a strong sex effect - this plot shows DE genes between clusters 1 and 2 which are predominantly hh4 clusters. Clustering is driven by sex genes
+png(paste0(curr_plot_path, 'HM.top15.DE.pre-sexfilt.png'), height = 40, width = 70, units = 'cm', res = 500)
+tenx.pheatmap(data = integrated_data[,rownames(integrated_data@meta.data[integrated_data$seurat_clusters == 1 | integrated_data$seurat_clusters == 2,])],
+              metadata = c("seurat_clusters", "orig.ident"), selected_genes = rownames(FindMarkers(integrated_data, ident.1 = 1, ident.2 = 2)),
+              hclust_rows = T, gaps_col = "seurat_clusters")
+graphics.off()
 
 # Use W chromosome genes to K-means cluster the cells into male (zz) and female (zw)
 W_genes <- as.matrix(integrated_data@assays$RNA[grepl("W-", rownames(integrated_data@assays$RNA)),])
