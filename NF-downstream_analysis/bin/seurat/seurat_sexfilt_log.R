@@ -70,7 +70,7 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
 }
 
 
-integrated_data <- readRDS(paste0(data_path, "seurat_integrated_SCTransform.RDS"))
+integrated_data <- readRDS(paste0(data_path, "seurat_integrated_scale.RDS"))
 
 # set integrated count data as default
 # DefaultAssay(integrated_data) <- "integrated"
@@ -233,15 +233,15 @@ sexscale_data <- integrated_data
 plan("multiprocess", workers = ncores)
 options(future.globals.maxSize = 4000 * 1024^2)
 
-sexscale_data <- SCTransform(sexscale_data, verbose = TRUE, vars.to.regress = c("percent.mt", "sex"))
+# sexscale_data <- SCTransform(sexscale_data, verbose = TRUE, vars.to.regress = c("percent.mt", "sex"))
 
-# sexscale_data <- ScaleData(sexscale_data, features = rownames(sexscale_data), vars.to.regress = c("percent.mt", "sex"))
+sexscale_data <- ScaleData(sexscale_data, features = rownames(sexscale_data), vars.to.regress = c("percent.mt", "sex"))
 
 # Save RDS
 saveRDS(sexscale_data, paste0(rds.path, "sexscale_data.RDS"))
 
 # Read in RDS data if needed
-# sexscale_data <- readRDS(paste0(rds.path, "sexscale_data.RDS"))
+sexscale_data <- readRDS(paste0(rds.path, "sexscale_data.RDS"))
 
 # PCA
 sexscale_data <- RunPCA(object = sexscale_data, verbose = FALSE)

@@ -1,4 +1,4 @@
-FROM  rocker/tidyverse:4.0.3
+FROM  rocker/tidyverse:4.0.0
 
 LABEL authors="alex.thiery@crick.ac.uk" \
       description="Docker image containing all requirements to run 10x downstream analysis in Seurat and Antler"
