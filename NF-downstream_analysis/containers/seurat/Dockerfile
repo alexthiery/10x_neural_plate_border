@@ -29,5 +29,7 @@ RUN   R -e "install.packages('future', dependencies=TRUE)" && \
 #  temporarily install older version of spatstat whilst Seurat update
 RUN   R -e "devtools::install_version('spatstat', version = '1.64-1')"
 
-RUN   R -e "install.packages('Seurat', dependencies=TRUE)" && \
-      R -e "remotes::install_github('carmonalab/STACAS')"
+RUN   R -e "install.packages('Seurat', dependencies=TRUE)"
+
+# RUN   R -e "install.packages('Seurat', dependencies=TRUE)" && \
+#       R -e "remotes::install_github('carmonalab/STACAS')"
