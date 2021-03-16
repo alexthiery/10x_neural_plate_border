@@ -3,12 +3,6 @@ FROM  rocker/tidyverse:4.0.0
 LABEL authors="alex.thiery@crick.ac.uk" \
       description="Docker image containing all requirements to run 10x downstream analysis in Seurat and Antler"
 
-COPY ./.Rprofile /usr/local/lib/R/etc/Rprofile.site
-# COPY ./.Rprofile /home/rstudio
-
-# ENV R_PROFILE=/usr/local/lib/R/.Rprofile
-
-
 # Install apt packages
 RUN apt-get update \
       && apt-get install -y --no-install-recommends \
@@ -20,8 +14,9 @@ RUN apt-get update \
       libxt-dev \
       libfreetype6-dev
 
-
-
+# Set CRAN and BioC repositories for package installations
+RUN   echo 'local({library(BiocManager); r <- repositories(); r["CRAN"] <- "https://cran.rstudio.com/"; options(repos = r)}); \
+            options(HTTPUserAgent = sprintf("R/%s R (%s)", getRversion(), paste(getRversion(), R.version$platform, R.version$arch, R.version$os)))' >> /usr/local/lib/R/etc/Rprofile.site
 
 RUN   R -e "install.packages('Seurat', dependencies=TRUE)" && \
       R -e "install.packages('future', dependencies=TRUE)" && \
