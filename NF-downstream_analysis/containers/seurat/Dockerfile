@@ -23,11 +23,11 @@ RUN apt-get update \
 
 
 
-RUN   R -e "install.packages('Seurat', dependencies=TRUE" && \
-      R -e "install.packages('future', dependencies=TRUE" && \
-      R -e "install.packages('cowplot', dependencies=TRUE"  && \
-      R -e "install.packages('clustree', dependencies=TRUE" && \
-      R -e "install.packages('gridExtra', dependencies=TRUE" && \
-      R -e "install.packages('getopt', dependencies=TRUE" && \
-      R -e "install.packages('pheatmap', dependencies=TRUE" && \
+RUN   R -e "install.packages('Seurat', dependencies=TRUE)" && \
+      R -e "install.packages('future', dependencies=TRUE)" && \
+      R -e "install.packages('cowplot', dependencies=TRUE)"  && \
+      R -e "install.packages('clustree', dependencies=TRUE)" && \
+      R -e "install.packages('gridExtra', dependencies=TRUE)" && \
+      R -e "install.packages('getopt', dependencies=TRUE)" && \
+      R -e "install.packages('pheatmap', dependencies=TRUE)" && \
       R -e "remotes::install_github('carmonalab/STACAS')"
