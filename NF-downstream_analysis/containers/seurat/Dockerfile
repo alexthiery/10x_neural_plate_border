@@ -31,5 +31,8 @@ RUN   R -e "devtools::install_version('spatstat', version = '1.64-1')"
 
 RUN   R -e "install.packages('Seurat', dependencies=TRUE)"
 
+# speed up SCTransform
+RUN   R -e "BiocManager::install('glmGamPoi')"
+
 # RUN   R -e "install.packages('Seurat', dependencies=TRUE)" && \
 #       R -e "remotes::install_github('carmonalab/STACAS')"
