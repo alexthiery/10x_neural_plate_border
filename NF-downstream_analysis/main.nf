@@ -11,6 +11,8 @@ def modules = params.modules.clone()
 --------------------------------------------------------------------------------------*/
 include {metadata} from "$baseDir/../modules/tools/metadata/main.nf"
 include {r as seurat_integrate} from "$baseDir/../modules/tools/r/main.nf" addParams(options: modules['seurat_integrate'], script: modules['seurat_integrate'].script)
+include {r as seurat_integrate_2} from "$baseDir/../modules/tools/r/main.nf" addParams(options: modules['seurat_integrate_2'], script: modules['seurat_integrate_2'].script)
+
 include {r as seurat_sexfilt} from "$baseDir/../modules/tools/r/main.nf" addParams(options: modules['seurat_sexfilt'], script: modules['seurat_sexfilt'].script)
 include {r as seurat_sexfilt_log} from "$baseDir/../modules/tools/r/main.nf" addParams(options: modules['seurat_sexfilt_log'], script: modules['seurat_sexfilt_log'].script)
 
