@@ -26,9 +26,13 @@ workflow {
     //  Run seurat_integrate
     seurat_integrate( metadata.out.filter{ it[0].sample_id == 'NF-scRNAseq_alignment_out' } )
 
-    //  Run seurat_2
-    seurat_sexfilt( seurat_integrate.out )
 
-    //  Run seurat_2
-    seurat_sexfilt_log( seurat_integrate.out )
+    //  Run seurat_integrate
+    seurat_integrate_2( metadata.out.filter{ it[0].sample_id == 'NF-scRNAseq_alignment_out' } )
+
+    // //  Run seurat_2
+    // seurat_sexfilt( seurat_integrate.out )
+
+    // //  Run seurat_2
+    // seurat_sexfilt_log( seurat_integrate.out )
 }

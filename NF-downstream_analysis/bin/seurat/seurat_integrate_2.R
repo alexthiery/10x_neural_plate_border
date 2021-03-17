@@ -31,8 +31,8 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
 {
   if (opt$runtype == "user"){
     sapply(list.files('./NF-downstream_analysis/bin/custom_functions/', full.names = T), source)
-    plot_path = "./output/NF-downstream_analysis/1_seurat_integrate/plots/"
-    rds_path = "./output/NF-downstream_analysis/1_seurat_integrate/rds_files/"
+    plot_path = "./output/NF-downstream_analysis/1_seurat_integrat_new/plots/"
+    rds_path = "./output/NF-downstream_analysis/1_seurat_integrate_new/rds_files/"
     data_path = "./output/NF-scRNAseq_alignment/cellranger/count/filtered_feature_bc_matrix"
     
     ncores = 8
@@ -65,7 +65,6 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
   library(grid)
   library(pheatmap)
   library(RColorBrewer)
-  library(STACAS)
   library(tidyverse)
 }
 
@@ -95,10 +94,10 @@ seurat_all <- PercentageFeatureSet(seurat_all, pattern = "^MT-", col.name = "per
 seurat_all <- subset(seurat_all, subset = c(nFeature_RNA > 1000 & nFeature_RNA < 6000 & percent.mt < 15))
 
 
+#####################################################################################################
+#                           Integrate data from different 10x runs                                  #
+#####################################################################################################
 
-# #####################################################################################################
-# #                           Integrate data from different 10x runs                                  #
-# #####################################################################################################
 
 # Split object by run and find integration points
 seurat_split <- SplitObject(seurat_all, split.by = "run")
@@ -111,22 +110,25 @@ if(opt$runtype == "nextflow"){
 
 # SCTransform replaces NormalizeData(), ScaleData(), and FindVariableFeatures()
 seurat_split_SCTransform <- lapply(seurat_split, function(x) SCTransform(x, method = "glmGamPoi", verbose = TRUE, vars.to.regress = "percent.mt"))
+# seurat_split_SCTransform <- lapply(seurat_split, function(x) SCTransform(x, verbose = TRUE))
+
 
 # Save RDS after SCTransform as this step takes time
 saveRDS(seurat_split_SCTransform, paste0(rds_path, 'seurat_split_SCTransform.RDS'))
 
 
 # Find and filter integration anchors
-features.sct <- SelectIntegrationFeatures(seurat_split_SCTransform, nfeatures = 500)
+features.sct <- SelectIntegrationFeatures(seurat_split_SCTransform, nfeatures = 2000)
 seurat_split_SCTransform <- PrepSCTIntegration(seurat_split_SCTransform, anchor.features = features.sct)
 seurat_split_SCTransform <- lapply(seurat_split_SCTransform, FUN = RunPCA, features = features.sct)
 
-seurat_split_SCTransform <- FindAnchors.STACAS(seurat_split_SCTransform, anchor.features=features.sct, normalization.method = "SCT")
 
-seurat_split_SCTransform <- FilterAnchors.STACAS(seurat_split_SCTransform)
 
-# Run seurat integrate on SCT data
-seurat_integrated_SCTransform <- IntegrateData(anchorset=seurat_split_SCTransform, dims=1:30, normalization.method = "SCT", preserve.order=T)
+seurat_integrated_SCTransform <- FindIntegrationAnchors(object.list = seurat_split_SCTransform, normalization.method = "SCT",
+                                  anchor.features = features.sct, dims = 1:30, reduction = "rpca", k.anchor = 5)
+
+seurat_integrated_SCTransform <- IntegrateData(anchorset = seurat_integrated_SCTransform, normalization.method = "SCT", dims = 1:30)
+
 
 # Change plot path
 curr_plot_path <- paste0(plot_path)
@@ -173,8 +175,5 @@ QC.plot(integrated_data)
 graphics.off()
 
 
-
 # Save RDS after integration
 saveRDS(integrated_data, paste0(rds_path, "integrated_data.RDS"))
-
-
