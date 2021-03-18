@@ -120,7 +120,7 @@ seurat_split <- lapply(seurat_split, function(x) {
     x <- RunPCA(x, features = features, verbose = FALSE)
 })
 
-seurat_split <- FindIntegrationAnchors(seurat_split, anchor.features = features, reduction = "rpca", k.anchor = 10)
+seurat_split <- FindIntegrationAnchors(seurat_split, anchor.features = features, reduction = "rpca", k.anchor = 20)
 intergration_data <- IntegrateData(anchorset = seurat_split)
 
 # specify that we will perform downstream analysis on the corrected data note that the original
