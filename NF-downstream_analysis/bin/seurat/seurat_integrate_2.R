@@ -31,8 +31,8 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
 {
   if (opt$runtype == "user"){
     sapply(list.files('./NF-downstream_analysis/bin/custom_functions/', full.names = T), source)
-    plot_path = "./output/NF-downstream_analysis/1_seurat_integrat_new/plots/"
-    rds_path = "./output/NF-downstream_analysis/1_seurat_integrate_new/rds_files/"
+    plot_path = "./output/NF-downstream_analysis/seurat_integrate_new/plots/"
+    rds_path = "./output/NF-downstream_analysis/seurat_integrate_new/rds_files/"
     data_path = "./output/NF-scRNAseq_alignment/cellranger/count/filtered_feature_bc_matrix"
     
     ncores = 8
@@ -177,3 +177,11 @@ graphics.off()
 
 # Save RDS after integration
 saveRDS(integrated_data, paste0(rds_path, "integrated_data.RDS"))
+
+
+readRDS(paste0(rds_path, "integrated_data.RDS"))
+
+
+
+
+
