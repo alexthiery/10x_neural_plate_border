@@ -31,8 +31,8 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
 {
   if (opt$runtype == "user"){
     sapply(list.files('./NF-downstream_analysis/bin/custom_functions/', full.names = T), source)
-    plot_path = "./output/NF-downstream_analysis/seurat_integrate_new/plots/"
-    rds_path = "./output/NF-downstream_analysis/seurat_integrate_new/rds_files/"
+    plot_path = "./output/NF-downstream_analysis/integration_STACAS/plots/"
+    rds_path = "./output/NF-downstream_analysis/integration_STACAS/rds_files/"
     data_path = "./output/NF-scRNAseq_alignment/cellranger/count/filtered_feature_bc_matrix"
     
     ncores = 8
@@ -65,6 +65,7 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
   library(grid)
   library(pheatmap)
   library(RColorBrewer)
+  library(STACAS)
   library(tidyverse)
 }
 
@@ -98,7 +99,6 @@ seurat_all <- subset(seurat_all, subset = c(nFeature_RNA > 1000 & nFeature_RNA <
 #                           Integrate data from different 10x runs                                  #
 #####################################################################################################
 
-
 # Split object by run and find integration points
 seurat_split <- SplitObject(seurat_all, split.by = "run")
 
@@ -109,76 +109,19 @@ if(opt$runtype == "nextflow"){
 }
 
 # SCTransform replaces NormalizeData(), ScaleData(), and FindVariableFeatures()
-seurat_split_SCTransform <- lapply(seurat_split, function(x) SCTransform(x, method = "glmGamPoi", verbose = TRUE, vars.to.regress = "percent.mt"))
-# seurat_split_SCTransform <- lapply(seurat_split, function(x) SCTransform(x, verbose = TRUE))
-
-
-# Save RDS after SCTransform as this step takes time
-saveRDS(seurat_split_SCTransform, paste0(rds_path, 'seurat_split_SCTransform.RDS'))
-
+sctransform_data <- lapply(seurat_split, function(x) SCTransform(x, verbose = TRUE, vars.to.regress = "percent.mt"))
 
 # Find and filter integration anchors
-features.sct <- SelectIntegrationFeatures(seurat_split_SCTransform, nfeatures = 2000)
-seurat_split_SCTransform <- PrepSCTIntegration(seurat_split_SCTransform, anchor.features = features.sct)
-seurat_split_SCTransform <- lapply(seurat_split_SCTransform, FUN = RunPCA, features = features.sct)
+features <- SelectIntegrationFeatures(sctransform_data, nfeatures = 500)
+sctransform_data <- PrepSCTIntegration(sctransform_data, anchor.features = features)
+sctransform_data <- lapply(sctransform_data, FUN = RunPCA, features = features)
 
+# Run STACAS integration
+sctransform_data <- FindAnchors.STACAS(sctransform_data, anchor.features=features, normalization.method = "SCT")
+sctransform_data <- FilterAnchors.STACAS(sctransform_data)
 
-
-seurat_integrated_SCTransform <- FindIntegrationAnchors(object.list = seurat_split_SCTransform, normalization.method = "SCT",
-                                  anchor.features = features.sct, dims = 1:30, reduction = "rpca", k.anchor = 5)
-
-seurat_integrated_SCTransform <- IntegrateData(anchorset = seurat_integrated_SCTransform, normalization.method = "SCT", dims = 1:30)
-
-
-# Change plot path
-curr_plot_path <- paste0(plot_path)
-
-# Run PCA analysis
-integrated_data <- RunPCA(object = seurat_integrated_SCTransform, verbose = FALSE)
-
-# Plot heatmap of top variable genes across top principle components
-png(paste0(curr_plot_path, "dimHM.png"), width=30, height=50, units = 'cm', res = 200)
-DimHeatmap(integrated_data, dims = 1:30, balanced = TRUE, cells = 500)
-graphics.off()
-
-# another heuristic method is ElbowPlot which ranks PCs based on the % variance explained by each PC
-png(paste0(curr_plot_path, "elbowplot.png"), width=24, height=20, units = 'cm', res = 200)
-print(ElbowPlot(integrated_data, ndims = 40))
-graphics.off()
-
-# Run clustering and UMAP at different PCA cutoffs - save this output to compare the optimal number of PCs to be used
-png(paste0(curr_plot_path, "UMAP_PCA_comparison.png"), width=40, height=30, units = 'cm', res = 200)
-PCA.level.comparison(integrated_data, PCA.levels = c(5, 10, 20, 40), cluster_res = 0.5)
-graphics.off()
-
-# Use PCA=20 as elbow plot is relatively stable across stages
-# Use clustering resolution = 0.5 for filtering
-integrated_data <- FindNeighbors(integrated_data, dims = 1:20, verbose = FALSE)
-integrated_data <- RunUMAP(integrated_data, dims = 1:20, verbose = FALSE)
-
-# Find optimal cluster resolution
-png(paste0(curr_plot_path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
-clust.res(seurat.obj = integrated_data, by = 0.1, prefix = 'integrated_snn_res.')
-graphics.off()
-
-# Use clustering resolution = 0.5
-integrated_data <- FindClusters(integrated_data, resolution = 0.5, verbose = FALSE)
-
-# Plot UMAP for clusters and developmental stage
-png(paste0(curr_plot_path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
-clust.stage.plot(integrated_data)
-graphics.off()
-
-# Plot QC for each cluster
-png(paste0(curr_plot_path, "cluster.QC.png"), width=40, height=14, units = 'cm', res = 200)
-QC.plot(integrated_data)
-graphics.off()
-
-# check whether stages that are resequenced are well integrated
-png(paste0(curr_plot_path, "check.integration.png"), width=60, height=20, units = 'cm', res = 200)
-check.integration(integrated_data)
-graphics.off()
+# Run seurat integrate on SCT data
+integrated_data <- IntegrateData(anchorset=sctransform_data, dims=1:30, normalization.method = "SCT")
 
 # Save RDS after integration
 saveRDS(integrated_data, paste0(rds_path, "integrated_data.RDS"))
-
