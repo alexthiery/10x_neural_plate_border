@@ -4,7 +4,7 @@ check.integration <- function(seurat_object, group.by = 'orig.ident', pt.size = 
   plots[['all cells']] <- DimPlot(seurat_object, group.by = group.by, pt.size = 0.2, shuffle = shuffle, seed = seed) + xlim(xlim) + ylim(ylim) + labs(title = 'all cells')
   
   # set colours to the same as when plotting all cells
-  cols <- factor(seurat_object[[group.by, drop = T]])
+  colours <- factor(seurat_object[[group.by, drop = T]])
   
   stages = unique(gsub('_.*', '', seurat_object[[group.by, drop=T]]))
   
@@ -12,7 +12,7 @@ check.integration <- function(seurat_object, group.by = 'orig.ident', pt.size = 
     dat <- filter(seurat_object@meta.data, grepl(pattern = i, orig.ident))
     if(length(unique(dat[[group.by]])) > 1){
       plots[[i]] <- DimPlot(seurat_object, cells = rownames(dat), group.by = group.by, pt.size = 0.2, shuffle = shuffle, seed = seed,
-                            cols = setNames(ggplotColours(n = length(levels(col_dat))), levels(col_dat))) + xlim(xlim) + ylim(ylim) + labs(title = i)
+                            cols = setNames(ggplotColours(n = length(levels(colours))), levels(colours))) + xlim(xlim) + ylim(ylim) + labs(title = i)
     }
   }
   do.call("grid.arrange", c(plots, nrow=nrow))
