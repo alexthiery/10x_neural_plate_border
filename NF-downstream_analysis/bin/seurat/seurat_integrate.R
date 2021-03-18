@@ -172,9 +172,10 @@ png(paste0(curr_plot_path, "cluster.QC.png"), width=40, height=14, units = 'cm',
 QC.plot(integrated_data)
 graphics.off()
 
-
+# check whether stages that are resequenced are well integrated
+png(paste0(curr_plot_path, "check.integration.png"), width=60, height=20, units = 'cm', res = 200)
+check.integration(integrated_data)
+graphics.off()
 
 # Save RDS after integration
 saveRDS(integrated_data, paste0(rds_path, "integrated_data.RDS"))
-
-
