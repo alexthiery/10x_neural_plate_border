@@ -103,7 +103,7 @@ seurat_split <- SplitObject(seurat_all, split.by = "run")
 
 # Log normalize data and find variable features
 seurat_split <- lapply(seurat_split, function(x) {
-  NormalizeData(x, normalization.method = "LogNormalize", scale.factor = 10000))
+  NormalizeData(x, normalization.method = "LogNormalize", scale.factor = 10000)
   FindVariableFeatures(x, selection.method = "vst", nfeatures = 2000)
 })
 

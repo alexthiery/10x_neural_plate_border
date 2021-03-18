@@ -74,7 +74,7 @@ pre_sexfilt_data <- readRDS(paste0(data_path, 'integration_qc_data.RDS'))
 DefaultAssay(pre_sexfilt_data) <- "RNA"
 
 # Log normalize data and find variable features
-pre_sexfilt_data <- NormalizeData(x, normalization.method = "LogNormalize", scale.factor = 10000))
+pre_sexfilt_data <- NormalizeData(x, normalization.method = "LogNormalize", scale.factor = 10000)
 pre_sexfilt_data <- FindVariableFeatures(x, selection.method = "vst", nfeatures = 2000)
 
 # Multi-core when running from command line
@@ -172,7 +172,7 @@ sexfilt_data <- pre_sexfilt_data
 DefaultAssay(sexfilt_data) <- "integrated"
 
 # Log normalize data and find variable features
-sexfilt_data <- NormalizeData(x, normalization.method = "LogNormalize", scale.factor = 10000))
+sexfilt_data <- NormalizeData(x, normalization.method = "LogNormalize", scale.factor = 10000)
 sexfilt_data <- FindVariableFeatures(x, selection.method = "vst", nfeatures = 2000)
 
 # Multi-core when running from command line
@@ -225,7 +225,7 @@ graphics.off()
 DefaultAssay(sexfilt_data) <- "RNA"
 
 # Log normalize data and find variable features
-sexfilt_data <- NormalizeData(x, normalization.method = "LogNormalize", scale.factor = 10000))
+sexfilt_data <- NormalizeData(x, normalization.method = "LogNormalize", scale.factor = 10000)
 sexfilt_data <- FindVariableFeatures(x, selection.method = "vst", nfeatures = 2000)
 
 # Multi-core when running from command line
