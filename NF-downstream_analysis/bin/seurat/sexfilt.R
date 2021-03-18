@@ -83,7 +83,7 @@ if(opt$runtype == "nextflow"){
   options(future.globals.maxSize = 32* 1024^3, future.seed=TRUE) # 32gb
 }
 
-pre_sexfilt_data <- ScaleData(pre_sexfilt_data, features = rownames(pre_sexfilt_data), verbose = FALSE)
+pre_sexfilt_data <- ScaleData(pre_sexfilt_data, features = rownames(pre_sexfilt_data), vars.to.regress = "percent.mt", verbose = FALSE)
 
 # Save RDS after integration
 saveRDS(pre_sexfilt_data, paste0(rds_path, "pre_sexfilt_data.RDS"))
@@ -181,7 +181,7 @@ if(opt$runtype == "nextflow"){
   options(future.globals.maxSize = 32* 1024^3, future.seed=TRUE) # 32gb
 }
 
-sexfilt_data <- ScaleData(sexfilt_data, features = rownames(sexfilt_data), verbose = FALSE)
+sexfilt_data <- ScaleData(sexfilt_data, features = rownames(sexfilt_data), vars.to.regress = c("percent.mt", "sex"), verbose = FALSE)
 
 # PCA
 sexfilt_data <- RunPCA(object = sexfilt_data, verbose = FALSE)
@@ -234,7 +234,7 @@ if(opt$runtype == "nextflow"){
   options(future.globals.maxSize = 32* 1024^3, future.seed=TRUE) # 32gb
 }
 
-sexfilt_data <- ScaleData(sexfilt_data, features = rownames(sexfilt_data), verbose = FALSE)
+sexfilt_data <- ScaleData(sexfilt_data, features = rownames(sexfilt_data), vars.to.regress = c("percent.mt", "sex"), verbose = FALSE)
 
 # Save RDS
 saveRDS(sexfilt_data, paste0(rds.path, "sexfilt_data.RDS"))

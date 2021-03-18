@@ -116,7 +116,7 @@ if(opt$runtype == "nextflow"){
   options(future.globals.maxSize = 32* 1024^3, future.seed=TRUE) # 32gb
 }
 seurat_split <- lapply(seurat_split, function(x) {
-    x <- ScaleData(x, features = features, verbose = FALSE)
+    x <- ScaleData(x, features = features, vars.to.regress = "percent.mt", verbose = FALSE)
     x <- RunPCA(x, features = features, verbose = FALSE)
 })
 
@@ -133,7 +133,7 @@ if(opt$runtype == "nextflow"){
   options(future.globals.maxSize = 32* 1024^3, future.seed=TRUE) # 32gb
 }
 
-intergration_data <- ScaleData(intergration_data, features = rownames(intergration_data), verbose = FALSE)
+intergration_data <- ScaleData(intergration_data, features = rownames(intergration_data), vars.to.regress = "percent.mt", verbose = FALSE)
 
 # Save RDS after integration
 saveRDS(intergration_data, paste0(rds_path, "intergration_data.RDS"))
