@@ -31,9 +31,10 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
 {
   if (opt$runtype == "user"){
     sapply(list.files('./NF-downstream_analysis/bin/custom_functions/', full.names = T), source)
-    plot_path = "./output/NF-downstream_analysis/seurat_sexfilt/plots/"
-    rds_path = "./output/NF-downstream_analysis/seurat_sexfilt/rds_files/"
-    data_path = "./output/NF-downstream_analysis/scRNAseq/seurat_integrate/rds_files/"
+    plot_path = "./output/NF-downstream_analysis/sexfilt/plots/"
+    rds_path = "./output/NF-downstream_analysis/sexfilt/rds_files/"
+
+    data_path = "./output/NF-downstream_analysis/integration_qc/rds_files/"
     
     ncores = 8
     
@@ -65,105 +66,33 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
   library(grid)
   library(pheatmap)
   library(RColorBrewer)
-  library(STACAS)
   library(tidyverse)
 }
 
-
-integrated_data <- readRDS(paste0(data_path, "seurat_integrated_SCTransform.RDS"))
-
-# set integrated count data as default
-# DefaultAssay(integrated_data) <- "integrated"
-
-
-integrated_data <- RunPCA(object = integrated_data, verbose = FALSE)
-integrated_data <- FindNeighbors(integrated_data, dims = 1:30, verbose = FALSE)
-integrated_data <- RunUMAP(integrated_data, dims = 1:30, verbose = FALSE)
-integrated_data <- FindClusters(integrated_data, resolution = 0.5, verbose = FALSE)
-
-png(paste0(plot_path, "UMAP_sctransform.png"), width=40, height=20, units = 'cm', res = 200)
-clust.stage.plot(integrated_data)
-graphics.off()
-
-
-
-
-# Change plot path
-curr_plot_path <- paste0(plot_path, '0_integrated_data/')
-dir.create(curr_plot_path)
-
-
-#####################################################################################################
-#   Seurat's clustering algorithm is based on principle components, so we need to ensure that only the informative PCs are kept! #
-#####################################################################################################
-
-# Run PCA analysis
-integrated_data <- RunPCA(object = integrated_data, verbose = FALSE)
-
-# Plot heatmap of top variable genes across top principle components
-png(paste0(curr_plot_path, "dimHM.png"), width=30, height=50, units = 'cm', res = 200)
-DimHeatmap(integrated_data, dims = 1:30, balanced = TRUE, cells = 500)
-graphics.off()
-
-# another heuristic method is ElbowPlot which ranks PCs based on the % variance explained by each PC
-png(paste0(curr_plot_path, "elbowplot.png"), width=24, height=20, units = 'cm', res = 200)
-print(ElbowPlot(integrated_data, ndims = 40))
-graphics.off()
-
-# Run clustering and UMAP at different PCA cutoffs - save this output to compare the optimal number of PCs to be used
-png(paste0(curr_plot_path, "UMAP_PCA_comparison.png"), width=40, height=30, units = 'cm', res = 200)
-PCA.level.comparison(integrated_data, PCA.levels = c(5, 10, 20, 40), cluster_res = 0.5)
-graphics.off()
-
-# Use PCA=20 as elbow plot is relatively stable across stages
-# Use clustering resolution = 0.5 for filtering
-integrated_data <- FindNeighbors(integrated_data, dims = 1:20, verbose = FALSE)
-integrated_data <- RunUMAP(integrated_data, dims = 1:20, verbose = FALSE)
-
-# Find optimal cluster resolution
-png(paste0(curr_plot_path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
-clust.res(seurat.obj = integrated_data, by = 0.1, prefix = 'integrated_snn_res.')
-graphics.off()
-
-# Use clustering resolution = 0.5
-integrated_data <- FindClusters(integrated_data, resolution = 0.5, verbose = FALSE)
-
-# Plot UMAP for clusters and developmental stage
-png(paste0(curr_plot_path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
-clust.stage.plot(integrated_data)
-graphics.off()
-
-# Plot QC for each cluster
-png(paste0(curr_plot_path, "cluster.QC.png"), width=40, height=14, units = 'cm', res = 200)
-QC.plot(integrated_data)
-graphics.off()
+sexfilt_data <- readRDS(paste0(data_path, 'integration_qc_data.RDS'))
 
 # plot dimplot for main W gene
 
-#_####################################################################################################
-#     Heatmap clearly shows clusters segregate by sex - check this and regress out the sex effect   #
-#####################################################################################################
-
-# Change plot path
-curr_plot_path <- paste0(plot_path, '1_sex_filt_integrated/')
-dir.create(curr_plot_path)
-
 # There is a strong sex effect - this plot shows DE genes between clusters 1 and 2 which are predominantly hh4 clusters. Clustering is driven by sex genes
-png(paste0(curr_plot_path, 'HM.top15.DE.pre-sexfilt.png'), height = 40, width = 70, units = 'cm', res = 500)
-tenx.pheatmap(data = integrated_data[,rownames(integrated_data@meta.data[integrated_data$seurat_clusters == 1 | integrated_data$seurat_clusters == 2,])],
-              metadata = c("seurat_clusters", "orig.ident"), selected_genes = rownames(FindMarkers(integrated_data, ident.1 = 1, ident.2 = 2)),
+png(paste0(plot_path, 'HM.top15.DE.pre-sexfilt.png'), height = 40, width = 70, units = 'cm', res = 500)
+tenx.pheatmap(data = sexfilt_data[,rownames(sexfilt_data@meta.data[sexfilt_data$seurat_clusters == 1 | sexfilt_data$seurat_clusters == 2,])],
+              metadata = c("seurat_clusters", "orig.ident"), selected_genes = rownames(FindMarkers(sexfilt_data, ident.1 = 1, ident.2 = 2)),
               hclust_rows = T, gaps_col = "seurat_clusters")
 graphics.off()
 
+#####################################################################################################
+#     Heatmap clearly shows clusters segregate by sex - check this and regress out the sex effect   #
+#####################################################################################################
+
 # Use W chromosome genes to K-means cluster the cells into male (zz) and female (zw)
-W_genes <- as.matrix(integrated_data@assays$RNA[grepl("W-", rownames(integrated_data@assays$RNA)),])
+W_genes <- as.matrix(sexfilt_data@assays$RNA[grepl("W-", rownames(sexfilt_data@assays$RNA)),])
 k_clusters <- kmeans(t(W_genes), 2)
 k_clusters <- data.frame(k_clusters$cluster)
-integrated_data@meta.data$k_clusters <- k_clusters[match(colnames(integrated_data@assays$RNA), rownames(k_clusters)),]
+sexfilt_data@meta.data$k_clusters <- k_clusters[match(colnames(sexfilt_data@assays$RNA), rownames(k_clusters)),]
 
 # Get rownames for kmeans clusters 1 and 2
-k_clus_1 <- rownames(integrated_data@meta.data[integrated_data@meta.data$k_clusters == 1,])
-k_clus_2 <- rownames(integrated_data@meta.data[integrated_data@meta.data$k_clusters == 2,])
+k_clus_1 <- rownames(sexfilt_data@meta.data[sexfilt_data@meta.data$k_clusters == 1,])
+k_clus_2 <- rownames(sexfilt_data@meta.data[sexfilt_data@meta.data$k_clusters == 2,])
 
 # K clustering identities are stochastic, so I mneed to identify which cluster is male and female
 # Sum of W genes is order of magnitude greater in cluster 2 - these are the female cells
@@ -178,11 +107,8 @@ if(sumclus1 < sumclus2){
   k.male <- k_clus_2
 }
 
-cell.sex.ID <- list("male.cells" = k.male, "female.cells" = k.female)
-saveRDS(cell.sex.ID, paste0(rds.path, "sex_kmeans_integrated.RDS"))
-
 # Add sex data to meta.data
-integrated_data@meta.data$sex <- unlist(lapply(rownames(integrated_data@meta.data), function(x)
+sexfilt_data@meta.data$sex <- unlist(lapply(rownames(sexfilt_data@meta.data), function(x)
   if(x %in% k.male){"male"} else if(x %in% k.female){"female"} else{stop("cell sex is not assigned")}))
 
 
@@ -192,20 +118,20 @@ integrated_data@meta.data$sex <- unlist(lapply(rownames(integrated_data@meta.dat
 # Calculating median is tricky as there are a lot of dropouts in 10x data so you end up with either 0s (when the median  = 0) or 1 (when the median expression in both clusters is the same - probably a result of normalisation resulting in a UMI of 0 or 1 being normalised to a nominal value)
 
 # Make dataframe for mean Z expression in male cells
-mean.Z.male <- data.frame(Z.mean = apply(integrated_data@assays$RNA[grepl("Z-", rownames(integrated_data@assays$RNA)), k.male], 1, mean))
+mean.Z.male <- data.frame(Z.mean = apply(sexfilt_data@assays$RNA[grepl("Z-", rownames(sexfilt_data@assays$RNA)), k.male], 1, mean))
 # add 1 before log2 as log2(1) = 0
 mean.Z.male <- log2(mean.Z.male + 1)
 
 # Make dataframe for mean Z expression in female cells
-mean.Z.female <- data.frame(Z.mean = apply(integrated_data@assays$RNA[grepl("Z-", rownames(integrated_data@assays$RNA)), k.female], 1, mean))
+mean.Z.female <- data.frame(Z.mean = apply(sexfilt_data@assays$RNA[grepl("Z-", rownames(sexfilt_data@assays$RNA)), k.female], 1, mean))
 mean.Z.female <- log2(mean.Z.female + 1)
 
 # Make dataframe for mean autosomal expression in male cells
-mean.auto.male <- data.frame(auto.mean = apply(integrated_data@assays$RNA[!grepl("Z-", rownames(integrated_data@assays$RNA)) & !grepl("W-", rownames(integrated_data@assays$RNA)), k.male], 1, mean))
+mean.auto.male <- data.frame(auto.mean = apply(sexfilt_data@assays$RNA[!grepl("Z-", rownames(sexfilt_data@assays$RNA)) & !grepl("W-", rownames(sexfilt_data@assays$RNA)), k.male], 1, mean))
 mean.auto.male <- log2(mean.auto.male + 1)
 
 # Make dataframe for mean autosomal expression in male cells
-mean.auto.female <- data.frame(auto.mean = apply(integrated_data@assays$RNA[!grepl("Z-", rownames(integrated_data@assays$RNA)) & !grepl("W-", rownames(integrated_data@assays$RNA)), k.female], 1, mean))
+mean.auto.female <- data.frame(auto.mean = apply(sexfilt_data@assays$RNA[!grepl("Z-", rownames(sexfilt_data@assays$RNA)) & !grepl("W-", rownames(sexfilt_data@assays$RNA)), k.female], 1, mean))
 mean.auto.female <- log2(mean.auto.female + 1)
 
 # Calculate FC by subtracting log2 expression from each other
@@ -214,7 +140,7 @@ FC$Z <- mean.Z.male - mean.Z.female
 FC$auto <-  mean.auto.male - mean.auto.female
 
 # Plot boxplot of Z gene and autosomal expression in male vs female cells
-png(paste0(curr_plot_path,"sex_kmeans_log2FC_boxplot.png"), height = 18, width = 18, units = "cm", res = 200)
+png(paste0(plot_path,"sex_kmeans_log2FC_boxplot.png"), height = 18, width = 18, units = "cm", res = 200)
 boxplot(c(FC$Z, FC$auto),  ylab = "male - female log2 FC (mean normalised UMI +1)", names = c("Z chromosome genes", "autosomal genes"))
 graphics.off()
 
@@ -225,7 +151,7 @@ graphics.off()
 #####################################################################################################
 
 # Init sexscale object 
-sexscale_data <- integrated_data
+sexscale_data <- sexfilt_data
 
 # Re-run findvariablefeatures and scaling
 # sexscale_data <- FindVariableFeatures(sexscale_data, selection.method = "vst", nfeatures = 2000)
@@ -246,15 +172,15 @@ saveRDS(sexscale_data, paste0(rds.path, "sexscale_data.RDS"))
 # PCA
 sexscale_data <- RunPCA(object = sexscale_data, verbose = FALSE)
 
-png(paste0(curr_plot_path, "dimHM.png"), width=30, height=50, units = 'cm', res = 200)
+png(paste0(plot_path, "dimHM.png"), width=30, height=50, units = 'cm', res = 200)
 DimHeatmap(sexscale_data, dims = 1:30, balanced = TRUE, cells = 500)
 graphics.off()
 
-png(paste0(curr_plot_path, "elbowplot.png"), width=24, height=20, units = 'cm', res = 200)
+png(paste0(plot_path, "elbowplot.png"), width=24, height=20, units = 'cm', res = 200)
 print(ElbowPlot(sexscale_data, ndims = 40))
 graphics.off()
 
-png(paste0(curr_plot_path, "UMAP_PCA_comparison.png"), width=40, height=30, units = 'cm', res = 200)
+png(paste0(plot_path, "UMAP_PCA_comparison.png"), width=40, height=30, units = 'cm', res = 200)
 PCA.level.comparison(sexscale_data, PCA.levels = c(10, 20, 30, 40), cluster_res = 0.5)
 graphics.off()
 
@@ -263,7 +189,7 @@ sexscale_data <- FindNeighbors(sexscale_data, dims = 1:30, verbose = FALSE)
 sexscale_data <- RunUMAP(sexscale_data, dims = 1:30, verbose = FALSE)
 
 # Find optimal cluster resolution
-png(paste0(curr_plot_path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
+png(paste0(plot_path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
 clust.res(seurat.obj = sexscale_data, by = 0.1, prefix = "integrated_snn_res.")
 graphics.off()
 
@@ -271,12 +197,12 @@ graphics.off()
 sexscale_data <- FindClusters(sexscale_data, resolution = 0.5, verbose = FALSE)
 
 # Plot UMAP for clusters and developmental stage
-png(paste0(curr_plot_path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
+png(paste0(plot_path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
 clust.stage.plot(sexscale_data)
 graphics.off()
 
 # Plot QC for each cluster
-png(paste0(curr_plot_path, "cluster.QC.png"), width=40, height=14, units = 'cm', res = 200)
+png(paste0(plot_path, "cluster.QC.png"), width=40, height=14, units = 'cm', res = 200)
 QC.plot(sexscale_data)
 graphics.off()
 
@@ -287,7 +213,7 @@ cluster.order = order.cell.stage.clust(seurat_object = sexscale_data, col.to.sor
 # Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
 top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC) %>% arrange(factor(cluster, levels = cluster.order))
 
-png(paste0(curr_plot_path, 'HM.top15.DE.post-sexfilt.png'), height = 75, width = 100, units = 'cm', res = 500)
+png(paste0(plot_path, 'HM.top15.DE.post-sexfilt.png'), height = 75, width = 100, units = 'cm', res = 500)
 tenx.pheatmap(data = sexscale_data, metadata = c("seurat_clusters", "orig.ident"), custom_order_column = "seurat_clusters",
               custom_order = cluster.order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters", assay = 'integrated')
 graphics.off()
