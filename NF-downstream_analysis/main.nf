@@ -34,7 +34,7 @@ workflow {
     integration_seurat_sexfilt( integration_seurat_qc.out )
 
     // Run pipeline on STACAS integration
-    integration_seurat( metadata.out.filter{ it[0].sample_id == 'NF-scRNAseq_alignment_out' } )
-    integration_seurat_qc( integration_seurat.out )
-    integration_seurat_sexfilt( integration_seurat_qc.out )
+    integration_STACAS( metadata.out.filter{ it[0].sample_id == 'NF-scRNAseq_alignment_out' } )
+    integration_STACAS_qc( integration_STACAS.out )
+    integration_STACAS_sexfilt( integration_STACAS_qc.out )
 }
