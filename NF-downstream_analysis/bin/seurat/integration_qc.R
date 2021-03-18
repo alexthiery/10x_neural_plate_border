@@ -93,8 +93,8 @@ graphics.off()
 
 # Use PCA=20 as elbow plot is relatively stable across stages
 # Use clustering resolution = 0.5 for filtering
-integration_qc_data <- FindNeighbors(integration_qc_data, dims = 1:20, verbose = FALSE)
 integration_qc_data <- RunUMAP(integration_qc_data, dims = 1:20, verbose = FALSE)
+integration_qc_data <- FindNeighbors(integration_qc_data, dims = 1:20, verbose = FALSE)
 
 # Find optimal cluster resolution
 png(paste0(plot_path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)

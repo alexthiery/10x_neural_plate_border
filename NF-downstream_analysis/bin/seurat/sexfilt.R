@@ -69,30 +69,46 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
   library(tidyverse)
 }
 
-sexfilt_data <- readRDS(paste0(data_path, 'integration_qc_data.RDS'))
+pre_sexfilt_data <- readRDS(paste0(data_path, 'integration_qc_data.RDS'))
 
-# plot dimplot for main W gene
+DefaultAssay(pre_sexfilt_data) <- "RNA"
+
+# Log normalize data and find variable features
+pre_sexfilt_data <- NormalizeData(x, normalization.method = "LogNormalize", scale.factor = 10000))
+pre_sexfilt_data <- FindVariableFeatures(x, selection.method = "vst", nfeatures = 2000)
+
+# Multi-core when running from command line
+if(opt$runtype == "nextflow"){
+  plan("multiprocess", workers = ncores)
+  options(future.globals.maxSize = 32* 1024^3) # 32gb
+}
+
+pre_sexfilt_data <- ScaleData(pre_sexfilt_data, features = rownames(pre_sexfilt_data), verbose = FALSE)
+
+# Save RDS after integration
+saveRDS(pre_sexfilt_data, paste0(rds_path, "pre_sexfilt_data.RDS"))
 
 # There is a strong sex effect - this plot shows DE genes between clusters 1 and 2 which are predominantly hh4 clusters. Clustering is driven by sex genes
 png(paste0(plot_path, 'HM.top15.DE.pre-sexfilt.png'), height = 40, width = 70, units = 'cm', res = 500)
-tenx.pheatmap(data = sexfilt_data[,rownames(sexfilt_data@meta.data[sexfilt_data$seurat_clusters == 1 | sexfilt_data$seurat_clusters == 2,])],
-              metadata = c("seurat_clusters", "orig.ident"), selected_genes = rownames(FindMarkers(sexfilt_data, ident.1 = 1, ident.2 = 2)),
+tenx.pheatmap(data = pre_sexfilt_data[,rownames(pre_sexfilt_data@meta.data[pre_sexfilt_data$seurat_clusters == 1 | pre_sexfilt_data$seurat_clusters == 2,])],
+              metadata = c("seurat_clusters", "orig.ident"), selected_genes = rownames(FindMarkers(pre_sexfilt_data, ident.1 = 1, ident.2 = 2)),
               hclust_rows = T, gaps_col = "seurat_clusters")
 graphics.off()
 
+# plot dimplot for main W gene
 #####################################################################################################
 #     Heatmap clearly shows clusters segregate by sex - check this and regress out the sex effect   #
 #####################################################################################################
 
 # Use W chromosome genes to K-means cluster the cells into male (zz) and female (zw)
-W_genes <- as.matrix(sexfilt_data@assays$RNA[grepl("W-", rownames(sexfilt_data@assays$RNA)),])
+W_genes <- as.matrix(pre_sexfilt_data@assays$RNA[grepl("W-", rownames(pre_sexfilt_data@assays$RNA)),])
 k_clusters <- kmeans(t(W_genes), 2)
 k_clusters <- data.frame(k_clusters$cluster)
-sexfilt_data@meta.data$k_clusters <- k_clusters[match(colnames(sexfilt_data@assays$RNA), rownames(k_clusters)),]
+pre_sexfilt_data@meta.data$k_clusters <- k_clusters[match(colnames(pre_sexfilt_data@assays$RNA), rownames(k_clusters)),]
 
 # Get rownames for kmeans clusters 1 and 2
-k_clus_1 <- rownames(sexfilt_data@meta.data[sexfilt_data@meta.data$k_clusters == 1,])
-k_clus_2 <- rownames(sexfilt_data@meta.data[sexfilt_data@meta.data$k_clusters == 2,])
+k_clus_1 <- rownames(pre_sexfilt_data@meta.data[pre_sexfilt_data@meta.data$k_clusters == 1,])
+k_clus_2 <- rownames(pre_sexfilt_data@meta.data[pre_sexfilt_data@meta.data$k_clusters == 2,])
 
 # K clustering identities are stochastic, so I mneed to identify which cluster is male and female
 # Sum of W genes is order of magnitude greater in cluster 2 - these are the female cells
@@ -108,7 +124,7 @@ if(sumclus1 < sumclus2){
 }
 
 # Add sex data to meta.data
-sexfilt_data@meta.data$sex <- unlist(lapply(rownames(sexfilt_data@meta.data), function(x)
+pre_sexfilt_data@meta.data$sex <- unlist(lapply(rownames(pre_sexfilt_data@meta.data), function(x)
   if(x %in% k.male){"male"} else if(x %in% k.female){"female"} else{stop("cell sex is not assigned")}))
 
 
@@ -118,20 +134,20 @@ sexfilt_data@meta.data$sex <- unlist(lapply(rownames(sexfilt_data@meta.data), fu
 # Calculating median is tricky as there are a lot of dropouts in 10x data so you end up with either 0s (when the median  = 0) or 1 (when the median expression in both clusters is the same - probably a result of normalisation resulting in a UMI of 0 or 1 being normalised to a nominal value)
 
 # Make dataframe for mean Z expression in male cells
-mean.Z.male <- data.frame(Z.mean = apply(sexfilt_data@assays$RNA[grepl("Z-", rownames(sexfilt_data@assays$RNA)), k.male], 1, mean))
+mean.Z.male <- data.frame(Z.mean = apply(pre_sexfilt_data@assays$RNA[grepl("Z-", rownames(pre_sexfilt_data@assays$RNA)), k.male], 1, mean))
 # add 1 before log2 as log2(1) = 0
 mean.Z.male <- log2(mean.Z.male + 1)
 
 # Make dataframe for mean Z expression in female cells
-mean.Z.female <- data.frame(Z.mean = apply(sexfilt_data@assays$RNA[grepl("Z-", rownames(sexfilt_data@assays$RNA)), k.female], 1, mean))
+mean.Z.female <- data.frame(Z.mean = apply(pre_sexfilt_data@assays$RNA[grepl("Z-", rownames(pre_sexfilt_data@assays$RNA)), k.female], 1, mean))
 mean.Z.female <- log2(mean.Z.female + 1)
 
 # Make dataframe for mean autosomal expression in male cells
-mean.auto.male <- data.frame(auto.mean = apply(sexfilt_data@assays$RNA[!grepl("Z-", rownames(sexfilt_data@assays$RNA)) & !grepl("W-", rownames(sexfilt_data@assays$RNA)), k.male], 1, mean))
+mean.auto.male <- data.frame(auto.mean = apply(pre_sexfilt_data@assays$RNA[!grepl("Z-", rownames(pre_sexfilt_data@assays$RNA)) & !grepl("W-", rownames(pre_sexfilt_data@assays$RNA)), k.male], 1, mean))
 mean.auto.male <- log2(mean.auto.male + 1)
 
 # Make dataframe for mean autosomal expression in male cells
-mean.auto.female <- data.frame(auto.mean = apply(sexfilt_data@assays$RNA[!grepl("Z-", rownames(sexfilt_data@assays$RNA)) & !grepl("W-", rownames(sexfilt_data@assays$RNA)), k.female], 1, mean))
+mean.auto.female <- data.frame(auto.mean = apply(pre_sexfilt_data@assays$RNA[!grepl("Z-", rownames(pre_sexfilt_data@assays$RNA)) & !grepl("W-", rownames(pre_sexfilt_data@assays$RNA)), k.female], 1, mean))
 mean.auto.female <- log2(mean.auto.female + 1)
 
 # Calculate FC by subtracting log2 expression from each other
@@ -151,70 +167,87 @@ graphics.off()
 #####################################################################################################
 
 # Init sexscale object 
-sexscale_data <- sexfilt_data
+sexfilt_data <- pre_sexfilt_data
 
-# Re-run findvariablefeatures and scaling
-# sexscale_data <- FindVariableFeatures(sexscale_data, selection.method = "vst", nfeatures = 2000)
-# Enable parallelisation
-plan("multiprocess", workers = ncores)
-options(future.globals.maxSize = 4000 * 1024^2)
+DefaultAssay(sexfilt_data) <- "integrated"
 
-sexscale_data <- SCTransform(sexscale_data, verbose = TRUE, vars.to.regress = c("percent.mt", "sex"))
+# Log normalize data and find variable features
+sexfilt_data <- NormalizeData(x, normalization.method = "LogNormalize", scale.factor = 10000))
+sexfilt_data <- FindVariableFeatures(x, selection.method = "vst", nfeatures = 2000)
 
-# sexscale_data <- ScaleData(sexscale_data, features = rownames(sexscale_data), vars.to.regress = c("percent.mt", "sex"))
+# Multi-core when running from command line
+if(opt$runtype == "nextflow"){
+  plan("multiprocess", workers = ncores)
+  options(future.globals.maxSize = 32* 1024^3) # 32gb
+}
 
-# Save RDS
-saveRDS(sexscale_data, paste0(rds.path, "sexscale_data.RDS"))
-
-# Read in RDS data if needed
-# sexscale_data <- readRDS(paste0(rds.path, "sexscale_data.RDS"))
+sexfilt_data <- ScaleData(sexfilt_data, features = rownames(sexfilt_data), verbose = FALSE)
 
 # PCA
-sexscale_data <- RunPCA(object = sexscale_data, verbose = FALSE)
+sexfilt_data <- RunPCA(object = sexfilt_data, verbose = FALSE)
 
 png(paste0(plot_path, "dimHM.png"), width=30, height=50, units = 'cm', res = 200)
-DimHeatmap(sexscale_data, dims = 1:30, balanced = TRUE, cells = 500)
+DimHeatmap(sexfilt_data, dims = 1:30, balanced = TRUE, cells = 500)
 graphics.off()
 
 png(paste0(plot_path, "elbowplot.png"), width=24, height=20, units = 'cm', res = 200)
-print(ElbowPlot(sexscale_data, ndims = 40))
+print(ElbowPlot(sexfilt_data, ndims = 40))
 graphics.off()
 
 png(paste0(plot_path, "UMAP_PCA_comparison.png"), width=40, height=30, units = 'cm', res = 200)
-PCA.level.comparison(sexscale_data, PCA.levels = c(10, 20, 30, 40), cluster_res = 0.5)
+PCA.level.comparison(sexfilt_data, PCA.levels = c(10, 20, 30, 40), cluster_res = 0.5)
 graphics.off()
 
 # Use PCA=15 as elbow plot is relatively stable across stages
-sexscale_data <- FindNeighbors(sexscale_data, dims = 1:30, verbose = FALSE)
-sexscale_data <- RunUMAP(sexscale_data, dims = 1:30, verbose = FALSE)
+sexfilt_data <- FindNeighbors(sexfilt_data, dims = 1:30, verbose = FALSE)
+sexfilt_data <- RunUMAP(sexfilt_data, dims = 1:30, verbose = FALSE)
 
 # Find optimal cluster resolution
 png(paste0(plot_path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
-clust.res(seurat.obj = sexscale_data, by = 0.1, prefix = "integrated_snn_res.")
+clust.res(seurat.obj = sexfilt_data, by = 0.1, prefix = "integrated_snn_res.")
 graphics.off()
 
 # Use clustering resolution = 0.5 to look for contamination clusters
-sexscale_data <- FindClusters(sexscale_data, resolution = 0.5, verbose = FALSE)
+sexfilt_data <- FindClusters(sexfilt_data, resolution = 0.5, verbose = FALSE)
 
 # Plot UMAP for clusters and developmental stage
 png(paste0(plot_path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
-clust.stage.plot(sexscale_data)
+clust.stage.plot(sexfilt_data)
 graphics.off()
 
 # Plot QC for each cluster
 png(paste0(plot_path, "cluster.QC.png"), width=40, height=14, units = 'cm', res = 200)
-QC.plot(sexscale_data)
+QC.plot(sexfilt_data)
 graphics.off()
 
+
+# switch to RNA assay for viewing expression data
+DefaultAssay(sexfilt_data) <- "RNA"
+
+# Log normalize data and find variable features
+sexfilt_data <- NormalizeData(x, normalization.method = "LogNormalize", scale.factor = 10000))
+sexfilt_data <- FindVariableFeatures(x, selection.method = "vst", nfeatures = 2000)
+
+# Multi-core when running from command line
+if(opt$runtype == "nextflow"){
+  plan("multiprocess", workers = ncores)
+  options(future.globals.maxSize = 32* 1024^3) # 32gb
+}
+
+sexfilt_data <- ScaleData(sexfilt_data, features = rownames(sexfilt_data), verbose = FALSE)
+
+# Save RDS
+saveRDS(sexfilt_data, paste0(rds.path, "sexfilt_data.RDS"))
+
 # Find differentially expressed genes and plot heatmap of top DE genes for each cluster
-markers <- FindAllMarkers(sexscale_data, only.pos = T, logfc.threshold = 0.25)
+markers <- FindAllMarkers(sexfilt_data, only.pos = T, logfc.threshold = 0.25)
 # get automated cluster order based on percentage of cells in adjacent stages
-cluster.order = order.cell.stage.clust(seurat_object = sexscale_data, col.to.sort = seurat_clusters, sort.by = orig.ident)
+cluster.order = order.cell.stage.clust(seurat_object = sexfilt_data, col.to.sort = seurat_clusters, sort.by = orig.ident)
 # Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
 top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_logFC) %>% arrange(factor(cluster, levels = cluster.order))
 
 png(paste0(plot_path, 'HM.top15.DE.post-sexfilt.png'), height = 75, width = 100, units = 'cm', res = 500)
-tenx.pheatmap(data = sexscale_data, metadata = c("seurat_clusters", "orig.ident"), custom_order_column = "seurat_clusters",
+tenx.pheatmap(data = sexfilt_data, metadata = c("seurat_clusters", "orig.ident"), custom_order_column = "seurat_clusters",
               custom_order = cluster.order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters", assay = 'integrated')
 graphics.off()
 
