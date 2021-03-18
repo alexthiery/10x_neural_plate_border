@@ -1,4 +1,4 @@
-FROM  rocker/tidyverse:4.0.0
+FROM  rocker/tidyverse:4.0.4
 
 LABEL authors="alex.thiery@crick.ac.uk" \
       description="Docker image containing all requirements to run 10x downstream analysis in Seurat and Antler"
@@ -24,15 +24,9 @@ RUN   R -e "install.packages('future', dependencies=TRUE)" && \
       R -e "install.packages('clustree', dependencies=TRUE)" && \
       R -e "install.packages('gridExtra', dependencies=TRUE)" && \
       R -e "install.packages('getopt', dependencies=TRUE)" && \
-      R -e "install.packages('pheatmap', dependencies=TRUE)"
-
-#  temporarily install older version of spatstat whilst Seurat update
-RUN   R -e "devtools::install_version('spatstat', version = '1.64-1')"
-
-RUN   R -e "install.packages('Seurat', dependencies=TRUE)"
-
-# speed up SCTransform
-RUN   R -e "BiocManager::install('glmGamPoi')"
-
-# RUN   R -e "install.packages('Seurat', dependencies=TRUE)" && \
-#       R -e "remotes::install_github('carmonalab/STACAS')"
+      R -e "install.packages('pheatmap', dependencies=TRUE)" && \
+      R -e "install.packages('Seurat', dependencies=TRUE)" && \
+      # speed up SCTransform
+      R -e "BiocManager::install('glmGamPoi')" && \
+      # install STACAS for time being
+      R -e "remotes::install_github('carmonalab/STACAS')"
