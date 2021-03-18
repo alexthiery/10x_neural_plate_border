@@ -172,7 +172,6 @@ sexfilt_data <- pre_sexfilt_data
 DefaultAssay(sexfilt_data) <- "integrated"
 
 # Log normalize data and find variable features
-sexfilt_data <- NormalizeData(sexfilt_data, normalization.method = "LogNormalize", scale.factor = 10000)
 sexfilt_data <- FindVariableFeatures(sexfilt_data, selection.method = "vst", nfeatures = 2000)
 
 # Multi-core when running from command line
@@ -225,7 +224,6 @@ graphics.off()
 DefaultAssay(sexfilt_data) <- "RNA"
 
 # Log normalize data and find variable features
-sexfilt_data <- NormalizeData(sexfilt_data, normalization.method = "LogNormalize", scale.factor = 10000)
 sexfilt_data <- FindVariableFeatures(sexfilt_data, selection.method = "vst", nfeatures = 2000)
 
 # Multi-core when running from command line
