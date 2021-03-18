@@ -80,7 +80,7 @@ pre_sexfilt_data <- FindVariableFeatures(x, selection.method = "vst", nfeatures 
 # Multi-core when running from command line
 if(opt$runtype == "nextflow"){
   plan("multiprocess", workers = ncores)
-  options(future.globals.maxSize = 32* 1024^3) # 32gb
+  options(future.globals.maxSize = 32* 1024^3, future.seed=TRUE) # 32gb
 }
 
 pre_sexfilt_data <- ScaleData(pre_sexfilt_data, features = rownames(pre_sexfilt_data), verbose = FALSE)
@@ -178,7 +178,7 @@ sexfilt_data <- FindVariableFeatures(x, selection.method = "vst", nfeatures = 20
 # Multi-core when running from command line
 if(opt$runtype == "nextflow"){
   plan("multiprocess", workers = ncores)
-  options(future.globals.maxSize = 32* 1024^3) # 32gb
+  options(future.globals.maxSize = 32* 1024^3, future.seed=TRUE) # 32gb
 }
 
 sexfilt_data <- ScaleData(sexfilt_data, features = rownames(sexfilt_data), verbose = FALSE)
@@ -231,7 +231,7 @@ sexfilt_data <- FindVariableFeatures(x, selection.method = "vst", nfeatures = 20
 # Multi-core when running from command line
 if(opt$runtype == "nextflow"){
   plan("multiprocess", workers = ncores)
-  options(future.globals.maxSize = 32* 1024^3) # 32gb
+  options(future.globals.maxSize = 32* 1024^3, future.seed=TRUE) # 32gb
 }
 
 sexfilt_data <- ScaleData(sexfilt_data, features = rownames(sexfilt_data), verbose = FALSE)

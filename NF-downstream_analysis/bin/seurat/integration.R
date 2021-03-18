@@ -113,7 +113,7 @@ features <- SelectIntegrationFeatures(object.list = seurat_split)
 # Multi-core when running from command line
 if(opt$runtype == "nextflow"){
   plan("multiprocess", workers = ncores)
-  options(future.globals.maxSize = 32* 1024^3) # 32gb
+  options(future.globals.maxSize = 32* 1024^3, future.seed=TRUE) # 32gb
 }
 seurat_split <- lapply(seurat_split, function(x) {
     x <- ScaleData(x, features = features, verbose = FALSE)
@@ -121,19 +121,19 @@ seurat_split <- lapply(seurat_split, function(x) {
 })
 
 seurat_split <- FindIntegrationAnchors(seurat_split, anchor.features = features, reduction = "rpca", k.anchor = 10)
-seurat_split <- IntegrateData(anchorset = seurat_split)
+intergration_data <- IntegrateData(anchorset = seurat_split)
 
 # specify that we will perform downstream analysis on the corrected data note that the original
 # unmodified data still resides in the 'RNA' assay
-DefaultAssay(integrated_data) <- "integrated"
+DefaultAssay(intergration_data) <- "integrated"
 
 # Multi-core when running from command line
 if(opt$runtype == "nextflow"){
   plan("multiprocess", workers = ncores)
-  options(future.globals.maxSize = 32* 1024^3) # 32gb
+  options(future.globals.maxSize = 32* 1024^3, future.seed=TRUE) # 32gb
 }
 
-integrated_data <- ScaleData(integrated_data, features = rownames(integrated_data), verbose = FALSE)
+intergration_data <- ScaleData(intergration_data, features = rownames(intergration_data), verbose = FALSE)
 
 # Save RDS after integration
-saveRDS(integrated_data, paste0(rds_path, "integrated_data.RDS"))
+saveRDS(intergration_data, paste0(rds_path, "intergration_data.RDS"))

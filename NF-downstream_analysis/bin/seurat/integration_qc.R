@@ -71,7 +71,7 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
   library(tidyverse)
 }
 
-integration_qc_data <- readRDS(paste0(data_path, 'integrated_data.RDS'))
+integration_qc_data <- readRDS(paste0(data_path, 'intergration_data.RDS'))
 
 # Run PCA analysis
 integration_qc_data <- RunPCA(object = integration_qc_data, verbose = FALSE)
