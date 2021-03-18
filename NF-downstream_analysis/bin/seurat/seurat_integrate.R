@@ -110,7 +110,7 @@ if(opt$runtype == "nextflow"){
 }
 
 # SCTransform replaces NormalizeData(), ScaleData(), and FindVariableFeatures()
-seurat_split_SCTransform <- lapply(seurat_split, function(x) SCTransform(x, method = "glmGamPoi", verbose = TRUE, vars.to.regress = "percent.mt"))
+seurat_split_SCTransform <- lapply(seurat_split, function(x) SCTransform(x, verbose = TRUE, vars.to.regress = "percent.mt"))
 
 # Save RDS after SCTransform as this step takes time
 saveRDS(seurat_split_SCTransform, paste0(rds_path, 'seurat_split_SCTransform.RDS'))
