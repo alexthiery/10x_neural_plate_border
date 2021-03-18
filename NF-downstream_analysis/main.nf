@@ -10,11 +10,15 @@ def modules = params.modules.clone()
 /* Module inclusions
 --------------------------------------------------------------------------------------*/
 include {metadata} from "$baseDir/../modules/tools/metadata/main.nf"
-include {r as seurat_integrate} from "$baseDir/../modules/tools/r/main.nf" addParams(options: modules['seurat_integrate'], script: modules['seurat_integrate'].script)
-include {r as seurat_integrate_2} from "$baseDir/../modules/tools/r/main.nf" addParams(options: modules['seurat_integrate_2'], script: modules['seurat_integrate_2'].script)
 
-include {r as seurat_sexfilt} from "$baseDir/../modules/tools/r/main.nf" addParams(options: modules['seurat_sexfilt'], script: modules['seurat_sexfilt'].script)
-include {r as seurat_sexfilt_log} from "$baseDir/../modules/tools/r/main.nf" addParams(options: modules['seurat_sexfilt_log'], script: modules['seurat_sexfilt_log'].script)
+include {r as integration_seurat} from "$baseDir/../modules/tools/r/main.nf" addParams(options: modules['integration_seurat'], script: modules['integration_seurat'].script)
+include {r as integration_seurat_qc} from "$baseDir/../modules/tools/r/main.nf" addParams(options: modules['integration_seurat_qc'], script: modules['integration_seurat_qc'].script)
+include {r as integration_seurat_sexfilt} from "$baseDir/../modules/tools/r/main.nf" addParams(options: modules['integration_seurat_sexfilt'], script: modules['integration_seurat_sexfilt'].script)
+
+
+include {r as integration_STACAS} from "$baseDir/../modules/tools/r/main.nf" addParams(options: modules['integration_STACAS'], script: modules['integration_STACAS'].script)
+include {r as integration_STACAS_qc} from "$baseDir/../modules/tools/r/main.nf" addParams(options: modules['integration_STACAS_qc'], script: modules['integration_STACAS_qc'].script)
+include {r as integration_STACAS_sexfilt} from "$baseDir/../modules/tools/r/main.nf" addParams(options: modules['integration_STACAS_sexfilt'], script: modules['integration_STACAS_sexfilt'].script)
 
 
 // /*------------------------------------------------------------------------------------*/
@@ -22,19 +26,15 @@ include {r as seurat_sexfilt_log} from "$baseDir/../modules/tools/r/main.nf" add
 // --------------------------------------------------------------------------------------*/
 
 workflow {
-
     metadata(params.input)
 
-    //  Run seurat_integrate
-    seurat_integrate( metadata.out.filter{ it[0].sample_id == 'NF-scRNAseq_alignment_out' } )
+    // Run pipeline on seurat integration
+    integration_seurat( metadata.out.filter{ it[0].sample_id == 'NF-scRNAseq_alignment_out' } )
+    integration_seurat_qc( integration_seurat.out )
+    integration_seurat_sexfilt( integration_seurat_qc.out )
 
-
-    //  Run seurat_integrate
-    seurat_integrate_2( metadata.out.filter{ it[0].sample_id == 'NF-scRNAseq_alignment_out' } )
-
-    // //  Run seurat_2
-    // seurat_sexfilt( seurat_integrate.out )
-
-    // //  Run seurat_2
-    // seurat_sexfilt_log( seurat_integrate.out )
+    // Run pipeline on STACAS integration
+    integration_seurat( metadata.out.filter{ it[0].sample_id == 'NF-scRNAseq_alignment_out' } )
+    integration_seurat_qc( integration_seurat.out )
+    integration_seurat_sexfilt( integration_seurat_qc.out )
 }
