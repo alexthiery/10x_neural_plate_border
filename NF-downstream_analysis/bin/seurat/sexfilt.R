@@ -69,7 +69,7 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
   library(tidyverse)
 }
 
-sexfilt_data <- readRDS(paste0(c(data_path, 'integration_qc_data.RDS')))
+sexfilt_data <- readRDS(paste0(data_path, 'integration_qc_data.RDS'))
 
 # plot dimplot for main W gene
 
