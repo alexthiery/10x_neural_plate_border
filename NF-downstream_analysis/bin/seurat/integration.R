@@ -113,7 +113,7 @@ features <- SelectIntegrationFeatures(object.list = seurat_split)
 # Multi-core when running from command line
 if(opt$runtype == "nextflow"){
   plan("multiprocess", workers = ncores)
-  options(future.globals.maxSize = 32* 1024^3, future.seed=TRUE) # 32gb
+  options(future.globals.maxSize = 32* 1024^3) # 32gb
 }
 seurat_split <- lapply(seurat_split, function(x) {
     x <- ScaleData(x, features = features, vars.to.regress = "percent.mt", verbose = FALSE)
@@ -130,7 +130,7 @@ DefaultAssay(intergration_data) <- "integrated"
 # Multi-core when running from command line
 if(opt$runtype == "nextflow"){
   plan("multiprocess", workers = ncores)
-  options(future.globals.maxSize = 32* 1024^3, future.seed=TRUE) # 32gb
+  options(future.globals.maxSize = 32* 1024^3) # 32gb
 }
 
 intergration_data <- ScaleData(intergration_data, features = rownames(intergration_data), vars.to.regress = "percent.mt", verbose = FALSE)
