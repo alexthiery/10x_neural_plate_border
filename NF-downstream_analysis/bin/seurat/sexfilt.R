@@ -235,7 +235,7 @@ if(opt$runtype == "nextflow"){
 sexfilt_data <- ScaleData(sexfilt_data, features = rownames(sexfilt_data), vars.to.regress = c("percent.mt", "sex"), verbose = FALSE)
 
 # Save RDS
-saveRDS(sexfilt_data, paste0(rds.path, "sexfilt_data.RDS"))
+saveRDS(sexfilt_data, paste0(rds_path, "sexfilt_data.RDS"))
 
 # Find differentially expressed genes and plot heatmap of top DE genes for each cluster
 markers <- FindAllMarkers(sexfilt_data, only.pos = T, logfc.threshold = 0.25)
