@@ -2,6 +2,20 @@
 
 # Define arguments for Rscript
 library(getopt)
+reticulate::use_python('/usr/bin/python3.7')
+library(Seurat)
+library(sctransform)
+
+library(future)
+library(dplyr)
+library(cowplot)
+library(clustree)
+library(gridExtra)
+library(grid)
+library(pheatmap)
+library(RColorBrewer)
+library(tidyverse)
+
 spec = matrix(c(
   'runtype', 'l', 2, "character",
   'cores'   , 'c', 2, "integer",
@@ -55,21 +69,6 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
   
   dir.create(plot_path, recursive = T)
   dir.create(rds_path, recursive = T)
-  
-  # Load packages - packages are stored within renv in the repository
-  reticulate::use_python('/usr/bin/python3.7')
-  library(Seurat)
-  library(sctransform)
-  
-  library(future)
-  library(dplyr)
-  library(cowplot)
-  library(clustree)
-  library(gridExtra)
-  library(grid)
-  library(pheatmap)
-  library(RColorBrewer)
-  library(tidyverse)
 }
 
 # Make dataframe with stage and replicate info extracted from path
