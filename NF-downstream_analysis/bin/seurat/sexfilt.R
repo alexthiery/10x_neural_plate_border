@@ -240,12 +240,12 @@ saveRDS(sexfilt_data, paste0(rds_path, "sexfilt_data.RDS"))
 # Find differentially expressed genes and plot heatmap of top DE genes for each cluster
 markers <- FindAllMarkers(sexfilt_data, only.pos = T, logfc.threshold = 0.25)
 # get automated cluster order based on percentage of cells in adjacent stages
-cluster.order = order.cell.stage.clust(seurat_object = sexfilt_data, col.to.sort = seurat_clusters, sort.by = orig.ident)
+cluster_order = order.cell.stage.clust(seurat_object = sexfilt_data, col.to.sort = seurat_clusters, sort.by = orig.ident)
 # Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
 top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_log2FC) %>% arrange(factor(cluster, levels = cluster.order))
 
 png(paste0(plot_path, 'HM.top15.DE.post-sexfilt.png'), height = 75, width = 100, units = 'cm', res = 500)
 tenx.pheatmap(data = sexfilt_data, metadata = c("seurat_clusters", "orig.ident"), custom_order_column = "seurat_clusters",
-              custom_order = cluster.order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters", assay = 'integrated')
+              custom_order = cluster_order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters")
 graphics.off()
 
