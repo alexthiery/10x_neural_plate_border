@@ -124,7 +124,7 @@ seurat_split <- lapply(seurat_split, function(x) {
 seurat_split <- FindIntegrationAnchors(seurat_split, anchor.features = features, reduction = "rpca", k.anchor = 20)
 
 # Get array of all genes across all datasets in order to integrate using all features
-all_features <- lapply(seurat_split.list, row.names) %>% Reduce(intersect, .)
+all_features <- lapply(seurat_split, row.names) %>% Reduce(intersect, .)
 # Integrate data
 intergration_data <- IntegrateData(anchorset = seurat_split, features.to.integrate = all_features)
 
