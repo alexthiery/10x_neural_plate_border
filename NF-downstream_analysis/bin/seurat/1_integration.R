@@ -45,6 +45,10 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
     rds_path = "./rds_files/"
     data_path = "./input/NF-scRNAseq_alignment/cellranger/count/filtered_feature_bc_matrix"
     ncores = opt$cores
+
+    # Multi-core when running from command line
+    plan("multiprocess", workers = ncores)
+    options(future.globals.maxSize = 32* 1024^3) # 32gb
   }
   
   cat(paste0("script ran with ", ncores, " cores\n"))
@@ -110,11 +114,6 @@ seurat_split <- lapply(seurat_split, function(x) {
 # select features that are repeatedly variable across datasets for integration
 features <- SelectIntegrationFeatures(object.list = seurat_split)
 
-# Multi-core when running from command line
-if(opt$runtype == "nextflow"){
-  plan("multiprocess", workers = ncores)
-  options(future.globals.maxSize = 32* 1024^3) # 32gb
-}
 seurat_split <- lapply(seurat_split, function(x) {
     x <- ScaleData(x, features = features, vars.to.regress = "percent.mt", verbose = FALSE)
     x <- RunPCA(x, features = features, verbose = FALSE)
@@ -131,12 +130,6 @@ intergration_data <- IntegrateData(anchorset = seurat_split, features.to.integra
 # specify that we will perform downstream analysis on the corrected data note that the original
 # unmodified data still resides in the 'RNA' assay
 DefaultAssay(intergration_data) <- "integrated"
-
-# Multi-core when running from command line
-if(opt$runtype == "nextflow"){
-  plan("multiprocess", workers = ncores)
-  options(future.globals.maxSize = 32* 1024^3) # 32gb
-}
 
 intergration_data <- ScaleData(intergration_data, features = rownames(intergration_data), vars.to.regress = "percent.mt", verbose = FALSE)
 
