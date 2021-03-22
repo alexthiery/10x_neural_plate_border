@@ -118,13 +118,13 @@ seurat_split <- lapply(seurat_split, function(x) {
     x <- RunPCA(x, features = features, verbose = FALSE)
 })
 
-# Find anchors used for integration
-seurat_split <- FindIntegrationAnchors(seurat_split, anchor.features = features, reduction = "rpca", k.anchor = 20)
 
 # Get array of all genes across all datasets in order to integrate using all features
 all_features <- lapply(seurat_split, row.names) %>% Reduce(intersect, .)
+# Find anchors used for integration
+intergration_data <- FindIntegrationAnchors(seurat_split, anchor.features = features, reduction = "rpca", k.anchor = 20)
 # Integrate data
-intergration_data <- IntegrateData(anchorset = seurat_split, features.to.integrate = all_features)
+intergration_data <- IntegrateData(anchorset = intergration_data, features.to.integrate = all_features)
 
 # specify that we will perform downstream analysis on the corrected data note that the original
 # unmodified data still resides in the 'RNA' assay
