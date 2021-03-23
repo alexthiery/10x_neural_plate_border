@@ -77,7 +77,7 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
 }
 
 
-poor_cluster_filt_data <- readRDS(paste0(data_path, 'integration_qc_data.RDS.RDS'))
+poor_cluster_filt_data <- readRDS(paste0(data_path, 'integration_qc_data.RDS'))
 
 ############################### Remove poor quality clusters ########################################
 
