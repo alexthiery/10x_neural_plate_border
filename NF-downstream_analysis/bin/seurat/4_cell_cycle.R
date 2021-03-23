@@ -1,7 +1,23 @@
 #!/usr/bin/env Rscript
 
-# Define arguments for Rscript
+# Load packages
 library(getopt)
+reticulate::use_python('/usr/bin/python3.7')
+library(Seurat)
+library(sctransform)
+
+library(future)
+library(dplyr)
+library(cowplot)
+library(clustree)
+library(gridExtra)
+library(grid)
+library(pheatmap)
+library(RColorBrewer)
+library(tidyverse)
+
+# Define arguments for Rscript
+
 spec = matrix(c(
   'runtype', 'l', 2, "character",
   'cores'   , 'c', 2, "integer",
@@ -46,27 +62,16 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
     rds_path = "./rds_files/"
     data_path = "./input/rds_files/"
     ncores = opt$cores
+
+    # Multi-core when running from command line
+    plan("multiprocess", workers = ncores)
+    options(future.globals.maxSize = 32* 1024^3) # 32gb
   }
   
   cat(paste0("script ran with ", ncores, " cores\n"))
   
   dir.create(plot_path, recursive = T)
   dir.create(rds_path, recursive = T)
-  
-  # Load packages - packages are stored within renv in the repository
-  reticulate::use_python('/usr/bin/python3.7')
-  library(Seurat)
-  library(sctransform)
-  
-  library(future)
-  library(dplyr)
-  library(cowplot)
-  library(clustree)
-  library(gridExtra)
-  library(grid)
-  library(pheatmap)
-  library(RColorBrewer)
-  library(tidyverse)
 }
 
 pre_cell_cycle_data <- readRDS(paste0(data_path, 'sex_filt_data.RDS'))
@@ -83,15 +88,7 @@ s.genes <- cc.genes$s.genes
 g2m.genes <- cc.genes$g2m.genes
 pre_cell_cycle_data <- CellCycleScoring(pre_cell_cycle_data, s.features = s.genes, g2m.features = g2m.genes, set.ident = TRUE)
 
-# Re-run findvariablefeatures and scaling
-pre_cell_cycle_data <- FindVariableFeatures(pre_cell_cycle_data, selection.method = "vst", nfeatures = 2000)
-
-# Multi-core when running from command line\
-if(opt$runtype == "nextflow"){
-  plan("multiprocess", workers = ncores)
-  options(future.globals.maxSize = 32* 1024^3) # 32gb
-}
-
+# Scale data and regress cell cycle
 cell_cycle_data <- ScaleData(pre_cell_cycle_data, features = rownames(pre_cell_cycle_data), vars.to.regress = c("percent.mt", "sex", "S.Score", "G2M.Score"))
 
 # PCA
@@ -138,6 +135,13 @@ print(gridExtra::grid.arrange(DimPlot(pre_cell_cycle_data, group.by = "Phase", r
                               ncol = 2))
 graphics.off()
 
+
+# switch to RNA assay for viewing expression data
+DefaultAssay(cell_cycle_data) <- "RNA"
+
+# Find variable features and scale data on RNA assay
+cell_cycle_data <- FindVariableFeatures(cell_cycle_data, selection.method = "vst", nfeatures = 2000)
+cell_cycle_data <- ScaleData(cell_cycle_data, features = rownames(cell_cycle_data), vars.to.regress = c("percent.mt", "sex", "S.Score", "G2M.Score"))
 
 # Find deferentially expressed genes and plot heatmap of top DE genes for each cluster
 markers <- FindAllMarkers(cell_cycle_data, only.pos = T, logfc.threshold = 0.25)
