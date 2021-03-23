@@ -93,7 +93,7 @@ poor_cluster_filt_data <- FindVariableFeatures(poor_cluster_filt_data, selection
 
 poor_cluster_filt_data <- ScaleData(poor_cluster_filt_data, features = rownames(poor_cluster_filt_data), vars.to.regress = c("percent.mt", "sex", "S.Score", "G2M.Score"))
 
-saveRDS(poor_cluster_filt_data, paste0(rds.path, "poor_cluster_filt_data.RDS"))
+saveRDS(poor_cluster_filt_data, paste0(rds_path, "poor_cluster_filt_data.RDS")) # remove once working
 
 
 # Set Integrated to default assay
