@@ -49,10 +49,10 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
 {
   if (opt$runtype == "user"){
     sapply(list.files('./NF-downstream_analysis/bin/custom_functions/', full.names = T), source)
-    plot_path = "./output/NF-downstream_analysis/5_contamination_filt/plots/"
-    rds_path = "./output/NF-downstream_analysis/5_contamination_filt/rds_files/"
+    plot_path = "./output/NF-downstream_analysis/3_poor_cluster_filt/plots/"
+    rds_path = "./output/NF-downstream_analysis/3_poor_cluster_filt/rds_files/"
 
-    data_path = "./output/NF-downstream_analysis/4_cell_cycle/rds_files/"
+    data_path = "./output/NF-downstream_analysis/2_integration_qc/rds_files/"
     
     ncores = 8
     
@@ -77,7 +77,7 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
 }
 
 
-poor_cluster_filt_data <- readRDS(paste0(data_path, 'cell_cycle_data.RDS'))
+poor_cluster_filt_data <- readRDS(paste0(data_path, 'integration_qc_data.RDS.RDS'))
 
 # Set RNA to default assay
 DefaultAssay(poor_cluster_filt_data) <- "RNA"
