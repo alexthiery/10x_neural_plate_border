@@ -1,7 +1,22 @@
 #!/usr/bin/env Rscript
 
-# Define arguments for Rscript
+# Load packages
 library(getopt)
+reticulate::use_python('/usr/bin/python3.7')
+library(Seurat)
+library(sctransform)
+
+library(future)
+library(dplyr)
+library(cowplot)
+library(clustree)
+library(gridExtra)
+library(grid)
+library(pheatmap)
+library(RColorBrewer)
+library(tidyverse)
+
+# Define arguments for Rscript
 spec = matrix(c(
   'runtype', 'l', 2, "character",
   'cores'   , 'c', 2, "integer",
@@ -54,24 +69,12 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
   
   dir.create(plot_path, recursive = T)
   dir.create(rds_path, recursive = T)
-  
-  # Load packages - packages are stored within renv in the repository
-  reticulate::use_python('/usr/bin/python3.7')
-  library(Seurat)
-  library(sctransform)
-  
-  library(future)
-  library(dplyr)
-  library(cowplot)
-  library(clustree)
-  library(gridExtra)
-  library(grid)
-  library(pheatmap)
-  library(RColorBrewer)
-  library(tidyverse)
 }
 
 integration_qc_data <- readRDS(paste0(data_path, 'intergration_data.RDS'))
+
+# Set integrated assay as default for clustering
+DefaultAssay(integration_qc_data) <- "integrated"
 
 # Run PCA analysis
 integration_qc_data <- RunPCA(object = integration_qc_data, verbose = FALSE)

@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-# Define arguments for Rscript
+# Load packages
 library(getopt)
 reticulate::use_python('/usr/bin/python3.7')
 library(Seurat)
@@ -16,6 +16,7 @@ library(pheatmap)
 library(RColorBrewer)
 library(tidyverse)
 
+# Define arguments for Rscript
 spec = matrix(c(
   'runtype', 'l', 2, "character",
   'cores'   , 'c', 2, "integer",
@@ -47,7 +48,7 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
     sapply(list.files('./NF-downstream_analysis/bin/custom_functions/', full.names = T), source)
     plot_path = "./output/NF-downstream_analysis/3_sex_filt/plots/"
     rds_path = "./output/NF-downstream_analysis/3_sex_filt/rds_files/"
-
+    
     data_path = "./output/NF-downstream_analysis/2_integration_qc/rds_files/"
     
     ncores = 8
@@ -74,7 +75,9 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
 
 pre_sex_filt_data <- readRDS(paste0(data_path, 'integration_qc_data.RDS'))
 
-cluster.dimplot(pre_sex_filt_data, clusters = c(1, 2), xlim = c(-10, 15), ylim = c(-10, 15))
+png(paste0(plot_path, 'cluster_subset.pre-sex_filt.png'), height = 40, width = 70, units = 'cm', res = 500)
+cluster.dimplot(pre_sex_filt_data, clusters = c(1, 6), xlim = c(-10, 15), ylim = c(-10, 15))
+graphics.off()
 
 DefaultAssay(pre_sex_filt_data) <- "RNA"
 
@@ -87,14 +90,10 @@ pre_sex_filt_data <- ScaleData(pre_sex_filt_data, features = rownames(pre_sex_fi
 # Save RDS after integration
 saveRDS(pre_sex_filt_data, paste0(rds_path, "pre_sex_filt_data.RDS"))
 
-
-
-
-
-# There is a strong sex effect - this plot shows DE genes between clusters 1 and 2 which are predominantly hh4 clusters. Clustering is driven by sex genes
+# There is a strong sex effect - this plot shows DE genes between clusters 1 and 6 which are predominantly hh4 clusters. Clustering is driven by sex genes
 png(paste0(plot_path, 'HM.top15.DE.pre-sex_filt.png'), height = 40, width = 70, units = 'cm', res = 500)
-tenx.pheatmap(data = pre_sex_filt_data[,rownames(pre_sex_filt_data@meta.data[pre_sex_filt_data$seurat_clusters == 1 | pre_sex_filt_data$seurat_clusters == 2,])],
-              metadata = c("seurat_clusters", "orig.ident"), selected_genes = rownames(FindMarkers(pre_sex_filt_data, ident.1 = 1, ident.2 = 2)),
+tenx.pheatmap(data = pre_sex_filt_data[,rownames(filter(pre_sex_filt_data@meta.data, seurat_clusters %in% c(1, 6)))],
+              metadata = c("seurat_clusters", "orig.ident"), selected_genes = rownames(FindMarkers(pre_sex_filt_data, ident.1 = 1, ident.2 = 6)),
               hclust_rows = T, gaps_col = "seurat_clusters")
 graphics.off()
 
@@ -174,15 +173,6 @@ sex_filt_data <- pre_sex_filt_data
 
 DefaultAssay(sex_filt_data) <- "integrated"
 
-# Log normalize data and find variable features
-sex_filt_data <- FindVariableFeatures(sex_filt_data, selection.method = "vst", nfeatures = 2000)
-
-# Multi-core when running from command line
-if(opt$runtype == "nextflow"){
-  plan("multiprocess", workers = ncores)
-  options(future.globals.maxSize = 32* 1024^3) # 32gb
-}
-
 sex_filt_data <- ScaleData(sex_filt_data, features = rownames(sex_filt_data), vars.to.regress = c("percent.mt", "sex"), verbose = FALSE)
 
 # PCA
@@ -226,15 +216,8 @@ graphics.off()
 # switch to RNA assay for viewing expression data
 DefaultAssay(sex_filt_data) <- "RNA"
 
-# Log normalize data and find variable features
+# Find variable features and scale data on RNA assay
 sex_filt_data <- FindVariableFeatures(sex_filt_data, selection.method = "vst", nfeatures = 2000)
-
-# Multi-core when running from command line
-if(opt$runtype == "nextflow"){
-  plan("multiprocess", workers = ncores)
-  options(future.globals.maxSize = 32* 1024^3) # 32gb
-}
-
 sex_filt_data <- ScaleData(sex_filt_data, features = rownames(sex_filt_data), vars.to.regress = c("percent.mt", "sex"), verbose = FALSE)
 
 # Save RDS
@@ -243,12 +226,11 @@ saveRDS(sex_filt_data, paste0(rds_path, "sex_filt_data.RDS"))
 # Find differentially expressed genes and plot heatmap of top DE genes for each cluster
 markers <- FindAllMarkers(sex_filt_data, only.pos = T, logfc.threshold = 0.25)
 # get automated cluster order based on percentage of cells in adjacent stages
-cluster_order = order.cell.stage.clust(seurat_object = sex_filt_data, col.to.sort = seurat_clusters, sort.by = orig.ident)
+cluster_order <- order.cell.stage.clust(seurat_object = sex_filt_data, col.to.sort = seurat_clusters, sort.by = orig.ident)
 # Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
-top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_log2FC) %>% arrange(factor(cluster, levels = cluster.order))
+top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_log2FC) %>% arrange(factor(cluster, levels = cluster_order))
 
 png(paste0(plot_path, 'HM.top15.DE.post-sex_filt.png'), height = 75, width = 100, units = 'cm', res = 500)
 tenx.pheatmap(data = sex_filt_data, metadata = c("seurat_clusters", "orig.ident"), custom_order_column = "seurat_clusters",
               custom_order = cluster_order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters")
 graphics.off()
-
