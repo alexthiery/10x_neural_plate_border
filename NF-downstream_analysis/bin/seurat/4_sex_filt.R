@@ -46,10 +46,10 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
 {
   if (opt$runtype == "user"){
     sapply(list.files('./NF-downstream_analysis/bin/custom_functions/', full.names = T), source)
-    plot_path = "./output/NF-downstream_analysis/3_sex_filt/plots/"
-    rds_path = "./output/NF-downstream_analysis/3_sex_filt/rds_files/"
+    plot_path = "./output/NF-downstream_analysis/4_sex_filt/plots/"
+    rds_path = "./output/NF-downstream_analysis/4_sex_filt/rds_files/"
     
-    data_path = "./output/NF-downstream_analysis/2_integration_qc/rds_files/"
+    data_path = "./output/NF-downstream_analysis/2_poor_cluster_filt/rds_files/"
     
     ncores = 8
     
@@ -73,7 +73,7 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
   dir.create(rds_path, recursive = T)
 }
 
-pre_sex_filt_data <- readRDS(paste0(data_path, 'integration_qc_data.RDS'))
+pre_sex_filt_data <- readRDS(paste0(data_path, 'poor_cluster_filt_data.RDS'))
 
 png(paste0(plot_path, 'cluster_subset.pre-sex_filt.png'), height = 40, width = 70, units = 'cm', res = 500)
 cluster.dimplot(pre_sex_filt_data, clusters = c(1, 6), xlim = c(-10, 15), ylim = c(-10, 15))

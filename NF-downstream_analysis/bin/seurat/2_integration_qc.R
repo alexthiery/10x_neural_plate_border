@@ -104,8 +104,10 @@ png(paste0(plot_path, "clustree.png"), width=70, height=35, units = 'cm', res = 
 clust.res(seurat.obj = integration_qc_data, by = 0.1, prefix = 'integrated_snn_res.')
 graphics.off()
 
-# Use clustering resolution = 0.5
-integration_qc_data <- FindClusters(integration_qc_data, resolution = 0.5, verbose = FALSE)
+############################## Identify poor quality clusters #######################################
+
+# Use higher cluster res in order to filter poor quality clusters
+integration_qc_data <- FindClusters(integration_qc_data, resolution = 0.8, verbose = FALSE)
 
 # Plot UMAP for clusters and developmental stage
 png(paste0(plot_path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)

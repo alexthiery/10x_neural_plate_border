@@ -47,10 +47,10 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
 {
   if (opt$runtype == "user"){
     sapply(list.files('./NF-downstream_analysis/bin/custom_functions/', full.names = T), source)
-    plot_path = "./output/NF-downstream_analysis/4_cell_cycle/plots/"
-    rds_path = "./output/NF-downstream_analysis/4_cell_cycle/rds_files/"
+    plot_path = "./output/NF-downstream_analysis/5_cell_cycle/plots/"
+    rds_path = "./output/NF-downstream_analysis/5_cell_cycle/rds_files/"
 
-    data_path = "./output/NF-downstream_analysis/3_sex_filt/rds_files/"
+    data_path = "./output/NF-downstream_analysis/4_sex_filt/rds_files/"
     
     ncores = 8
     

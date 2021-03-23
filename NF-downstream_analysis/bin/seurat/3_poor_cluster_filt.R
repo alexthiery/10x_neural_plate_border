@@ -79,11 +79,10 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
 
 poor_cluster_filt_data <- readRDS(paste0(data_path, 'integration_qc_data.RDS.RDS'))
 
+############################### Remove poor quality clusters ########################################
+
 # Set RNA to default assay
 DefaultAssay(poor_cluster_filt_data) <- "RNA"
-
-
-############################### Remove poor quality clusters ########################################
 
 poor_quality_cells <- rownames(filter(poor_cluster_filt_data@meta.data, seurat_clusters %in% c(11, 15)))
 
