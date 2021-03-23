@@ -86,7 +86,7 @@ DefaultAssay(poor_cluster_filt_data) <- "RNA"
 
 poor_quality_cells <- rownames(filter(poor_cluster_filt_data@meta.data, seurat_clusters %in% c(11, 15)))
 
-poor_cluster_filt_data <- subset(contamination_filt_data, cells = poor_quality_cells, invert = T)
+poor_cluster_filt_data <- subset(poor_cluster_filt_data, cells = poor_quality_cells, invert = T)
 
 # Re-run findvariablefeatures and scaling
 poor_cluster_filt_data <- FindVariableFeatures(poor_cluster_filt_data, selection.method = "vst", nfeatures = 2000, assay = 'RNA')
