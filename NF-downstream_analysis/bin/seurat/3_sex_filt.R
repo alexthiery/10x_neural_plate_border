@@ -2,6 +2,20 @@
 
 # Define arguments for Rscript
 library(getopt)
+reticulate::use_python('/usr/bin/python3.7')
+library(Seurat)
+library(sctransform)
+
+library(future)
+library(dplyr)
+library(cowplot)
+library(clustree)
+library(gridExtra)
+library(grid)
+library(pheatmap)
+library(RColorBrewer)
+library(tidyverse)
+
 spec = matrix(c(
   'runtype', 'l', 2, "character",
   'cores'   , 'c', 2, "integer",
@@ -31,10 +45,10 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
 {
   if (opt$runtype == "user"){
     sapply(list.files('./NF-downstream_analysis/bin/custom_functions/', full.names = T), source)
-    plot_path = "./output/NF-downstream_analysis/sex_filt/plots/"
-    rds_path = "./output/NF-downstream_analysis/sex_filt/rds_files/"
+    plot_path = "./output/NF-downstream_analysis/3_sex_filt/plots/"
+    rds_path = "./output/NF-downstream_analysis/3_sex_filt/rds_files/"
 
-    data_path = "./output/NF-downstream_analysis/integration_qc/rds_files/"
+    data_path = "./output/NF-downstream_analysis/2_integration_qc/rds_files/"
     
     ncores = 8
     
@@ -46,30 +60,21 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
     rds_path = "./rds_files/"
     data_path = "./input/rds_files/"
     ncores = opt$cores
+    
+    # Multi-core when running from command line
+    plan("multiprocess", workers = ncores)
+    options(future.globals.maxSize = 32* 1024^3) # 32gb
   }
   
   cat(paste0("script ran with ", ncores, " cores\n"))
   
   dir.create(plot_path, recursive = T)
   dir.create(rds_path, recursive = T)
-  
-  # Load packages - packages are stored within renv in the repository
-  reticulate::use_python('/usr/bin/python3.7')
-  library(Seurat)
-  library(sctransform)
-  
-  library(future)
-  library(dplyr)
-  library(cowplot)
-  library(clustree)
-  library(gridExtra)
-  library(grid)
-  library(pheatmap)
-  library(RColorBrewer)
-  library(tidyverse)
 }
 
 pre_sex_filt_data <- readRDS(paste0(data_path, 'integration_qc_data.RDS'))
+
+cluster.dimplot(pre_sex_filt_data, clusters = c(1, 2), xlim = c(-10, 15), ylim = c(-10, 15))
 
 DefaultAssay(pre_sex_filt_data) <- "RNA"
 
@@ -77,16 +82,14 @@ DefaultAssay(pre_sex_filt_data) <- "RNA"
 pre_sex_filt_data <- NormalizeData(pre_sex_filt_data, normalization.method = "LogNormalize", scale.factor = 10000)
 pre_sex_filt_data <- FindVariableFeatures(pre_sex_filt_data, selection.method = "vst", nfeatures = 2000)
 
-# Multi-core when running from command line
-if(opt$runtype == "nextflow"){
-  plan("multiprocess", workers = ncores)
-  options(future.globals.maxSize = 32* 1024^3) # 32gb
-}
-
-pre_sex_filt_data <- ScaleData(pre_sex_filt_data, features = rownames(pre_sex_filt_data), vars.to.regress = "percent.mt", verbose = FALSE)
+pre_sex_filt_data <- ScaleData(pre_sex_filt_data, features = rownames(pre_sex_filt_data), vars.to.regress = "percent.mt")
 
 # Save RDS after integration
 saveRDS(pre_sex_filt_data, paste0(rds_path, "pre_sex_filt_data.RDS"))
+
+
+
+
 
 # There is a strong sex effect - this plot shows DE genes between clusters 1 and 2 which are predominantly hh4 clusters. Clustering is driven by sex genes
 png(paste0(plot_path, 'HM.top15.DE.pre-sex_filt.png'), height = 40, width = 70, units = 'cm', res = 500)
