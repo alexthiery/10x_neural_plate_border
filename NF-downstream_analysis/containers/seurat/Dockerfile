@@ -1,7 +1,7 @@
 FROM  rocker/tidyverse:4.0.4
 
 LABEL authors="alex.thiery@crick.ac.uk" \
-      description="Docker image containing all requirements to run 10x downstream analysis in Seurat and Antler"
+      description="Docker image containing all requirements to run 10x downstream analysis in Seurat"
 
 # Install apt packages
 RUN apt-get update \
