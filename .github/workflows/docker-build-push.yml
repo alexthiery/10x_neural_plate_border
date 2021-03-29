@@ -15,7 +15,7 @@ jobs:
       matrix:
         tag: ["base"]
         docker-file: ["Dockerfile"]
-        module-name: ["seurat"]
+        module-name: ["seurat", "antler"]
 
     steps:
       - uses: actions/checkout@v2
