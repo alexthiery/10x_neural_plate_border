@@ -26,4 +26,4 @@ RUN apt-get update \
 RUN   echo 'local({library(BiocManager); r <- repositories(); r["CRAN"] <- "https://cran.rstudio.com/"; options(repos = r)}); \
             options(HTTPUserAgent = sprintf("R/%s R (%s)", getRversion(), paste(getRversion(), R.version$platform, R.version$arch, R.version$os)))' >> /usr/local/lib/R/etc/Rprofile.site
 
-RUN   R -e "devtools::install_github('juliendelile/Antler', dependencies = TRUE)"
+RUN   R -e "devtools::install_github('juliendelile/Antler', ref = 'Development2019')"
