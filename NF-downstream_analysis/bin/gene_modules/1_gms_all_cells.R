@@ -8,6 +8,7 @@ library(Seurat)
 library(pheatmap)
 library(tidyverse)
 library(Antler)
+library(RColorBrewer)
 
 spec = matrix(c(
   'runtype', 'l', 2, "character",
@@ -54,7 +55,7 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
     antler_path = "./antler_data/"
     data_path = "./input/rds_files/"
     ncores = opt$cores
-
+    
     # Multi-core when running from command line
     plan("multiprocess", workers = ncores)
     options(future.globals.maxSize = 32* 1024^3) # 32gb
@@ -69,22 +70,28 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
 
 seurat_data <- readRDS(paste0(data_path, 'contamination_filt_data.RDS'))
 
+seurat_data <- DietSeurat(seurat_data, counts = TRUE, data = TRUE, scale.data = TRUE, assays = 'RNA')
+
+
+# seurat_data <- subset(seurat_data, cells = colnames(seurat_data)[1:2500])
+
+
 # strip end of cell names as this is incorrectly reformated in Antler
 seurat_data <- RenameCells(seurat_data, new.names = sub('-', '_', colnames(seurat_data)))
 
-seurat_data <- RenameCells(seurat_data, new.names = sub('-.*', '', colnames(seurat_data)))
+# seurat_data <- RenameCells(seurat_data, new.names = sub('-.*', '', colnames(seurat_data)))
 
 antler_data <- data.frame(row.names = colnames(seurat_data),
-                          "timepoint" = as.numeric(substring(colnames(seurat_out), 3, 3)),
-                          "treatment" = rep("null", ncol(seurat_out)),
-                          "replicate_id" = rep(1, ncol(seurat_out))
+                          "timepoint" = as.numeric(substring(colnames(seurat_data), 3, 3)),
+                          "treatment" = rep("null", ncol(seurat_data)),
+                          "replicate_id" = rep(1, ncol(seurat_data))
 )
 
 # save pheno data
-write.table(antler_data, file = paste0(antler.path, "phenoData.csv"), row.names = T, sep = "\t", col.names = T)
+write.table(antler_data, file = paste0(antler_path, "phenoData.csv"), row.names = T, sep = "\t", col.names = T)
 
 # save count data
-write.table(GetAssayData(seurat_out, assay = "RNA", slot = "counts"), file = paste0(antler_path, "assayData.csv"), row.names = T, sep = "\t", col.names = T, quote = F)
+write.table(GetAssayData(seurat_data, assay = "RNA", slot = "counts"), file = paste0(antler_path, "assayData.csv"), row.names = T, sep = "\t", col.names = T, quote = F)
 
 ########################################################################################################
 #                            Load Antler data and generate correlation matrix                          #
@@ -115,15 +122,39 @@ GM.plot(data = seurat_data, metadata = c("stage", "seurat_clusters"), gene_modul
         show_rownames = F, col_order = c("stage", "seurat_clusters"))
 graphics.off()
 
-# use bait genes to filter mods
-bait.genes = c("PAX7", "SOX2", "SOX21", "SOX10", "EYA2", "GBX2", "PAX6", "PAX2", "SIX3", "FRZB", "MSX1", "WNT1", "DLX5", "TFAP2A", "TFAP2B", "AXUD1", "GATA2", "HOMER2", "SIX1", "EYA2", "ETS1")
-temp.gms = lapply(antler$gene_modules$lists$unbiasedGMs$content, function(x) if(any(bait.genes %in% x)){x})
+# # use bait genes to filter mods
+# bait.genes = c("PAX7", "SOX2", "SOX21", "SOX10", "EYA2", "GBX2", "PAX6", "PAX2", "SIX3", "FRZB", "MSX1", "WNT1", "DLX5", "TFAP2A", "TFAP2B", "AXUD1", "GATA2", "HOMER2", "SIX1", "EYA2", "ETS1")
+# temp.gms = lapply(antler$gene_modules$lists$unbiasedGMs$content, function(x) if(any(bait.genes %in% x)){x})
+# 
+# png(paste0(plot.path, 'DE.GM.200.png'), height = 50, width = 80, units = 'cm', res = 400)
+# GM.plot(data = seurat_data, metadata = c("stage", "orig.ident", "seurat_clusters"), gene_modules = temp.gms, gaps_col = "stage",
+#         show_rownames = T, col_order = c("stage", "seurat_clusters"))
+# graphics.off()
+# 
 
-png(paste0(plot.path, 'DE.GM.200.png'), height = 50, width = 80, units = 'cm', res = 400)
-GM.plot(data = seurat_out, metadata = c("stage", "orig.ident", "seurat_clusters"), gene_modules = temp.gms, gaps_col = "stage",
-        show_rownames = T, col_order = c("stage", "seurat_clusters"))
+
+
+
+
+# Plot gene modules with at least 50% of genes DE > 0.25 logFC & FDR < 0.001
+# switch to RNA assay for viewing expression data
+DefaultAssay(seurat_data) <- "RNA"
+# Find DEGs
+DE_genes <- FindAllMarkers(seurat_data, only.pos = T, logfc.threshold = 0.25) %>% filter(p_val_adj < 0.001)
+
+# Get automated cluster order based on percentage of cells in adjacent stages
+cluster_order = order.cell.stage.clust(seurat_object = seurat_data, col.to.sort = seurat_clusters, sort.by = stage)
+
+# Filter GMs with 50% genes DE logFC > 0.25 & FDR < 0.001
+gms <- subset.gm(antler_data$gene_modules$get("unbiasedGMs"), selected_genes = DE_genes$gene, keep_mod_ID = T, selected_gene_ratio = 0.5)
+
+png(paste0(plot_path, 'DE_gms.png'), height = 160, width = 80, units = 'cm', res = 500)
+GM.plot(data = seurat_data, metadata = c("stage", "seurat_clusters"), gene_modules = gms, gaps_col = "seurat_clusters",
+        show_rownames = T, custom_order = cluster_order, custom_order_column = "seurat_clusters", fontsize = 25, fontsize_row = 10)
 graphics.off()
 
+
+debug(GM.plot)
 
 
 
