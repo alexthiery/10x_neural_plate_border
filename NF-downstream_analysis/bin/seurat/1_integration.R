@@ -2,6 +2,20 @@
 
 # Define arguments for Rscript
 library(getopt)
+reticulate::use_python('/usr/bin/python3.7')
+library(Seurat)
+library(sctransform)
+
+library(future)
+library(dplyr)
+library(cowplot)
+library(clustree)
+library(gridExtra)
+library(grid)
+library(pheatmap)
+library(RColorBrewer)
+library(tidyverse)
+
 spec = matrix(c(
   'runtype', 'l', 2, "character",
   'cores'   , 'c', 2, "integer",
@@ -45,27 +59,16 @@ if(length(commandArgs(trailingOnly = TRUE)) == 0){
     rds_path = "./rds_files/"
     data_path = "./input/NF-scRNAseq_alignment/cellranger/count/filtered_feature_bc_matrix"
     ncores = opt$cores
+
+    # Multi-core when running from command line
+    plan("multiprocess", workers = ncores)
+    options(future.globals.maxSize = 32* 1024^3) # 32gb
   }
   
   cat(paste0("script ran with ", ncores, " cores\n"))
   
   dir.create(plot_path, recursive = T)
   dir.create(rds_path, recursive = T)
-  
-  # Load packages - packages are stored within renv in the repository
-  reticulate::use_python('/usr/bin/python3.7')
-  library(Seurat)
-  library(sctransform)
-  
-  library(future)
-  library(dplyr)
-  library(cowplot)
-  library(clustree)
-  library(gridExtra)
-  library(grid)
-  library(pheatmap)
-  library(RColorBrewer)
-  library(tidyverse)
 }
 
 # Make dataframe with stage and replicate info extracted from path
@@ -110,30 +113,24 @@ seurat_split <- lapply(seurat_split, function(x) {
 # select features that are repeatedly variable across datasets for integration
 features <- SelectIntegrationFeatures(object.list = seurat_split)
 
-# Multi-core when running from command line
-if(opt$runtype == "nextflow"){
-  plan("multiprocess", workers = ncores)
-  options(future.globals.maxSize = 32* 1024^3) # 32gb
-}
 seurat_split <- lapply(seurat_split, function(x) {
-    x <- ScaleData(x, features = features, verbose = FALSE)
+    x <- ScaleData(x, features = features, vars.to.regress = "percent.mt", verbose = FALSE)
     x <- RunPCA(x, features = features, verbose = FALSE)
 })
 
-seurat_split <- FindIntegrationAnchors(seurat_split, anchor.features = features, reduction = "rpca", k.anchor = 10)
-seurat_split <- IntegrateData(anchorset = seurat_split)
+
+# Get array of all genes across all datasets in order to integrate using all features
+all_features <- lapply(seurat_split, row.names) %>% Reduce(intersect, .)
+# Find anchors used for integration
+intergration_data <- FindIntegrationAnchors(seurat_split, anchor.features = features, reduction = "rpca", k.anchor = 20)
+# Integrate data
+intergration_data <- IntegrateData(anchorset = intergration_data, features.to.integrate = all_features)
 
 # specify that we will perform downstream analysis on the corrected data note that the original
 # unmodified data still resides in the 'RNA' assay
-DefaultAssay(integrated_data) <- "integrated"
+DefaultAssay(intergration_data) <- "integrated"
 
-# Multi-core when running from command line
-if(opt$runtype == "nextflow"){
-  plan("multiprocess", workers = ncores)
-  options(future.globals.maxSize = 32* 1024^3) # 32gb
-}
-
-integrated_data <- ScaleData(integrated_data, features = rownames(integrated_data), verbose = FALSE)
+intergration_data <- ScaleData(intergration_data, features = rownames(intergration_data), vars.to.regress = "percent.mt", verbose = FALSE)
 
 # Save RDS after integration
-saveRDS(integrated_data, paste0(rds_path, "integrated_data.RDS"))
+saveRDS(intergration_data, paste0(rds_path, "intergration_data.RDS"))
