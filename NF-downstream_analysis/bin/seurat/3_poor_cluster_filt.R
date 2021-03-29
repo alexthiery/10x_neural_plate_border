@@ -91,7 +91,7 @@ poor_cluster_filt_data <- subset(poor_cluster_filt_data, cells = poor_quality_ce
 # Re-run findvariablefeatures and scaling
 poor_cluster_filt_data <- FindVariableFeatures(poor_cluster_filt_data, selection.method = "vst", nfeatures = 2000, assay = 'RNA')
 
-poor_cluster_filt_data <- ScaleData(poor_cluster_filt_data, features = rownames(poor_cluster_filt_data), vars.to.regress = c("percent.mt", "sex", "S.Score", "G2M.Score"))
+poor_cluster_filt_data <- ScaleData(poor_cluster_filt_data, features = rownames(poor_cluster_filt_data), vars.to.regress = "percent.mt")
 
 saveRDS(poor_cluster_filt_data, paste0(rds_path, "poor_cluster_filt_data.RDS")) # remove once working
 
@@ -100,7 +100,7 @@ saveRDS(poor_cluster_filt_data, paste0(rds_path, "poor_cluster_filt_data.RDS")) 
 DefaultAssay(poor_cluster_filt_data) <- "integrated"
 
 # Rescale data on integrated assay
-poor_cluster_filt_data <- ScaleData(poor_cluster_filt_data, features = rownames(poor_cluster_filt_data), vars.to.regress = c("percent.mt", "sex", "S.Score", "G2M.Score"))
+poor_cluster_filt_data <- ScaleData(poor_cluster_filt_data, features = rownames(poor_cluster_filt_data), vars.to.regress = "percent.mt")
 
 # PCA
 poor_cluster_filt_data <- RunPCA(object = poor_cluster_filt_data, verbose = FALSE)

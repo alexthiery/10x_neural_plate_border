@@ -112,7 +112,7 @@ cell_cycle_data <- RunUMAP(cell_cycle_data, dims = 1:15, verbose = FALSE)
 
 # Find optimal cluster resolution
 png(paste0(plot_path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
-clust.res(seurat.obj = cell_cycle_data, by = 0.2)
+clust.res(seurat.obj = cell_cycle_data, by = 0.2, prefix = "integrated_snn_res.")
 graphics.off()
 
 # Use clustering resolution = 1.2
