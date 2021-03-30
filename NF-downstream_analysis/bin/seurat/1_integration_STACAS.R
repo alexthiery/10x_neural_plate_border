@@ -84,15 +84,18 @@ seurat_split <- lapply(seurat_split, function(x) {
   FindVariableFeatures(x, selection.method = "vst", nfeatures = 2000)
 })
 
-ref.anchors.filtered <- Run.STACAS(seurat_data_integrated, dims = 1:30, anchor.features = 2000)
-
-seurat_data_integrated <- IntegrateData(anchorset = ref.anchors.filtered, dims = 1:30)
+# Get array of all genes across all datasets in order to integrate using all features
+all_features <- lapply(seurat_split, row.names) %>% Reduce(intersect, .)
+# Find anchors used for integration
+intergration_data <- Run.STACAS(seurat_split, dims = 1:30, anchor.features = 2000)
+# Integrate data
+intergration_data <- IntegrateData(anchorset = intergration_data, dims = 1:30, features.to.integrate = all_features)
 
 # specify that we will perform downstream analysis on the corrected data note that the original
 # unmodified data still resides in the 'RNA' assay
 DefaultAssay(intergration_data) <- "integrated"
 
-intergration_data <- ScaleData(intergration_data, features = rownames(intergration_data), vars.to.regress = "percent.mt", verbose = FALSE)
+intergration_data <- ScaleData(intergration_data, features = rownames(intergration_data), vars.to.regress = "percent.mt")
 
 # Save RDS after integration
 saveRDS(intergration_data, paste0(rds_path, "intergration_data.RDS"))
