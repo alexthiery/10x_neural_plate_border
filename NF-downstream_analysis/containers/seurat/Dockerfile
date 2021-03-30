@@ -29,4 +29,6 @@ RUN   R -e "install.packages('future', dependencies=TRUE)" && \
       # install STACAS for time being
       R -e "remotes::install_github('carmonalab/STACAS')"
 
-RUN   R -e "devtools::install_github('alexthiery/scHelper', dependencies = TRUE)"
+RUN   R -e "devtools::install_version('ArrayBin', version = '0.2')" && \
+      R -e "devtools::install_github('juliendelile/Antler', dependencies = TRUE)" && \
+      R -e "devtools::install_github('alexthiery/scHelper', dependencies = TRUE)"
