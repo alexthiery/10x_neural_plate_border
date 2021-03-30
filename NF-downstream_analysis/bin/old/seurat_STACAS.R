@@ -176,7 +176,7 @@ seurat_data_integrated <- FindClusters(seurat_data_integrated, resolution = 0.5,
 
 # Plot UMAP for clusters and developmental stage
 png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
-clust.stage.plot(seurat_data_integrated)
+ClustStagePlot(seurat_data_integrated)
 graphics.off()
 
 # Plot QC for each cluster
@@ -323,7 +323,7 @@ seurat_data_integrated.sexscale <- RunUMAP(seurat_data_integrated.sexscale, dims
 
 # Find optimal cluster resolution
 png(paste0(curr.plot.path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
-clust.res(seurat.obj = seurat_data_integrated.sexscale, by = 0.1, prefix = "integrated_snn_res.")
+ClustRes(seurat_object = seurat_data_integrated.sexscale, by = 0.1, prefix = "integrated_snn_res.")
 graphics.off()
 
 # Use clustering resolution = 0.5 to look for contamination clusters
@@ -331,7 +331,7 @@ seurat_data_integrated.sexscale <- FindClusters(seurat_data_integrated.sexscale,
 
 # Plot UMAP for clusters and developmental stage
 png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
-clust.stage.plot(seurat_data_integrated.sexscale, stage.col = "stage")
+ClustStagePlot(seurat_data_integrated.sexscale, stage_col = "stage")
 graphics.off()
 
 # Plot QC for each cluster
@@ -429,7 +429,7 @@ norm.data.contamfilt <- RunUMAP(norm.data.contamfilt, dims = 1:30, verbose = FAL
 
 # Find optimal cluster resolution
 png(paste0(curr.plot.path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
-clust.res(seurat.obj = norm.data.contamfilt, by = 0.2, prefix = "integrated_snn_res.")
+ClustRes(seurat_object = norm.data.contamfilt, by = 0.2, prefix = "integrated_snn_res.")
 graphics.off()
 
 # Use clustering resolution = 1 in order to make lots of clusters and identify any remaining poor quality cells
@@ -437,7 +437,7 @@ norm.data.contamfilt <- FindClusters(norm.data.contamfilt, resolution = 1)
 
 # Plot UMAP for clusters and developmental stage
 png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
-clust.stage.plot(norm.data.contamfilt, stage.col = "stage")
+ClustStagePlot(norm.data.contamfilt, stage_col = "stage")
 graphics.off()
 
 # Plot QC for each cluster
@@ -502,7 +502,7 @@ norm.data.clustfilt <- RunUMAP(norm.data.clustfilt, dims = 1:30, verbose = FALSE
 
 # Find optimal cluster resolution
 png(paste0(curr.plot.path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
-clust.res(seurat.obj = norm.data.clustfilt, by = 0.2, prefix = "integrated_snn_res.")
+ClustRes(seurat_object = norm.data.clustfilt, by = 0.2, prefix = "integrated_snn_res.")
 graphics.off()
 
 # Use clustering resolution = 1.2
@@ -510,7 +510,7 @@ norm.data.clustfilt <- FindClusters(norm.data.clustfilt, resolution = 1.2)
 
 # Plot UMAP for clusters and developmental stage
 png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
-clust.stage.plot(norm.data.clustfilt, stage.col = "stage")
+ClustStagePlot(norm.data.clustfilt, stage_col = "stage")
 graphics.off()
 
 # Find differentially expressed genes and plot heatmap of top DE genes for each cluster
@@ -573,7 +573,7 @@ norm.data.hh4filt <- RunUMAP(norm.data.hh4filt, dims = 1:30, verbose = FALSE)
 
 # Find optimal cluster resolution
 png(paste0(curr.plot.path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
-clust.res(seurat.obj = norm.data.hh4filt, by = 0.2, prefix = "integrated_snn_res.")
+ClustRes(seurat_object = norm.data.hh4filt, by = 0.2, prefix = "integrated_snn_res.")
 graphics.off()
 
 # Use clustering resolution = 1.2
@@ -581,7 +581,7 @@ norm.data.hh4filt <- FindClusters(norm.data.hh4filt, resolution = 1.2)
 
 # Plot UMAP for clusters and developmental stage
 png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
-clust.stage.plot(norm.data.hh4filt, stage.col = "stage")
+ClustStagePlot(norm.data.hh4filt, stage_col = "stage")
 graphics.off()
 
 # Find differentially expressed genes and plot heatmap of top DE genes for each cluster

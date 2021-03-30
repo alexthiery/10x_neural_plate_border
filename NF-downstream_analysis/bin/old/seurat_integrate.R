@@ -163,7 +163,7 @@ seurat_data_integrated <- FindClusters(seurat_data_integrated, resolution = 0.5,
 
 # Plot UMAP for clusters and developmental stage
 png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
-clust.stage.plot(seurat_data_integrated)
+ClustStagePlot(seurat_data_integrated)
 graphics.off()
 
 # Plot QC for each cluster
@@ -310,7 +310,7 @@ seurat_data_integrated.sexscale <- RunUMAP(seurat_data_integrated.sexscale, dims
 
 # Find optimal cluster resolution
 png(paste0(curr.plot.path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
-clust.res(seurat.obj = seurat_data_integrated.sexscale, by = 0.1, prefix = "integrated_snn_res.")
+ClustRes(seurat_object = seurat_data_integrated.sexscale, by = 0.1, prefix = "integrated_snn_res.")
 graphics.off()
 
 # Use clustering resolution = 0.5 to look for contamination clusters
@@ -318,7 +318,7 @@ seurat_data_integrated.sexscale <- FindClusters(seurat_data_integrated.sexscale,
 
 # Plot UMAP for clusters and developmental stage
 png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
-clust.stage.plot(seurat_data_integrated.sexscale)
+ClustStagePlot(seurat_data_integrated.sexscale)
 graphics.off()
 
 # Plot QC for each cluster
@@ -411,7 +411,7 @@ norm.data.contamfilt <- RunUMAP(norm.data.contamfilt, dims = 1:30, verbose = FAL
 
 # Find optimal cluster resolution
 png(paste0(curr.plot.path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
-clust.res(seurat.obj = norm.data.contamfilt, by = 0.2)
+ClustRes(seurat_object = norm.data.contamfilt, by = 0.2)
 graphics.off()
 
 # Use clustering resolution = 1.6 in order to make lots of clusters and identify any remaining poor quality cells
@@ -419,7 +419,7 @@ norm.data.contamfilt <- FindClusters(norm.data.contamfilt, resolution = 1.6)
 
 # Plot UMAP for clusters and developmental stage
 png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
-clust.stage.plot(norm.data.contamfilt)
+ClustStagePlot(norm.data.contamfilt)
 graphics.off()
 
 # Plot QC for each cluster
@@ -475,7 +475,7 @@ norm.data.clustfilt <- RunUMAP(norm.data.clustfilt, dims = 1:30, verbose = FALSE
 
 # Find optimal cluster resolution
 png(paste0(curr.plot.path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
-clust.res(seurat.obj = norm.data.clustfilt, by = 0.2)
+ClustRes(seurat_object = norm.data.clustfilt, by = 0.2)
 graphics.off()
 
 # Use clustering resolution = 0.8
@@ -483,5 +483,5 @@ norm.data.clustfilt <- FindClusters(norm.data.clustfilt, resolution = 0.8)
 
 # Plot UMAP for clusters and developmental stage
 png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
-clust.stage.plot(norm.data.clustfilt)
+ClustStagePlot(norm.data.clustfilt)
 graphics.off()

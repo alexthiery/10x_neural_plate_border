@@ -158,7 +158,7 @@ norm.data <- FindClusters(norm.data, resolution = 0.5, verbose = FALSE)
 
 # Plot UMAP for clusters and developmental stage
 png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
-clust.stage.plot(norm.data)
+ClustStagePlot(norm.data)
 graphics.off()
 
 # Plot QC for each cluster
@@ -273,7 +273,7 @@ norm.data.sexscale <- RunUMAP(norm.data.sexscale, dims = 1:30, verbose = FALSE)
 
 # Find optimal cluster resolution
 png(paste0(curr.plot.path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
-clust.res(seurat.obj = norm.data.sexscale, by = 0.1)
+ClustRes(seurat_object = norm.data.sexscale, by = 0.1)
 graphics.off()
 
 # Use clustering resolution = 0.5 to look for contamination clusters
@@ -281,7 +281,7 @@ norm.data.sexscale <- FindClusters(norm.data.sexscale, resolution = 0.5, verbose
 
 # Plot UMAP for clusters and developmental stage
 png(paste0(curr.plot.path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
-clust.stage.plot(norm.data.sexscale)
+ClustStagePlot(norm.data.sexscale)
 graphics.off()
 
 # Plot QC for each cluster
