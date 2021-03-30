@@ -26,7 +26,7 @@ RUN   R -e "install.packages('future', dependencies=TRUE)" && \
       R -e "install.packages('getopt', dependencies=TRUE)" && \
       R -e "install.packages('pheatmap', dependencies=TRUE)" && \
       R -e "install.packages('Seurat', dependencies=TRUE)" && \
-      # speed up SCTransform
-      R -e "BiocManager::install('glmGamPoi')" && \
       # install STACAS for time being
       R -e "remotes::install_github('carmonalab/STACAS')"
+
+RUN   R -e "devtools::install_github('alexthiery/scHelper', dependencies = TRUE)"

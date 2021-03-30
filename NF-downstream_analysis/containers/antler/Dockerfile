@@ -7,3 +7,4 @@ LABEL authors="alex.thiery@crick.ac.uk" \
 
 RUN   R -e "devtools::install_version('ArrayBin', version = '0.2')"
 RUN   R -e "devtools::install_github('juliendelile/Antler', dependencies = TRUE)"
+RUN   R -e "devtools::install_github('alexthiery/scHelper', dependencies = TRUE)"
