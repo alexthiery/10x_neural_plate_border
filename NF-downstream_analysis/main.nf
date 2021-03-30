@@ -11,7 +11,7 @@ def modules = params.modules.clone()
 --------------------------------------------------------------------------------------*/
 include {metadata} from "$baseDir/../modules/tools/metadata/main.nf"
 
-include {r as integration} from "$baseDir/../modules/tools/r/main.nf" addParams(options: modules['integration'], script: modules['integration_STACAS'].script)
+include {r as integration} from "$baseDir/../modules/tools/r/main.nf" addParams(options: modules['integration'], script: modules['integration'].script)
 include {r as integration_qc} from "$baseDir/../modules/tools/r/main.nf" addParams(options: modules['integration_qc'], script: modules['integration_qc'].script)
 include {r as sex_filt} from "$baseDir/../modules/tools/r/main.nf" addParams(options: modules['sex_filt'], script: modules['sex_filt'].script)
 include {r as cell_cycle} from "$baseDir/../modules/tools/r/main.nf" addParams(options: modules['cell_cycle'], script: modules['cell_cycle'].script)
