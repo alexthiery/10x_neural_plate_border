@@ -102,7 +102,7 @@ graphics.off()
 
 # Plot UMAP for poor quality clusters
 png(paste0(plot_path, "PoorClusters.png"), width=60, height=20, units = 'cm', res = 200)
-ClusterDimplot(poor_cluster_filt_data, clusters = c(1, 8, 11, 16), plot_title = 'poor quality clusters')
+ClusterDimplot(integration_qc_data, clusters = c(1, 8, 11, 16), plot_title = 'poor quality clusters')
 graphics.off()
 
 # check whether stages that are resequenced are well integrated
