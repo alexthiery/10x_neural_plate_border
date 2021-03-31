@@ -1,0 +1,7 @@
+low = 16 cpu 16 ram seurat 12
+med = 16 cpu 64 ram seurat 12
+high = 16 cpu 128 ram seurat 12
+
+seurat_low = 16 cpu 64 ram seurat 8
+seurat_med = 16 cpu 64 ram seurat 32
+seurat_high = 16 cpu 64 ram seurat 60
