@@ -10,7 +10,7 @@ library(tidyverse)
 
 spec = matrix(c(
   'runtype', 'l', 2, "character",
-  'cores'   , 'c', 2, "integer",
+  'cores'   , 'c', 2, "integer"
 ), byrow=TRUE, ncol=4)
 opt = getopt(spec)
 
