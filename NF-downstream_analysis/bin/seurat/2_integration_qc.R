@@ -25,9 +25,9 @@ opt = getopt(spec)
   if(length(commandArgs(trailingOnly = TRUE)) == 0){
     cat('No command line arguments provided, paths are set for running interactively in Rstudio server\n')
 
-    plot_path = "./output/NF-downstream_analysis/integration_qc/plots/"
-    rds_path = "./output/NF-downstream_analysis/integration_qc/rds_files/"
-    data_path = "./output/NF-downstream_analysis/integration_STACAS/rds_files/"
+    plot_path = "./output/NF-downstream_analysis/2_integration_qc/plots/"
+    rds_path = "./output/NF-downstream_analysis/2_integration_qc/rds_files/"
+    data_path = "./output/NF-downstream_analysis/1_integration/rds_files/"
     
     ncores = 8
 
