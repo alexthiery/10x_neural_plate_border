@@ -1,0 +1,7 @@
+task_id	hash	native_id	name	status	exit	submit	duration	realtime	%cpu	peak_rss	peak_vmem	rchar	wchar
+3	ab/1dcf69	23238236	integration_seurat_med (1)	COMPLETED	0	2021-03-31 16:57:16.487	24m 2s	23m 54s	934.5%	426.3 GB	440.5 GB	10.5 GB	14.4 GB
+1	77/f5589c	23238233	integration_seurat_high (1)	COMPLETED	0	2021-03-31 16:57:16.085	25m 38s	25m 31s	974.8%	426.5 GB	440.5 GB	10.5 GB	14.4 GB
+2	2d/1bd4ab	23238234	integration_seurat_low (1)	COMPLETED	0	2021-03-31 16:57:16.174	29m 22s	29m 18s	977.8%	431.8 GB	445.9 GB	10.5 GB	14.4 GB
+6	42/cb63d2	23238232	integration_med (1)	COMPLETED	0	2021-03-31 16:57:15.945	31m 3s	22m 39s	1767.4%	424.7 GB	454.6 GB	10.5 GB	14.4 GB
+4	0c/7acedf	23238235	integration_high (1)	COMPLETED	0	2021-03-31 16:57:16.357	39m 12s	22m 41s	1768.9%	424.8 GB	454.6 GB	10.5 GB	14.4 GB
+5	4c/887de6	23238237	integration_low (1)	FAILED	-	2021-03-31 16:57:16.549	1h 5m 32s	1h 5m 30s	-	-	-	-	-
