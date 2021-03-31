@@ -59,7 +59,7 @@ poor_cluster_filt_data <- readRDS(paste0(data_path, 'integration_qc_data.RDS'))
 # Set RNA to default assay
 DefaultAssay(poor_cluster_filt_data) <- "RNA"
 
-poor_quality_cells <- rownames(filter(poor_cluster_filt_data@meta.data, seurat_clusters %in% c(5, 7)))
+poor_quality_cells <- rownames(filter(poor_cluster_filt_data@meta.data, seurat_clusters %in% c(1, 8, 11, 16)))
 
 poor_cluster_filt_data <- subset(poor_cluster_filt_data, cells = poor_quality_cells, invert = T)
 

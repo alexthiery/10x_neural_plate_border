@@ -25,9 +25,9 @@ opt = getopt(spec)
   if(length(commandArgs(trailingOnly = TRUE)) == 0){
     cat('No command line arguments provided, paths are set for running interactively in Rstudio server\n')
 
-    plot_path = "./output/NF-downstream_analysis/2_integration_qc/plots/"
-    rds_path = "./output/NF-downstream_analysis/2_integration_qc/rds_files/"
-    data_path = "./output/NF-downstream_analysis/1_integration/rds_files/"
+    plot_path = "./output/NF-downstream_analysis/integration_qc/plots/"
+    rds_path = "./output/NF-downstream_analysis/integration_qc/rds_files/"
+    data_path = "./output/NF-downstream_analysis/integration_STACAS/rds_files/"
     
     ncores = 8
 
@@ -96,8 +96,13 @@ ClustStagePlot(integration_qc_data)
 graphics.off()
 
 # Plot QC for each cluster
-png(paste0(plot_path, "QCPlot.png"), width=40, height=14, units = 'cm', res = 200)
+png(paste0(plot_path, "QCPlot.png"), width=50, height=14, units = 'cm', res = 200)
 QCPlot(integration_qc_data)
+graphics.off()
+
+# Plot UMAP for poor quality clusters
+png(paste0(plot_path, "PoorClusters.png"), width=60, height=20, units = 'cm', res = 200)
+ClusterDimplot(poor_cluster_filt_data, clusters = c(1, 8, 11, 16), plot_title = 'poor quality clusters')
 graphics.off()
 
 # check whether stages that are resequenced are well integrated
