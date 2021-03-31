@@ -102,7 +102,7 @@ graphics.off()
 
 # check whether stages that are resequenced are well integrated
 png(paste0(plot_path, "CheckIntegration.png"), width=60, height=20, units = 'cm', res = 200)
-CheckIntegration(integration_qc_data)
+CheckIntegration(integration_qc_data, group_by = 'stage')
 graphics.off()
 
 # Save RDS
