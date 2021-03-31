@@ -11,6 +11,7 @@ def modules = params.modules.clone()
 --------------------------------------------------------------------------------------*/
 include {metadata} from "$baseDir/../modules/tools/metadata/main.nf"
 
+include {r as integration_min} from "$baseDir/../modules/tools/r/main.nf" addParams(options: modules['integration_min'], script: modules['integration_min'].script)
 include {r as integration_low} from "$baseDir/../modules/tools/r/main.nf" addParams(options: modules['integration_low'], script: modules['integration_low'].script)
 include {r as integration_med} from "$baseDir/../modules/tools/r/main.nf" addParams(options: modules['integration_med'], script: modules['integration_med'].script)
 include {r as integration_high} from "$baseDir/../modules/tools/r/main.nf" addParams(options: modules['integration_high'], script: modules['integration_high'].script)
@@ -26,6 +27,7 @@ workflow {
     metadata(params.input)
 
     // Run pipeline on seurat integration
+    integration_min( metadata.out.filter{ it[0].sample_id == 'NF-scRNAseq_alignment_out' } )
     integration_low( metadata.out.filter{ it[0].sample_id == 'NF-scRNAseq_alignment_out' } )
     integration_med( metadata.out.filter{ it[0].sample_id == 'NF-scRNAseq_alignment_out' } )
     integration_high( metadata.out.filter{ it[0].sample_id == 'NF-scRNAseq_alignment_out' } )
