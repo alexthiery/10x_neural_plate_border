@@ -4,65 +4,48 @@
 library(getopt)
 reticulate::use_python('/usr/bin/python3.7')
 library(Seurat)
-
 library(pheatmap)
 library(tidyverse)
 library(Antler)
 library(RColorBrewer)
+library(scHelper)
 
 spec = matrix(c(
   'runtype', 'l', 2, "character",
-  'cores'   , 'c', 2, "integer",
-  'custom_functions', 'm', 2, "character"
+  'cores'   , 'c', 2, "integer"
 ), byrow=TRUE, ncol=4)
 opt = getopt(spec)
 
-# Set run location
-if(length(commandArgs(trailingOnly = TRUE)) == 0){
-  cat('No command line arguments provided, user defaults paths are set for running interactively in Rstudio on docker\n')
-  opt$runtype = "user"
-} else {
-  if(is.null(opt$runtype)){
-    stop("--runtype must be either 'user' or 'nextflow'")
-  }
-  if(tolower(opt$runtype) != "user" & tolower(opt$runtype) != "nextflow"){
-    stop("--runtype must be either 'user' or 'nextflow'")
-  }
-  if(tolower(opt$runtype) == "nextflow"){
-    if(is.null(opt$custom_functions) | opt$custom_functions == "null"){
-      stop("--custom_functions path must be specified in process params config")
-    }
-  }
-}
-
 # Set paths and load data
 {
-  if (opt$runtype == "user"){
-    sapply(list.files('./NF-downstream_analysis/bin/custom_functions/', full.names = T), source)
+  if(length(commandArgs(trailingOnly = TRUE)) == 0){
+    cat('No command line arguments provided, paths are set for running interactively in Rstudio server\n')
+
     plot_path = "./output/NF-downstream_analysis/1_gms_all_cells/plots/"
     rds_path = "./output/NF-downstream_analysis/1_gms_all_cells/rds_files/"
     antler_path = "./output/NF-downstream_analysis/1_gms_all_cells/antler_data/"
     data_path = "./output/NF-downstream_analysis/6_contamination_filt/rds_files/"
     
     ncores = 8
-    
+
   } else if (opt$runtype == "nextflow"){
-    cat('pipeline running through nextflow\n')
-    
-    sapply(list.files(opt$custom_functions, full.names = T), source)
+    cat('pipeline running through Nextflow\n')
+
     plot_path = "./plots/"
     rds_path = "./rds_files/"
     antler_path = "./antler_data/"
     data_path = "./input/rds_files/"
     ncores = opt$cores
-    
+
     # Multi-core when running from command line
     plan("multiprocess", workers = ncores)
     options(future.globals.maxSize = 32* 1024^3) # 32gb
+
+  } else {
+    stop("--runtype must be set to 'nextflow'")
   }
-  
+
   cat(paste0("script ran with ", ncores, " cores\n"))
-  
   dir.create(plot_path, recursive = T)
   dir.create(rds_path, recursive = T)
   dir.create(antler_path, recursive = T)
@@ -118,16 +101,16 @@ saveRDS(antler_data, paste0(rds_path, "antler_all.RDS"))
 
 # plot all gene modules
 png(paste0(plot_path, 'allmodules.200.png'), height = 100, width = 80, units = 'cm', res = 400)
-GM.plot(data = seurat_data, metadata = c("stage", "seurat_clusters"), gene_modules = antler_data$gene_modules$lists$unbiasedGMs$content,
+GeneModulePheatmap(data = seurat_data, metadata = c("stage", "seurat_clusters"), gene_modules = antler_data$gene_modules$lists$unbiasedGMs$content,
         show_rownames = F, col_order = c("stage", "seurat_clusters"))
 graphics.off()
 
 # # use bait genes to filter mods
-# bait.genes = c("PAX7", "SOX2", "SOX21", "SOX10", "EYA2", "GBX2", "PAX6", "PAX2", "SIX3", "FRZB", "MSX1", "WNT1", "DLX5", "TFAP2A", "TFAP2B", "AXUD1", "GATA2", "HOMER2", "SIX1", "EYA2", "ETS1")
-# temp.gms = lapply(antler$gene_modules$lists$unbiasedGMs$content, function(x) if(any(bait.genes %in% x)){x})
+# bait_genes = c("PAX7", "SOX2", "SOX21", "SOX10", "EYA2", "GBX2", "PAX6", "PAX2", "SIX3", "FRZB", "MSX1", "WNT1", "DLX5", "TFAP2A", "TFAP2B", "AXUD1", "GATA2", "HOMER2", "SIX1", "EYA2", "ETS1")
+# temp_gms = lapply(antler$gene_modules$lists$unbiasedGMs$content, function(x) if(any(bait_genes %in% x)){x})
 # 
 # png(paste0(plot.path, 'DE.GM.200.png'), height = 50, width = 80, units = 'cm', res = 400)
-# GM.plot(data = seurat_data, metadata = c("stage", "orig.ident", "seurat_clusters"), gene_modules = temp.gms, gaps_col = "stage",
+# GeneModulePheatmap(data = seurat_data, metadata = c("stage", "orig.ident", "seurat_clusters"), gene_modules = temp_gms, gaps_col = "stage",
 #         show_rownames = T, col_order = c("stage", "seurat_clusters"))
 # graphics.off()
 # 
@@ -143,18 +126,18 @@ DefaultAssay(seurat_data) <- "RNA"
 DE_genes <- FindAllMarkers(seurat_data, only.pos = T, logfc.threshold = 0.25) %>% filter(p_val_adj < 0.001)
 
 # Get automated cluster order based on percentage of cells in adjacent stages
-cluster_order = order.cell.stage.clust(seurat_object = seurat_data, col.to.sort = seurat_clusters, sort.by = stage)
+cluster_order <- OrderCellClusters(seurat_object = seurat_data, col_to_sort = seurat_clusters, sort_by = stage)
 
 # Filter GMs with 50% genes DE logFC > 0.25 & FDR < 0.001
-gms <- subset.gm(antler_data$gene_modules$get("unbiasedGMs"), selected_genes = DE_genes$gene, keep_mod_ID = T, selected_gene_ratio = 0.5)
+gms <- SubsetGeneModules(antler_data$gene_modules$get("unbiasedGMs"), selected_genes = DE_genes$gene, keep_mod_ID = T, selected_gene_ratio = 0.5)
 
 png(paste0(plot_path, 'DE_gms.png'), height = 160, width = 80, units = 'cm', res = 500)
-GM.plot(data = seurat_data, metadata = c("stage", "seurat_clusters"), gene_modules = gms, gaps_col = "seurat_clusters",
+GeneModulePheatmap(data = seurat_data, metadata = c("stage", "seurat_clusters"), gene_modules = gms, gaps_col = "seurat_clusters",
         show_rownames = T, custom_order = cluster_order, custom_order_column = "seurat_clusters", fontsize = 25, fontsize_row = 10)
 graphics.off()
 
 
-debug(GM.plot)
+debug(GeneModulePheatmap)
 
 
 
@@ -175,15 +158,15 @@ saveRDS(antler, paste0(rds.path, "antler_all.RDS"))
 
 # plot all gene modules
 png(paste0(plot.path, 'allmodules.unbiased.png'), height = 100, width = 80, units = 'cm', res = 400)
-GM.plot(data = seurat_out, metadata = c("stage", "seurat_clusters"), gene_modules = antler$gene_modules$lists$unbiasedGMs$content,
+GeneModulePheatmap(data = seurat_out, metadata = c("stage", "seurat_clusters"), gene_modules = antler$gene_modules$lists$unbiasedGMs$content,
         show_rownames = F, col_order = c("stage", "seurat_clusters"))
 graphics.off()
 
 # use bait genes to filter mods
-bait.genes = c("PAX7", "SOX2", "SOX21", "SOX10", "EYA2", "GBX2", "PAX6", "PAX2", "SIX3", "FRZB", "MSX1", "WNT1", "DLX5", "TFAP2A", "TFAP2B", "AXUD1", "GATA2", "HOMER2", "SIX1", "EYA2", "ETS1")
-temp.gms = lapply(antler$gene_modules$lists$unbiasedGMs$content, function(x) if(any(bait.genes %in% x)){x})
+bait_genes = c("PAX7", "SOX2", "SOX21", "SOX10", "EYA2", "GBX2", "PAX6", "PAX2", "SIX3", "FRZB", "MSX1", "WNT1", "DLX5", "TFAP2A", "TFAP2B", "AXUD1", "GATA2", "HOMER2", "SIX1", "EYA2", "ETS1")
+temp_gms = lapply(antler$gene_modules$lists$unbiasedGMs$content, function(x) if(any(bait_genes %in% x)){x})
 
 png(paste0(plot.path, 'DE.GM.unbiased.png'), height = 50, width = 80, units = 'cm', res = 400)
-GM.plot(data = seurat_out, metadata = c("stage", "orig.ident", "seurat_clusters"), gene_modules = temp.gms, gaps_col = "stage",
+GeneModulePheatmap(data = seurat_out, metadata = c("stage", "orig.ident", "seurat_clusters"), gene_modules = temp_gms, gaps_col = "stage",
         show_rownames = T, col_order = c("stage", "seurat_clusters"))
 graphics.off()
