@@ -54,18 +54,31 @@ opt = getopt(spec)
 
 poor_cluster_filt_data <- readRDS(paste0(data_path, 'integration_qc_data.RDS'))
 
-############################### Remove poor quality clusters ########################################
+############################## Identify and filter poor quality clusters #######################################
 
 # Set RNA to default assay
 DefaultAssay(poor_cluster_filt_data) <- "RNA"
 
-poor_quality_cells <- rownames(filter(poor_cluster_filt_data@meta.data, seurat_clusters %in% c(1, 8, 11, 16)))
+# Plot QC for each cluster with quantiles
+png(paste0(plot_path, "QCPlot.png"), width=50, height=14, units = 'cm', res = 200)
+QCPlot(poor_cluster_filt_data, plot_quantiles = TRUE)
+graphics.off()
 
+# Automatically find poor quality clusters
+poor_clusters <- IdentifyOutliers(poor_cluster_filt_data@meta.data, group_by = 'seurat_clusters', metric = c('nCount_RNA', 'nFeature_RNA'), intersect_metrics = TRUE)
+
+# Plot UMAP for poor quality clusters
+png(paste0(plot_path, "PoorClusters.png"), width=60, height=20, units = 'cm', res = 200)
+ClusterDimplot(poor_cluster_filt_data, clusters = poor_clusters, plot_title = 'poor quality clusters')
+graphics.off()
+
+
+# Filter poor quality clusters
+poor_quality_cells <- rownames(filter(poor_cluster_filt_data@meta.data, seurat_clusters %in% poor_clusters))
 poor_cluster_filt_data <- subset(poor_cluster_filt_data, cells = poor_quality_cells, invert = T)
 
 # Re-run findvariablefeatures and scaling
 poor_cluster_filt_data <- FindVariableFeatures(poor_cluster_filt_data, selection.method = "vst", nfeatures = 2000, assay = 'RNA')
-
 poor_cluster_filt_data <- ScaleData(poor_cluster_filt_data, features = rownames(poor_cluster_filt_data), vars.to.regress = "percent.mt")
 
 
