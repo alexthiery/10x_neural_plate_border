@@ -113,9 +113,6 @@ print(gridExtra::grid.arrange(DimPlot(pre_cell_cycle_data, group.by = "Phase", r
                               ncol = 2))
 graphics.off()
 
-
-cell_cycle_data <- DietSeurat(cell_cycle_data, counts = TRUE, data = TRUE, scale.data = TRUE, assays = c('RNA', 'integrated'))
-
 # switch to RNA assay for viewing expression data
 DefaultAssay(cell_cycle_data) <- "RNA"
 
