@@ -54,14 +54,13 @@ opt = getopt(spec)
 
 contamination_filt_data <- readRDS(paste0(data_path, 'cell_cycle_data.RDS'))
 
-# Set RNA to default assay
-DefaultAssay(contamination_filt_data) <- "integrated"
-
 #####################################################################################################
 #                           Identify and remove contamination (mesoderm and PGCs)                   #
 #####################################################################################################
 
-# Identify mesoderm and PGCs
+# Set RNA to default assay for plotting expression data
+DefaultAssay(contamination_filt_data) <- "RNA"
+
 # UMAP plots GOI
 genes <- c("EYA2", "SIX1", "TWIST1", "PITX2", "SOX17", "DAZL", "DND1", "CXCR4")
 
@@ -71,8 +70,9 @@ MultiFeaturePlot(seurat_obj = contamination_filt_data, gene_list = genes, plot_c
                    plot_stage = T, label = "", cluster_col = "integrated_snn_res.0.5", n_col = ncol)
 graphics.off()
 
+
 # Dotplot for identifying PGCs, Early mesoderm and Late mesoderm
-png(paste0(plot_path, "dotplot.GOI.png"), width = 20, height = 12, units = "cm", res = 200)
+png(paste0(plot_path, "dotplot_GOI.png"), width = 20, height = 12, units = "cm", res = 200)
 DotPlot(contamination_filt_data, features = c( "SOX17", "CXCR4","EYA2", "TWIST1", "SIX1",  "PITX2", "DAZL", "CDH5", "TAL1", "HBZ"))
 graphics.off()
 
@@ -92,9 +92,6 @@ contamination_filt_data <- subset(contamination_filt_data, cells = filter_cells,
 contamination_filt_data <- FindVariableFeatures(contamination_filt_data, selection.method = "vst", nfeatures = 2000, assay = 'RNA')
 
 contamination_filt_data <- ScaleData(contamination_filt_data, features = rownames(contamination_filt_data), vars.to.regress = c("percent.mt", "sex", "S.Score", "G2M.Score"))
-
-saveRDS(contamination_filt_data, paste0(rds_path, "contamination_filt_data.RDS")) # remove once script works
-
 
 # Set Integrated to default assay
 DefaultAssay(contamination_filt_data) <- "integrated"

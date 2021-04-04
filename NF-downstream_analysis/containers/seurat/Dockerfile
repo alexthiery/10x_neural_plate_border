@@ -26,8 +26,8 @@ RUN   R -e "install.packages('future', dependencies=TRUE)" && \
       R -e "install.packages('getopt', dependencies=TRUE)" && \
       R -e "install.packages('pheatmap', dependencies=TRUE)" && \
       R -e "install.packages('Seurat', dependencies=TRUE)" && \
-      # install STACAS for time being
       R -e "remotes::install_github('carmonalab/STACAS')"
 
 RUN   R -e "devtools::install_version('ArrayBin', version = '0.2')" && \
+      R -e "devtools::install_version('heatmap.plus', version = '1.3')" && \
       R -e "devtools::install_github('juliendelile/Antler', dependencies = TRUE)"
