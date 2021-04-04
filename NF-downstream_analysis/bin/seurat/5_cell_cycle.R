@@ -121,6 +121,10 @@ DefaultAssay(cell_cycle_data) <- "RNA"
 
 # Find variable features and scale data on RNA assay
 cell_cycle_data <- FindVariableFeatures(cell_cycle_data, selection.method = "vst", nfeatures = 2000)
+
+# Save RDS after regressing cell cycle
+saveRDS(cell_cycle_data, paste0(rds_path, "temp.RDS"))
+
 cell_cycle_data <- ScaleData(cell_cycle_data, features = rownames(cell_cycle_data), vars.to.regress = c("percent.mt", "sex", "S.Score", "G2M.Score"))
 
 # Find deferentially expressed genes and plot heatmap of top DE genes for each cluster
