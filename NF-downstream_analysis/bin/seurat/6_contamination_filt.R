@@ -55,7 +55,7 @@ opt = getopt(spec)
 contamination_filt_data <- readRDS(paste0(data_path, 'cell_cycle_data.RDS'))
 
 # Set RNA to default assay
-DefaultAssay(contamination_filt_data) <- "RNA"
+DefaultAssay(contamination_filt_data) <- "integrated"
 
 #####################################################################################################
 #                           Identify and remove contamination (mesoderm and PGCs)                   #
@@ -84,7 +84,7 @@ graphics.off()
 # Clust 11,12 = early mesoderm - expresses sox17, eya2, pitx2, cxcr4
 # Clust 8,10 = Late mesoderm - expresses twist1, six1, eya2
 
-filter_cells <- rownames(filter(contamination_filt_data@meta.data, seurat_clusters %in% c(8, 10, 11, 12, 13, 14)))
+filter_cells <- rownames(filter(contamination_filt_data@meta.data, seurat_clusters %in% c(14, 17, 18, 20, 21, 22)))
 
 contamination_filt_data <- subset(contamination_filt_data, cells = filter_cells, invert = T)
 
