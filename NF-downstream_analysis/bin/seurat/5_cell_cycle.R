@@ -41,7 +41,7 @@ opt = getopt(spec)
 
     # Multi-core when running from command line
     plan("multiprocess", workers = ncores)
-    options(future.globals.maxSize = 32* 1024^3) # 32gb
+    options(future.globals.maxSize = 16* 1024^3) # 32gb
 
   } else {
     stop("--runtype must be set to 'nextflow'")
@@ -113,12 +113,12 @@ print(gridExtra::grid.arrange(DimPlot(pre_cell_cycle_data, group.by = "Phase", r
                               ncol = 2))
 graphics.off()
 
-
 # switch to RNA assay for viewing expression data
 DefaultAssay(cell_cycle_data) <- "RNA"
 
 # Find variable features and scale data on RNA assay
 cell_cycle_data <- FindVariableFeatures(cell_cycle_data, selection.method = "vst", nfeatures = 2000)
+
 cell_cycle_data <- ScaleData(cell_cycle_data, features = rownames(cell_cycle_data), vars.to.regress = c("percent.mt", "sex", "S.Score", "G2M.Score"))
 
 # Find deferentially expressed genes and plot heatmap of top DE genes for each cluster
