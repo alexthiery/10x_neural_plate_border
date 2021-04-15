@@ -101,7 +101,7 @@ ClustStagePlot(integration_qc_data)
 graphics.off()
 
 # Plot QC for each cluster
-png(paste0(plot_path, "QCPlot.png"), width=50, height=14, units = 'cm', res = 200)
+png(paste0(plot_path, "QCPlot.png"), width=32, height=28, units = 'cm', res = 200)
 QCPlot(integration_qc_data, plot_quantiles = TRUE)
 graphics.off()
 

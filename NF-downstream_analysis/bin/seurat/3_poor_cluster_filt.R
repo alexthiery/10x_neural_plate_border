@@ -61,7 +61,7 @@ DefaultAssay(poor_cluster_filt_data) <- "RNA"
 
 
 # Plot QC for each cluster
-png(paste0(plot_path, "QCPlot.png"), width=50, height=14, units = 'cm', res = 200)
+png(paste0(plot_path, "QCPlot.png"), width=32, height=28, units = 'cm', res = 200)
 QCPlot(poor_cluster_filt_data, plot_quantiles = TRUE)
 graphics.off()
 

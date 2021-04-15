@@ -133,7 +133,7 @@ ClustStagePlot(contamination_filt_data, stage_col = "stage")
 graphics.off()
 
 # Plot QC for each cluster
-png(paste0(plot_path, "cluster.QC.png"), width=60, height=14, units = 'cm', res = 200)
+png(paste0(plot_path, "QCPlot.png"), width=40, height=28, units = 'cm', res = 200)
 QCPlot(contamination_filt_data)
 graphics.off()
 

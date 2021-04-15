@@ -1,7 +1,7 @@
-FROM  alexthiery/10x-npb-seurat:latest
+FROM  alexthiery/10x-npb-schelper:latest
 
 LABEL authors="alex.thiery@crick.ac.uk" \
       description="Docker image containing all requirements to run 10x downstream analysis in Seurat"
 
-# Install scHelper
-RUN   R -e "devtools::install_github('alexthiery/scHelper', dependencies = TRUE)"
+# Install phateR
+RUN   R -e "install.packages(c('phateR', 'Rmagic'))"

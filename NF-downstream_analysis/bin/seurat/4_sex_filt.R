@@ -188,10 +188,9 @@ ClustStagePlot(sex_filt_data)
 graphics.off()
 
 # Plot QC for each cluster
-png(paste0(plot_path, "cluster.QC.png"), width=40, height=14, units = 'cm', res = 200)
-QCPlot(sex_filt_data)
+png(paste0(plot_path, "QCPlot.png"), width=28, height=28, units = 'cm', res = 200)
+QCPlot(sex_filt_data, plot_quantiles = TRUE)
 graphics.off()
-
 
 # switch to RNA assay for viewing expression data
 DefaultAssay(sex_filt_data) <- "RNA"
