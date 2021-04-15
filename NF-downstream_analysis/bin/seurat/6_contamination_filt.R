@@ -124,7 +124,7 @@ png(paste0(plot_path, "clustree.png"), width=70, height=35, units = 'cm', res = 
 ClustRes(seurat_object = contamination_filt_data, by = 0.2, prefix = "integrated_snn_res.")
 graphics.off()
 
-# Use clustering resolution = 1 in order to make lots of clusters and identify any remaining poor quality cells
+# Use clustering resolution = 1 in order to identify any remaining poor quality cells
 contamination_filt_data <- FindClusters(contamination_filt_data, resolution = 1)
 
 # Plot UMAP for clusters and developmental stage

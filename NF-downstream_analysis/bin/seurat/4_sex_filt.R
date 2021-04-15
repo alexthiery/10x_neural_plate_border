@@ -179,7 +179,7 @@ png(paste0(plot_path, "clustree.png"), width=70, height=35, units = 'cm', res = 
 ClustRes(seurat_object = sex_filt_data, by = 0.1, prefix = "integrated_snn_res.")
 graphics.off()
 
-# Use clustering resolution = 0.5 to look for contamination clusters
+# Use default clustering resolution (0.5)
 sex_filt_data <- FindClusters(sex_filt_data, resolution = 0.5, verbose = FALSE)
 
 # Plot UMAP for clusters and developmental stage

@@ -115,8 +115,8 @@ png(paste0(plot_path, "clustree.png"), width=70, height=35, units = 'cm', res = 
 ClustRes(seurat_object = poor_cluster_filt_data, by = 0.2, prefix = "integrated_snn_res.")
 graphics.off()
 
-# Use clustering resolution = 1.2
-poor_cluster_filt_data <- FindClusters(poor_cluster_filt_data, resolution = 1.2)
+# Use default clustering resolution (0.5)
+poor_cluster_filt_data <- FindClusters(poor_cluster_filt_data, resolution = 0.5)
 
 # Plot UMAP for clusters and developmental stage
 png(paste0(plot_path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
