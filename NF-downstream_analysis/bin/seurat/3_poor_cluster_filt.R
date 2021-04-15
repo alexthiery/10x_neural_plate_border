@@ -59,13 +59,15 @@ poor_cluster_filt_data <- readRDS(paste0(data_path, 'integration_qc_data.RDS'))
 # Set RNA to default assay
 DefaultAssay(poor_cluster_filt_data) <- "RNA"
 
-# Plot QC for each cluster with quantiles
+
+# Plot QC for each cluster
 png(paste0(plot_path, "QCPlot.png"), width=50, height=14, units = 'cm', res = 200)
 QCPlot(poor_cluster_filt_data, plot_quantiles = TRUE)
 graphics.off()
 
 # Automatically find poor quality clusters
-poor_clusters <- IdentifyOutliers(poor_cluster_filt_data@meta.data, group_by = 'seurat_clusters', metric = c('nCount_RNA', 'nFeature_RNA'), intersect_metrics = TRUE)
+poor_clusters <- IdentifyOutliers(poor_cluster_filt_data@meta.data, group_by = 'seurat_clusters',
+                                     metrics = c('nCount_RNA', 'nFeature_RNA'), intersect_metrics = TRUE)
 
 # Plot UMAP for poor quality clusters
 png(paste0(plot_path, "PoorClusters.png"), width=60, height=20, units = 'cm', res = 200)
@@ -91,21 +93,22 @@ poor_cluster_filt_data <- ScaleData(poor_cluster_filt_data, features = rownames(
 # PCA
 poor_cluster_filt_data <- RunPCA(object = poor_cluster_filt_data, verbose = FALSE)
 
-png(paste0(plot_path, "dimHM.png"), width=30, height=50, units = 'cm', res = 200)
-DimHeatmap(poor_cluster_filt_data, dims = 1:30, balanced = TRUE, cells = 500)
+png(paste0(plot_path, "dimHM.png"), width=30, height=65, units = 'cm', res = 200)
+DimHeatmap(poor_cluster_filt_data, dims = 1:40, balanced = TRUE, cells = 500)
 graphics.off()
 
-png(paste0(plot_path, "elbowplot.png"), width=24, height=20, units = 'cm', res = 200)
-print(ElbowPlot(poor_cluster_filt_data, ndims = 40))
+png(paste0(plot_path, "ElbowCutoff.png"), width=30, height=20, units = 'cm', res = 200)
+ElbowCutoff(poor_cluster_filt_data, return = 'plot')
 graphics.off()
+
+pc_cutoff <- ElbowCutoff(poor_cluster_filt_data)
 
 png(paste0(plot_path, "UMAP_PCA_comparison.png"), width=40, height=30, units = 'cm', res = 200)
-PCALevelComparison(poor_cluster_filt_data, PCA_levels = c(10, 20, 30, 40), cluster_res = 0.5)
+PCALevelComparison(poor_cluster_filt_data, PCA_levels = c(10, 15, 20, 25), cluster_res = 0.5)
 graphics.off()
 
-# Use PCA=15 as elbow plot is relatively stable across stages
-poor_cluster_filt_data <- FindNeighbors(poor_cluster_filt_data, dims = 1:30, verbose = FALSE)
-poor_cluster_filt_data <- RunUMAP(poor_cluster_filt_data, dims = 1:30, verbose = FALSE)
+poor_cluster_filt_data <- FindNeighbors(poor_cluster_filt_data, dims = 1:pc_cutoff, verbose = FALSE)
+poor_cluster_filt_data <- RunUMAP(poor_cluster_filt_data, dims = 1:pc_cutoff, verbose = FALSE)
 
 # Find optimal cluster resolution
 png(paste0(plot_path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)

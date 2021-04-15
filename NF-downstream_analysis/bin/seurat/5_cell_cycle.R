@@ -72,21 +72,23 @@ cell_cycle_data <- ScaleData(pre_cell_cycle_data, features = rownames(pre_cell_c
 # PCA
 cell_cycle_data <- RunPCA(object = cell_cycle_data, verbose = FALSE)
 
-png(paste0(plot_path, "dimHM.png"), width=30, height=50, units = 'cm', res = 200)
-DimHeatmap(cell_cycle_data, dims = 1:30, balanced = TRUE, cells = 500)
+png(paste0(plot_path, "dimHM.png"), width=30, height=65, units = 'cm', res = 200)
+DimHeatmap(cell_cycle_data, dims = 1:40, balanced = TRUE, cells = 500)
 graphics.off()
 
-png(paste0(plot_path, "elbowplot.png"), width=24, height=20, units = 'cm', res = 200)
-print(ElbowPlot(cell_cycle_data, ndims = 40))
+png(paste0(plot_path, "ElbowCutoff.png"), width=30, height=20, units = 'cm', res = 200)
+ElbowCutoff(cell_cycle_data, return = 'plot')
 graphics.off()
+
+pc_cutoff <- ElbowCutoff(cell_cycle_data)
 
 png(paste0(plot_path, "UMAP_PCA_comparison.png"), width=40, height=30, units = 'cm', res = 200)
-PCALevelComparison(cell_cycle_data, PCA_levels = c(7, 10, 15, 20), cluster_res = 0.5)
+PCALevelComparison(cell_cycle_data, PCA_levels = c(10, 15, 20, 25), cluster_res = 0.5)
 graphics.off()
 
 # Use PCA=15 as elbow plot is relatively stable across stages
-cell_cycle_data <- FindNeighbors(cell_cycle_data, dims = 1:15, verbose = FALSE)
-cell_cycle_data <- RunUMAP(cell_cycle_data, dims = 1:15, verbose = FALSE)
+cell_cycle_data <- FindNeighbors(cell_cycle_data, dims = 1:pc_cutoff, verbose = FALSE)
+cell_cycle_data <- RunUMAP(cell_cycle_data, dims = 1:pc_cutoff, verbose = FALSE)
 
 # Find optimal cluster resolution
 png(paste0(plot_path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)

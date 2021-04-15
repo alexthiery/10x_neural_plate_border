@@ -106,17 +106,18 @@ png(paste0(plot_path, "dimHM.png"), width=30, height=50, units = 'cm', res = 200
 DimHeatmap(contamination_filt_data, dims = 1:30, balanced = TRUE, cells = 500)
 graphics.off()
 
-png(paste0(plot_path, "elbowplot.png"), width=24, height=20, units = 'cm', res = 200)
-print(ElbowPlot(contamination_filt_data, ndims = 40))
+png(paste0(plot_path, "ElbowCutoff.png"), width=30, height=20, units = 'cm', res = 200)
+ElbowCutoff(contamination_filt_data, return = 'plot')
 graphics.off()
+
+pc_cutoff <- ElbowCutoff(contamination_filt_data)
 
 png(paste0(plot_path, "UMAP_PCA_comparison.png"), width=40, height=30, units = 'cm', res = 200)
 PCALevelComparison(contamination_filt_data, PCA_levels = c(10, 20, 30, 40), cluster_res = 0.5)
 graphics.off()
 
-# Use PCA=15 as elbow plot is relatively stable across stages
-contamination_filt_data <- FindNeighbors(contamination_filt_data, dims = 1:30, verbose = FALSE)
-contamination_filt_data <- RunUMAP(contamination_filt_data, dims = 1:30, verbose = FALSE)
+contamination_filt_data <- FindNeighbors(contamination_filt_data, dims = 1:pc_cutoff, verbose = FALSE)
+contamination_filt_data <- RunUMAP(contamination_filt_data, dims = 1:pc_cutoff, verbose = FALSE)
 
 # Find optimal cluster resolution
 png(paste0(plot_path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
