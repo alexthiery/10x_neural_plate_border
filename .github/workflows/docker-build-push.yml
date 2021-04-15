@@ -3,10 +3,8 @@ name: docker-build-push
 
 on:
   push:
-    branches: 
-      - master
-    path: 
-      - 'NF-downstream_analysis_analysis/containers/**'
+    branches: [master]
+      path: ['NF-downstream_analysis_analysis/containers/**']
 
 jobs:
   build-push-docker:
