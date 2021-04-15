@@ -103,10 +103,12 @@ png(paste0(plot_path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
 ClustStagePlot(cell_cycle_data)
 graphics.off()
 
+
 # Plot QC for each cluster
-png(paste0(plot_path, "cluster.QC.png"), width=40, height=14, units = 'cm', res = 200)
-QCPlot(cell_cycle_data)
+png(paste0(plot_path, "QCPlot.png"), width=28, height=28, units = 'cm', res = 200)
+QCPlot(cell_cycle_data, plot_quantiles = TRUE)
 graphics.off()
+
 
 # UMAP of cell cycle before and after regressing out
 png(paste0(plot_path, "cell.cycle.png"), width=40, height=20, units = 'cm', res = 200)
