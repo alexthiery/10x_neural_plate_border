@@ -5,8 +5,8 @@ on:
   push:
     branches: 
       - master
-      path: 
-        - 'NF-downstream_analysis_analysis/containers/**'
+    paths: 
+      - 'NF-downstream_analysis_analysis/containers/**'
 
 jobs:
   build-push-docker:
