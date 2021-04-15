@@ -6,7 +6,7 @@ on:
     branches: 
       - master
     paths: 
-      - 'NF-downstream_analysis_analysis/containers/**'
+      - '**/Dockerfile'
 
 jobs:
   build-push-docker:
