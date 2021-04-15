@@ -192,7 +192,6 @@ png(paste0(plot_path, "QCPlot.png"), width=28, height=28, units = 'cm', res = 20
 QCPlot(sex_filt_data, plot_quantiles = TRUE)
 graphics.off()
 
-
 # switch to RNA assay for viewing expression data
 DefaultAssay(sex_filt_data) <- "RNA"
 

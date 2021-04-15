@@ -137,8 +137,6 @@ png(paste0(plot_path, "QCPlot.png"), width=40, height=28, units = 'cm', res = 20
 QCPlot(contamination_filt_data)
 graphics.off()
 
-
-
 # Find differentially expressed genes and plot heatmap of top DE genes for each cluster
 markers <- FindAllMarkers(contamination_filt_data, only.pos = T, logfc.threshold = 0.25)
 # get automated cluster order based on percentage of cells in adjacent stages
