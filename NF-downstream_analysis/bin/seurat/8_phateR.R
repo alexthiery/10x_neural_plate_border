@@ -2,13 +2,11 @@
 
 # Define arguments for Rscript
 library(getopt)
-reticulate::use_python('/usr/bin/python3.7')
 library(Seurat)
 library(pheatmap)
 library(tidyverse)
 library(RColorBrewer)
 library(scHelper)
-
 
 library(phateR)
 library(readr)

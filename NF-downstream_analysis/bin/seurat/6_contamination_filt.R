@@ -2,7 +2,6 @@
 
 # Load packages
 library(getopt)
-reticulate::use_python('/usr/bin/python3.7')
 library(Seurat)
 library(future)
 library(cowplot)
