@@ -26,13 +26,13 @@ RUN   echo 'local({library(BiocManager); r <- repositories(); r["CRAN"] <- "http
             options(HTTPUserAgent = sprintf("R/%s R (%s)", getRversion(), paste(getRversion(), R.version$platform, R.version$arch, R.version$os))); \
             Sys.setenv(RETICULATE_PYTHON = "/usr/miniconda3/bin/python3.8")' >> /usr/local/lib/R/etc/Rprofile.site
 
-RUN   R -e "install.packages('future', dependencies=TRUE)" && \
-      R -e "install.packages('cowplot', dependencies=TRUE)"  && \
-      R -e "install.packages('clustree', dependencies=TRUE)" && \
-      R -e "install.packages('gridExtra', dependencies=TRUE)" && \
-      R -e "install.packages('getopt', dependencies=TRUE)" && \
-      R -e "install.packages('pheatmap', dependencies=TRUE)" && \
-      R -e "install.packages('Seurat', dependencies=TRUE)" && \
+RUN   R -e "install.packages('future')" && \
+      R -e "install.packages('cowplot')"  && \
+      R -e "install.packages('clustree')" && \
+      R -e "install.packages('gridExtra')" && \
+      R -e "install.packages('getopt')" && \
+      R -e "install.packages('pheatmap')" && \
+      R -e "install.packages('Seurat')" && \
       R -e "remotes::install_github('carmonalab/STACAS')"
 
 RUN   R -e "devtools::install_version('ArrayBin', version = '0.2')" && \
