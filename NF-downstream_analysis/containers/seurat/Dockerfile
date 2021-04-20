@@ -15,16 +15,28 @@ RUN apt-get update \
       libfontconfig1-dev \
       libfribidi-dev
 
-# Install miniconda
-RUN   wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && \
-      bash Miniconda3-latest-Linux-x86_64.sh -b && \
-      mv /root/miniconda3 /usr/ && \
-      rm -f Miniconda3-latest-Linux-x86_64.sh
+# Add conda to $PATH
+ENV PATH /opt/conda/bin:$PATH
 
-# Set CRAN and BioC repositories for package installations - also set python3.8 as default for reticulate
+# Install miniconda
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py38_4.9.2-Linux-x86_64.sh -O ~/miniconda.sh && \
+    /bin/bash ~/miniconda.sh -b -p /opt/conda && \
+    rm ~/miniconda.sh && \
+    /opt/conda/bin/conda clean -tipsy && \
+    ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
+    echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc && \
+    echo "conda activate base" >> ~/.bashrc
+
+# Update conda and install phate
+RUN   conda update -n base -c defaults conda && \
+      pip install phate
+
+# Set default python for reticulate
+RUN   echo 'RETICULATE_PYTHON = /opt/conda/bin/python' >> /usr/local/lib/R/etc/Renviron
+
+# Set CRAN and BioC repositories for package installations
 RUN   echo 'local({library(BiocManager); r <- repositories(); r["CRAN"] <- "https://cran.rstudio.com/"; options(repos = r)}); \
-            options(HTTPUserAgent = sprintf("R/%s R (%s)", getRversion(), paste(getRversion(), R.version$platform, R.version$arch, R.version$os))); \
-            Sys.setenv(RETICULATE_PYTHON = "/usr/miniconda3/bin/python3.8")' >> /usr/local/lib/R/etc/Rprofile.site
+            options(HTTPUserAgent = sprintf("R/%s R (%s)", getRversion(), paste(getRversion(), R.version$platform, R.version$arch, R.version$os)))' >> /usr/local/lib/R/etc/Rprofile.site
 
 RUN   R -e "install.packages('future')" && \
       R -e "install.packages('cowplot')"  && \
