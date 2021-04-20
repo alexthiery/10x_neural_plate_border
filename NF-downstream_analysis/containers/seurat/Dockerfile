@@ -28,8 +28,7 @@ RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py38_4.9.2-Linux
     echo "conda activate base" >> ~/.bashrc
 
 # Update conda and install phate
-RUN   conda update -n base -c defaults conda && \
-      pip install phate
+RUN   conda update -n base -c defaults conda
 
 # Set default python for reticulate
 RUN   echo 'RETICULATE_PYTHON = /opt/conda/bin/python' >> /usr/local/lib/R/etc/Renviron
