@@ -77,7 +77,7 @@ pc_cutoff <- ElbowCutoff(integration_qc_data)
 
 # Run clustering and UMAP at different PCA cutoffs - save this output to compare the optimal number of PCs to be used
 png(paste0(plot_path, "UMAP_PCA_comparison.png"), width=40, height=30, units = 'cm', res = 200)
-PCALevelComparison(integration_qc_data, PCA_levels = c(10, 15, 20, 25), cluster_res = 0.5)
+PCALevelComparison(integration_qc_data, PCA_levels = c(10, 15, 20, 25), cluster_res = 1)
 graphics.off()
 
 # Use clustering resolution = 0.5 for filtering
@@ -86,13 +86,13 @@ integration_qc_data <- FindNeighbors(integration_qc_data, dims = 1:pc_cutoff, ve
 
 # Find optimal cluster resolution
 png(paste0(plot_path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
-ClustRes(seurat_object = integration_qc_data, prefix = 'integrated_snn_res.')
+ClustRes(seurat_object = integration_qc_data, by = 0.2, prefix = 'integrated_snn_res.')
 graphics.off()
 
 ############################## Identify poor quality clusters #######################################
 
-# Use standard cluster res in order to filter poor quality clusters
-integration_qc_data <- FindClusters(integration_qc_data, resolution = 0.5, verbose = FALSE)
+# Use higher cluster resolution for filtering poor clusters
+integration_qc_data <- FindClusters(integration_qc_data, resolution = 1, verbose = FALSE)
 
 # Plot UMAP for clusters and developmental stage
 png(paste0(plot_path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)

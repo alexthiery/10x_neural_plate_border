@@ -111,7 +111,7 @@ poor_cluster_filt_data <- RunUMAP(poor_cluster_filt_data, dims = 1:pc_cutoff, ve
 
 # Find optimal cluster resolution
 png(paste0(plot_path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
-ClustRes(seurat_object = poor_cluster_filt_data, by = 0.2, prefix = "integrated_snn_res.")
+ClustRes(seurat_object = poor_cluster_filt_data, by = 0.1, prefix = "integrated_snn_res.")
 graphics.off()
 
 # Use default clustering resolution (0.5)
