@@ -17,8 +17,8 @@ RUN apt-get update \
 
 # Install miniconda
 RUN   wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && \
-      mkdir /usr/.conda && \
       bash Miniconda3-latest-Linux-x86_64.sh -b && \
+      mv /root/miniconda3 /usr/ && \
       rm -f Miniconda3-latest-Linux-x86_64.sh
 
 # Set CRAN and BioC repositories for package installations - also set python3.8 as default for reticulate
@@ -38,3 +38,5 @@ RUN   R -e "install.packages('future', dependencies=TRUE)" && \
 RUN   R -e "devtools::install_version('ArrayBin', version = '0.2')" && \
       R -e "devtools::install_version('heatmap.plus', version = '1.3')" && \
       R -e "devtools::install_github('juliendelile/Antler', dependencies = TRUE)"
+
+      
