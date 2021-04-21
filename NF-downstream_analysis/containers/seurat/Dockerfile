@@ -44,6 +44,7 @@ RUN   R -e "install.packages('future')" && \
       R -e "install.packages('getopt')" && \
       R -e "install.packages('pheatmap')" && \
       R -e "install.packages('Seurat')" && \
+      R -e "BiocManager::install('limma')" && \
       R -e "remotes::install_github('carmonalab/STACAS')"
 
 RUN   R -e "devtools::install_version('ArrayBin', version = '0.2')" && \
