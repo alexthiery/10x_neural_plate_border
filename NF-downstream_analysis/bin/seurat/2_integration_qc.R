@@ -24,9 +24,9 @@ opt = getopt(spec)
   if(length(commandArgs(trailingOnly = TRUE)) == 0){
     cat('No command line arguments provided, paths are set for running interactively in Rstudio server\n')
 
-    plot_path = "./output/NF-downstream_analysis/2_integration_qc/plots/"
-    rds_path = "./output/NF-downstream_analysis/2_integration_qc/rds_files/"
-    data_path = "./output/NF-downstream_analysis/1_integration/rds_files/"
+    plot_path = "./output/NF-downstream_analysis/seurat/2_integration_qc/plots/"
+    rds_path = "./output/NF-downstream_analysis/seurat/2_integration_qc/rds_files/"
+    data_path = "./output/NF-downstream_analysis/seurat/1_integration/rds_files/"
     
     ncores = 8
 
@@ -51,7 +51,7 @@ opt = getopt(spec)
   dir.create(rds_path, recursive = T)
 }
 
-integration_qc_data <- readRDS(paste0(data_path, 'intergration_data.RDS'))
+integration_qc_data <- readRDS(paste0(data_path, 'integration_data.RDS'))
 
 # Set integrated assay as default for clustering
 DefaultAssay(integration_qc_data) <- "integrated"
@@ -101,12 +101,12 @@ graphics.off()
 
 # Plot QC for each cluster
 png(paste0(plot_path, "QCPlot.png"), width=32, height=28, units = 'cm', res = 200)
-QCPlot(integration_qc_data, plot_quantiles = TRUE)
+QCPlot(integration_qc_data, quantiles = c(0.25, 0.75))
 graphics.off()
 
 # Automatically find poor quality clusters
 poor_clusters <- IdentifyOutliers(integration_qc_data@meta.data, group_by = 'seurat_clusters',
-                                     metrics = c('nCount_RNA', 'nFeature_RNA'), intersect_metrics = TRUE)
+                                     metrics = c('nCount_RNA', 'nFeature_RNA'), quantiles = c(0.25, 0.75), intersect_metrics = TRUE)
 
 # Plot UMAP for poor quality clusters
 png(paste0(plot_path, "PoorClusters.png"), width=60, height=20, units = 'cm', res = 200)
