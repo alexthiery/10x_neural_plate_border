@@ -18,8 +18,8 @@ opt = getopt(spec)
   if(length(commandArgs(trailingOnly = TRUE)) == 0){
     cat('No command line arguments provided, paths are set for running interactively in Rstudio server\n')
 
-    plot_path = "./output/NF-downstream_analysis/integration_seurat/plots/"
-    rds_path = "./output/NF-downstream_analysis/integration_seurat/rds_files/"
+    plot_path = "./output/NF-downstream_analysis/seurat/1_integration/plots/"
+    rds_path = "./output/NF-downstream_analysis/seurat/1_integration/rds_files/"
     data_path = "./output/NF-scRNAseq_alignment/cellranger/count/filtered_feature_bc_matrix"
     ncores = 8
 
@@ -33,7 +33,7 @@ opt = getopt(spec)
 
     # Multi-core when running from command line
     plan("multiprocess", workers = ncores)
-    options(future.globals.maxSize = 16* 1024^3) # 32gb
+    options(future.globals.maxSize = 16* 1024^3) # 16gb
 
   } else {
     stop("--runtype must be set to 'nextflow'")
@@ -86,15 +86,15 @@ seurat_split <- lapply(seurat_split, function(x) {
 # Get array of all genes across all datasets in order to integrate using all features
 all_features <- lapply(seurat_split, row.names) %>% Reduce(intersect, .)
 # Find anchors used for integration
-intergration_data <- Run.STACAS(seurat_split, dims = 1:30, anchor.features = 2000)
+integration_data <- Run.STACAS(seurat_split, dims = 1:30, anchor.features = 2000)
 # Integrate data
-intergration_data <- IntegrateData(anchorset = intergration_data, dims = 1:30, features.to.integrate = all_features)
+integration_data <- IntegrateData(anchorset = integration_data, dims = 1:30, features.to.integrate = all_features)
 
 # specify that we will perform downstream analysis on the corrected data note that the original
 # unmodified data still resides in the 'RNA' assay
-DefaultAssay(intergration_data) <- "integrated"
+DefaultAssay(integration_data) <- "integrated"
 
-intergration_data <- ScaleData(intergration_data, features = rownames(intergration_data), vars.to.regress = "percent.mt")
+integration_data <- ScaleData(integration_data, features = rownames(integration_data), vars.to.regress = "percent.mt")
 
 # Save RDS after integration
-saveRDS(intergration_data, paste0(rds_path, "intergration_data.RDS"))
+saveRDS(integration_data, paste0(rds_path, "integration_data.RDS"))

@@ -23,29 +23,29 @@ opt = getopt(spec)
 {
   if(length(commandArgs(trailingOnly = TRUE)) == 0){
     cat('No command line arguments provided, paths are set for running interactively in Rstudio server\n')
-
+    
     plot_path = "./output/NF-downstream_analysis/6_contamination_filt/plots/"
     rds_path = "./output/NF-downstream_analysis/6_contamination_filt/rds_files/"
     data_path = "./output/NF-downstream_analysis/5_cell_cycle/rds_files/"
     
     ncores = 8
-
+    
   } else if (opt$runtype == "nextflow"){
     cat('pipeline running through Nextflow\n')
-
+    
     plot_path = "./plots/"
     rds_path = "./rds_files/"
     data_path = "./input/rds_files/"
     ncores = opt$cores
-
+    
     # Multi-core when running from command line
     plan("multiprocess", workers = ncores)
     options(future.globals.maxSize = 16* 1024^3) # 32gb
-
+    
   } else {
     stop("--runtype must be set to 'nextflow'")
   }
-
+  
   cat(paste0("script ran with ", ncores, " cores\n"))
   dir.create(plot_path, recursive = T)
   dir.create(rds_path, recursive = T)
@@ -60,30 +60,46 @@ contamination_filt_data <- readRDS(paste0(data_path, 'cell_cycle_data.RDS'))
 # Set RNA to default assay for plotting expression data
 DefaultAssay(contamination_filt_data) <- "RNA"
 
-# UMAP plots GOI
-genes <- c( "SOX17", "CXCR4","EYA2", "TWIST1", "SIX1",  "PITX2", "DAZL", "CDH5", "TAL1", "HBZ")
+# Make gene list containing markers used to identify contamination clusters
+genes <- list('PGC module' = 'DAZL',
+              'Blood island module' = c('CDH5', 'TAL1', 'HBZ'),
+              'Mesoderm module' = c('ALX1', 'CDX2', 'PITX2', 'TWIST1', 'GATA6', 'TBXT', 'MESP1'),
+              'Endoderm module' = c('SOX17', 'CXCR4', 'FOXA2', 'NKX2-2', 'GATA6'))
+
+
+# Calculate average module expression for contamination gene list
+contamination_filt_data <- AverageGeneModules(seurat_obj = contamination_filt_data, gene_list = genes)
+
+# Plot distribution of contamination gene modules
+png(paste0(plot_path, "ContaminationClustersBoxPLot.png"), width = ncol*10, height = 10*ceiling((length(genes)+1)/ncol), units = "cm", res = 200)
+PlotContamination(seurat_obj = contamination_filt_data, gene_list = genes, quantiles = c(0.1, 0.90), ncol = 2)
+graphics.off()
+
+contaminating_clusters <- IdentifyOutliers(seurat_obj = contamination_filt_data, metrics = names(genes), quantiles = c(0.1, 0.90), intersect_metrics = FALSE)
+
+
+# Plot UMAP for poor quality clusters
+png(paste0(plot_path, "ContaminationClustersUMAP.png"), width=60, height=20, units = 'cm', res = 200)
+ClusterDimplot(contamination_filt_data, clusters = contaminating_clusters, plot_title = 'Contamination')
+graphics.off()
+
 
 ncol = 4
 png(paste0(plot_path, "UMAP_GOI.png"), width = ncol*10, height = 10*ceiling((length(genes)+1)/ncol), units = "cm", res = 200)
-MultiFeaturePlot(seurat_obj = contamination_filt_data, gene_list = genes, plot_clusters = T,
-                   plot_stage = T, label = "", cluster_col = "integrated_snn_res.0.5", n_col = ncol)
+MultiFeaturePlot(seurat_obj = contamination_filt_data, gene_list = unlist(genes), plot_clusters = T,
+                 plot_stage = T, label = "", cluster_col = "integrated_snn_res.0.5", n_col = ncol)
 graphics.off()
 
 
 # Dotplot for identifying PGCs, Early mesoderm and Late mesoderm
 png(paste0(plot_path, "dotplot_GOI.png"), width = 20, height = 12, units = "cm", res = 200)
-DotPlot(contamination_filt_data, features = genes)
+DotPlot(contamination_filt_data, features = unique(unlist(genes)))
 graphics.off()
 
 
 ############################### Remove contaminating cells from clusters ########################################
 
-# Clust 11 = PGC's - expresses dazl very highly
-# Clust 10 = - expresses CDH5, TAL1, HBZ
-# Clust 9 = early mesoderm - expresses sox17, eya2, pitx2, cxcr4
-# Clust 7 = Late mesoderm - expresses twist1, six1, eya2
-
-filter_cells <- rownames(filter(contamination_filt_data@meta.data, seurat_clusters %in% c(7, 9, 10, 11)))
+filter_cells <- rownames(filter(contamination_filt_data@meta.data, seurat_clusters %in% contaminating_clusters))
 
 contamination_filt_data <- subset(contamination_filt_data, cells = filter_cells, invert = T)
 
@@ -145,7 +161,7 @@ top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_log2FC) %>% ar
 
 png(paste0(plot_path, 'HM.top15.DE.contamination_filt_data.png'), height = 75, width = 100, units = 'cm', res = 500)
 TenxPheatmap(data = contamination_filt_data, metadata = c("seurat_clusters", "stage"), custom_order_column = "seurat_clusters",
-              custom_order = cluster_order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters", assay = 'integrated')
+             custom_order = cluster_order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters", assay = 'integrated')
 graphics.off()
 
 saveRDS(contamination_filt_data, paste0(rds_path, "contamination_filt_data.RDS"))
