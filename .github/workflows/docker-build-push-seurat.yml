@@ -6,7 +6,7 @@ on:
     branches: 
       - master
     paths: 
-      - '**/Dockerfile'
+      - 'NF-downstream_analysis/containers/seurat/Dockerfile'
 
 jobs:
   build-push-docker:
@@ -16,7 +16,7 @@ jobs:
       matrix:
         tag: ["base"]
         docker-file: ["Dockerfile"]
-        module-name: ["schelper", "phate", "scvelo"]
+        module-name: ["seurat", "schelper", "phate", "scvelo"]
 
     steps:
       - uses: actions/checkout@v2
