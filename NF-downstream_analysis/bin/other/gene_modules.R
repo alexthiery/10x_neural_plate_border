@@ -20,10 +20,10 @@ opt = getopt(spec)
   if(length(commandArgs(trailingOnly = TRUE)) == 0){
     cat('No command line arguments provided, paths are set for running interactively in Rstudio server\n')
 
-    plot_path = "./output/NF-downstream_analysis/1_gms_all_cells/plots/"
-    rds_path = "./output/NF-downstream_analysis/1_gms_all_cells/rds_files/"
-    antler_path = "./output/NF-downstream_analysis/1_gms_all_cells/antler_data/"
-    data_path = "./output/NF-downstream_analysis/6_contamination_filt/rds_files/"
+    plot_path = "./output/NF-downstream_analysis/gene_modules/plots/"
+    rds_path = "./output/NF-downstream_analysis/gene_modules/rds_files/"
+    antler_path = "./output/NF-downstream_analysis/gene_modules/antler_data/"
+    data_path = "./output/NF-downstream_analysis/seurat/6_contamination_filt/rds_files/"
     
     ncores = 8
 
@@ -51,6 +51,9 @@ opt = getopt(spec)
 }
 
 seurat_data <- readRDS(paste0(data_path, 'contamination_filt_data.RDS'))
+
+# switch to RNA assay for viewing expression data
+DefaultAssay(seurat_data) <- "RNA"
 
 seurat_data <- DietSeurat(seurat_data, counts = TRUE, data = TRUE, scale.data = TRUE, assays = 'RNA')
 
@@ -119,8 +122,7 @@ graphics.off()
 
 
 # Plot gene modules with at least 50% of genes DE > 0.25 logFC & FDR < 0.001
-# switch to RNA assay for viewing expression data
-DefaultAssay(seurat_data) <- "RNA"
+
 # Find DEGs
 DE_genes <- FindAllMarkers(seurat_data, only.pos = T, logfc.threshold = 0.25) %>% filter(p_val_adj < 0.001)
 
@@ -134,9 +136,6 @@ png(paste0(plot_path, 'DE_gms.png'), height = 160, width = 80, units = 'cm', res
 GeneModulePheatmap(data = seurat_data, metadata = c("stage", "seurat_clusters"), gene_modules = gms, gaps_col = "seurat_clusters",
         show_rownames = T, custom_order = cluster_order, custom_order_column = "seurat_clusters", fontsize = 25, fontsize_row = 10)
 graphics.off()
-
-
-debug(GeneModulePheatmap)
 
 
 

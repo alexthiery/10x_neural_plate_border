@@ -20,8 +20,8 @@ opt = getopt(spec)
   if(length(commandArgs(trailingOnly = TRUE)) == 0){
     cat('No command line arguments provided, paths are set for running interactively in Rstudio server\n')
     
-    plot_path = "./output/NF-downstream_analysis/8_phate/plots/"
-    data_path = "./output/NF-downstream_analysis/6_contamination_filt/rds_files/"
+    plot_path = "./output/NF-downstream_analysis/phateR/plots/"
+    data_path = "./output/NF-downstream_analysis/seurat/6_contamination_filt/rds_files/"
     
     ncores = 8
     
@@ -34,7 +34,7 @@ opt = getopt(spec)
     
     # Multi-core when running from command line
     plan("multiprocess", workers = ncores)
-    options(future.globals.maxSize = 16* 1024^3) # 32gb
+    options(future.globals.maxSize = 16* 1024^3) # 16gb
     
   } else {
     stop("--runtype must be set to 'nextflow'")
@@ -54,9 +54,9 @@ phate_dat <- t(GetAssayData(seurat_sub, slot = "scale.data"))
 
 phate_out <- phate(phate_dat, knn = 10, decay = 100, t = 50)
 
-# png("phateR.output.pdf", width = 10, height = 10)
+png(paste0(plot_path, "phateR.png"), width=20, height=20, units = 'cm', res = 200)
 ggplot(phate_out, aes(PHATE1, PHATE2, colour = seurat_sub$orig.ident)) +
   geom_point() +
   labs(colour='Cell Type')
-# dev.off()
+graphics.off()
 
