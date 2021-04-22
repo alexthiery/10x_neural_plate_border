@@ -12,6 +12,7 @@ jobs:
   build-push-docker:
     runs-on: ubuntu-latest
     strategy:
+      max-parallel: 1
       matrix:
         tag: ["base"]
         docker-file: ["Dockerfile"]
