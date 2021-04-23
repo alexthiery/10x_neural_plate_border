@@ -135,4 +135,4 @@ TenxPheatmap(data = cell_cycle_data, metadata = c("seurat_clusters", "orig.ident
 graphics.off()
 
 # Save RDS after regressing cell cycle
-saveRDS(cell_cycle_data, paste0(rds_path, "cell_cycle_data.RDS"))
+saveRDS(cell_cycle_data, paste0(rds_path, "cell_cycle_data.RDS"), compress = FALSE)
