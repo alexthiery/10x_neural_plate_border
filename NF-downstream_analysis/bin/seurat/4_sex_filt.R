@@ -65,8 +65,6 @@ pre_sex_filt_data <- FindVariableFeatures(pre_sex_filt_data, selection.method = 
 
 pre_sex_filt_data <- ScaleData(pre_sex_filt_data, features = rownames(pre_sex_filt_data), vars.to.regress = "percent.mt")
 
-# Save RDS after integration
-saveRDS(pre_sex_filt_data, paste0(rds_path, "pre_sex_filt_data.RDS"))
 
 # There is a strong sex effect - this plot shows DE genes between clusters 1 and 6 which are predominantly hh4 clusters. Clustering is driven by sex genes
 png(paste0(plot_path, 'HM.top15.DE.pre-sex_filt.png'), height = 40, width = 70, units = 'cm', res = 500)
@@ -199,7 +197,7 @@ sex_filt_data <- FindVariableFeatures(sex_filt_data, selection.method = "vst", n
 sex_filt_data <- ScaleData(sex_filt_data, features = rownames(sex_filt_data), vars.to.regress = c("percent.mt", "sex"), verbose = FALSE)
 
 # Save RDS
-saveRDS(sex_filt_data, paste0(rds_path, "sex_filt_data.RDS"))
+saveRDS(sex_filt_data, paste0(rds_path, "sex_filt_data.RDS"), compress = FALSE)
 
 # Find differentially expressed genes and plot heatmap of top DE genes for each cluster
 markers <- FindAllMarkers(sex_filt_data, only.pos = T, logfc.threshold = 0.25)

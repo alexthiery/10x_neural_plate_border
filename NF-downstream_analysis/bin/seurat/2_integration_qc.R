@@ -119,4 +119,4 @@ CheckIntegration(integration_qc_data)
 graphics.off()
 
 # Save RDS
-saveRDS(integration_qc_data, paste0(rds_path, "integration_qc_data.RDS"))
+saveRDS(integration_qc_data, paste0(rds_path, "integration_qc_data.RDS"), compress = FALSE)

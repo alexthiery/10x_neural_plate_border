@@ -97,4 +97,4 @@ DefaultAssay(integration_data) <- "integrated"
 integration_data <- ScaleData(integration_data, features = rownames(integration_data), vars.to.regress = "percent.mt")
 
 # Save RDS after integration
-saveRDS(integration_data, paste0(rds_path, "integration_data.RDS"))
+saveRDS(integration_data, paste0(rds_path, "integration_data.RDS"), compress = FALSE)

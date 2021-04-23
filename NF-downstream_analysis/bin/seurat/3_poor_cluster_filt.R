@@ -134,4 +134,4 @@ TenxPheatmap(data = poor_cluster_filt_data, metadata = c("seurat_clusters", "sta
               custom_order = cluster_order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters", assay = 'integrated')
 graphics.off()
 
-saveRDS(poor_cluster_filt_data, paste0(rds_path, "poor_cluster_filt_data.RDS"))
+saveRDS(poor_cluster_filt_data, paste0(rds_path, "poor_cluster_filt_data.RDS"), compress = FALSE)
