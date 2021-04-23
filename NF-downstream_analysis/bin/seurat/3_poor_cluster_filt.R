@@ -65,7 +65,7 @@ QCPlot(poor_cluster_filt_data, uantiles = c(0.25, 0.75))
 graphics.off()
 
 # Automatically find poor quality clusters
-poor_clusters <- IdentifyOutliers(poor_cluster_filt_data@meta.data, group_by = 'seurat_clusters',
+poor_clusters <- IdentifyOutliers(poor_cluster_filt_data, group_by = 'seurat_clusters',
                                      metrics = c('nCount_RNA', 'nFeature_RNA'), quantiles = c(0.25, 0.75), intersect_metrics = TRUE)
 
 # Plot UMAP for poor quality clusters
