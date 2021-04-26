@@ -51,7 +51,7 @@ opt = getopt(spec)
   dir.create(rds_path, recursive = T)
 }
 
-pre_sex_filt_data <- readRDS(paste0(data_path, 'poor_cluster_filt_data.RDS'))
+pre_sex_filt_data <- readRDS(list.files(data_path, full.names = TRUE))
 
 png(paste0(plot_path, 'ClusterDimplot_pre-sex_filt.png'), height = 40, width = 70, units = 'cm', res = 500)
 ClusterDimplot(pre_sex_filt_data, clusters = c(1, 6), xlim = c(-10, 15), ylim = c(-10, 15))

@@ -51,7 +51,7 @@ opt = getopt(spec)
   dir.create(rds_path, recursive = T)
 }
 
-integration_qc_data <- readRDS(paste0(data_path, 'integration_data.RDS'))
+integration_qc_data <- readRDS(list.files(data_path, full.names = TRUE))
 
 # Set integrated assay as default for clustering
 DefaultAssay(integration_qc_data) <- "integrated"

@@ -51,7 +51,7 @@ opt = getopt(spec)
   dir.create(rds_path, recursive = T)
 }
 
-pre_cell_cycle_data <- readRDS(paste0(data_path, 'sex_filt_data.RDS'))
+pre_cell_cycle_data <- readRDS(list.files(data_path, full.names = TRUE))
 
 ####################################################################################
 #                            Check for cell cycle effect                           #

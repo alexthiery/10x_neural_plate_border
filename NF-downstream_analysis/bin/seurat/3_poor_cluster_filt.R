@@ -51,7 +51,7 @@ opt = getopt(spec)
   dir.create(rds_path, recursive = T)
 }
 
-poor_cluster_filt_data <- readRDS(paste0(data_path, 'integration_qc_data.RDS'))
+poor_cluster_filt_data <- readRDS(list.files(data_path, full.names = TRUE))
 
 ############################## Identify and filter poor quality clusters #######################################
 

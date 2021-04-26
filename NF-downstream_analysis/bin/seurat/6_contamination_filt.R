@@ -51,7 +51,7 @@ opt = getopt(spec)
   dir.create(rds_path, recursive = T)
 }
 
-contamination_filt_data <- readRDS(paste0(data_path, 'cell_cycle_data.RDS'))
+contamination_filt_data <- readRDS(list.files(data_path, full.names = TRUE))
 
 #####################################################################################################
 #                           Identify and remove contamination (mesoderm and PGCs)                   #
