@@ -16,6 +16,8 @@ export NXF_VER=20.07.1
 
 nextflow run ./NF-downstream_analysis/main.nf \
 --input ./NF-downstream_analysis/samplesheet.csv \
---outdir ./output/NF-downstream_analysis \
+--outdir ./output/NF-downstream_analysis_STACAS \
+--debug \
+--integration STACAS \
 -profile crick \
 -resume
