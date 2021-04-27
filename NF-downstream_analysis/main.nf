@@ -7,20 +7,60 @@ nextflow.enable.dsl=2
 def modules = params.modules.clone()
 
 /*------------------------------------------------------------------------------------*/
+/* Set scripts used for downstream analysis
+--------------------------------------------------------------------------------------*/
+
+if(params.integration && params.integration != 'Seurat' && params.integration != 'STACAS'){
+    log.error "'${params.integration}' is not a valid option for integration. Please use 'Seurat' or 'STACAS'."
+    System.exit(1)
+}
+
+def analysis_scripts = [:]
+analysis_scripts.integration = params.integration == 'STACAS' ? file("$baseDir/bin/seurat/1_integration_STACAS.R", checkIfExists: true) : file("$baseDir/bin/seurat/1_integration.R", checkIfExists: true)
+analysis_scripts.integration_qc = file("$baseDir/bin/seurat/2_integration_qc.R", checkIfExists: true)
+analysis_scripts.poor_cluster_filt = file("$baseDir/bin/seurat/3_poor_cluster_filt.R", checkIfExists: true)
+analysis_scripts.sex_filt = file("$baseDir/bin/seurat/4_sex_filt.R", checkIfExists: true)
+analysis_scripts.cell_cycle = file("$baseDir/bin/seurat/5_cell_cycle.R", checkIfExists: true)
+analysis_scripts.contamination_filt = file("$baseDir/bin/seurat/6_contamination_filt.R", checkIfExists: true)
+analysis_scripts.gene_modules = file("$baseDir/bin/other/gene_modules.R", checkIfExists: true)
+
+/*------------------------------------------------------------------------------------*/
 /* Module inclusions
 --------------------------------------------------------------------------------------*/
 include {metadata} from "$baseDir/../modules/tools/metadata/main.nf"
 
 // Include Seurat R processes
-include {r as integration} from "$baseDir/../modules/tools/r/main.nf" addParams(options: modules['integration'], script: modules['integration'].script)
-include {r as integration_qc} from "$baseDir/../modules/tools/r/main.nf" addParams(options: modules['integration_qc'], script: modules['integration_qc'].script)
-include {r as sex_filt} from "$baseDir/../modules/tools/r/main.nf" addParams(options: modules['sex_filt'], script: modules['sex_filt'].script)
-include {r as cell_cycle} from "$baseDir/../modules/tools/r/main.nf" addParams(options: modules['cell_cycle'], script: modules['cell_cycle'].script)
-include {r as contamination_filt} from "$baseDir/../modules/tools/r/main.nf" addParams(options: modules['contamination_filt'], script: modules['contamination_filt'].script)
-include {r as poor_cluster_filt} from "$baseDir/../modules/tools/r/main.nf" addParams(options: modules['poor_cluster_filt'], script: modules['poor_cluster_filt'].script)
+include {r as integration} from "$baseDir/../modules/tools/r/main.nf"           addParams(  options: modules['integration'],
+                                                                                            script: analysis_scripts.integration )
+
+include {r as integration_qc} from "$baseDir/../modules/tools/r/main.nf"        addParams(  options: modules['integration_qc'],
+                                                                                            script: analysis_scripts.integration_qc )
+
+include {r as poor_cluster_filt} from "$baseDir/../modules/tools/r/main.nf"     addParams(  options: modules['poor_cluster_filt'],
+                                                                                            script: analysis_scripts.poor_cluster_filt )
+
+include {r as sex_filt} from "$baseDir/../modules/tools/r/main.nf"              addParams(  options: modules['sex_filt'],
+                                                                                            script: analysis_scripts.sex_filt )
+
+include {r as cell_cycle} from "$baseDir/../modules/tools/r/main.nf"            addParams(  options: modules['cell_cycle'],
+                                                                                            script: analysis_scripts.cell_cycle )
+
+include {r as contamination_filt} from "$baseDir/../modules/tools/r/main.nf"    addParams(  options: modules['contamination_filt'],
+                                                                                            script: analysis_scripts.contamination_filt )
 
 // Include other downstream processes
-include {r as gene_modules} from "$baseDir/../modules/tools/r/main.nf" addParams(options: modules['gene_modules'], script: modules['gene_modules'].script)
+include {r as gene_modules} from "$baseDir/../modules/tools/r/main.nf"          addParams(  options: modules['gene_modules'],
+                                                                                            script: analysis_scripts.gene_modules )
+
+
+
+/*-----------------------------------------------------------------------------------------------------------------------------
+Log
+-------------------------------------------------------------------------------------------------------------------------------*/
+if(params.debug) {
+    log.info Headers.build_debug_param_summary(params, params.monochrome_logs)
+    log.info Headers.build_debug_scripts_summary(analysis_scripts, params.monochrome_logs)
+}
 
 
 // /*------------------------------------------------------------------------------------*/

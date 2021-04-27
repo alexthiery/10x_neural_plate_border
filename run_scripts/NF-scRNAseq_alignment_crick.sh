@@ -16,6 +16,6 @@ export NXF_VER=20.07.1
 
 nextflow run ./NF-scRNAseq_alignment/main.nf \
 --input ./NF-scRNAseq_alignment/crick_samplesheet.csv \
---outdir ./output/NF-downstream_analysis \
+--outdir ./output/NF-scRNAseq_alignment \
 -profile crick \
 -resume
