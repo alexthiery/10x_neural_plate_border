@@ -5,6 +5,8 @@ import sys
 import errno
 import argparse
 import loompy
+import scvelo as scv
+
 
 def parse_args(args=None):
     Description = "Reformat nf-core/viralrecon samplesheet file and check its contents."
@@ -12,66 +14,61 @@ def parse_args(args=None):
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input', help="Input loom file.", metavar='')
-    parser.add_argument('-o', '--output', type=dir_path, help="Output file.", metavar='')
-    parser.add_argument('-l', '--loom', help="Full path to concatenated loom output file.", metavar='')
+    # parser.add_argument('-o', '--output', help="Output file.", metavar='')
+    parser.add_argument('-si', '--seuratIntersect', help="Pre-filtered H5 seurat object for intersecting with loom", metavar='')
+    parser.add_argument('-lo', '--loomOutput', help="Path to concatenated loom output file.", metavar='')
     return parser.parse_args(args)
-
-def check_path(path):
-    if not os.path.isdir(path) and not :
-        return os.path.abspath(path)
-    else:
-        raise argparse.ArgumentTypeError(f"'{path}' is not a valid path")
+    
 
 def get_file_paths(path):
-    path = dir_path(path)
     files = [path+'/'+f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
     return files
 
-def evaluate_input(input_path):
-    path = os.path.abspath(input_path)
+def evaluate_args(args):
+    path = os.path.abspath(args.input)
     if os.path.isdir(path):
         path = get_file_paths(path)
-        concatenate_loom(paths)
-        path = 
+        if args.loomOutput is None:
+            raise Exception("'--loomOutput must be specified when '--input' is a list of loom files to concatenate.")
+            
+    elif not os.path.isfile(path):
+        raise argparse.ArgumentTypeError(f"'--input' path:'{args.input_path}' is not a valid path")
+    return(path)
 
-    elif os.path.isfile(path):
-        path = dir_path(path)
 
+def concatenate_loom(loom_paths, output_path):
+    if not isinstance(loom_paths, str):
+        loompy.combine(loom_paths, output_file=output_path, key="Accession")
+        return(output_path)
     else:
-        raise argparse.ArgumentTypeError(f"'{input_path}' is not a valid path")
+        return(loom_paths)
 
-    print(path)
+def prepare_scVelo(loom):
+    adata = scv.read(loom, cache=False)
 
 
-
-
-def concatenate_loom(args, input_path):
-
-    
-
-    if len(files) > 1:
-        if args.loom is None:
-            loompy.combine(files, output_file='test', key="Accession")
-        else:
-            loom_input = loompy.combine(files, output_file='test', key="Accession")
-    elif len(files) == 0:
-        exit(0)
-    # if os.path.isdir(args.input):
-    #     print(os.listdir(file_list))
-
-    # return(loompy.combine(file_list, key="Accession"))
 
 def main(args=None):
+    args = parse_args(args)    
+    path = evaluate_args(args)
+    
+    loom_path = concatenate_loom(path, args.loomOutput)
 
-    # print(os.getcwd()+'test')
-    args = parse_args(args)
+    ds = loompy.connect(loom_path)
 
-    evaluate_input(args.input)
+    print(ds.ra.keys())
+    print(ds.ca.keys())
 
-    # if args.input.length > 1:
-    #     concatenate_loom(args.input)
+    temp = ds.view[:, 10:20]
 
-    # print(parse_args(args))
+    print(temp.ra.Accession)
+
+    # print(ds.ra[["Accession"]])
+
+    # scv.read("mouseBM.h5ad")
+
+
+    # prepare_scVelo(loom_path)
 
 if __name__ == "__main__":
     sys.exit(main())
