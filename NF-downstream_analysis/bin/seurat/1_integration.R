@@ -55,11 +55,11 @@ seurat_all <- merge(x = seurat_list[[1]], y=seurat_list[-1], add.cell.ids = name
 
 # Add seurat gene annotation dataframe to misc slot
 seurat_all@misc[['annotations']] <- read.table(paste0(input[1,'path'], '/features.tsv.gz'), col.names = c('Accession', 'Gene', 'V3', 'V4'))[,1:2]
-seurat_all@misc$annotations <- make.unique(seurat_all@misc$annotations)
+seurat_all@misc$annotations$Gene <- make.unique(seurat_all@misc$annotations$Gene)
 
 # Add metadata col for seq run
-seurat_all@meta.data[["run"]] <- gsub(".*_", "", as.character(seurat_all@meta.data$orig.ident))
-seurat_all@meta.data[["stage"]] <- gsub("_.*", "", as.character(seurat_all@meta.data$orig.ident))
+seurat_all@meta.data[["run"]] <- gsub(".*-", "", as.character(seurat_all@meta.data$orig.ident))
+seurat_all@meta.data[["stage"]] <- gsub("-.*", "", as.character(seurat_all@meta.data$orig.ident))
 
 # Convert metadata character cols to factors
 seurat_all@meta.data[sapply(seurat_all@meta.data, is.character)] <- lapply(seurat_all@meta.data[sapply(seurat_all@meta.data, is.character)], as.factor)
