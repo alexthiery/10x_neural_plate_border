@@ -18,8 +18,10 @@ opt = getopt(spec)
 cat('pipeline running through Nextflow\n')
 data_path = "./input/rds_files/"
 
-input_rds <- readRDS(list.files(data_path, full.names = TRUE))
+seurat_object <- readRDS(list.files(data_path, full.names = TRUE))
 
-DefaultAssay(input_rds) <- opt$assay
-SaveH5Seurat(input_rds, filename = opt$outfile)
+DefaultAssay(seurat_object) <- opt$assay
+seurat_object <- DietSeurat(seurat_object, counts = TRUE, assays = opt$assay, dimreducs = c('pca', 'umap'))
+
+SaveH5Seurat(seurat_object, filename = opt$outfile)
 Convert(opt$outfile, dest = "h5ad")
