@@ -23,6 +23,7 @@ analysis_scripts.sex_filt = file("$baseDir/bin/seurat/4_sex_filt.R", checkIfExis
 analysis_scripts.cell_cycle = file("$baseDir/bin/seurat/5_cell_cycle.R", checkIfExists: true)
 analysis_scripts.contamination_filt = file("$baseDir/bin/seurat/6_contamination_filt.R", checkIfExists: true)
 analysis_scripts.gene_modules = file("$baseDir/bin/other/gene_modules.R", checkIfExists: true)
+analysis_scripts.seurat_to_h5ad = file("$baseDir/bin/other/seurat_to_h5ad.R", checkIfExists: true)
 
 /*------------------------------------------------------------------------------------*/
 /* Module inclusions
@@ -52,7 +53,8 @@ include {r as contamination_filt} from "$baseDir/../modules/tools/r/main.nf"    
 include {r as gene_modules} from "$baseDir/../modules/tools/r/main.nf"          addParams(  options: modules['gene_modules'],
                                                                                             script: analysis_scripts.gene_modules )
 
-
+include {r as contamination_filt_h5ad} from "$baseDir/../modules/tools/r/main.nf" addParams(  options: modules['contamination_filt_h5ad'],
+                                                                                                script: analysis_scripts.seurat_to_h5ad )
 
 /*-----------------------------------------------------------------------------------------------------------------------------
 Log
@@ -77,6 +79,7 @@ workflow {
     sex_filt( poor_cluster_filt.out )
     cell_cycle( sex_filt.out )
     contamination_filt( cell_cycle.out )
+    contamination_filt_h5ad( contamination_filt.out )
 
     // Run downstream analyses
     gene_modules( contamination_filt.out )
