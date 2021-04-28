@@ -63,7 +63,7 @@ seurat_data <- DietSeurat(seurat_data, counts = TRUE, data = TRUE, scale.data = 
 
 
 # strip end of cell names as this is incorrectly reformated in Antler
-seurat_data <- RenameCells(seurat_data, new.names = sub('-', '_', colnames(seurat_data)))
+seurat_data <- RenameCells(seurat_data, new.names = gsub('-', '_', colnames(seurat_data)))
 
 # seurat_data <- RenameCells(seurat_data, new.names = sub('-.*', '', colnames(seurat_data)))
 
