@@ -22,8 +22,8 @@ analysis_scripts.poor_cluster_filt = file("$baseDir/bin/seurat/3_poor_cluster_fi
 analysis_scripts.sex_filt = file("$baseDir/bin/seurat/4_sex_filt.R", checkIfExists: true)
 analysis_scripts.cell_cycle = file("$baseDir/bin/seurat/5_cell_cycle.R", checkIfExists: true)
 analysis_scripts.contamination_filt = file("$baseDir/bin/seurat/6_contamination_filt.R", checkIfExists: true)
+analysis_scripts.seurat_to_h5ad = file("$baseDir/bin/seurat/seurat_to_h5ad.R", checkIfExists: true)
 analysis_scripts.gene_modules = file("$baseDir/bin/other/gene_modules.R", checkIfExists: true)
-analysis_scripts.seurat_to_h5ad = file("$baseDir/bin/other/seurat_to_h5ad.R", checkIfExists: true)
 
 /*------------------------------------------------------------------------------------*/
 /* Module inclusions
