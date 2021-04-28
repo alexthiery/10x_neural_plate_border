@@ -46,7 +46,7 @@ opt = getopt(spec)
 
 # Make dataframe with stage and replicate info extracted from path
 input <- list.dirs(data_path, recursive = FALSE, full.names = TRUE)
-input <- data.frame(sample = sub('.*/', '', input), run = str_split(sub('.*/', '', input), pattern = "_", simplify = T)[,2], path = input)
+input <- data.frame(sample = sub('.*/', '', input), run = str_split(sub('.*/', '', input), pattern = "-", simplify = T)[,2], path = input)
 
 # Init list of seurat objects then merge
 seurat_list <- apply(input, 1, function(x) CreateSeuratObject(counts= Read10X(data.dir = x[["path"]]), project = x[["sample"]]))
