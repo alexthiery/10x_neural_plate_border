@@ -53,6 +53,10 @@ seurat_list <- apply(input, 1, function(x) CreateSeuratObject(counts= Read10X(da
 names(seurat_list) <- input$sample
 seurat_all <- merge(x = seurat_list[[1]], y=seurat_list[-1], add.cell.ids = names(seurat_list), project = "chick.10x")
 
+# Add seurat gene annotation dataframe to misc slot
+seurat_all@misc[['annotations']] <- read.table(paste0(input[1,'path'], '/features.tsv.gz'), col.names = c('Accession', 'Gene', 'V3', 'V4'))[,1:2]
+seurat_all@misc$annotations <- make.unique(seurat_all@misc$annotations)
+
 # Add metadata col for seq run
 seurat_all@meta.data[["run"]] <- gsub(".*_", "", as.character(seurat_all@meta.data$orig.ident))
 seurat_all@meta.data[["stage"]] <- gsub("_.*", "", as.character(seurat_all@meta.data$orig.ident))

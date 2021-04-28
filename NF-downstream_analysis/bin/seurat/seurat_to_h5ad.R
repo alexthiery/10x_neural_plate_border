@@ -25,3 +25,6 @@ seurat_object <- DietSeurat(seurat_object, counts = TRUE, assays = opt$assay, di
 
 SaveH5Seurat(seurat_object, filename = paste0(opt$outfile, '.h5Seurat'))
 Convert(paste0(opt$outfile, '.h5Seurat'), dest = "h5ad")
+
+# Remove intermediate h5Seurat file
+file.remove(paste0(opt$outfile, '.h5Seurat'))
