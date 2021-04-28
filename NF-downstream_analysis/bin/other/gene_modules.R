@@ -51,7 +51,7 @@ opt = getopt(spec)
   dir.create(antler_path, recursive = T)
 }
 
-seurat_data <- readRDS(paste0(data_path, 'contamination_filt_data.RDS'))
+seurat_data <- readRDS(list.files(data_path, full.names = TRUE))
 
 # switch to RNA assay for viewing expression data
 DefaultAssay(seurat_data) <- "RNA"
