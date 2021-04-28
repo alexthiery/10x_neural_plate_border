@@ -23,5 +23,5 @@ seurat_object <- readRDS(list.files(data_path, full.names = TRUE))
 DefaultAssay(seurat_object) <- opt$assay
 seurat_object <- DietSeurat(seurat_object, counts = TRUE, assays = opt$assay, dimreducs = c('pca', 'umap'))
 
-SaveH5Seurat(seurat_object, filename = opt$outfile)
-Convert(opt$outfile, dest = "h5ad")
+SaveH5Seurat(seurat_object, filename = paste0(opt$outfile, '.h5Seurat'))
+Convert(paste0(opt$outfile, '.h5Seurat'), dest = "h5ad")
