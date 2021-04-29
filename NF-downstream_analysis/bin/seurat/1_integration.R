@@ -53,10 +53,6 @@ seurat_list <- apply(input, 1, function(x) CreateSeuratObject(counts= Read10X(da
 names(seurat_list) <- input$sample
 seurat_all <- merge(x = seurat_list[[1]], y=seurat_list[-1], add.cell.ids = names(seurat_list), project = "chick.10x")
 
-# Add seurat gene annotation dataframe to misc slot
-seurat_all@misc[['annotations']] <- read.table(paste0(input[1,'path'], '/features.tsv.gz'), col.names = c('Accession', 'Gene', 'V3', 'V4'))[,1:2]
-seurat_all@misc$annotations$Gene <- make.unique(seurat_all@misc$annotations$Gene)
-
 # Add metadata col for seq run
 seurat_all@meta.data[["run"]] <- gsub(".*-", "", as.character(seurat_all@meta.data$orig.ident))
 seurat_all@meta.data[["stage"]] <- gsub("-.*", "", as.character(seurat_all@meta.data$orig.ident))
@@ -102,6 +98,10 @@ all_features <- lapply(seurat_split, row.names) %>% Reduce(intersect, .)
 integration_data <- FindIntegrationAnchors(seurat_split, anchor.features = features, reduction = "rpca", k.anchor = 20)
 # Integrate data
 integration_data <- IntegrateData(anchorset = integration_data, features.to.integrate = all_features)
+
+# Add seurat gene annotation dataframe to misc slot
+integration_data@misc[['annotations']] <- read.table(paste0(input[1,'path'], '/features.tsv.gz'), col.names = c('Accession', 'Gene', 'V3', 'V4'))[,1:2]
+integration_data@misc$annotations$Gene <- make.unique(integration_data@misc$annotations$Gene)
 
 # specify that we will perform downstream analysis on the corrected data note that the original
 # unmodified data still resides in the 'RNA' assay
