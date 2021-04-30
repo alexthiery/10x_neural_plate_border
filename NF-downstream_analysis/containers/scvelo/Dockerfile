@@ -6,7 +6,8 @@ LABEL authors="alex.thiery@crick.ac.uk" \
 RUN pip install -U scvelo && \
     pip install python-igraph louvain && \
     pip install pybind11 hnswlib && \
-    conda install notebook
+    conda install notebook && \
+    conda install numba=0.52.0
 
 RUN R -e "remotes::install_github('mojaveazure/seurat-disk')" && \
     R -e "install.packages('SeuratWrappers')" && \
