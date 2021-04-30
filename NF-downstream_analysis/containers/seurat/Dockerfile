@@ -50,3 +50,4 @@ RUN   R -e "install.packages('future')" && \
 RUN   R -e "devtools::install_version('ArrayBin', version = '0.2')" && \
       R -e "devtools::install_version('heatmap.plus', version = '1.3')" && \
       R -e "devtools::install_github('juliendelile/Antler', dependencies = TRUE)"
+      
