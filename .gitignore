@@ -17,3 +17,6 @@ nf-testData
 testData
 .DS_Store
 null
+.devcontainer
+.vscode
+notebooks
