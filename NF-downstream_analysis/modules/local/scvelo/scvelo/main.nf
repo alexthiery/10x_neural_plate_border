@@ -19,11 +19,11 @@ process SCVELO {
         path(loom)
 
     output:
-        path "${prefix}.loom", emit: loom
+        path "figures", emit: plots
 
     script:
         def software = getSoftwareName(task.process)
-        def prefix   = options.prefix ? ${options.prefix} : "seurat_merged"
+        def prefix   = options.prefix ? "${options.prefix}" : "seurat_merged"
         """
         scvelo.py --input ${loom} --output ${prefix}.loom
         """

@@ -21,7 +21,7 @@ process SEURAT_INTERSECT_LOOM {
         path(annotations)
 
     output:
-        path "${prefix}.loom", emit: loom
+        path "*.loom", emit: loom
 
     script:
         def software = getSoftwareName(task.process)

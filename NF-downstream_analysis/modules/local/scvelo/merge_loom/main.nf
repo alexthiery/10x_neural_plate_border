@@ -19,11 +19,11 @@ process MERGE_LOOM {
         path(loom_dir)
 
     output:
-        path "${prefix}.loom", emit: loom
+        path "*.loom", emit: loom
 
     script:
         def software = getSoftwareName(task.process)
-        def prefix   = options.prefix ? ${options.prefix} : "merged"
+        def prefix   = options.prefix ? "${options.prefix}" : "merged"
         """
         merge_loom.py --input ${loom_dir} --output ${prefix}.loom
         """
