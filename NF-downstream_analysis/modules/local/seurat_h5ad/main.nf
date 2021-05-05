@@ -7,7 +7,7 @@ include { initOptions; saveFiles; getSoftwareName } from './functions'
 params.options = [:]
 def options    = initOptions(params.options)
 
-process MERGE_LOOM {
+process SEURAT_H5AD {
 
     publishDir "${params.outdir}",
         mode: 'copy',
@@ -16,15 +16,14 @@ process MERGE_LOOM {
     container "alexthiery/10x-npb-scvelo:latest"
 
     input:
-        path(loom_dir)
+        tuple val(meta), path('input/*')
 
     output:
-        path "*.loom", emit: loom
+        tuple val(meta), file('*h5ad')
 
     script:
-        def software = getSoftwareName(task.process)
-        def prefix   = options.prefix ? "${options.prefix}" : "merged"
+
         """
-        $moduleDir/bin/merge_loom.py --input ${loom_dir} --output ${prefix}.loom
+        Rscript $moduleDir/bin/seurat_h5ad.R ${options.args}
         """
 }

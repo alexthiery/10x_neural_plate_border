@@ -58,7 +58,7 @@ def plot_velocity(adata):
     scv.pl.velocity_embedding_grid(adata, basis='umap', save=True)
     scv.pl.velocity_embedding_stream(adata, basis='umap', save=True)
 
-def latent_time(adata)
+def latent_time(adata):
     scv.tl.latent_time(adata)
     scv.pl.scatter(adata, color='latent_time', color_map='gnuplot', size=80, save=True)
     top_genes = adata.var['fit_likelihood'].sort_values(ascending=False).index[:300]

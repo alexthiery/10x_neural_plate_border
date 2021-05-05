@@ -28,7 +28,7 @@ opt = getopt(spec)
 
     plot_path = "./plots/"
     rds_path = "./rds_files/"
-    data_path = "./input/NF-scRNAseq_alignment/cellranger/count/filtered_feature_bc_matrix"
+    data_path = "./input/filtered_feature_bc_matrix"
     ncores = opt$cores
 
     # Multi-core when running from command line
@@ -94,6 +94,9 @@ integration_data <- IntegrateData(anchorset = integration_data, dims = 1:30, fea
 integration_data@misc[['annotations']] <- read.table(paste0(input[1,'path'], '/features.tsv.gz'), col.names = c('Accession', 'Gene', 'V3', 'V4'))[,1:2]
 integration_data@misc$annotations$Gene <- make.unique(integration_data@misc$annotations$Gene)
 
+# Save annnotation dataframe
+write.table(integration_data@misc$annotations, 'seurat_annotations.csv', row.names=FALSE, quote=FALSE)
+
 # specify that we will perform downstream analysis on the corrected data note that the original
 # unmodified data still resides in the 'RNA' assay
 DefaultAssay(integration_data) <- "integrated"
@@ -102,3 +105,4 @@ integration_data <- ScaleData(integration_data, features = rownames(integration_
 
 # Save RDS after integration
 saveRDS(integration_data, paste0(rds_path, "integration_data.RDS"), compress = FALSE)
+

@@ -28,6 +28,6 @@ process SEURAT_INTERSECT_LOOM {
         def prefix   = options.prefix ? "${options.prefix}" : "seurat_merged"
         
         """
-        seurat_intersect_loom.py --loomInput ${loom} --seuratInput ${seurat} --annotations ${annotations} --output ${prefix}.loom
+        $moduleDir/bin/seurat_intersect_loom.py --loomInput ${loom} --seuratInput ${seurat} --annotations ${annotations} --output ${prefix}.loom
         """
 }

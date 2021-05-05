@@ -7,24 +7,24 @@ include { initOptions; saveFiles; getSoftwareName } from './functions'
 params.options = [:]
 def options    = initOptions(params.options)
 
-process MERGE_LOOM {
+process R {
 
     publishDir "${params.outdir}",
         mode: 'copy',
         saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:'') }
 
-    container "alexthiery/10x-npb-scvelo:latest"
+    container "streitlab/custom-nf-modules-r:latest"
 
     input:
-        path(loom_dir)
+        tuple val(meta), path('input/*')
 
     output:
-        path "*.loom", emit: loom
+        tuple val(meta), file('*')
 
     script:
-        def software = getSoftwareName(task.process)
-        def prefix   = options.prefix ? "${options.prefix}" : "merged"
+
         """
-        $moduleDir/bin/merge_loom.py --input ${loom_dir} --output ${prefix}.loom
+        Rscript ${params.script} --cores ${task.cpus} --runtype nextflow ${options.args}
+        rm -r input
         """
 }
