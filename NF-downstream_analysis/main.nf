@@ -58,12 +58,14 @@ workflow {
     // Convert seurat to h5ad format
     SEURAT_SUBSET_H5AD( SEURAT_FILTERING.out.contamination_filt_out )
 
+    if(!params.skip_scvelo){
+        // Set channel for input looms
+        METADATA.out
+            .filter{ it[0].sample_id == 'NF-scRNAseq_alignment_out' }
+            .map {it[1].collect{ file(it+"/velocyto", checkIfExists: true) }}
+            .set {ch_loomInput}
 
-    // Set channel for input looms
-    METADATA.out
-        .filter{ it[0].sample_id == 'NF-scRNAseq_alignment_out' }
-        .map {it[1].collect{ file(it+"/velocyto", checkIfExists: true) }}
-        .set {ch_loomInput}
+        SEURAT_SCVELO( ch_loomInput, SEURAT_SUBSET_H5AD.out.contamination_filt_h5ad_out, SEURAT_FILTERING.out.annotations )
+    }
 
-    SEURAT_SCVELO( ch_loomInput, SEURAT_SUBSET_H5AD.out.contamination_filt_h5ad_out, SEURAT_FILTERING.out.annotations )
 }
