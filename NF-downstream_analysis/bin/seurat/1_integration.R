@@ -28,7 +28,7 @@ opt = getopt(spec)
 
     plot_path = "./plots/"
     rds_path = "./rds_files/"
-    data_path = "./input/NF-scRNAseq_alignment/cellranger/count/filtered_feature_bc_matrix"
+    data_path = "./input/filtered_feature_bc_matrix"
     ncores = opt$cores
 
     # Multi-core when running from command line
