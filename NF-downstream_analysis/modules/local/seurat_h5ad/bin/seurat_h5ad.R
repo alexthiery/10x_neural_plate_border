@@ -7,8 +7,6 @@ library(SeuratDisk)
 library(SeuratWrappers)
 
 spec = matrix(c(
-  'runtype', 'l', 2, "character",
-  'cores', 'c', 2, "integer",
   'assay', 'a', 2, "character",
   'outfile', 'o', 2, "character"
 ), byrow=TRUE, ncol=4)
