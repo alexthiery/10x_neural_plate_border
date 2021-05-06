@@ -10,7 +10,7 @@ include { SCVELO } from '../../modules/local/scvelo/scvelo/main'                
 
 workflow SEURAT_SCVELO {
     take:
-    looms //channel: [loom]
+    loom //channel: [loom]
     seurat_input //channel: [hd5a]
     annotations //channel: [annotations]
 
