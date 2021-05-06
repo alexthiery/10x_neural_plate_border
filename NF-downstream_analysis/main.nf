@@ -9,6 +9,9 @@ def modules = params.modules.clone()
 def merge_loom_options = modules['merge_loom']
 merge_loom_options.skip_process = file(params.loomInput).isFile()
 
+def skip_seurat_filtering = params.skip_seurat_filtering ? true : false
+def skip_scvelo = params.skip_scvelo ? true : false
+
 /*-----------------------------------------------------------------------------------------------------------------------------
 Log
 -------------------------------------------------------------------------------------------------------------------------------*/
@@ -42,7 +45,7 @@ workflow {
     /*------------------------------------------------------------------------------------*/
     /* Run inital seurat pipeline
     --------------------------------------------------------------------------------------*/
-   if(!params.skip_seurat_filtering){
+   if(!skip_seurat_filtering){
         // Set channel for cellranger counts
         METADATA.out
             .filter{ it[0].sample_id == 'NF-scRNAseq_alignment_out' }
@@ -64,7 +67,7 @@ workflow {
     // Convert seurat to h5ad format
     SEURAT_SUBSET_H5AD( seurat_out )
 
-    if(!params.skip_scvelo){
+    if(!skip_scvelo){
         // Set channel for input looms
         METADATA.out
             .filter{ it[0].sample_id == 'NF-scRNAseq_alignment_out' }

@@ -20,7 +20,5 @@ nextflow run ./NF-downstream_analysis/main.nf \
 --debug \
 --integration STACAS \
 --skip_seurat_filtering \
---seurat_out /camp/home/thierya/scratch/10x_neural_plate_border/output/NF-downstream_analysis_stacas/seurat/6_contamination_filt/rds_files/contamination_filt_data.RDS \
---seurat_annotations /camp/home/thierya/scratch/10x_neural_plate_border/output/NF-downstream_analysis_stacas/seurat/1_integration/seurat_annotations.csv \
 -profile crick \
 -resume
