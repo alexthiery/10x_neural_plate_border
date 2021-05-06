@@ -9,7 +9,6 @@ def modules = params.modules.clone()
 def merge_loom_options = modules['merge_loom']
 merge_loom_options.skip_process = file(params.loomInput).isFile()
 
-
 /*-----------------------------------------------------------------------------------------------------------------------------
 Log
 -------------------------------------------------------------------------------------------------------------------------------*/
@@ -52,15 +51,18 @@ workflow {
 
         SEURAT_FILTERING( ch_scRNAseq_counts )
 
-        params.seurat_out = SEURAT_FILTERING.out.contamination_filt_out
-        params.seurat_annotations = SEURAT_FILTERING.out.annotations
+        seurat_out = SEURAT_FILTERING.out.contamination_filt_out
+        seurat_annotations = SEURAT_FILTERING.out.annotations
+   } else {
+       seurat_out = [[sample_id:'temp'], [params.seurat_out]]
+       seurat_annotations = params.seurat_annotations
    }
 
     /*------------------------------------------------------------------------------------*/
     /* Prepare inputs for scVelo
     --------------------------------------------------------------------------------------*/
     // Convert seurat to h5ad format
-    SEURAT_SUBSET_H5AD( params.seurat_out )
+    SEURAT_SUBSET_H5AD( seurat_out )
 
     if(!params.skip_scvelo){
         // Set channel for input looms
@@ -69,7 +71,7 @@ workflow {
             .map {it[1].collect{ file(it+"/velocyto", checkIfExists: true) }}
             .set {ch_loomInput}
 
-        SEURAT_SCVELO( ch_loomInput, SEURAT_SUBSET_H5AD.out.contamination_filt_h5ad_out, params.seurat_annotations )
+        SEURAT_SCVELO( ch_loomInput, SEURAT_SUBSET_H5AD.out.contamination_filt_h5ad_out.map{it[1]}, seurat_annotations )
     }
 
 }
