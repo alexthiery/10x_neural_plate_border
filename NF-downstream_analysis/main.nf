@@ -6,9 +6,6 @@ nextflow.enable.dsl=2
 // Don't overwrite global params.modules, create a copy instead and use that within the main script.
 def modules = params.modules.clone()
 
-def merge_loom_options = modules['merge_loom']
-merge_loom_options.skip_process = file(params.loomInput).isFile()
-
 def skip_seurat_filtering = params.skip_seurat_filtering ? true : false
 def skip_scvelo = params.skip_scvelo ? true : false
 
