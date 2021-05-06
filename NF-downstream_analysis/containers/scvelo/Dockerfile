@@ -1,14 +1,15 @@
-FROM  alexthiery/10x-npb-seurat:latest
+FROM continuumio/miniconda3:4.6.14
 
-LABEL authors="alex.thiery@crick.ac.uk" \
-      description="Docker image containing packages to run scVelo from Seurat object"
+# Install apt packages
+RUN apt-get update \
+      && apt-get install -y --no-install-recommends \
+      apt-utils \
+      build-essential \
+      procps
 
-RUN pip install -U scvelo && \
-    pip install python-igraph louvain && \
-    pip install pybind11 hnswlib && \
-    conda install notebook && \
-    conda install numba=0.52.0
+# Create the environment:
+COPY environment.yml .
 
-RUN R -e "remotes::install_github('mojaveazure/seurat-disk')" && \
-    R -e "install.packages('SeuratWrappers')" && \
-    R -e "remotes::install_github('satijalab/seurat-wrappers')"
+RUN conda update -n base -c defaults conda && \
+    conda env create -f environment.yml && \
+    echo "conda activate scvelo" >> ~/.bashrc
