@@ -30,12 +30,12 @@ include {SEURAT_FILTERING} from "$baseDir/subworkflows/seurat_filtering/main"   
                                                                                                 cell_cycle_options:                 modules['cell_cycle'],
                                                                                                 contamination_filt_options:         modules['contamination_filt'] )
 
+include {MERGE_LOOM} from "$baseDir/modules/local/merge_loom/main"                  addParams(  options:                            modules['merge_loom'] )
 
-include {SEURAT_SCVELO} from "$baseDir/subworkflows/seurat_scvelo/main"             addParams(  merge_loom_options:                 merge_loom_options,
-                                                                                                seurat_intersect_loom_options:      modules['seurat_intersect_loom'],
+include {SEURAT_SCVELO} from "$baseDir/subworkflows/seurat_scvelo/main"             addParams(  seurat_intersect_loom_options:      modules['seurat_intersect_loom'],
                                                                                                 scvelo_options:                     modules['scvelo'] )
 
-include {SEURAT_SUBSET_H5AD} from "$baseDir/subworkflows/seurat_subset_h5ad/main"   addParams(  contamination_filt_h5ad_options:    modules['contamination_filt_h5ad'])
+include {SEURAT_SUBSET_H5AD} from "$baseDir/subworkflows/seurat_subset_h5ad/main"   addParams(  contamination_filt_h5ad_options:    modules['contamination_filt_h5ad'] )
 
 
 workflow {
@@ -74,7 +74,9 @@ workflow {
             .map {it[1].collect{ file(it+"/velocyto", checkIfExists: true) }}
             .set {ch_loomInput}
 
-        SEURAT_SCVELO( ch_loomInput, SEURAT_SUBSET_H5AD.out.contamination_filt_h5ad_out.map{it[1]}, seurat_annotations )
+        MERGE_LOOM( ch_loomInput )
+        
+        SEURAT_SCVELO( MERGE_LOOM.out, SEURAT_SUBSET_H5AD.out.contamination_filt_h5ad_out.map{it[1]}, seurat_annotations )
     }
 
 }
