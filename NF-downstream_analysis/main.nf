@@ -43,20 +43,24 @@ workflow {
     /*------------------------------------------------------------------------------------*/
     /* Run inital seurat pipeline
     --------------------------------------------------------------------------------------*/
-    // Set channel for cellranger counts
-    METADATA.out
-        .filter{ it[0].sample_id == 'NF-scRNAseq_alignment_out' }
-        .map {[it[0], it[1].collect{ file(it+"/cellranger/count/filtered_feature_bc_matrix", checkIfExists: true) }]}
-        .set {ch_scRNAseq_counts}
+   if(!params.skip_seurat_filtering){
+        // Set channel for cellranger counts
+        METADATA.out
+            .filter{ it[0].sample_id == 'NF-scRNAseq_alignment_out' }
+            .map {[it[0], it[1].collect{ file(it+"/cellranger/count/filtered_feature_bc_matrix", checkIfExists: true) }]}
+            .set {ch_scRNAseq_counts}
 
-    SEURAT_FILTERING( ch_scRNAseq_counts )
+        SEURAT_FILTERING( ch_scRNAseq_counts )
 
+        params.seurat_out = SEURAT_FILTERING.out.contamination_filt_out
+        params.seurat_annotations = SEURAT_FILTERING.out.annotations
+   }
 
     /*------------------------------------------------------------------------------------*/
     /* Prepare inputs for scVelo
     --------------------------------------------------------------------------------------*/
     // Convert seurat to h5ad format
-    SEURAT_SUBSET_H5AD( SEURAT_FILTERING.out.contamination_filt_out )
+    SEURAT_SUBSET_H5AD( params.seurat_out )
 
     if(!params.skip_scvelo){
         // Set channel for input looms
@@ -65,7 +69,7 @@ workflow {
             .map {it[1].collect{ file(it+"/velocyto", checkIfExists: true) }}
             .set {ch_loomInput}
 
-        SEURAT_SCVELO( ch_loomInput, SEURAT_SUBSET_H5AD.out.contamination_filt_h5ad_out, SEURAT_FILTERING.out.annotations )
+        SEURAT_SCVELO( ch_loomInput, SEURAT_SUBSET_H5AD.out.contamination_filt_h5ad_out, params.seurat_annotations )
     }
 
 }
