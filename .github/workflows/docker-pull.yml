@@ -21,7 +21,7 @@ jobs:
 
           for module in NF-downstream_analysis/containers/*; do
               if [ -f "$module"/Dockerfile ]; then
-                  images+=($(echo "alexthiery/10x-NPB-${module##*/}:$(cat "$module"/VERSION)"))
+                  images+=($(echo "alexthiery/10x-npb-${module##*/}:$(cat "$module"/VERSION)"))
               fi
           done
 
