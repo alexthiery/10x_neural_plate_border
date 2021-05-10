@@ -95,7 +95,7 @@ integration_data@misc[['annotations']] <- read.table(paste0(input[1,'path'], '/f
 integration_data@misc$annotations$Gene <- make.unique(integration_data@misc$annotations$Gene)
 
 # Save annnotation dataframe
-write.table(integration_data@misc$annotations, 'seurat_annotations.csv', row.names=FALSE, quote=FALSE)
+write.table(integration_data@misc$annotations, 'seurat_annotations.csv', row.names=FALSE, quote=FALSE, sep=',')
 
 # specify that we will perform downstream analysis on the corrected data note that the original
 # unmodified data still resides in the 'RNA' assay
