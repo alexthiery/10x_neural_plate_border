@@ -16,12 +16,10 @@ process SEURAT_INTERSECT_LOOM {
     container "alexthiery/10x-npb-scvelo:latest"
 
     input:
-        path(loom)
-        path(seurat)
-        path(annotations)
+        tuple val(meta), path(loom), path(seurat), path(annotations)
 
     output:
-        path "*.loom", emit: loom
+        tuple val(meta), path("*.loom"), emit: loom
 
     script:
         def software = getSoftwareName(task.process)

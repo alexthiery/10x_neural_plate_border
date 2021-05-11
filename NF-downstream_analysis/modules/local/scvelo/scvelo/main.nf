@@ -16,7 +16,7 @@ process SCVELO {
     container "alexthiery/10x-npb-scvelo:latest"
 
     input:
-        path(loom)
+        tuple val(meta), path(loom)
 
     output:
         path "figures", emit: plots
