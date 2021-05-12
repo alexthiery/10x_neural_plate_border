@@ -55,8 +55,8 @@ workflow {
         // Convert seurat to h5ad format
         SEURAT_SUBSET_H5AD( SEURAT_FILTERING.out.contamination_filt_out )
 
-        seurat_h5ad = SEURAT_SUBSET_H5AD.out.contamination_filt_h5ad_out
-        seurat_annotations = SEURAT_FILTERING.out.annotations
+        ch_seurat_h5ad = SEURAT_SUBSET_H5AD.out.contamination_filt_h5ad_out
+        ch_seurat_annotations = SEURAT_FILTERING.out.annotations
 
    } else {
        seurat_h5ad = [[[sample_id:'NF-scRNAseq_alignment_out'], file(params.seurat_h5ad, checkIfExists: true)]]
