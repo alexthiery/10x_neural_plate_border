@@ -14,9 +14,9 @@ opt = getopt(spec)
 
 # Set paths and load data
 cat('pipeline running through Nextflow\n')
-data_path = "./input/rds_files/"
+data_path = "./input/"
 
-seurat_object <- readRDS(list.files(data_path, full.names = TRUE))
+seurat_object <- readRDS(list.files(data_path, full.names = TRUE, recursive = TRUE))
 
 DefaultAssay(seurat_object) <- opt$assay
 seurat_object <- DietSeurat(seurat_object, counts = TRUE, assays = opt$assay, dimreducs = c('pca', 'umap'))

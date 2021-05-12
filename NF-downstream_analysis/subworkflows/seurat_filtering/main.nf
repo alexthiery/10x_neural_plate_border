@@ -70,13 +70,14 @@ workflow SEURAT_FILTERING {
     CELL_CYCLE( SEX_FILT.out )
     CONTAMINATION_FILT( CELL_CYCLE.out )
 
+    
     emit:
-    annotations                 = INTEGRATION.out.map{ Helper.globArray(it[1], '.*seurat_annotations.csv') }
-    integration_out             = INTEGRATION.out
-    integration_qc_out          = INTEGRATION_QC.out
-    poor_cluster_filt_out       = POOR_CLUSTER_FILT.out
-    sex_filt_out                = SEX_FILT.out
-    cell_cycle_out              = CELL_CYCLE.out
-    contamination_filt_out      = CONTAMINATION_FILT.out
+    annotations                 = INTEGRATION.out.map{[it[0], it[1].findAll{it =~ /seurat_annotations.csv/}[0]]}.view() //Channel: [[meta], annotations]
+    integration_out             = INTEGRATION.out //Channel: [[meta], [output]]
+    integration_qc_out          = INTEGRATION_QC.out //Channel: [[meta], [output]]
+    poor_cluster_filt_out       = POOR_CLUSTER_FILT.out //Channel: [[meta], [output]]
+    sex_filt_out                = SEX_FILT.out //Channel: [[meta], [output]]
+    cell_cycle_out              = CELL_CYCLE.out //Channel: [[meta], [output]]
+    contamination_filt_out      = CONTAMINATION_FILT.out //Channel: [[meta], [output]]
 }
 

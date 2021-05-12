@@ -19,5 +19,6 @@ nextflow run ./NF-downstream_analysis/main.nf \
 --outdir ./output/NF-downstream_analysis_stacas \
 --debug \
 --integration STACAS \
+--skip_seurat_filtering \
 -profile crick \
 -resume

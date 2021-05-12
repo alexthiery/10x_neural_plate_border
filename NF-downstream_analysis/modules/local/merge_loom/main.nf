@@ -16,10 +16,10 @@ process MERGE_LOOM {
     container "alexthiery/10x-npb-scvelo:latest"
 
     input:
-        path(loom_dir)
+        tuple val(meta), path(loom_dir)
 
     output:
-        path "*.loom", emit: loom
+        tuple val(meta), path("*.loom"), emit: loom
 
     script:
         def software = getSoftwareName(task.process)
