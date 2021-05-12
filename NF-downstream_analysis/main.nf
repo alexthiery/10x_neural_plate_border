@@ -59,21 +59,11 @@ workflow {
         seurat_annotations = SEURAT_FILTERING.out.annotations
 
    } else {
+       seurat_h5ad = [[[sample_id:'NF-scRNAseq_alignment_out'], file(params.seurat_h5ad, checkIfExists: true)]]
+       ch_seurat_h5ad = Channel.from(seurat_h5ad)
 
-       seurat_h5ad = [[[sample_id:'NF-scRNAseq_alignment_out'], params.seurat_h5ad]]
-
-       Channel
-        .from(seurat_h5ad)
-        .map { row -> [ row[0], file(row[1], checkIfExists: true) ] }
-        .set {ch_seurat_h5ad}
-
-
-       seurat_annotations = [[[sample_id:'NF-scRNAseq_alignment_out'], params.seurat_annotations]]
-
-       Channel
-        .from(seurat_annotations)
-        .map { row -> [ row[0], file(row[1], checkIfExists: true) ] }
-        .set {ch_seurat_annotations}
+       seurat_annotations = [[[sample_id:'NF-scRNAseq_alignment_out'], file(params.seurat_annotations, checkIfExists: true)]]
+       ch_seurat_annotations = Channel.from(seurat_annotations)
    }
 
     /*------------------------------------------------------------------------------------*/
@@ -89,14 +79,7 @@ workflow {
             .set {ch_loomInput}
 
         MERGE_LOOM( ch_loomInput )
-
-        // Combine loom, seurat and annotations for running scvelo
-        MERGE_LOOM.out
-            .concat(ch_seurat_h5ad, ch_seurat_annotations)
-            .groupTuple(by: 0, size: 3)
-            .map{[it[0], it[1][0], it[1][1], it[1][2]]}
-            .set(ch_scveloInput)
         
-        SEURAT_SCVELO( ch_scveloInput ) // Channel [[meta], merged.loom, seurat.h5ad, seurat_annotations.csv]
+        SEURAT_SCVELO( MERGE_LOOM.out.loom, ch_seurat_h5ad, ch_seurat_annotations ) // Channel: [[meta], merged.loom],  Channel: [[meta], seurat.h5ad], Channel: [[meta], seurat_annotations.csv]
     }
 }
