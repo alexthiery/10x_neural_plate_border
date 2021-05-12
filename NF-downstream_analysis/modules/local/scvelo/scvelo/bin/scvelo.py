@@ -16,7 +16,6 @@ def parse_args(args=None):
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input', help="Input loom file.", metavar='')
     parser.add_argument('-vm', '--velocityMode', help="Method for calculating RNA velocity. Must be set to either: 'dynamical', 'deterministic', or 'stochastic'.", default='dynamical', metavar='')
-    parser.add_argument('-o', '--output', help="Path to concatenated loom output file.", metavar='')
     return parser.parse_args(args)
     
 
@@ -40,16 +39,16 @@ def preprocess_anndata(adata):
 def calc_moments(adata):
     scv.pp.moments(adata, n_pcs=30, n_neighbors=30)
 
-def calc_velocity(args, adata):
-    if args.velocityMode == 'dynamical':
+def calc_velocity(velocityMode, adata):
+    if velocityMode == 'dynamical':
         scv.tl.recover_dynamics(adata)
         scv.tl.velocity(adata, mode='dynamical')
-    elif args.velocityMode == 'deterministic':
+    elif velocityMode == 'deterministic':
         scv.tl.velocity(adata, mode='deterministic')
-    elif args.velocityMode == 'stochastic':
+    elif velocityMode == 'stochastic':
         scv.tl.velocity(adata)
     else:
-        Exception(f"'--velocityMode': '{args.velocityMode}' is not valid. Must be set to either: 'dynamical', 'deterministic', or 'stochastic'.")
+        Exception(f"'--velocityMode': '{velocityMode}' is not valid. Must be set to either: 'dynamical', 'deterministic', or 'stochastic'.")
 
     scv.tl.velocity_graph(adata)
 
@@ -78,7 +77,7 @@ def main(args=None):
     calc_moments(adata)
 
 
-    calc_velocity(args, adata)
+    calc_velocity(args.velocityMode, adata)
 
     plot_velocity(adata)
 
