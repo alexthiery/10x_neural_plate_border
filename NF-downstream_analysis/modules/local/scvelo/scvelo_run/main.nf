@@ -7,7 +7,7 @@ include { initOptions; saveFiles; getSoftwareName } from './functions'
 params.options = [:]
 def options    = initOptions(params.options)
 
-process SCVELO {
+process SCVELO_RUN {
 
     publishDir "${params.outdir}",
         mode: 'copy',
@@ -25,6 +25,6 @@ process SCVELO {
         def software = getSoftwareName(task.process)
         def prefix   = options.prefix ? "${options.prefix}" : "seurat_merged"
         """
-        $moduleDir/bin/scvelo.py --input ${loom} ${options.args}
+        $moduleDir/bin/scvelo_run.py --input ${loom} ${options.args}
         """
 }

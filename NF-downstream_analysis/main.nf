@@ -31,7 +31,7 @@ include {SEURAT_FILTERING} from "$baseDir/subworkflows/seurat_filtering/main"   
 include {MERGE_LOOM} from "$baseDir/modules/local/merge_loom/main"                  addParams(  options:                            modules['merge_loom'] )
 
 include {SEURAT_SCVELO} from "$baseDir/subworkflows/seurat_scvelo/main"             addParams(  seurat_intersect_loom_options:      modules['seurat_intersect_loom'],
-                                                                                                scvelo_options:                     modules['scvelo'] )
+                                                                                                scvelo_run_options:                 modules['scvelo_run'] )
 
 include {SEURAT_SUBSET_H5AD} from "$baseDir/subworkflows/seurat_subset_h5ad/main"   addParams(  contamination_filt_h5ad_options:    modules['contamination_filt_h5ad'] )
 
