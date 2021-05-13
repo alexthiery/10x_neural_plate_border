@@ -10,3 +10,4 @@ dependencies:
   - scvelo
   - numba=0.52.0
   - notebook
+  - pdfkit
