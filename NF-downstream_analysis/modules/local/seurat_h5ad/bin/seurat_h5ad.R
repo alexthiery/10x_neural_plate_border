@@ -14,7 +14,7 @@ opt = getopt(spec)
 
 # Set paths and load data
 cat('pipeline running through Nextflow\n')
-data_path = "./input/"
+data_path = "./input/rds_files/"
 
 seurat_object <- readRDS(list.files(data_path, full.names = TRUE, recursive = TRUE))
 
