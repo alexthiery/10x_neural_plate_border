@@ -13,7 +13,7 @@ process MERGE_LOOM {
         mode: 'copy',
         saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:'') }
 
-    container "alexthiery/10x-npb-scvelo:latest"
+    container "alexthiery/10x-npb-scvelo:base-1.4"
 
     input:
         tuple val(meta), path(loom_dir)

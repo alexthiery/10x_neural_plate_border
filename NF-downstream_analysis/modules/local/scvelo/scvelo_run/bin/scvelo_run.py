@@ -2,11 +2,8 @@
 
 import os
 import sys
-import errno
 import argparse
-import loompy
 import scvelo as scv
-import pandas as pd
 import pdfkit
 
 
