@@ -25,6 +25,6 @@ process SCVELO_RUN {
         def software = getSoftwareName(task.process)
         def prefix   = options.prefix ? "${options.prefix}" : "seurat_merged"
         """
-        $moduleDir/bin/scvelo_run.py --input ${loom} ${options.args}
+        $moduleDir/bin/scvelo_run.py --input ${loom} --ncores ${task.cpus} ${options.args}
         """
 }

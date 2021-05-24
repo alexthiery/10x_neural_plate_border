@@ -13,9 +13,10 @@ def parse_args(args=None):
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input', help="Input loom file.", metavar='')
-    parser.add_argument('-vm', '--velocityMode', help="Method for calculating RNA velocity. Must be set to either: 'dynamical', 'deterministic', or 'stochastic'.", default='dynamical', metavar='')
-    parser.add_argument('-c', '--clusterColumn', help="Name of cluster column.", default='Clusters', metavar='')
+    parser.add_argument('-m', '--velocityMode', help="Method for calculating RNA velocity. Must be set to either: 'dynamical', 'deterministic', or 'stochastic'.", default='dynamical', metavar='')
+    parser.add_argument('-x', '--clusterColumn', help="Name of cluster column.", default='Clusters', metavar='')
     parser.add_argument('-g', '--genes', help="Genes of interest to plot on velocity.", nargs='+')
+    parser.add_argument('-c', '--ncores', help="Number of cores used for parallelisation.", metavar='')
     return parser.parse_args(args)
     
 
@@ -53,12 +54,12 @@ def calc_moments(adata):
     return(adata)
 
 # calculate cell velocity
-def calc_velocity(adata, velocityMode):
+def calc_velocity(adata, velocityMode, ncores):
     if velocityMode not in ['dynamical', 'deterministic', 'stochastic']:
         Exception(f"'--velocityMode': '{velocityMode}' is not valid. Must be set to either: 'dynamical', 'deterministic', or 'stochastic'.")
 
     if velocityMode == 'dynamical':
-        scv.tl.recover_dynamics(adata)
+        scv.tl.recover_dynamics(adata, n_jobs=ncores)
 
     scv.tl.velocity(adata, mode=velocityMode)
     scv.tl.velocity_graph(adata)
@@ -105,7 +106,7 @@ def main(args=None):
     plot_proportions(adata, args.clusterColumn)
     preprocess_anndata(adata)
     calc_moments(adata)
-    calc_velocity(adata, args.velocityMode)
+    calc_velocity(adata, args.velocityMode, args.ncores)
     plot_velocity(adata, args.clusterColumn)
     
     plot_genes(adata, args)
