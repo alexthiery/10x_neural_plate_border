@@ -55,6 +55,7 @@ def calc_moments(adata):
 
 # calculate cell velocity
 def calc_velocity(adata, velocityMode, ncores):
+    print(ncores)
     if velocityMode not in ['dynamical', 'deterministic', 'stochastic']:
         Exception(f"'--velocityMode': '{velocityMode}' is not valid. Must be set to either: 'dynamical', 'deterministic', or 'stochastic'.")
 
@@ -98,6 +99,7 @@ def plot_differentiation(adata, clusterColumn):
 
 
 def main(args=None):
+    print(args.ncores)
     args = parse_args(args)
     # check_args(args)
     
