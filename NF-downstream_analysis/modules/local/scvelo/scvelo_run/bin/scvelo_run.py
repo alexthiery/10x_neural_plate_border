@@ -66,9 +66,9 @@ def calc_velocity(adata, velocityMode, ncores):
     return(adata)
 
 def plot_velocity(adata, clusterColumn):
-    scv.pl.velocity_embedding(adata, color=clusterColumn, arrow_length=3, arrow_size=2, dpi=120, save=True)
-    scv.pl.velocity_embedding_grid(adata, color=clusterColumn, basis='umap', save=True)
-    scv.pl.velocity_embedding_stream(adata, color=clusterColumn, basis='umap', save=True)
+    scv.pl.velocity_embedding(adata, color=clusterColumn, arrow_length=3, arrow_size=2, dpi=120, save='embedding.png')
+    scv.pl.velocity_embedding_grid(adata, color=clusterColumn, basis='umap', save='embedding_grid.png')
+    scv.pl.velocity_embedding_stream(adata, color=clusterColumn, basis='umap', save='embedding_stream.png')
 
 
 # identify genes which explain the vector field in a given lineage
@@ -88,7 +88,7 @@ def plot_genes(adata, args):
 def plot_differentiation(adata, clusterColumn):
     scv.tl.velocity_confidence(adata)
     keys = 'velocity_length', 'velocity_confidence'
-    scv.pl.scatter(adata, c=keys, cmap='coolwarm', perc=[5, 95], save=True)
+    scv.pl.scatter(adata, c=keys, cmap='coolwarm', perc=[5, 95], save='differentiation_scatter.png')
     
     df = adata.obs.groupby(clusterColumn)[keys].mean().T
     styled_table = df.style.background_gradient(cmap='coolwarm', axis=1)
