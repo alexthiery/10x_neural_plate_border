@@ -4,7 +4,6 @@ import os
 import sys
 import argparse
 import scvelo as scv
-import pdfkit
 
 
 def parse_args(args=None):
@@ -17,6 +16,7 @@ def parse_args(args=None):
     parser.add_argument('-x', '--clusterColumn', help="Name of cluster column.", default='Clusters', metavar='')
     parser.add_argument('-g', '--genes', help="Genes of interest to plot on velocity.", nargs='+')
     parser.add_argument('-c', '--ncores', help="Number of cores used for parallelisation.", metavar='')
+    parser.add_argument('-d', '--dpi', type=int, help='Set DPI for plots.', default='240')
     return parser.parse_args(args)
     
 
@@ -55,7 +55,6 @@ def calc_moments(adata):
 
 # calculate cell velocity
 def calc_velocity(adata, velocityMode, ncores):
-    print(ncores)
     if velocityMode not in ['dynamical', 'deterministic', 'stochastic']:
         Exception(f"'--velocityMode': '{velocityMode}' is not valid. Must be set to either: 'dynamical', 'deterministic', or 'stochastic'.")
 
@@ -66,73 +65,103 @@ def calc_velocity(adata, velocityMode, ncores):
     scv.tl.velocity_graph(adata)
     return(adata)
 
-def plot_velocity(adata, clusterColumn):
-    scv.pl.velocity_embedding(adata, color=clusterColumn, arrow_length=3, arrow_size=2, dpi=120, save='embedding.png')
-    scv.pl.velocity_embedding_grid(adata, color=clusterColumn, basis='umap', save='embedding_grid.png')
-    scv.pl.velocity_embedding_stream(adata, color=clusterColumn, basis='umap', save='embedding_stream.png')
+def plot_velocity(adata, clusterColumn, threshold=.1, dpi=240):
+    scv.pl.velocity_embedding(adata, color=clusterColumn, arrow_length=3, arrow_size=2, save='embedding.png', dpi=dpi)
+    scv.pl.velocity_embedding_grid(adata, color=clusterColumn, basis='umap', save='embedding_grid.png', dpi=dpi)
+    scv.pl.velocity_embedding_stream(adata, color=clusterColumn, basis='umap', save='embedding_stream.png', dpi=dpi)
+    scv.pl.velocity_graph(adata, threshold=threshold, color=clusterColumn, basis='umap', save='graph.png', dpi=dpi)
 
+# plot expression of genes of interest across velocity UMAPs
+def plot_genes(adata, genes_dict, dpi=240, prefix=""): # genes_dict is a key value pair with {name:gene(s)}
+    for key, value in genes_dict.items():
+        scv.pl.velocity(adata, value, save=prefix+key+'.png', dpi=dpi)
 
 # identify genes which explain the vector field in a given lineage
-def ident_genes(adata, clusterColumn, min_corr=.3):
+def ident_top_genes(adata, clusterColumn, min_corr=.3, n_genes=5):
     scv.tl.rank_velocity_genes(adata, groupby=clusterColumn, min_corr=min_corr)
     df = scv.DataFrame(adata.uns['rank_velocity_genes']['names'])
-    return(df)
+    
+    top_cluster_genes = {'Cluster-'+column: df[column][:n_genes] for column in df}
+    return(top_cluster_genes) # return dictionary: {cluster_1:top_genes, cluster_2:top_genes}
+        
 
-def plot_genes(adata, args):
-    if args.genes is not None:
-        scv.pl.velocity(adata, args.genes, ncols=2)
-#     df = ident_genes(adata, args.clusterColumn)
-#     for column in df:
-#         scv.pl.scatter(adata, df[column][:5], ylabel=column)
-#         scv.pl.velocity(adata, df[column][:5], ncols=5, ylabel=column, dpi=240)
-
-def plot_differentiation(adata, clusterColumn):
+def plot_differentiation(adata, clusterColumn, dpi=240):
     scv.tl.velocity_confidence(adata)
     keys = 'velocity_length', 'velocity_confidence'
-    scv.pl.scatter(adata, c=keys, cmap='coolwarm', perc=[5, 95], save='differentiation_scatter.png')
+    scv.pl.scatter(adata, c=keys, cmap='coolwarm', perc=[5, 95], save='differentiation_scatter.png', dpi=dpi)
+
     
-    df = adata.obs.groupby(clusterColumn)[keys].mean().T
-    styled_table = df.style.background_gradient(cmap='coolwarm', axis=1)
-    html = styled_table.render()
-    pdfkit.from_string(html, 'figures/cluster_differentiation.png')
+def velocity_pseudotime(adata, dpi=240):
+    scv.tl.velocity_pseudotime(adata)
+    scv.pl.scatter(adata, color='velocity_pseudotime', cmap='gnuplot', save='pseudotime.png', dpi=dpi)
+    return(adata)
 
 
+def paga(adata, clusterColumn, dpi=240):
+    adata.uns['neighbors']['distances'] = adata.obsp['distances']
+    adata.uns['neighbors']['connectivities'] = adata.obsp['connectivities']
+
+    scv.tl.paga(adata, groups=clusterColumn)
+    paga_df = scv.get_df(adata, 'paga/transitions_confidence', precision=2).T
+    paga_df.style.background_gradient(cmap='Blues').format('{:.2g}')
+    scv.pl.paga(adata, basis='umap', size=50, alpha=.1, min_edge_width=2, node_size_scale=1.5, save='paga.png', dpi=dpi)
+    return(adata, paga_df)
+
+def latent_time(adata, clusterColumn, dpi=240):
+    scv.tl.latent_time(adata)
+    scv.pl.scatter(adata, color='latent_time', color_map='gnuplot', size=80, save='latent_time.png', dpi=dpi)
+    top_genes = adata.var['fit_likelihood'].sort_values(ascending=False).index[:300]
+    scv.pl.heatmap(adata, var_names=top_genes, sortby='latent_time', col_color=clusterColumn, n_convolve=100, save='heatmap.png', dpi=dpi)
+    return(adata)
 
 def main(args=None):
-    print(args.ncores)
+    
     args = parse_args(args)
+    
     # check_args(args)
     
-    adata = read_loom(args.input, args.clusterColumn)
+    adata = read_loom(loom_path=args.input, clusterColumn=args.clusterColumn)
     
-    plot_proportions(adata, args.clusterColumn)
-    preprocess_anndata(adata)
-    calc_moments(adata)
-    calc_velocity(adata, args.velocityMode, args.ncores)
-    plot_velocity(adata, args.clusterColumn)
+    plot_proportions(adata=adata, clusterColumn=args.clusterColumn)
     
-    plot_genes(adata, args)
-    plot_differentiation(adata, args.clusterColumn)
+    adata = preprocess_anndata(adata=adata)
     
-    latent_time(adata)
+    adata = calc_moments(adata=adata)
+    
+    adata = calc_velocity(adata=adata, velocityMode=args.velocityMode, ncores=args.ncores)
+    plot_velocity(adata=adata, clusterColumn=args.clusterColumn, dpi=args.dpi)
+    
+    # Plot velocity for manual GOI
+    if args.genes is not None:
+        manual_genes = {args.genes[i]: args.genes[i] for i in range(0, len(args.genes))}
+        plot_genes(adata=adata, genes_dict=manual_genes, dpi=args.dpi)
+        
+    # Identify and plot genes that have cluster-specific differential velocity expression
+    top_cluster_genes = ident_top_genes(adata, args.clusterColumn)
+    plot_genes(adata=adata, genes_dict=top_cluster_genes, dpi=args.dpi)
+    
+    plot_differentiation(adata, clusterColumn=args.clusterColumn, dpi=args.dpi)
+    
+    Calculate velocity pseudotime and plot
+    velocity_pseudotime(adata, dpi=args.dpi)
+    
+    adata, paga_df = paga(adata, clusterColumn=args.clusterColumn, dpi=args.dpi)
+    adata = latent_time(adata, clusterColumn=args.clusterColumn, dpi=args.dpi)
         
     return(args, adata)
-
 
 if __name__ == "__main__":
     sys.exit(main())
 
 
-
-# set args for interactive testing
-# args = ['-i', '../output/NF-downstream_analysis_stacas/scvelo/seurat_intersect_loom/seurat_merged.loom', '-vm', 'deterministic']
-# args = ['-i', 'test_loom.loom', '-vm', 'deterministic']
-
-# args, adata = main(args)
-
 # # Generate test data
 # args = parse_args(args)
-# adata = read_loom(args.input)
+# adata = read_loom(args.input, args.clusterColumn)
 # adata = adata[adata.obs.index[0:1000], adata.var.index[0:5000]]
 # adata.write_loom('test_loom.loom', write_obsm_varm=True)
 
+# set args for interactive testing
+# args = ['-i', '../output/NF-downstream_analysis_stacas/scvelo/seurat_intersect_loom/seurat_merged.loom', '-m', 'deterministic', '-x', 'Clusters']
+# args = ['-i', 'test_loom.loom', '-m', 'deterministic', '-x', 'Clusters', '-c', '2', '-g', 'BCLAF1', 'AHI1', '--dpi', '80']
+
+# args, adata = main(args)
