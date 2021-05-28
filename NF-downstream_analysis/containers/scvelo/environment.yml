@@ -10,4 +10,5 @@ dependencies:
   - scvelo
   - numba=0.52.0
   - notebook
-  - python-pdfkit
+  
+!pip install python-igraph --upgrade --quiet

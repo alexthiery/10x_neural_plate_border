@@ -11,11 +11,11 @@ def parse_args(args=None):
     Epilog = "Example usage: python check_samplesheet.py <FILE_IN> <FILE_OUT>"
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-i', '--input', help="Input loom file.", metavar='')
-    parser.add_argument('-m', '--velocityMode', help="Method for calculating RNA velocity. Must be set to either: 'dynamical', 'deterministic', or 'stochastic'.", default='dynamical', metavar='')
-    parser.add_argument('-x', '--clusterColumn', help="Name of cluster column.", default='Clusters', metavar='')
+    parser.add_argument('-i', '--input', type=str, help="Input loom file.", metavar='')
+    parser.add_argument('-m', '--velocityMode', type=str, help="Method for calculating RNA velocity. Must be set to either: 'dynamical', 'deterministic', or 'stochastic'.", default='dynamical', metavar='')
+    parser.add_argument('-x', '--clusterColumn', type=str, help="Name of cluster column.", default='Clusters', metavar='')
     parser.add_argument('-g', '--genes', help="Genes of interest to plot on velocity.", nargs='+')
-    parser.add_argument('-c', '--ncores', help="Number of cores used for parallelisation.", metavar='')
+    parser.add_argument('-c', '--ncores', type=int, help="Number of cores used for parallelisation.", metavar='')
     parser.add_argument('-d', '--dpi', type=int, help='Set DPI for plots.', default='240')
     return parser.parse_args(args)
     
@@ -72,18 +72,31 @@ def plot_velocity(adata, clusterColumn, threshold=.1, dpi=240):
     scv.pl.velocity_graph(adata, threshold=threshold, color=clusterColumn, basis='umap', save='graph.png', dpi=dpi)
 
 # plot expression of genes of interest across velocity UMAPs
-def plot_genes(adata, genes_dict, dpi=240, prefix=""): # genes_dict is a key value pair with {name:gene(s)}
+def plot_genes(adata, genes_dict, clusterColumn, dpi=240, prefix=""): # genes_dict is a key value pair with {name:gene(s)}
     for key, value in genes_dict.items():
-        scv.pl.velocity(adata, value, save=prefix+key+'.png', dpi=dpi)
+        scv.pl.velocity(adata, value, save=prefix+key+'.png', color=clusterColumn, dpi=dpi)
 
+# plot expression of genes of interest across velocity UMAPs
+def plot_genes_dynamical(adata, genes_dict, clusterColumn, dpi=240, prefix=""): # genes_dict is a key value pair with {name:gene(s)}
+    for key, value in genes_dict.items():
+        scv.pl.scatter(adata, value, ylabel=key, color=clusterColumn, frameon=False, save=prefix+key+'_dynamical.png', dpi=dpi)
+        scv.pl.scatter(adata, x='latent_time', y=value, color=clusterColumn, save=prefix+key+'_dynamical_latent_time.png', frameon=False)
+
+        
 # identify genes which explain the vector field in a given lineage
 def ident_top_genes(adata, clusterColumn, min_corr=.3, n_genes=5):
     scv.tl.rank_velocity_genes(adata, groupby=clusterColumn, min_corr=min_corr)
     df = scv.DataFrame(adata.uns['rank_velocity_genes']['names'])
     
-    top_cluster_genes = {'Cluster-'+column: df[column][:n_genes] for column in df}
+    top_cluster_genes = {'Cluster-'+column: df.loc[:5,column].values for column in df}
     return(top_cluster_genes) # return dictionary: {cluster_1:top_genes, cluster_2:top_genes}
-        
+
+def ident_top_genes_dynamical(adata, clusterColumn, n_genes=5):
+    scv.tl.rank_dynamical_genes(adata, groupby=clusterColumn)
+    df = scv.get_df(adata, 'rank_dynamical_genes/names')
+    
+    top_cluster_genes = {'Cluster-'+column: df.loc[:5,column].values for column in df}
+    return(top_cluster_genes) # return dictionary: {cluster_1:top_genes, cluster_2:top_genes}
 
 def plot_differentiation(adata, clusterColumn, dpi=240):
     scv.tl.velocity_confidence(adata)
@@ -111,7 +124,9 @@ def latent_time(adata, clusterColumn, dpi=240):
     scv.tl.latent_time(adata)
     scv.pl.scatter(adata, color='latent_time', color_map='gnuplot', size=80, save='latent_time.png', dpi=dpi)
     top_genes = adata.var['fit_likelihood'].sort_values(ascending=False).index[:300]
-    scv.pl.heatmap(adata, var_names=top_genes, sortby='latent_time', col_color=clusterColumn, n_convolve=100, save='heatmap.png', dpi=dpi)
+    scv.pl.heatmap(adata, var_names=top_genes, sortby='latent_time', col_color=clusterColumn, n_convolve=100, save='.png')
+    top_genes = adata.var['fit_likelihood'].sort_values(ascending=False).index
+
     return(adata)
 
 def main(args=None):
@@ -134,24 +149,24 @@ def main(args=None):
     # Plot velocity for manual GOI
     if args.genes is not None:
         manual_genes = {args.genes[i]: args.genes[i] for i in range(0, len(args.genes))}
-        plot_genes(adata=adata, genes_dict=manual_genes, dpi=args.dpi)
+        plot_genes(adata=adata, genes_dict=manual_genes, clusterColumn=args.clusterColumn, dpi=args.dpi)
         
     # Identify and plot genes that have cluster-specific differential velocity expression
     top_cluster_genes = ident_top_genes(adata, args.clusterColumn)
-    plot_genes(adata=adata, genes_dict=top_cluster_genes, dpi=args.dpi)
-    
+    plot_genes(adata=adata, genes_dict=top_cluster_genes, clusterColumn=args.clusterColumn, dpi=args.dpi)
     plot_differentiation(adata, clusterColumn=args.clusterColumn, dpi=args.dpi)
     
-    Calculate velocity pseudotime and plot
+    # Calculate velocity pseudotime and plot
     velocity_pseudotime(adata, dpi=args.dpi)
     
     adata, paga_df = paga(adata, clusterColumn=args.clusterColumn, dpi=args.dpi)
-    adata = latent_time(adata, clusterColumn=args.clusterColumn, dpi=args.dpi)
+    
+    if args.velocityMode == 'dynamical':
+        adata = latent_time(adata, clusterColumn=args.clusterColumn, dpi=args.dpi)
+        plot_genes_dynamical(adata, genes_dict=top_cluster_genes, clusterColumn=args.clusterColumn, dpi=args.dpi)
+        
         
     return(args, adata)
-
-if __name__ == "__main__":
-    sys.exit(main())
 
 
 # # Generate test data
@@ -160,8 +175,6 @@ if __name__ == "__main__":
 # adata = adata[adata.obs.index[0:1000], adata.var.index[0:5000]]
 # adata.write_loom('test_loom.loom', write_obsm_varm=True)
 
-# set args for interactive testing
-# args = ['-i', '../output/NF-downstream_analysis_stacas/scvelo/seurat_intersect_loom/seurat_merged.loom', '-m', 'deterministic', '-x', 'Clusters']
-# args = ['-i', 'test_loom.loom', '-m', 'deterministic', '-x', 'Clusters', '-c', '2', '-g', 'BCLAF1', 'AHI1', '--dpi', '80']
-
+# # set args for interactive testing
+# args = ['-i', 'test_loom.loom', '-m', 'dynamical', '-x', 'Clusters', '-c', '2', '-g', 'BCLAF1', 'AHI1', '--dpi', '80']
 # args, adata = main(args)
