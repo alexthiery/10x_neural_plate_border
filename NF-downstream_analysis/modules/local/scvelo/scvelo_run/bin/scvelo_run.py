@@ -168,7 +168,9 @@ def main(args=None):
         
     return(args, adata)
 
-
+if __name__ == '__main__':
+    sys.exit(main())
+    
 # # Generate test data
 # args = parse_args(args)
 # adata = read_loom(args.input, args.clusterColumn)
