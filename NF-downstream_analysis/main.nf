@@ -9,7 +9,6 @@ def modules = params.modules.clone()
 def skip_seurat_filtering = params.skip_seurat_filtering ? true : false
 def skip_scvelo = params.skip_scvelo ? true : false
 
-println skip_scvelo
 /*-----------------------------------------------------------------------------------------------------------------------------
 Log
 -------------------------------------------------------------------------------------------------------------------------------*/
@@ -27,6 +26,8 @@ include {SEURAT_FILTERING} from "$baseDir/subworkflows/seurat_filtering/main"   
                                                                                                 sex_filt_options:                   modules['sex_filt'],
                                                                                                 cell_cycle_options:                 modules['cell_cycle'],
                                                                                                 contamination_filt_options:         modules['contamination_filt'] )
+
+include {SEURAT_STAGE_PROCESS} from "$baseDir/subworkflows/seurat_stage_process/main" addParams( stage_split_options:               modules['stage_split'])
 
 include {MERGE_LOOM} from "$baseDir/modules/local/merge_loom/main"                  addParams(  options:                            modules['merge_loom'] )
 
@@ -51,6 +52,10 @@ workflow {
             .set {ch_scRNAseq_counts}
 
         SEURAT_FILTERING( ch_scRNAseq_counts )
+
+        SEURAT_STAGE_PROCESS( SEURAT_FILTERING.out.contamination_filt_out )
+
+        SEURAT_STAGE_PROCESS.out.test.view()
 
         // Convert seurat to h5ad format
         SEURAT_SUBSET_H5AD( SEURAT_FILTERING.out.contamination_filt_out )
