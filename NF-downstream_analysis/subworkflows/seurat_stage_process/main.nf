@@ -31,14 +31,14 @@ workflow SEURAT_STAGE_PROCESS {
     seurat_out //Channel: [[meta], [plot_dir, rds_dir]]
 
     main:
-    seurat_out.view()
     // Run Seurat pipeline
     STAGE_SPLIT( seurat_out )
 
     STAGE_SPLIT.out
         .map {row -> [row[0], row[1].findAll { it =~ ".*rds_files" }]}
-        .flatMap {it[1].listFiles()}
+        .flatMap {it[1][0].listFiles()}
         .map { row -> [[sample_id:row.name.replaceFirst(~/\.[^\.]+$/, '')], row] }
+        .view()
         .set { ch_split_stage }
     
     emit:
