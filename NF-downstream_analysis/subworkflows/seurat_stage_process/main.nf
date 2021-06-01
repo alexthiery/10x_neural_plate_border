@@ -32,9 +32,9 @@ workflow SEURAT_STAGE_PROCESS {
 
     main:
     // Run Seurat pipeline
-    SEURAT_STAGE_SPLIT( seurat_out )
+    STAGE_SPLIT( seurat_out )
 
-    SEURAT_STAGE_SPLIT.out
+    STAGE_SPLIT.out
         .flatMap {it[1].listFiles()}
         .map { row -> [[sample_id:row.name.replaceFirst(~/\.[^\.]+$/, '')], row] }
         .set { ch_split_stage }
