@@ -3,17 +3,14 @@ FROM continuumio/miniconda3:4.6.14
 ENV MPLCONFIGDIR=/tmp/matplotlib
 ENV NUMBA_CACHE_DIR=/tmp/numbacache
 
-# Install apt packages
-RUN apt-get update \
+# Install packages and make conda env
+RUN   apt-get update \
       && apt-get install -y --no-install-recommends \
       apt-utils \
       build-essential \
-      procps
-
-# Create the environment:
-COPY environment.yml .
-
-RUN conda update -n base -c defaults conda && \
-    conda env create -f environment.yml && \
-    echo "conda activate scvelo" >> ~/.bashrc
-    
+      procps && \
+      rm -rf /var/lib/apt/lists/* && \
+      conda env create -n scvelo && \
+      conda install --yes --freeze-installed -n scvelo python=3.8.5 scvelo numba=0.52.0 notebook ipywidgets --channel bioconda --channel defaults --channel conda-forge && \
+      conda clean -afy && \
+      echo "conda activate scvelo" >> ~/.bashrc

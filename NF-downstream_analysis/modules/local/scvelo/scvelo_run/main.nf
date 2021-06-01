@@ -13,7 +13,7 @@ process SCVELO_RUN {
         mode: 'copy',
         saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:'') }
 
-    container "alexthiery/10x-npb-scvelo:latest"
+    container "alexthiery/10x-npb-scvelo:base-1.5"
 
     input:
         tuple val(meta), path(loom)
@@ -25,6 +25,6 @@ process SCVELO_RUN {
         def software = getSoftwareName(task.process)
         def prefix   = options.prefix ? "${options.prefix}" : "seurat_merged"
         """
-        $moduleDir/bin/scvelo_run.py --input ${loom} ${options.args}
+        $moduleDir/bin/scvelo_run.py --input ${loom} --ncores ${task.cpus} ${options.args}
         """
 }

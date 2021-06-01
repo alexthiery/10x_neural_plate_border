@@ -22,6 +22,6 @@ workflow SEURAT_SCVELO {
         .map{[it[0], it[1][0], it[1][1], it[1][2]]}
         .set{ch_scveloInput}
 
-    SEURAT_INTERSECT_LOOM ( ch_scveloInput )
-    SCVELO_RUN (SEURAT_INTERSECT_LOOM.out.loom)
+    SEURAT_INTERSECT_LOOM ( ch_scveloInput ) //channel: [[meta], loom, seurat, annotations]
+    SCVELO_RUN (SEURAT_INTERSECT_LOOM.out.loom) //channel: [[meta], loom]
 }
