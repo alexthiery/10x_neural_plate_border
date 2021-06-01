@@ -28,7 +28,7 @@ Workflow
 
 workflow SEURAT_STAGE_PROCESS {
     take:
-    seurat_out //Channel: [[meta], rds_dir_path]
+    seurat_out //Channel: [[meta], [plot_dir, rds_dir]]
 
     main:
     seurat_out.view()
@@ -36,6 +36,7 @@ workflow SEURAT_STAGE_PROCESS {
     STAGE_SPLIT( seurat_out )
 
     STAGE_SPLIT.out
+        .map {row -> [row[0], row[1].findAll { it =~ ".*rds_files" }]}
         .flatMap {it[1].listFiles()}
         .map { row -> [[sample_id:row.name.replaceFirst(~/\.[^\.]+$/, '')], row] }
         .set { ch_split_stage }
