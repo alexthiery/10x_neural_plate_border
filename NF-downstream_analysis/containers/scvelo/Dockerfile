@@ -10,7 +10,7 @@ RUN   apt-get update \
       build-essential \
       procps && \
       rm -rf /var/lib/apt/lists/* && \
-      conda env create -n scvelo && \
+      conda create -n scvelo && \
       conda install --yes --freeze-installed -n scvelo python=3.8.5 scvelo numba=0.52.0 notebook ipywidgets --channel bioconda --channel defaults --channel conda-forge && \
       conda clean -afy && \
       echo "conda activate scvelo" >> ~/.bashrc
