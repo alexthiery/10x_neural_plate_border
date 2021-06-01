@@ -31,7 +31,7 @@ workflow SEURAT_STAGE_PROCESS {
     seurat_out //Channel: [[meta], rds_dir_path]
 
     main:
-    seurat.out.view()
+    seurat_out.view()
     // Run Seurat pipeline
     STAGE_SPLIT( seurat_out )
 
