@@ -7,7 +7,7 @@
 --------------------------------------------------------------------------------------*/
 
 def analysis_scripts = [:]
-analysis_scripts.stage_split        = file("$baseDir/bin/seurat/2_integration_qc.R", checkIfExists: true)
+analysis_scripts.stage_split        = file("$baseDir/bin/seurat/stage_split.R", checkIfExists: true)
 
 params.stage_split_options          = [:]
 
