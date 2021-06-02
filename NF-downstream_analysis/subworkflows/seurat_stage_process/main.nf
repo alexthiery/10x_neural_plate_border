@@ -14,11 +14,14 @@ params.stage_split_options          = [:]
 params.stage_cluster_options          = [:]
 
 // Include Seurat R processes
-include {R as STAGE_SPLIT} from "$baseDir/modules/local/r/main"               addParams(    options: params.stage_split_options,
+include {R as STAGE_SPLIT} from "$baseDir/modules/local/r/main"                 addParams(  options: params.stage_split_options,
                                                                                             script: analysis_scripts.stage_split )
 
 include {R as STAGE_CLUSTER} from "$baseDir/modules/local/r/main"               addParams(  options: params.stage_cluster_options,
                                                                                             script: analysis_scripts.stage_cluster )
+
+include {R as STAGE_GENE_MODULES} from "$baseDir/modules/local/r/main"          addParams(  options: params.stage_gene_modules_options,
+                                                                                            script: analysis_scripts.stage_gene_modules )
 /*-----------------------------------------------------------------------------------------------------------------------------
 Log
 -------------------------------------------------------------------------------------------------------------------------------*/
@@ -45,6 +48,8 @@ workflow SEURAT_STAGE_PROCESS {
         .set { ch_split_stage }
 
     STAGE_CLUSTER( ch_split_stage )
+
+    STAGE_GENE_MODULES( STAGE_CLUSTER.out )
     
 }
 
