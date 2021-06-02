@@ -72,7 +72,7 @@ workflow SEURAT_FILTERING {
 
     
     emit:
-    annotations                 = INTEGRATION.out.map{[it[0], it[1].findAll{it =~ /seurat_annotations.csv/}[0]]}.view() //Channel: [[meta], annotations]
+    annotations                 = INTEGRATION.out.map{[it[0], it[1].findAll{it =~ /seurat_annotations.csv/}[0]]} //Channel: [[meta], annotations]
     integration_out             = INTEGRATION.out //Channel: [[meta], [output]]
     integration_qc_out          = INTEGRATION_QC.out //Channel: [[meta], [output]]
     poor_cluster_filt_out       = POOR_CLUSTER_FILT.out //Channel: [[meta], [output]]
