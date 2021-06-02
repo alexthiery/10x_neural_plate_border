@@ -55,8 +55,6 @@ workflow {
 
         SEURAT_STAGE_PROCESS( SEURAT_FILTERING.out.contamination_filt_out )
 
-        SEURAT_STAGE_PROCESS.out.test.view()
-
         // Convert seurat to h5ad format
         SEURAT_SUBSET_H5AD( SEURAT_FILTERING.out.contamination_filt_out )
 

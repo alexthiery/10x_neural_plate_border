@@ -8,13 +8,17 @@
 
 def analysis_scripts = [:]
 analysis_scripts.stage_split        = file("$baseDir/bin/seurat/stage_split.R", checkIfExists: true)
+analysis_scripts.stage_cluster        = file("$baseDir/bin/seurat/stage_cluster.R", checkIfExists: true)
 
 params.stage_split_options          = [:]
+params.stage_cluster_options          = [:]
 
 // Include Seurat R processes
 include {R as STAGE_SPLIT} from "$baseDir/modules/local/r/main"               addParams(    options: params.stage_split_options,
                                                                                             script: analysis_scripts.stage_split )
 
+include {R as STAGE_CLUSTER} from "$baseDir/modules/local/r/main"               addParams(  options: params.stage_cluster_options,
+                                                                                            script: analysis_scripts.stage_cluster )
 /*-----------------------------------------------------------------------------------------------------------------------------
 Log
 -------------------------------------------------------------------------------------------------------------------------------*/
@@ -38,10 +42,9 @@ workflow SEURAT_STAGE_PROCESS {
         .map {row -> [row[0], row[1].findAll { it =~ ".*rds_files" }]}
         .flatMap {it[1][0].listFiles()}
         .map { row -> [[sample_id:row.name.replaceFirst(~/\.[^\.]+$/, '')], row] }
-        .view()
         .set { ch_split_stage }
+
+    STAGE_CLUSTER( ch_split_stage )
     
-    emit:
-    test                 = ch_split_stage //Channel: [[meta], annotations]
 }
 
