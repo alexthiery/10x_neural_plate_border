@@ -1,0 +1,13 @@
+name: scvelo
+
+channels:
+  - bioconda
+  - defaults
+  - conda-forge
+
+dependencies:
+  - python=3.8.5
+  - scvelo
+  - numba=0.52.0
+  - notebook
+  - ipywidgets
