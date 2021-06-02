@@ -8,12 +8,13 @@ params.options = [:]
 def options    = initOptions(params.options)
 
 process R {
-
+    tag "$meta.sample_id"
+    label 'process_medium'
     publishDir "${params.outdir}",
-        mode: 'copy',
-        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:'') }
+        mode: params.publish_dir_mode,
+        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), meta:[:], publish_by_meta:[]) }
 
-    container "streitlab/custom-nf-modules-r:latest"
+    container "alexthiery/10x-npb-schelper:base-1.3"
 
     input:
         tuple val(meta), path('input/*')

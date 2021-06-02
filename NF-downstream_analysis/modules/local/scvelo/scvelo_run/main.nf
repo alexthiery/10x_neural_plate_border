@@ -8,10 +8,11 @@ params.options = [:]
 def options    = initOptions(params.options)
 
 process SCVELO_RUN {
-
+    tag "$meta.sample_id"
+    label 'process_high'
     publishDir "${params.outdir}",
-        mode: 'copy',
-        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:'') }
+        mode: params.publish_dir_mode,
+        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), meta:[:], publish_by_meta:[]) }
 
     container "alexthiery/10x-npb-scvelo:base-1.5"
 
