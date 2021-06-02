@@ -27,22 +27,22 @@ params.cell_cycle_options           = [:]
 params.contamination_filt_options   = [:]
 
 // Include Seurat R processes
-include {R as INTEGRATION} from "$baseDir/modules/local/r/main"               addParams(  options: params.integration_options,
+include {R as INTEGRATION} from "$baseDir/modules/local/r/main"               addParams(        options: params.integration_options,
                                                                                                 script: analysis_scripts.integration )
 
-include {R as INTEGRATION_QC} from "$baseDir/modules/local/r/main"            addParams(  options: params.integration_qc_options,
+include {R as INTEGRATION_QC} from "$baseDir/modules/local/r/main"            addParams(        options: params.integration_qc_options,
                                                                                                 script: analysis_scripts.integration_qc )
 
-include {R as POOR_CLUSTER_FILT} from "$baseDir/modules/local/r/main"         addParams(  options: params.poor_cluster_filt_options,
+include {R as POOR_CLUSTER_FILT} from "$baseDir/modules/local/r/main"         addParams(        options: params.poor_cluster_filt_options,
                                                                                                 script: analysis_scripts.poor_cluster_filt )
 
-include {R as SEX_FILT} from "$baseDir/modules/local/r/main"                  addParams(  options: params.sex_filt_options,
+include {R as SEX_FILT} from "$baseDir/modules/local/r/main"                  addParams(        options: params.sex_filt_options,
                                                                                                 script: analysis_scripts.sex_filt )
 
-include {R as CELL_CYCLE} from "$baseDir/modules/local/r/main"                addParams(  options: params.cell_cycle_options,
+include {R as CELL_CYCLE} from "$baseDir/modules/local/r/main"                addParams(        options: params.cell_cycle_options,
                                                                                                 script: analysis_scripts.cell_cycle )
 
-include {R as CONTAMINATION_FILT} from "$baseDir/modules/local/r/main"        addParams(  options: params.contamination_filt_options,
+include {R as CONTAMINATION_FILT} from "$baseDir/modules/local/r/main"        addParams(        options: params.contamination_filt_options,
                                                                                                 script: analysis_scripts.contamination_filt )
 
 

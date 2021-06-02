@@ -20,21 +20,25 @@ if(params.debug) {log.info Headers.build_debug_param_summary(params, params.mono
 
 include {METADATA} from "$baseDir/subworkflows/metadata/main"
 
-include {SEURAT_FILTERING} from "$baseDir/subworkflows/seurat_filtering/main"       addParams(  integration_options:                modules['integration'],
-                                                                                                integration_qc_options:             modules['integration_qc'],
-                                                                                                poor_cluster_filt_options:          modules['poor_cluster_filt'],
-                                                                                                sex_filt_options:                   modules['sex_filt'],
-                                                                                                cell_cycle_options:                 modules['cell_cycle'],
-                                                                                                contamination_filt_options:         modules['contamination_filt'] )
+include {SEURAT_FILTERING} from "$baseDir/subworkflows/seurat_filtering/main"           addParams(  integration_options:                modules['integration'],
+                                                                                                    integration_qc_options:             modules['integration_qc'],
+                                                                                                    poor_cluster_filt_options:          modules['poor_cluster_filt'],
+                                                                                                    sex_filt_options:                   modules['sex_filt'],
+                                                                                                    cell_cycle_options:                 modules['cell_cycle'],
+                                                                                                    contamination_filt_options:         modules['contamination_filt'] )
 
-include {SEURAT_STAGE_PROCESS} from "$baseDir/subworkflows/seurat_stage_process/main" addParams( stage_split_options:               modules['stage_split'])
+include {EXPLORATORY_ANALYSIS} from "$baseDir/subworkflows/exploratory_analysis/main"   addParams(  gene_module_options:                modules['gene_modules'] )
 
-include {MERGE_LOOM} from "$baseDir/modules/local/merge_loom/main"                  addParams(  options:                            modules['merge_loom'] )
+include {SEURAT_STAGE_PROCESS} from "$baseDir/subworkflows/seurat_stage_process/main"   addParams(  stage_split_options:                modules['stage_split'],
+                                                                                                    stage_cluster_options:              modules['stage_cluster'],
+                                                                                                    stage_gene_modules_options:         modules['stage_gene_modules'])
 
-include {SEURAT_SCVELO} from "$baseDir/subworkflows/seurat_scvelo/main"             addParams(  seurat_intersect_loom_options:      modules['seurat_intersect_loom'],
-                                                                                                scvelo_run_options:                 modules['scvelo_run'] )
+include {MERGE_LOOM} from "$baseDir/modules/local/merge_loom/main"                      addParams(  options:                            modules['merge_loom'] )
 
-include {SEURAT_SUBSET_H5AD} from "$baseDir/subworkflows/seurat_subset_h5ad/main"   addParams(  contamination_filt_h5ad_options:    modules['contamination_filt_h5ad'] )
+include {SEURAT_SCVELO} from "$baseDir/subworkflows/seurat_scvelo/main"                 addParams(  seurat_intersect_loom_options:      modules['seurat_intersect_loom'],
+                                                                                                    scvelo_run_options:                 modules['scvelo_run'] )
+
+include {SEURAT_SUBSET_H5AD} from "$baseDir/subworkflows/seurat_subset_h5ad/main"       addParams(  contamination_filt_h5ad_options:    modules['contamination_filt_h5ad'] )
 
 
 workflow {
@@ -52,8 +56,10 @@ workflow {
             .set {ch_scRNAseq_counts}
 
         SEURAT_FILTERING( ch_scRNAseq_counts )
-
+        
         SEURAT_STAGE_PROCESS( SEURAT_FILTERING.out.contamination_filt_out )
+
+        EXPLORATORY_ANALYSIS( SEURAT_FILTERING.out.contamination_filt_out )
 
         // Convert seurat to h5ad format
         SEURAT_SUBSET_H5AD( SEURAT_FILTERING.out.contamination_filt_out )
@@ -68,6 +74,9 @@ workflow {
        seurat_annotations = [[[sample_id:'NF-scRNAseq_alignment_out'], file(params.seurat_annotations, checkIfExists: true)]]
        ch_seurat_annotations = Channel.from(seurat_annotations)
    }
+
+
+
 
     /*------------------------------------------------------------------------------------*/
     /* Prepare inputs for scVelo

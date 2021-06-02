@@ -6,12 +6,14 @@
 /* Set scripts used for downstream analysis
 --------------------------------------------------------------------------------------*/
 
-def analysis_scripts = [:]
-analysis_scripts.stage_split        = file("$baseDir/bin/seurat/stage_split.R", checkIfExists: true)
-analysis_scripts.stage_cluster        = file("$baseDir/bin/seurat/stage_cluster.R", checkIfExists: true)
+def analysis_scripts                    = [:]
+analysis_scripts.stage_split            = file("$baseDir/bin/seurat/stage_split.R", checkIfExists: true)
+analysis_scripts.stage_cluster          = file("$baseDir/bin/seurat/stage_cluster.R", checkIfExists: true)
+analysis_scripts.stage_gene_modules     = file("$baseDir/bin/other/stage_gene_modules.R", checkIfExists: true)
 
-params.stage_split_options          = [:]
-params.stage_cluster_options          = [:]
+params.stage_split_options              = [:]
+params.stage_cluster_options            = [:]
+params.stage_gene_modules_options       = [:]
 
 // Include Seurat R processes
 include {R as STAGE_SPLIT} from "$baseDir/modules/local/r/main"                 addParams(  options: params.stage_split_options,
