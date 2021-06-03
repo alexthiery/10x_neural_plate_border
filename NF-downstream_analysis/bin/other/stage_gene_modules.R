@@ -111,7 +111,7 @@ saveRDS(antler_data, paste0(rds_path, stage, "_antler.RDS"))
 # antler <- readRDS(paste0(rds_path, "antler_all.RDS"))
 
 # plot all gene modules
-png(paste0(plot.path, 'allmodules_unbiased.png'), height = 100, width = 80, units = 'cm', res = 400)
+png(paste0(plot_path, 'allmodules_unbiased.png'), height = 100, width = 80, units = 'cm', res = 400)
 GeneModulePheatmap(seurat_obj = seurat_out, metadata = c("stage", "seurat_clusters"), gene_modules = antler_data$gene_modules$lists$unbiasedGMs$content,
         show_rownames = T, col_order = c("stage", "seurat_clusters"))
 graphics.off()
