@@ -123,7 +123,7 @@ ClustStagePlot(poor_cluster_filt_data, stage_col = "stage")
 graphics.off()
 
 # Find differentially expressed genes and plot heatmap of top DE genes for each cluster
-markers <- FindAllMarkers(poor_cluster_filt_data, only.pos = T, logfc.threshold = 0.25)
+markers <- FindAllMarkers(poor_cluster_filt_data, only.pos = T, logfc.threshold = 0.25, assay = "RNA")
 # get automated cluster order based on percentage of cells in adjacent stages
 cluster_order <- OrderCellClusters(seurat_object = poor_cluster_filt_data, col_to_sort = seurat_clusters, sort_by = stage)
 # Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
@@ -131,7 +131,7 @@ top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_log2FC) %>% ar
 
 png(paste0(plot_path, 'HM.top15.DE.poor_cluster_filt_data.png'), height = 75, width = 100, units = 'cm', res = 500)
 TenxPheatmap(data = poor_cluster_filt_data, metadata = c("seurat_clusters", "stage"), custom_order_column = "seurat_clusters",
-              custom_order = cluster_order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters", assay = 'integrated')
+              custom_order = cluster_order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters", assay = 'RNA')
 graphics.off()
 
 saveRDS(poor_cluster_filt_data, paste0(rds_path, "poor_cluster_filt_data.RDS"), compress = FALSE)

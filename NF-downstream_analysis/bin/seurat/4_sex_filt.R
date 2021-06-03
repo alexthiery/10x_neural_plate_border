@@ -200,7 +200,7 @@ sex_filt_data <- ScaleData(sex_filt_data, features = rownames(sex_filt_data), va
 saveRDS(sex_filt_data, paste0(rds_path, "sex_filt_data.RDS"), compress = FALSE)
 
 # Find differentially expressed genes and plot heatmap of top DE genes for each cluster
-markers <- FindAllMarkers(sex_filt_data, only.pos = T, logfc.threshold = 0.25)
+markers <- FindAllMarkers(sex_filt_data, only.pos = T, logfc.threshold = 0.25, assay = "RNA")
 # get automated cluster order based on percentage of cells in adjacent stages
 cluster_order <- OrderCellClusters(seurat_object = sex_filt_data, col_to_sort = seurat_clusters, sort_by = orig.ident)
 # Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
@@ -208,5 +208,5 @@ top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_log2FC) %>% ar
 
 png(paste0(plot_path, 'HM.top15.DE.post-sex_filt.png'), height = 75, width = 100, units = 'cm', res = 500)
 TenxPheatmap(data = sex_filt_data, metadata = c("seurat_clusters", "orig.ident"), custom_order_column = "seurat_clusters",
-              custom_order = cluster_order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters")
+              custom_order = cluster_order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters", assay = "RNA")
 graphics.off()
