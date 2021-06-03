@@ -60,9 +60,9 @@ workflow {
         SEURAT_STAGE_PROCESS( SEURAT_FILTERING.out.contamination_filt_out )
 
         EXPLORATORY_ANALYSIS( SEURAT_FILTERING.out.contamination_filt_out )
-
+        
         // Convert seurat to h5ad format
-        SEURAT_SUBSET_H5AD( SEURAT_FILTERING.out.contamination_filt_out )
+        SEURAT_SUBSET_H5AD( SEURAT_FILTERING.out.contamination_filt_out.concat(SEURAT_STAGE_PROCESS.out.stage_cluster_out) )
 
         ch_seurat_h5ad = SEURAT_SUBSET_H5AD.out.contamination_filt_h5ad_out
         ch_seurat_annotations = SEURAT_FILTERING.out.annotations
@@ -74,9 +74,6 @@ workflow {
        seurat_annotations = [[[sample_id:'NF-scRNAseq_alignment_out'], file(params.seurat_annotations, checkIfExists: true)]]
        ch_seurat_annotations = Channel.from(seurat_annotations)
    }
-
-
-
 
     /*------------------------------------------------------------------------------------*/
     /* Prepare inputs for scVelo

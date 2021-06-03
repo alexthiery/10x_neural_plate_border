@@ -52,6 +52,8 @@ workflow SEURAT_STAGE_PROCESS {
     STAGE_CLUSTER( ch_split_stage )
 
     STAGE_GENE_MODULES( STAGE_CLUSTER.out )
-    
+
+    emit:
+    stage_cluster_out   = STAGE_CLUSTER.out //Channel: [[meta], [output]]
 }
 
