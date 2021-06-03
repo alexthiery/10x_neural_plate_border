@@ -18,18 +18,9 @@ opt = getopt(spec)
 
 # Set paths and load data
 data_path = "./input/rds_files/"
-stage_cluster_data <- readRDS(list.files(data_path, full.names = TRUE))
-
-# Set stage var based on input
-if(length(unique(stage_cluster_data$stage)) == 1){
-  stage = unique(stage_cluster_data$stage)
-} else {
-  stop('Input RDS object contains more than 1 developmental stage')
-}
-
-plot_path = paste0("./plots/", stage, "/")
+plot_path = "./plots/"
 rds_path = "./rds_files/"
-antler_path = paste0("./antler_data/", stage, "/")
+antler_path = "./antler_data/"
 dir.create(plot_path, recursive = T)
 dir.create(rds_path, recursive = T)
 dir.create(antler_path, recursive = T)
@@ -107,7 +98,7 @@ antler_data$gene_modules$identify(
   mod_consistency_thres = 0.4,  # ratio of expressed genes among "positive" cells
   process_plots         = TRUE)
 
-saveRDS(antler_data, paste0(rds_path, stage, "_antler.RDS"))
+saveRDS(antler_data, paste0(rds_path, "antler.RDS"))
 # antler <- readRDS(paste0(rds_path, "antler_all.RDS"))
 
 # plot all gene modules

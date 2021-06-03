@@ -23,15 +23,8 @@ opt = getopt(spec)
 data_path = "./input/"
 stage_cluster_data <- readRDS(list.files(data_path, full.names = TRUE))
 
-# Set stage var based on input
-if(length(unique(stage_cluster_data$stage)) == 1){
-  stage = unique(stage_cluster_data$stage)
-} else {
-  stop('Input RDS object contains more than 1 developmental stage')
-}
-
-plot_path = paste0("./plots/", stage, "/")
-rds_path =paste0("./rds_files/")
+plot_path = "./plots/"
+rds_path = "./rds_files/"
 dir.create(plot_path, recursive = T)
 dir.create(rds_path, recursive = T)
 
@@ -104,4 +97,4 @@ TenxPheatmap(data = stage_cluster_data, metadata = c("seurat_clusters", "stage")
              custom_order = cluster_order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters", assay = 'integrated')
 graphics.off()
 
-saveRDS(stage_cluster_data, paste0(rds_path, stage, "_stage_cluster_data.RDS"), compress = FALSE)
+saveRDS(stage_cluster_data, paste0(rds_path, "stage_cluster_data.RDS"), compress = FALSE)
