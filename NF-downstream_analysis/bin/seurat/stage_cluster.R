@@ -79,22 +79,35 @@ graphics.off()
 # Use clustering resolution = 0.5 (default)
 stage_cluster_data <- FindClusters(stage_cluster_data, resolution = 0.5)
 
-# Plot UMAP for clusters
-png(paste0(plot_path, "UMAP.png"), width=20, height=20, units = 'cm', res = 200)
-DimPlot(stage_cluster_data, group.by = "seurat_clusters") + 
-  ggtitle(paste("Clusters")) + theme(plot.title = element_text(hjust = 0.5))
-graphics.off()
+# Plot UMAP for clusters and integration (if subset contains more than one batch)
+if(length(unique(stage_cluster_data$run)) > 1){
+  clust_plot <- DimPlot(stage_cluster_data, group.by = "seurat_clusters") + 
+    ggtitle(paste("Clusters")) + theme(plot.title = element_text(hjust = 0.5))
+  integration_plot <- DimPlot(stage_cluster_data, group.by = "orig.ident") + 
+    ggtitle(paste("Batches")) + theme(plot.title = element_text(hjust = 0.5))
+  
+  png(paste0(plot_path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
+  grid.arrange(clust_plot, integration_plot, nrow=1)
+  graphics.off()
+}else{
+  png(paste0(plot_path, "UMAP.png"), width=20, height=20, units = 'cm', res = 200)
+  DimPlot(stage_cluster_data, group.by = "seurat_clusters") + 
+    ggtitle(paste("Clusters")) + theme(plot.title = element_text(hjust = 0.5))
+  graphics.off()
+}
 
 # Find differentially expressed genes and plot heatmap of top DE genes for each cluster
-markers <- FindAllMarkers(stage_cluster_data, only.pos = T, logfc.threshold = 0.25)
+markers <- FindAllMarkers(stage_cluster_data, only.pos = T, logfc.threshold = 0.25, assay = "RNA")
 # get automated cluster order based on percentage of cells in adjacent stages
 cluster_order = OrderCellClusters(seurat_object = stage_cluster_data, col_to_sort = seurat_clusters, sort_by = stage)
 # Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
 top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_log2FC) %>% arrange(factor(cluster, levels = cluster_order))
 
+if(length(unique(stage_cluster_data$run)) > 1){metadata <- c("run", "seurat_clusters")} else {metadata <- "seurat_clusters"}
+
 png(paste0(plot_path, 'HM.top15.DE.stage_cluster_data.png'), height = 75, width = 100, units = 'cm', res = 500)
-TenxPheatmap(data = stage_cluster_data, metadata = c("seurat_clusters", "stage"), custom_order_column = "seurat_clusters",
-             custom_order = cluster_order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters", assay = 'integrated')
+TenxPheatmap(data = stage_cluster_data, metadata = metadata, custom_order_column = "seurat_clusters",
+             custom_order = cluster_order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters", assay = 'RNA')
 graphics.off()
 
 saveRDS(stage_cluster_data, paste0(rds_path, "stage_cluster_data.RDS"), compress = FALSE)
