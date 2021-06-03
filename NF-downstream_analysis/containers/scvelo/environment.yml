@@ -11,3 +11,4 @@ dependencies:
   - numba=0.52.0
   - notebook
   - ipywidgets
+  - python-igraph
