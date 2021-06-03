@@ -83,7 +83,7 @@ antler_data$normalize(method = 'MR')
 #   process_plots         = TRUE)
 
 saveRDS(antler_data, paste0(rds_path, "antler_all.RDS"))
-# antler <- readRDS(paste0(rds.path, "antler_all.RDS"))
+# antler <- readRDS(paste0(rds_path, "antler_all.RDS"))
 
 # # plot all gene modules
 # png(paste0(plot_path, 'allmodules_100.png'), height = 100, width = 80, units = 'cm', res = 400)
@@ -107,8 +107,8 @@ antler_data$gene_modules$identify(
   mod_consistency_thres = 0.4,  # ratio of expressed genes among "positive" cells
   process_plots         = TRUE)
 
-saveRDS(antler_data, paste0(rds.path, stage, "_antler.RDS"))
-# antler <- readRDS(paste0(rds.path, "antler_all.RDS"))
+saveRDS(antler_data, paste0(rds_path, stage, "_antler.RDS"))
+# antler <- readRDS(paste0(rds_path, "antler_all.RDS"))
 
 # plot all gene modules
 png(paste0(plot.path, 'allmodules_unbiased.png'), height = 100, width = 80, units = 'cm', res = 400)
