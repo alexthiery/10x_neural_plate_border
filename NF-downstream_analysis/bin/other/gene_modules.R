@@ -156,7 +156,7 @@ saveRDS(antler_data, paste0(rds_path, "antler_all.RDS"))
 
 # plot all gene modules
 png(paste0(plot_path, 'allmodules_unbiased.png'), height = 100, width = 80, units = 'cm', res = 400)
-GeneModulePheatmap(seurat_obj = seurat_out, metadata = c("stage", "seurat_clusters"), gene_modules = antler_data$gene_modules$lists$unbiasedGMs$content,
+GeneModulePheatmap(seurat_obj = seurat_data, metadata = c("stage", "seurat_clusters"), gene_modules = antler_data$gene_modules$lists$unbiasedGMs$content,
         show_rownames = F, col_order = c("stage", "seurat_clusters"))
 graphics.off()
 
@@ -165,5 +165,5 @@ bait_genes = c("PAX7", "SOX2", "SOX21", "SOX10", "EYA2", "GBX2", "PAX6", "PAX2",
 temp_gms = lapply(antler_data$gene_modules$lists$unbiasedGMs$content, function(x) if(any(bait_genes %in% x)){x})
 
 png(paste0(plot_path, 'allmodules_unbiased_bait.png'), height = 50, width = 80, units = 'cm', res = 400)
-GeneModulePheatmap(seurat_obj = seurat_out, metadata = c("stage", "orig.ident", "seurat_clusters"), col_order = c("stage", "seurat_clusters"), gene_modules = temp_gms, gaps_col = "stage")
+GeneModulePheatmap(seurat_obj = seurat_data, metadata = c("stage", "orig.ident", "seurat_clusters"), col_order = c("stage", "seurat_clusters"), gene_modules = temp_gms, gaps_col = "stage")
 graphics.off()
