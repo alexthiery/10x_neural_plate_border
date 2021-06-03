@@ -14,7 +14,7 @@ process SEURAT_INTERSECT_LOOM {
         mode: params.publish_dir_mode,
         saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), meta:meta, publish_by_meta:[]) }
 
-    container "alexthiery/10x-npb-scvelo:base-1.6"
+    container "alexthiery/10x-npb-scvelo:base-1.7"
 
     input:
         tuple val(meta), path(loom), path(seurat), path(annotations)
