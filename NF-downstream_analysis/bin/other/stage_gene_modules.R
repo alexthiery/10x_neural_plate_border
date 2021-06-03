@@ -99,7 +99,7 @@ saveRDS(antler_data, paste0(rds_path, "antler_all.RDS"))
 
 
 
-antler$gene_modules$identify(
+antler_data$gene_modules$identify(
   name                  = "unbiasedGMs",
   corr_t                = 0.3,  # the Spearman correlation treshold
   corr_min              = 3,    # min. number of genes a gene must correlate with
@@ -107,12 +107,12 @@ antler$gene_modules$identify(
   mod_consistency_thres = 0.4,  # ratio of expressed genes among "positive" cells
   process_plots         = TRUE)
 
-saveRDS(antler, paste0(rds.path, stage, "_antler.RDS"))
+saveRDS(antler_data, paste0(rds.path, stage, "_antler.RDS"))
 # antler <- readRDS(paste0(rds.path, "antler_all.RDS"))
 
 # plot all gene modules
 png(paste0(plot.path, 'allmodules_unbiased.png'), height = 100, width = 80, units = 'cm', res = 400)
-GeneModulePheatmap(seurat_obj = seurat_out, metadata = c("stage", "seurat_clusters"), gene_modules = antler$gene_modules$lists$unbiasedGMs$content,
+GeneModulePheatmap(seurat_obj = seurat_out, metadata = c("stage", "seurat_clusters"), gene_modules = antler_data$gene_modules$lists$unbiasedGMs$content,
         show_rownames = T, col_order = c("stage", "seurat_clusters"))
 graphics.off()
 
