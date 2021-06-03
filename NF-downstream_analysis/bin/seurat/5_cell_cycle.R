@@ -123,7 +123,7 @@ cell_cycle_data <- FindVariableFeatures(cell_cycle_data, selection.method = "vst
 cell_cycle_data <- ScaleData(cell_cycle_data, features = rownames(cell_cycle_data), vars.to.regress = c("percent.mt", "sex", "S.Score", "G2M.Score"))
 
 # Find deferentially expressed genes and plot heatmap of top DE genes for each cluster
-markers <- FindAllMarkers(cell_cycle_data, only.pos = T, logfc.threshold = 0.25)
+markers <- FindAllMarkers(cell_cycle_data, only.pos = T, logfc.threshold = 0.25, assay = "RNA")
 # get automated cluster order based on percentage of cells in adjacent stages
 cluster_order <- OrderCellClusters(seurat_object = cell_cycle_data, col_to_sort = seurat_clusters, sort_by = orig.ident)
 # Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
@@ -131,7 +131,7 @@ top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_log2FC) %>% ar
 
 png(paste0(plot_path, 'HM.top15.DE.png'), height = 75, width = 100, units = 'cm', res = 500)
 TenxPheatmap(data = cell_cycle_data, metadata = c("seurat_clusters", "orig.ident"), custom_order_column = "seurat_clusters",
-              custom_order = cluster_order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters")
+              custom_order = cluster_order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters", assay = "RNA")
 graphics.off()
 
 # Save RDS after regressing cell cycle
