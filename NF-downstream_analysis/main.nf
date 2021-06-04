@@ -63,7 +63,7 @@ workflow {
         
         // Convert seurat to h5ad format
         SEURAT_SUBSET_H5AD( SEURAT_FILTERING.out.contamination_filt_out.concat(SEURAT_STAGE_PROCESS.out.stage_cluster_out) )
-
+        
         ch_seurat_h5ad = SEURAT_SUBSET_H5AD.out.contamination_filt_h5ad_out
         ch_seurat_annotations = SEURAT_FILTERING.out.annotations
 
@@ -89,6 +89,6 @@ workflow {
 
         MERGE_LOOM( ch_loomInput )
         
-        SEURAT_SCVELO( MERGE_LOOM.out.loom, ch_seurat_h5ad, ch_seurat_annotations ) // Channel: [[meta], merged.loom],  Channel: [[meta], seurat.h5ad], Channel: [[meta], seurat_annotations.csv]
+        SEURAT_SCVELO( ch_seurat_h5ad, MERGE_LOOM.out.loom.map{it[1]}, ch_seurat_annotations.map{it[1]} ) // Channel: [[meta], seurat.h5ad], Channel: merged.loom, Channel: seurat_annotations.csv
     }
 }

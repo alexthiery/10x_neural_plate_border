@@ -17,7 +17,7 @@ process SEURAT_INTERSECT_LOOM {
     container "alexthiery/10x-npb-scvelo:base-1.7"
 
     input:
-        tuple val(meta), path(loom), path(seurat), path(annotations)
+        tuple val(meta), path(seurat), path(loom), path(annotations)
 
     output:
         tuple val(meta), path("*.loom"), emit: loom

@@ -10,18 +10,18 @@ include { SCVELO_RUN } from '../../modules/local/scvelo/scvelo_run/main'        
 
 workflow SEURAT_SCVELO {
     take:
-    loom //channel: [[meta], loom]
     seurat_input //channel: [[meta], hd5a]
-    annotations //channel: [[meta], annotations]
+    loom //channel: loom
+    annotations //channel: annotations
 
     main:
 
     // Combine loom, seurat and annotations for running scvelo
-    loom.concat(seurat_input, annotations)
-        .groupTuple(by: 0, size: 3)
-        .map{[it[0], it[1][0], it[1][1], it[1][2]]}
+    seurat_input
+        .combine(loom)
+        .combine(annotations)
         .set{ch_scveloInput}
 
-    SEURAT_INTERSECT_LOOM ( ch_scveloInput ) //channel: [[meta], loom, seurat, annotations]
+    SEURAT_INTERSECT_LOOM ( ch_scveloInput ) //channel: [[meta], seurat, loom, annotations]
     SCVELO_RUN (SEURAT_INTERSECT_LOOM.out.loom) //channel: [[meta], loom]
 }
