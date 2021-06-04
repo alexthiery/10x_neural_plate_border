@@ -31,7 +31,7 @@ def read_loom(loom_path):
 
 # subset annotations data frame by remaining genes in seurat object
 def seurat_filter_annotations(seurat_hd5, annotations):
-    seurat_hd5 = scv.read(seurat_hd5, cache=True)
+    seurat_hd5 = scv.read(seurat_hd5)
     annotations = pd.read_csv(annotations)
     annotations = annotations.loc[annotations.Gene.isin(seurat_hd5.var.features)]
     annotations = annotations.set_index('Accession')
