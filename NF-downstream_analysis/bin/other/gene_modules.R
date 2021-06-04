@@ -133,7 +133,7 @@ DE_genes <- FindAllMarkers(seurat_data, only.pos = TRUE, logfc.threshold = 0.25)
 cluster_order <- OrderCellClusters(seurat_object = seurat_data, col_to_sort = seurat_clusters, sort_by = stage)
 
 # Filter GMs with 50% genes DE logFC > 0.25 & FDR < 0.001
-gms <- SubsetGeneModules(antler_data$gene_modules$get("unbiasedGMs"), selected_genes = DE_genes$gene, keep_mod_ID = T, selected_gene_ratio = 0.5)
+gms <- SubsetGeneModules(antler_data$gene_modules$get("GMs200"), selected_genes = DE_genes$gene, keep_mod_ID = T, selected_gene_ratio = 0.5)
 
 png(paste0(plot_path, 'DE_allmodules_200.png'), height = round(ngene/2), width = 75, units = 'cm', res = 400)
 GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = gms, custom_order = cluster_order, custom_order_column = "seurat_clusters",
