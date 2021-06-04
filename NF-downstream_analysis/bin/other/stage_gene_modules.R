@@ -98,16 +98,31 @@ DE_genes <- FindAllMarkers(seurat_data, only.pos = T, logfc.threshold = 0.25) %>
 gms <- SubsetGeneModules(antler_data$gene_modules$get("unbiasedGMs"), selected_genes = DE_genes$gene, keep_mod_ID = T, selected_gene_ratio = 0.5)
 
 ncell = ncol(seurat_data)
-ngene = length(unlist(antler_data$gene_modules$lists$unbiasedGMs$content))
+ngene = length(unlist(gms))
 
-png(paste0(plot_path, 'DE_rownames_allmodules_unbiased.png'), height = round(ngene/7), width = round(ncell/25), units = 'cm', res = 400)
+png(paste0(plot_path, 'DE_rownames_allmodules_unbiased.png'), height = round(ngene/2), width = round(ncell/40), units = 'cm', res = 400)
 GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, col_order = metadata, col_ann_order = metadata, gene_modules = gms, gaps_col = "seurat_clusters",
-                   fontsize = 25, fontsize_row = 12)
+                   fontsize_row = 10)
 graphics.off()
 
 
-png(paste0(plot_path, 'DE_allmodules_unbiased.png'), height = round(ngene/15), width = round(ncell/50), units = 'cm', res = 400)
+png(paste0(plot_path, 'DE_allmodules_unbiased.png'), height = round(ngene/2), width = round(ncell/50), units = 'cm', res = 400)
 GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, col_order = metadata, col_ann_order = metadata, gene_modules = gms, gaps_col = "seurat_clusters",
                    show_rownames = FALSE)
+graphics.off()
+
+
+
+# use bait genes to filter mods
+bait_genes = c("PAX7", "SOX2", "SOX21", "SOX10", "EYA2", "GBX2", "PAX6", "PAX2", "SIX3", "FRZB", "MSX1", "WNT1", "DLX5", "TFAP2A", "TFAP2B", "AXUD1", "GATA2", "HOMER2", "SIX1", "EYA2", "ETS1")
+temp_gms <- lapply(antler_data$gene_modules$lists$unbiasedGMs$content, function(x) if(any(bait_genes %in% x)){x})
+temp_gms <- temp_gms[!sapply(temp_gms, is.null)]
+
+ncell = ncol(seurat_data)
+ngene = length(unlist(temp_gms))
+
+png(paste0(plot_path, 'bait_allmodules_unbiased.png'), height = round(ngene/2), width = round(ncell/50), units = 'cm', res = 400)
+GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, gene_modules = temp_gms, gaps_col = "seurat_clusters",
+                   show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, fontsize_row = 10)
 graphics.off()
 
