@@ -91,8 +91,8 @@ if(length(unique(stage_cluster_data$run)) > 1){
   graphics.off()
 }else{
   png(paste0(plot_path, "UMAP.png"), width=20, height=20, units = 'cm', res = 200)
-  DimPlot(stage_cluster_data, group.by = "seurat_clusters") + 
-    ggtitle(paste("Clusters")) + theme(plot.title = element_text(hjust = 0.5))
+  print(DimPlot(stage_cluster_data, group.by = "seurat_clusters") + 
+    ggtitle(paste("Clusters")) + theme(plot.title = element_text(hjust = 0.5)))
   graphics.off()
 }
 
