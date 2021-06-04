@@ -17,7 +17,7 @@ process SEURAT_INTERSECT_LOOM {
     container "alexthiery/10x-npb-scvelo:base-1.7"
 
     input:
-        tuple val(meta), path('input/'seurat), path('input/'loom), path('input/'annotations)
+        tuple val(meta), path('input/*'), path('input/*'), path('input/*')
 
     output:
         tuple val(meta), path("*.loom"), emit: loom
@@ -27,6 +27,6 @@ process SEURAT_INTERSECT_LOOM {
         def prefix   = options.prefix ? "${options.prefix}" : "seurat_merged"
         
         """
-        $moduleDir/bin/seurat_intersect_loom.py --loomInput input/${loom} --seuratInput input/${seurat} --annotations input/${annotations} --output ${prefix}.loom
+        $moduleDir/bin/seurat_intersect_loom.py --loomInput input/*loom --seuratInput input/*h5ad --annotations input/*csv --output ${prefix}.loom
         """
 }
