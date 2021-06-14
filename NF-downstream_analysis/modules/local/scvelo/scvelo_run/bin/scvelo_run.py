@@ -1,3 +1,5 @@
+#!/opt/conda/envs/scvelo/bin/python
+
 import os
 import sys
 import argparse
