@@ -9,10 +9,10 @@
 def analysis_scripts              = [:]
 analysis_scripts.gene_modules     = file("$baseDir/bin/other/gene_modules.R", checkIfExists: true)
 
-params.gene_modules_options       = [:]
+params.gene_module_options       = [:]
 
 // Include R processes
-include {R as GENE_MODULES} from "$baseDir/modules/local/r/main"          addParams(        options: params.gene_modules_options,
+include {R as GENE_MODULES} from "$baseDir/modules/local/r/main"          addParams(        options: params.gene_module_options,
                                                                                             script: analysis_scripts.gene_modules )
 /*-----------------------------------------------------------------------------------------------------------------------------
 Log

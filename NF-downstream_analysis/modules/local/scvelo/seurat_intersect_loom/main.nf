@@ -10,6 +10,10 @@ def options    = initOptions(params.options)
 process SEURAT_INTERSECT_LOOM {
     tag "$meta.sample_id"
     label 'process_medium'
+
+    maxForks 1
+
+    
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
         saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), meta:meta, publish_by_meta:[]) }
@@ -24,9 +28,9 @@ process SEURAT_INTERSECT_LOOM {
 
     script:
         def software = getSoftwareName(task.process)
-        def prefix   = options.prefix ? "${options.prefix}" : "seurat_merged"
+        def prefix   = options.prefix ? "${options.prefix}" : "${meta.sample_id}"
         
         """
-        $moduleDir/bin/seurat_intersect_loom.py --loomInput ${loom} --seuratInput ${seurat} --annotations ${annotations} --output ${prefix}.loom
+        $moduleDir/bin/seurat_intersect_loom.py --loomInput ${loom} --seuratInput ${seurat} --annotations ${annotations} --output ${prefix}_seurat_intersect.loom
         """
 }
