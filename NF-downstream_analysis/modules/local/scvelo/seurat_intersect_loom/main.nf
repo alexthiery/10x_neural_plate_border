@@ -28,9 +28,9 @@ process SEURAT_INTERSECT_LOOM {
 
     script:
         def software = getSoftwareName(task.process)
-        def prefix   = options.prefix ? "${options.prefix}" : "seurat_merged"
+        def prefix   = options.prefix ? "${options.prefix}" : "${meta.sample_id}"
         
         """
-        $moduleDir/bin/seurat_intersect_loom.py --loomInput ${loom} --seuratInput ${seurat} --annotations ${annotations} --output ${prefix}.loom
+        $moduleDir/bin/seurat_intersect_loom.py --loomInput ${loom} --seuratInput ${seurat} --annotations ${annotations} --output ${prefix}_seurat_intersect.loom
         """
 }

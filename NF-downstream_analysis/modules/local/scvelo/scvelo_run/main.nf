@@ -20,13 +20,14 @@ process SCVELO_RUN {
         tuple val(meta), path(loom)
 
     output:
-        tuple val(meta), path("${prefix}_output.loom")
+        tuple val(meta), path("${prefix}_scvelo.h5ad"), emit: h5ad
         path "figures", emit: plots
 
     script:
         def software = getSoftwareName(task.process)
         def prefix   = options.prefix ? "${options.prefix}" : "${meta.sample_id}"
+        
         """
-        $moduleDir/bin/scvelo_run.py --input ${loom} --output ${prefix}_output.h5ad --ncores ${task.cpus} ${options.args} 
+        $moduleDir/bin/scvelo_run.py --input ${loom} --output ${prefix}_scvelo.h5ad --ncores ${task.cpus} ${options.args} 
         """
 }
