@@ -89,13 +89,7 @@ graphics.off()
 
 
 # Plot gene modules with at least 50% of genes DE > 0.25 logFC & FDR < 0.001
-
-# Find DEGs
-DE_genes <- FindAllMarkers(seurat_data, only.pos = T, logfc.threshold = 0.25) %>% filter(p_val_adj < 0.001)
-
-
-# Filter GMs with 50% genes DE logFC > 0.25 & FDR < 0.001
-gms <- SubsetGeneModules(antler_data$gene_modules$get("unbiasedGMs"), selected_genes = DE_genes$gene, keep_mod_ID = T, selected_gene_ratio = 0.5)
+gms <- DEGeneModules(seurat_data, antler_data$gene_modules$get("unbiasedGMs"), logfc = 0.25, pval = 0.001, selected_gene_ratio = 0.5)
 
 ncell = ncol(seurat_data)
 ngene = length(unlist(gms))
@@ -111,6 +105,27 @@ GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, col_order = me
                    show_rownames = FALSE)
 graphics.off()
 
+
+# Filter gene modules which are deferentially expressed across batches
+if(length(unique(seurat_data$run)) > 1){
+  gms <- gms[!names(gms) %in% names(DEGeneModules(seurat_data, antler_data$gene_modules$get("unbiasedGMs"),
+                                                  logfc = 0.25,
+                                                  pval = 0.001,
+                                                  selected_gene_ratio = 0.5,
+                                                  active_ident = 'run'))]
+  ncell = ncol(seurat_data)
+  ngene = length(unlist(gms))
+  
+  png(paste0(plot_path, 'DE_rownames_allmodules_unbiased_batchfilt.png'), height = round(ngene/2), width = round(ncell/40), units = 'cm', res = 400)
+  GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, col_order = metadata, col_ann_order = metadata, gene_modules = gms, gaps_col = "seurat_clusters",
+                     fontsize_row = 10)
+  graphics.off()
+  
+  png(paste0(plot_path, 'DE_allmodules_unbiased_batchfilt.png'), height = round(ngene/2), width = round(ncell/50), units = 'cm', res = 400)
+  GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, col_order = metadata, col_ann_order = metadata, gene_modules = gms, gaps_col = "seurat_clusters",
+                     show_rownames = FALSE)
+  graphics.off()
+}
 
 
 # use bait genes to filter mods

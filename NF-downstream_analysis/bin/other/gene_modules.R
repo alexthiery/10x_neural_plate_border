@@ -125,20 +125,41 @@ GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, gene_modules =
 graphics.off()
 
 # Plot gene modules with at least 50% of genes DE > 0.25 logFC & FDR < 0.001
+gms <- DEGeneModules(seurat_data, antler_data$gene_modules$get("GMs200"), logfc = 0.25, pval = 0.001, selected_gene_ratio = 0.5)
 
-# Find DEGs
-DE_genes <- FindAllMarkers(seurat_data, only.pos = TRUE, logfc.threshold = 0.25) %>% filter(p_val_adj < 0.001)
+ngene = length(unlist(gms))
 
-# Get automated cluster order based on percentage of cells in adjacent stages
-# cluster_order <- OrderCellClusters(seurat_object = seurat_data, col_to_sort = seurat_clusters, sort_by = stage)
-
-# Filter GMs with 50% genes DE logFC > 0.25 & FDR < 0.001
-gms <- SubsetGeneModules(antler_data$gene_modules$get("GMs200"), selected_genes = DE_genes$gene, keep_mod_ID = T, selected_gene_ratio = 0.5)
-
-png(paste0(plot_path, 'DE_allmodules_200.png'), height = round(ngene/2), width = 75, units = 'cm', res = 600)
+png(paste0(plot_path, 'DE_rownames_allmodules_200.png'), height = round(ngene/2), width = 75, units = 'cm', res = 600)
 GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = gms,
                    show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15, fontsize_row = 10)
 graphics.off()
+
+png(paste0(plot_path, 'DE_allmodules_200.png'), height = round(ngene/2), width = 75, units = 'cm', res = 600)
+GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = gms,
+                   show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15, fontsize_row = 10)
+graphics.off()
+
+# Filter gene modules which are deferentially expressed across batches
+if(length(unique(seurat_data$run)) > 1){
+  gms <- gms[!names(gms) %in% names(DEGeneModules(seurat_data, antler_data$gene_modules$get("GMs200"),
+                                                  logfc = 0.25,
+                                                  pval = 0.001,
+                                                  selected_gene_ratio = 0.5,
+                                                  active_ident = 'run'))]
+
+  ngene = length(unlist(gms))
+
+  png(paste0(plot_path, 'DE_rownames_allmodules_200_batchfilt.png'), height = round(ngene/2), width = 75, units = 'cm', res = 600)
+  GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = gms,
+                    show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15, fontsize_row = 10)
+  graphics.off()
+
+  png(paste0(plot_path, 'DE_allmodules_200_batchfilt.png'), height = round(ngene/2), width = 75, units = 'cm', res = 600)
+  GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = gms,
+                    show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15, fontsize_row = 10)
+  graphics.off()
+}
+
 
 ########################################################################################################################################################
 # Calculate GMs unbiasedly
@@ -176,18 +197,40 @@ GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, gene_modules =
 graphics.off()
 
 
+
+
 # Plot gene modules with at least 50% of genes DE > 0.25 logFC & FDR < 0.001
+gms <- DEGeneModules(seurat_data, antler_data$gene_modules$get("unbiasedGMs"), logfc = 0.25, pval = 0.001, selected_gene_ratio = 0.5)
 
-# Find DEGs
-DE_genes <- FindAllMarkers(seurat_data, only.pos = TRUE, logfc.threshold = 0.25) %>% filter(p_val_adj < 0.001)
+ngene = length(unlist(gms))
 
-# Get automated cluster order based on percentage of cells in adjacent stages
-# cluster_order <- OrderCellClusters(seurat_object = seurat_data, col_to_sort = seurat_clusters, sort_by = stage)
-
-# Filter GMs with 50% genes DE logFC > 0.25 & FDR < 0.001
-gms <- SubsetGeneModules(antler_data$gene_modules$get("unbiasedGMs"), selected_genes = DE_genes$gene, keep_mod_ID = T, selected_gene_ratio = 0.5)
-
-png(paste0(plot_path, 'DE_allmodules_unbiased.png'), height = round(ngene/2), width = 75, units = 'cm', res = 600)
+png(paste0(plot_path, 'DE_rownames_allmodules_unbiased.png'), height = round(ngene/2), width = 75, units = 'cm', res = 600)
 GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = gms,
                    show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15, fontsize_row = 10)
 graphics.off()
+
+png(paste0(plot_path, 'DE_allmodules_unbiased.png'), height = round(ngene/2), width = 75, units = 'cm', res = 600)
+GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = gms,
+                   show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15, fontsize_row = 10)
+graphics.off()
+
+# Filter gene modules which are deferentially expressed across batches
+if(length(unique(seurat_data$run)) > 1){
+  gms <- gms[!names(gms) %in% names(DEGeneModules(seurat_data, antler_data$gene_modules$get("unbiasedGMs"),
+                                                  logfc = 0.25,
+                                                  pval = 0.001,
+                                                  selected_gene_ratio = 0.5,
+                                                  active_ident = 'run'))]
+
+  ngene = length(unlist(gms))
+
+  png(paste0(plot_path, 'DE_rownames_allmodules_unbiased_batchfilt.png'), height = round(ngene/2), width = 75, units = 'cm', res = 600)
+  GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = gms,
+                    show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15, fontsize_row = 10)
+  graphics.off()
+
+  png(paste0(plot_path, 'DE_allmodules_unbiased_batchfilt.png'), height = round(ngene/2), width = 75, units = 'cm', res = 600)
+  GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = gms,
+                    show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15, fontsize_row = 10)
+  graphics.off()
+}
