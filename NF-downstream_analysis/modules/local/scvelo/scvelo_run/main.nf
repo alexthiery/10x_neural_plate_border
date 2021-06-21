@@ -20,7 +20,7 @@ process SCVELO_RUN {
         tuple val(meta), path(loom)
 
     output:
-        tuple val(meta), path("${prefix}_scvelo.h5ad"), emit: h5ad
+        tuple val(meta), path("*.h5ad"), emit: h5ad
         path "figures", emit: plots
 
     script:
@@ -28,8 +28,6 @@ process SCVELO_RUN {
         def prefix   = options.prefix ? "${options.prefix}" : "${meta.sample_id}"
 
         """
-        echo "${meta.sample_id}"
-        echo "${prefix}"
         $moduleDir/bin/scvelo_run.py --input ${loom} --output ${prefix}_scvelo.h5ad --ncores ${task.cpus} ${options.args} 
         """
 }
