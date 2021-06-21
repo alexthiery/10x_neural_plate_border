@@ -27,6 +27,6 @@ process SCVELO_RUN {
         def software = getSoftwareName(task.process)
         def prefix   = options.prefix ? "${options.prefix}" : "${meta.sample_id}"
         """
-        $moduleDir/bin/scvelo_run.py --input ${loom} --output ${prefix}_output.h5ad --ncores ${task.cpus} --ram ${task.memory} ${options.args} 
+        $moduleDir/bin/scvelo_run.py --input ${loom} --output ${prefix}_output.h5ad --ncores ${task.cpus} ${options.args} 
         """
 }

@@ -19,7 +19,7 @@ def parse_args(args=None):
     parser.add_argument('-b', '--batchColumn', type=str, help="Name of batch column.", default=None, metavar='')
     parser.add_argument('-g', '--genes', help="Genes of interest to plot on velocity.", nargs='+')
     parser.add_argument('-n', '--ncores', type=int, help="Number of cores used for parallelisation.", metavar='', default=1)
-    parser.add_argument('-r', '--ram', type=int, help="Max memory usage in Gigabyte.", metavar='', default=12)
+    # parser.add_argument('-r', '--ram', type=int, help="Max memory usage in Gigabyte.", metavar='', default=12)
     parser.add_argument('-d', '--dpi', type=int, help='Set DPI for plots.', default='240')
     parser.add_argument('-gd', '--geneDiscovery', type=bool, help='Run unbiased gene discovery.', default=True)
     parser.add_argument('-f', '--forceCol', type=bool, help='Force plotting color bars.', default=False)
@@ -75,7 +75,7 @@ def calc_velocity(adata, velocityMode, ncores, diffKinetics=None, groupby=None):
     return(adata)
 
 def plot_velocity(adata, clusterColumn, threshold=.1, arrow_length=5, arrow_size=2, plot_dir="", prefix="", dpi=240):
-    if plot_dir is not "" and not os.path.exists(scv.settings.figdir+plot_dir):
+    if plot_dir != "" and not os.path.exists(scv.settings.figdir+plot_dir):
         os.makedirs(scv.settings.figdir+plot_dir)
     scv.pl.velocity_embedding(adata, color=clusterColumn, arrow_length=arrow_length, arrow_size=arrow_size, save=plot_dir+prefix+'velocity_embedding.png', dpi=dpi)
     scv.pl.velocity_embedding_grid(adata, color=clusterColumn, arrow_length=arrow_length, arrow_size=arrow_size, basis='umap', save=plot_dir+prefix+'velocity_embedding_grid.png', dpi=dpi)
@@ -84,14 +84,14 @@ def plot_velocity(adata, clusterColumn, threshold=.1, arrow_length=5, arrow_size
 
 # plot expression of genes of interest across velocity UMAPs
 def plot_genes(adata, genes_dict, clusterColumn, dpi=240, plot_dir="", prefix=""): # genes_dict is a key value pair with {name:gene(s)}
-    if plot_dir is not "" and not os.path.exists(scv.settings.figdir+plot_dir):
+    if plot_dir != "" and not os.path.exists(scv.settings.figdir+plot_dir):
         os.makedirs(scv.settings.figdir+plot_dir)
     for key, value in genes_dict.items():
         scv.pl.velocity(adata, value, save=plot_dir+prefix+key+'.png', color=clusterColumn, dpi=dpi)
 
 # plot expression of genes of interest across velocity UMAPs
 def plot_genes_dynamical(adata, genes_dict, clusterColumn, dpi=240, plot_dir="", prefix=""): # genes_dict is a key value pair with {name:gene(s)}
-    if plot_dir is not "" and not os.path.exists(scv.settings.figdir+plot_dir):
+    if plot_dir != "" and not os.path.exists(scv.settings.figdir+plot_dir):
         os.makedirs(scv.settings.figdir+plot_dir)
     for key, value in genes_dict.items():
         scv.pl.scatter(adata, value, ylabel=key, color=clusterColumn, frameon=False, save=plot_dir+prefix+key+'_dynamical.png', dpi=dpi)
@@ -166,7 +166,7 @@ def main(args=None):
     scv.logging.print_version()
     scv.settings.plot_prefix = "" # remove plot prefix
     scv.settings.n_jobs = args.ncores  # set max width size for presenter view
-    scv.settings.max_memory = args.ram  # for beautified visualization
+    # scv.settings.max_memory = args.ram  # for beautified visualization
     
     adata = read_loom(loom_path=args.input, clusterColumn=args.clusterColumn, stageColumn=args.stageColumn, batchColumn=args.batchColumn)
     plot_proportions(adata=adata, clusterColumn=args.clusterColumn)
