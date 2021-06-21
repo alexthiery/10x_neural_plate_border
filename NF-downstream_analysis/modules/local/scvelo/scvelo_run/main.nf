@@ -24,9 +24,10 @@ process SCVELO_RUN {
         path "figures", emit: plots
 
     script:
+        println "$meta.sample_id"
         def software = getSoftwareName(task.process)
         def prefix   = options.prefix ? "${options.prefix}" : "${meta.sample_id}"
-        
+
         """
         $moduleDir/bin/scvelo_run.py --input ${loom} --output ${prefix}_scvelo.h5ad --ncores ${task.cpus} ${options.args} 
         """
