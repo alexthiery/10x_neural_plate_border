@@ -90,8 +90,6 @@ antler_data$normalize(method = 'MR')
 
 ########################################################################################################################################################
 
-print('debug 1 \n')
-
 # Calculate 200 GMs
 antler_data$gene_modules$identify(
   name                  = "GMs200",
@@ -108,7 +106,6 @@ ngene = length(unlist(antler_data$gene_modules$lists$GMs200$content))
 
 metadata = c("stage", "seurat_clusters", "run")
 
-print('debug 2 \n')
 png(paste0(plot_path, 'allmodules_200.png'), height = round(ngene/10), width = 75, units = 'cm', res = 600)
 GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, gene_modules = antler_data$gene_modules$lists$GMs200$content,
                    show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 13)
@@ -123,7 +120,6 @@ temp_gms <- temp_gms[!sapply(temp_gms, is.null)]
 ncell = ncol(seurat_data)
 ngene = length(unlist(temp_gms))
 
-print('debug 3 \n')
 png(paste0(plot_path, 'bait_allmodules_200.png'), height = round(ngene/2), width = 75, units = 'cm', res = 600)
 GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, gene_modules = temp_gms,
                    show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15, fontsize_row = 10)
@@ -144,7 +140,6 @@ GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules 
                    show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15, fontsize_row = 10)
 graphics.off()
 
-print('debug 4 \n')
 # Filter gene modules which are deferentially expressed across batches
 if(length(unique(seurat_data$run)) > 1){
   gms <- gms[!names(gms) %in% names(DEGeneModules(seurat_data, antler_data$gene_modules$get("GMs200"),
