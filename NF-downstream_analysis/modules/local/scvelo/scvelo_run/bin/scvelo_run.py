@@ -63,12 +63,12 @@ def calc_moments(adata):
     return(adata)
 
 # calculate cell velocity
-def calc_velocity(adata, velocityMode, ncores, groupby=None):
+def calc_velocity(adata, velocityMode, ncores, groupby=None, diffKinetics=False):
     if velocityMode not in ['dynamical', 'deterministic', 'stochastic']:
         Exception(f"'--velocityMode': '{velocityMode}' is not valid. Must be set to either: 'dynamical', 'deterministic', or 'stochastic'.")
     if velocityMode == 'dynamical':
         scv.tl.recover_dynamics(adata, n_jobs=ncores)
-    scv.tl.velocity(adata, mode=velocityMode, groupby=groupby)
+    scv.tl.velocity(adata, mode=velocityMode, groupby=groupby, diff_kinetics=diffKinetics)
     scv.tl.velocity_graph(adata)
     return(adata)
 
@@ -155,6 +155,16 @@ def plot_latent_time_heatmap(adata, clusterColumn, stageColumn=None, batchColumn
     scv.settings.figdir = keep_figdir
 
 
+def calc_diff_kinetics(adata, clusterColumn, plot_dir=""):
+    if plot_dir != "" and not os.path.exists(scv.settings.figdir+plot_dir):
+        os.makedirs(scv.settings.figdir+plot_dir)
+    top_genes = adata.var['fit_likelihood'].sort_values(ascending=False).index[:100]
+    scv.tl.differential_kinetic_test(adata, var_names=top_genes, groupby=clusterColumn)
+    scv.pl.scatter(adata, basis=top_genes[:20], ncols=5, add_outline='fit_diff_kinetics', frameon=False, add_linfit=True, linewidth=2, save=plot_dir+"/top_genes_diff_kinetics_1-20.png")
+    scv.pl.scatter(adata, basis=top_genes[20:40], ncols=5, add_outline='fit_diff_kinetics', frameon=False, add_linfit=True, linewidth=2, save=plot_dir+"/top_genes_diff_kinetics_21-40.png")
+    return(adata)
+
+
 def main(args=None):
     
     args = parse_args(args)
@@ -204,15 +214,10 @@ def main(args=None):
             manual_genes = {args.genes[i]: args.genes[i] for i in range(0, len(args.genes))}
             plot_genes_dynamical(adata=adata, genes_dict=manual_genes, clusterColumn=args.clusterColumn, plot_dir = 'goi_dynamical/', dpi=args.dpi)
         
-        top_genes = adata.var['fit_likelihood'].sort_values(ascending=False).index[:100]
-        scv.tl.differential_kinetic_test(adata, var_names=top_genes, groupby=args.clusterColumn)
-        scv.pl.scatter(adata, basis=top_genes[:20], ncols=5, add_outline='fit_diff_kinetics', frameon=False, add_linfit=True, linewidth=2, save="diff_kinetics/top_genes_diff_kinetics_1-20.png")
-        scv.pl.scatter(adata, basis=top_genes[20:40], ncols=5, add_outline='fit_diff_kinetics', frameon=False, add_linfit=True, linewidth=2, save="diff_kinetics/top_genes_diff_kinetics_21-40.png")
+        print('Calculate differential kinetics and recompute velocity')
+        adata = calc_diff_kinetics(adata=adata, clusterColumn=args.clusterColumn, plot_dir="")
 
-        
-        print('Recompute velocity whilst allowing for differential kinetics')
-        scv.tl.velocity(adata, mode=args.velocityMode, diff_kinetics=True, groupby=args.clusterColumn)
-        scv.tl.velocity_graph(adata)
+        adata = calc_velocity(adata=adata, velocityMode=args.velocityMode, ncores=args.ncores, diffKinetics=True)
         plot_velocity(adata=adata, clusterColumn=args.clusterColumn, plot_dir="diff_kinetics/", dpi=args.dpi)
     
     adata.write(args.output + '_scvelo.h5ad')
