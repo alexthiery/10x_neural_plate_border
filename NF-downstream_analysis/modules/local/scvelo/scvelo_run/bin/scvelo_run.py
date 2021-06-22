@@ -12,7 +12,7 @@ def parse_args(args=None):
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input', type=str, help="Input loom path.", metavar='')
-    parser.add_argument('-o', '--output', type=str, help="Output hds5 file path.", metavar='')
+    parser.add_argument('-o', '--output', type=str, help="Prefix for output files.", metavar='')
     parser.add_argument('-m', '--velocityMode', type=str, help="Method for calculating RNA velocity. Must be set to either: 'dynamical', 'deterministic', or 'stochastic'.", default='dynamical', metavar='')
     parser.add_argument('-c', '--clusterColumn', type=str, help="Name of cluster column.", default='seurat_clusters', metavar='')
     parser.add_argument('-s', '--stageColumn', type=str, help="Name of stage column.", default=None, metavar='')
@@ -23,7 +23,6 @@ def parse_args(args=None):
     parser.add_argument('-d', '--dpi', type=int, help='Set DPI for plots.', default='240')
     parser.add_argument('-gd', '--geneDiscovery', type=bool, help='Run unbiased gene discovery.', default=True)
     parser.add_argument('-f', '--forceCol', type=bool, help='Force plotting color bars.', default=False)
-    parser.add_argument('-k', '--differentialKinetics', type=bool, help='Boolean as to whether to run differential kinetics.', default=None)
     return parser.parse_args(args)
 
 # def check_args(args=None):
@@ -64,13 +63,12 @@ def calc_moments(adata):
     return(adata)
 
 # calculate cell velocity
-def calc_velocity(adata, velocityMode, ncores, diffKinetics=None, groupby=None):
+def calc_velocity(adata, velocityMode, ncores, groupby=None, diffKinetics=False):
     if velocityMode not in ['dynamical', 'deterministic', 'stochastic']:
         Exception(f"'--velocityMode': '{velocityMode}' is not valid. Must be set to either: 'dynamical', 'deterministic', or 'stochastic'.")
-    if velocityMode == 'dynamical' and diffKinetics == None:
+    if velocityMode == 'dynamical' and diffKinetics == False:
         scv.tl.recover_dynamics(adata, n_jobs=ncores)
-
-    scv.tl.velocity(adata, mode=velocityMode, diff_kinetics=diffKinetics, groupby=groupby)
+    scv.tl.velocity(adata, mode=velocityMode, groupby=groupby, diff_kinetics=diffKinetics)
     scv.tl.velocity_graph(adata)
     return(adata)
 
@@ -157,6 +155,16 @@ def plot_latent_time_heatmap(adata, clusterColumn, stageColumn=None, batchColumn
     scv.settings.figdir = keep_figdir
 
 
+def calc_diff_kinetics(adata, clusterColumn, plot_dir=""):
+    if plot_dir != "" and not os.path.exists(scv.settings.figdir+plot_dir):
+        os.makedirs(scv.settings.figdir+plot_dir)
+    top_genes = adata.var['fit_likelihood'].sort_values(ascending=False).index[:100]
+    scv.tl.differential_kinetic_test(adata, var_names=top_genes, groupby=clusterColumn)
+    scv.pl.scatter(adata, basis=top_genes[:20], ncols=5, add_outline='fit_diff_kinetics', frameon=False, add_linfit=True, linewidth=2, save=plot_dir+"/top_genes_diff_kinetics_1-20.png")
+    scv.pl.scatter(adata, basis=top_genes[20:40], ncols=5, add_outline='fit_diff_kinetics', frameon=False, add_linfit=True, linewidth=2, save=plot_dir+"/top_genes_diff_kinetics_21-40.png")
+    return(adata)
+
+
 def main(args=None):
     
     args = parse_args(args)
@@ -205,16 +213,14 @@ def main(args=None):
         if args.genes is not None:
             manual_genes = {args.genes[i]: args.genes[i] for i in range(0, len(args.genes))}
             plot_genes_dynamical(adata=adata, genes_dict=manual_genes, clusterColumn=args.clusterColumn, plot_dir = 'goi_dynamical/', dpi=args.dpi)
-            
-    if args.differentialKinetics:
-        top_genes = adata.var['fit_likelihood'].sort_values(ascending=False).index[:100]
-        scv.tl.differential_kinetic_test(adata, var_names=top_genes, groupby='seurat_clusters')
-        scv.pl.scatter(adata, basis=top_genes[:20], ncols=5, add_outline='fit_diff_kinetics')
-
-        adata = calc_velocity(adata=adata, velocityMode=args.velocityMode, diffKinetics=True, ncores=args.ncores)
+        
+        print('Calculate differential kinetics and recompute velocity')
+        adata = calc_diff_kinetics(adata=adata, clusterColumn=args.clusterColumn, plot_dir="")
+        adata = calc_velocity(adata=adata, velocityMode=args.velocityMode, ncores=args.ncores, diffKinetics=True, groupby=args.clusterColumn)
         plot_velocity(adata=adata, clusterColumn=args.clusterColumn, plot_dir="diff_kinetics/", dpi=args.dpi)
     
-    adata.write(args.output)
+    adata.write(args.output + '_scvelo.h5ad')
+    adata.obs.to_csv(args.output + '_metadata.csv')
 
 if __name__ == '__main__':
     sys.exit(main())
