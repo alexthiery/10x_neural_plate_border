@@ -125,7 +125,7 @@ GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, gene_modules =
 graphics.off()
 
 # Plot gene modules with at least 50% of genes DE > 0.25 logFC & FDR < 0.001
-gms <- DEGeneModules(seurat_data, antler_data$gene_modules$get("GMs200"), logfc = 0.25, pval = 0.001, selected_gene_ratio = 0.5)
+gms <- DEGeneModules(seurat_data, antler_data$gene_modules$get("GMs200"), logfc = 0.25, pval = 0.001, selected_gene_proportion = 0.5)
 
 ngene = length(unlist(gms))
 
@@ -144,7 +144,7 @@ if(length(unique(seurat_data$run)) > 1){
   gms <- gms[!names(gms) %in% names(DEGeneModules(seurat_data, antler_data$gene_modules$get("GMs200"),
                                                   logfc = 0.25,
                                                   pval = 0.001,
-                                                  selected_gene_ratio = 0.5,
+                                                  selected_gene_proportion = 0.5,
                                                   active_ident = 'run'))]
 
   ngene = length(unlist(gms))
@@ -200,7 +200,7 @@ graphics.off()
 
 
 # Plot gene modules with at least 50% of genes DE > 0.25 logFC & FDR < 0.001
-gms <- DEGeneModules(seurat_data, antler_data$gene_modules$get("unbiasedGMs"), logfc = 0.25, pval = 0.001, selected_gene_ratio = 0.5)
+gms <- DEGeneModules(seurat_data, antler_data$gene_modules$get("unbiasedGMs"), logfc = 0.25, pval = 0.001, selected_gene_proportion = 0.5)
 
 ngene = length(unlist(gms))
 
@@ -219,7 +219,7 @@ if(length(unique(seurat_data$run)) > 1){
   gms <- gms[!names(gms) %in% names(DEGeneModules(seurat_data, antler_data$gene_modules$get("unbiasedGMs"),
                                                   logfc = 0.25,
                                                   pval = 0.001,
-                                                  selected_gene_ratio = 0.5,
+                                                  selected_gene_proportion = 0.5,
                                                   active_ident = 'run'))]
 
   ngene = length(unlist(gms))
