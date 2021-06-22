@@ -66,7 +66,7 @@ def calc_moments(adata):
 def calc_velocity(adata, velocityMode, ncores, groupby=None, diffKinetics=False):
     if velocityMode not in ['dynamical', 'deterministic', 'stochastic']:
         Exception(f"'--velocityMode': '{velocityMode}' is not valid. Must be set to either: 'dynamical', 'deterministic', or 'stochastic'.")
-    if velocityMode == 'dynamical':
+    if velocityMode == 'dynamical' and diffKinetics == False:
         scv.tl.recover_dynamics(adata, n_jobs=ncores)
     scv.tl.velocity(adata, mode=velocityMode, groupby=groupby, diff_kinetics=diffKinetics)
     scv.tl.velocity_graph(adata)
@@ -216,8 +216,7 @@ def main(args=None):
         
         print('Calculate differential kinetics and recompute velocity')
         adata = calc_diff_kinetics(adata=adata, clusterColumn=args.clusterColumn, plot_dir="")
-
-        adata = calc_velocity(adata=adata, velocityMode=args.velocityMode, ncores=args.ncores, diffKinetics=True)
+        adata = calc_velocity(adata=adata, velocityMode=args.velocityMode, ncores=args.ncores, diffKinetics=True, groupby=args.clusterColumn)
         plot_velocity(adata=adata, clusterColumn=args.clusterColumn, plot_dir="diff_kinetics/", dpi=args.dpi)
     
     adata.write(args.output + '_scvelo.h5ad')
