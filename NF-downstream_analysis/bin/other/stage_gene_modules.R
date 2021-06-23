@@ -82,9 +82,6 @@ antler_data$gene_modules$identify(
   mod_consistency_thres = 0.4,  # ratio of expressed genes among "positive" cells
   process_plots         = TRUE)
 
-saveRDS(antler_data, paste0(rds_path, "antler.RDS"))
-# antler <- readRDS(paste0(rds_path, "antler_all.RDS"))
-
 # detect if stage contains more than 1 seq batch
 if(length(unique(seurat_data$run)) > 1){metadata <- c("seurat_clusters", "run")} else {metadata <- "seurat_clusters"}
 
