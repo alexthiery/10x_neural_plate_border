@@ -23,6 +23,7 @@ opt = getopt(spec)
     
     plot_path = "./output/NF-downstream_analysis_stacas/gene_modules/plots/"
     rds_path = "./output/NF-downstream_analysis_stacas/gene_modules/rds_files/"
+    gm_path = "./output/NF-downstream_analysis_stacas/gene_modules/gene_module_lists/"
     antler_path = "./output/NF-downstream_analysis_stacas/gene_modules/antler_data/"
     data_path = "./output/NF-downstream_analysis_stacas/seurat/6_contamination_filt/rds_files/"
     
@@ -33,6 +34,7 @@ opt = getopt(spec)
     
     plot_path = "./plots/"
     rds_path = "./rds_files/"
+    gm_path = "./gene_module_lists/"
     antler_path = "./antler_data/"
     data_path = "./input/rds_files/"
     ncores = opt$cores
@@ -48,6 +50,7 @@ opt = getopt(spec)
   cat(paste0("script ran with ", ncores, " cores\n"))
   dir.create(plot_path, recursive = T)
   dir.create(rds_path, recursive = T)
+  dir.create(gm_path, recursive = T)
   dir.create(antler_path, recursive = T)
 }
 
@@ -112,34 +115,53 @@ GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, gene_modules =
 graphics.off()
 
 
+# save list of allmodules_200
+sink(paste0(gm_path, "allmodules_200.txt"))
+print(setNames(antler_data$gene_modules$lists$GMs200$content, paste('GM:', names(antler_data$gene_modules$lists$GMs200$content))))
+sink()
+
+########## Bait GMs ##############
 # use bait genes to filter mods
 bait_genes = c("PAX7", "SOX2", "SOX21", "SOX10", "EYA2", "GBX2", "PAX6", "PAX2", "SIX3", "FRZB", "MSX1", "WNT1", "DLX5", "TFAP2A", "TFAP2B", "AXUD1", "GATA2", "HOMER2", "SIX1", "EYA2", "ETS1")
-temp_gms <- lapply(antler_data$gene_modules$lists$GMs200$content, function(x) if(any(bait_genes %in% x)){x})
-temp_gms <- temp_gms[!sapply(temp_gms, is.null)]
+gms <- lapply(antler_data$gene_modules$lists$GMs200$content, function(x) if(any(bait_genes %in% x)){x})
+gms <- gms[!sapply(gms, is.null)]
+
+# save list of bait_allmodules_200
+sink(paste0(gm_path, "bait_allmodules_200.txt"))
+print(setNames(gms, paste('GM:', names(gms))))
+sink()
 
 ncell = ncol(seurat_data)
-ngene = length(unlist(temp_gms))
+ngene = length(unlist(gms))
 
 png(paste0(plot_path, 'bait_allmodules_200.png'), height = round(ngene/2), width = 75, units = 'cm', res = 600)
-GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, gene_modules = temp_gms,
+GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, gene_modules = gms,
                    show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15, fontsize_row = 10)
 graphics.off()
 
+
+########## DE GMs ##############
 # Plot gene modules with at least 50% of genes DE > 0.25 logFC & FDR < 0.001
 gms <- DEGeneModules(seurat_data, antler_data$gene_modules$get("GMs200"), logfc = 0.25, pval = 0.001, selected_gene_proportion = 0.5)
 
+# save list of DE_allmodules_200
+sink(paste0(gm_path, "DE_allmodules_200.txt"))
+print(setNames(gms, paste('GM:', names(gms))))
+sink()
+
 ngene = length(unlist(gms))
 
-png(paste0(plot_path, 'DE_rownames_allmodules_200.png'), height = round(ngene/2), width = 75, units = 'cm', res = 600)
+png(paste0(plot_path, 'DE_rownames_allmodules_200.png'), height = round(ngene/3), width = 75, units = 'cm', res = 200)
 GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = gms,
                    show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15, fontsize_row = 10)
 graphics.off()
 
-png(paste0(plot_path, 'DE_allmodules_200.png'), height = round(ngene/2), width = 75, units = 'cm', res = 600)
+png(paste0(plot_path, 'DE_allmodules_200.png'), height = round(ngene/10), width = 75, units = 'cm', res = 600)
 GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = gms,
                    show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15, fontsize_row = 10)
 graphics.off()
 
+########## DE batch filter GMs ##############
 # Filter gene modules which are deferentially expressed across batches
 if(length(unique(seurat_data$run)) > 1){
   gms <- gms[!names(gms) %in% names(DEGeneModules(seurat_data, antler_data$gene_modules$get("GMs200"),
@@ -147,7 +169,12 @@ if(length(unique(seurat_data$run)) > 1){
                                                   pval = 0.001,
                                                   selected_gene_proportion = 0.5,
                                                   active_ident = 'run'))]
-
+  
+  # save list of DE_allmodules_200_batchfilt
+  sink(paste0(gm_path, "DE_allmodules_200_batchfilt.txt"))
+  print(setNames(gms, paste('GM:', names(gms))))
+  sink()
+  
   ngene = length(unlist(gms))
 
   png(paste0(plot_path, 'DE_rownames_allmodules_200_batchfilt.png'), height = round(ngene/2), width = 75, units = 'cm', res = 600)
@@ -183,38 +210,53 @@ GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, gene_modules =
                    show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15)
 graphics.off()
 
+# save list of allmodules_unbiased
+sink(paste0(gm_path, "allmodules_unbiased.txt"))
+print(setNames(antler_data$gene_modules$lists$unbiasedGMs$content, paste('GM:', names(antler_data$gene_modules$lists$unbiasedGMs$content))))
+sink()
 
+########## Bait GMs ##############
 # use bait genes to filter mods
 bait_genes = c("PAX7", "SOX2", "SOX21", "SOX10", "EYA2", "GBX2", "PAX6", "PAX2", "SIX3", "FRZB", "MSX1", "WNT1", "DLX5", "TFAP2A", "TFAP2B", "AXUD1", "GATA2", "HOMER2", "SIX1", "EYA2", "ETS1")
-temp_gms <- lapply(antler_data$gene_modules$lists$unbiasedGMs$content, function(x) if(any(bait_genes %in% x)){x})
-temp_gms <- temp_gms[!sapply(temp_gms, is.null)]
+gms <- lapply(antler_data$gene_modules$lists$unbiasedGMs$content, function(x) if(any(bait_genes %in% x)){x})
+gms <- gms[!sapply(gms, is.null)]
+
+# save list of bait_allmodules_unbiased
+sink(paste0(gm_path, "bait_allmodules_unbiased.txt"))
+print(setNames(gms, paste('GM:', names(gms))))
+sink()
 
 ncell = ncol(seurat_data)
-ngene = length(unlist(temp_gms))
+ngene = length(unlist(gms))
 
 png(paste0(plot_path, 'bait_allmodules_unbiased.png'), height = round(ngene/2), width = 75, units = 'cm', res = 600)
-GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, gene_modules = temp_gms,
+GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, gene_modules = gms,
                    show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15, fontsize_row = 10)
 graphics.off()
 
 
-
-
+########## DE GMs ##############
 # Plot gene modules with at least 50% of genes DE > 0.25 logFC & FDR < 0.001
 gms <- DEGeneModules(seurat_data, antler_data$gene_modules$get("unbiasedGMs"), logfc = 0.25, pval = 0.001, selected_gene_proportion = 0.5)
 
+# save list of DE_allmodules_unbiased
+sink(paste0(gm_path, "DE_allmodules_unbiased.txt"))
+print(setNames(gms, paste('GM:', names(gms))))
+sink()
+
 ngene = length(unlist(gms))
 
-png(paste0(plot_path, 'DE_rownames_allmodules_unbiased.png'), height = round(ngene/2), width = 75, units = 'cm', res = 600)
+png(paste0(plot_path, 'DE_rownames_allmodules_unbiased.png'), height = round(ngene/3), width = 75, units = 'cm', res = 200)
 GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = gms,
                    show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15, fontsize_row = 10)
 graphics.off()
 
-png(paste0(plot_path, 'DE_allmodules_unbiased.png'), height = round(ngene/2), width = 75, units = 'cm', res = 600)
+png(paste0(plot_path, 'DE_allmodules_unbiased.png'), height = round(ngene/10), width = 75, units = 'cm', res = 600)
 GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = gms,
                    show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15, fontsize_row = 10)
 graphics.off()
 
+########## DE batch filter GMs ##############
 # Filter gene modules which are deferentially expressed across batches
 if(length(unique(seurat_data$run)) > 1){
   gms <- gms[!names(gms) %in% names(DEGeneModules(seurat_data, antler_data$gene_modules$get("unbiasedGMs"),
@@ -222,6 +264,10 @@ if(length(unique(seurat_data$run)) > 1){
                                                   pval = 0.001,
                                                   selected_gene_proportion = 0.5,
                                                   active_ident = 'run'))]
+  # save list of DE_allmodules_200_batchfilt
+  sink(paste0(gm_path, "DE_allmodules_200_batchfilt.txt"))
+  print(setNames(gms, paste('GM:', names(gms))))
+  sink()
 
   ngene = length(unlist(gms))
 
