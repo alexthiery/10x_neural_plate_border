@@ -67,6 +67,13 @@ workflow {
         ch_seurat_h5ad = SEURAT_SUBSET_H5AD.out.contamination_filt_h5ad_out
         ch_seurat_annotations = SEURAT_FILTERING.out.annotations
 
+        SEURAT_SUBSET_H5AD.out.contamination_filt_h5ad_out.view()
+        EXPLORATORY_ANALYSIS.out.view()
+        
+        SEURAT_STAGE_PROCESS.out.stage_cluster_out.view()
+        SEURAT_STAGE_PROCESS.out.stage_gene_modules_out.view()
+
+
    } else {
        seurat_h5ad = [[[sample_id:'NF-scRNAseq_alignment_out'], file(params.seurat_h5ad, checkIfExists: true)]]
        ch_seurat_h5ad = Channel.from(seurat_h5ad)
@@ -90,5 +97,7 @@ workflow {
         MERGE_LOOM( ch_loomInput )
         
         SEURAT_SCVELO( ch_seurat_h5ad, MERGE_LOOM.out.loom.map{it[1]}, ch_seurat_annotations.map{it[1]} ) // Channel: [[meta], seurat.h5ad], Channel: merged.loom, Channel: seurat_annotations.csv
+
+        SEURAT_SCVELO.out.scvelo_run_out_metadata.view()
     }
 }

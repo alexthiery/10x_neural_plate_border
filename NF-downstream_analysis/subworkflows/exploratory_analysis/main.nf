@@ -33,5 +33,7 @@ workflow EXPLORATORY_ANALYSIS {
     // Run Seurat pipeline
     GENE_MODULES( seurat_out )
     
+    emit:
+    gene_modules_out = GENE_MODULES.out //Channel: [[meta], [output]]
 }
 
