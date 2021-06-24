@@ -43,7 +43,7 @@ include {SEURAT_SUBSET_H5AD} from "$baseDir/subworkflows/seurat_subset_h5ad/main
 
 def analysis_scripts = [:]
 
-include {GENE_MODULE_LATENT_TIME} from "$baseDir/modules/local/r/main"                  addParams(  options:                            modules['gene_module_latent_time'],
+include {R as GENE_MODULE_LATENT_TIME} from "$baseDir/modules/local/r/main"                  addParams(  options:                            modules['gene_module_latent_time'],
                                                                                                     script: file("$baseDir/bin/other/gene_modules_latent_time.R", checkIfExists: true) )
 
 workflow {
