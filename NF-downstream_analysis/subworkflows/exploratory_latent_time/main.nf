@@ -34,7 +34,7 @@ workflow EXPLORATORY_LATENT_TIME {
 
     main:
     
-    ch_gene_module_latent_time = seurat_data.combine(antler_data, by: 0).combine(scvelo_data, by: 0)
+    ch_gene_module_latent_time = seurat_out.combine(antler_out, by: 0).combine(scvelo_out, by: 0)
     ch_gene_module_latent_time = ch_gene_module_latent_time.map{[it[0], [it[1], it[2], it[3]]]}
 
     // Run gene modules across latent time
