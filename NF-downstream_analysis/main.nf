@@ -111,9 +111,9 @@ workflow {
     antler_data = EXPLORATORY_ANALYSIS.out.gene_modules_out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0]]}
     // scvelo_data = SEURAT_SCVELO.out.scvelo_run_out_metadata.map{[it[0], it[1].findAll{it =~ /csv/}[0]]}
 
-    seurat_data.map{it[1].listFiles()}.view()
+    // seurat_data.map{it[1].listFiles()}.view()
 
-    // temp = seurat_data.combine(antler_data, by: 0)
-    // ch_gene_module_latent_time = temp.map{[it[0], [it[1].listFiles(), it[2].listFiles()]]}
+    temp = seurat_data.combine(antler_data, by: 0)
+    ch_gene_module_latent_time = temp.map{[it[0], [it[1].listFiles(), it[2].listFiles()]]}.view()
     // GENE_MODULE_LATENT_TIME(ch_gene_module_latent_time)
 }
