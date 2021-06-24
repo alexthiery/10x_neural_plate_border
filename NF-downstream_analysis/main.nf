@@ -38,7 +38,8 @@ include {MERGE_LOOM} from "$baseDir/modules/local/merge_loom/main"              
 include {SEURAT_SCVELO} from "$baseDir/subworkflows/seurat_scvelo/main"                 addParams(  seurat_intersect_loom_options:      modules['seurat_intersect_loom'],
                                                                                                     scvelo_run_options:                 modules['scvelo_run'] )
 
-include {EXPLORATORY_LATENT_TIME} from "$baseDir/subworkflows/exploratory_latent_time/main" addParams(  gene_modules_latent_time_options: modules['gene_modules_latent_time'])
+include {EXPLORATORY_LATENT_TIME} from "$baseDir/subworkflows/exploratory_latent_time/main" addParams( gene_modules_latent_time_options: modules['gene_modules_latent_time'],
+                                                                                                       cell_state_classication_options: modules['cell_state_classification'])
 
 include {EXPLORATORY_LATENT_TIME as STAGE_EXPLORATORY_LATENT_TIME} from "$baseDir/subworkflows/exploratory_latent_time/main" addParams(  gene_modules_latent_time_options: modules['stage_gene_modules_latent_time'])
 
