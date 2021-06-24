@@ -104,7 +104,7 @@ DotPlot(seurat_data[, !is.na(seurat_data@meta.data$plac_nc_clusters)], group.by 
 graphics.off()
 
 
-###################### Nerual crest and placode cell type identification ###################### 
+###################### Neural crest and placode cell type identification ###################### 
 np_genes <- c(
   # HB
   "GBX2", "HOXA2", "HOXA3", "HOXB2", "KROX20",
@@ -123,7 +123,6 @@ nrow = ceiling((length(np_genes)+1)/ncol)
 png(paste0(plot_path, 'multi_feature_np.png'), width = ncol*10, height = nrow*10, units = "cm", res = 200)
 MultiFeaturePlot(seurat_data, plot_stage = TRUE, stage_col = "stage", gene_list = np_genes, n_col = ncol, label = '')
 graphics.off()
-
 
 # add neural crest and placodal cell types to metadata
 np_clusters <- c("Hindbrain" = 3, "Midbrain" = 7, "Forebrain" = 9, "Ventral Forebrain" = 5) 
@@ -144,3 +143,37 @@ png(paste0(plot_path, "np_dotplot.png"), width = 25, height = 10, res = 200, uni
 DotPlot(seurat_data[, !is.na(seurat_data@meta.data$np_clusters)], group.by = "np_clusters", features = rev(np_genes)) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 graphics.off()
+
+
+###################### progenitor cell type identification ###################### 
+progenitor_genes <- c("KRT7", "KRT18", "GATA2", "HOMER2", "DLX6", "DLX5", "EYA2", "SIX1", "ZNF385C", "TFAP2A", "MSX1", "CSRNP1", "PAX7", "DRAXIN", "SOX21", "SHISA2", "FRZB", "LMO1", "PAX6")
+
+ncol = ceiling((length(progenitor_genes)+1)/8)+1
+nrow = ceiling((length(progenitor_genes)+1)/ncol)
+
+# plot expression of np genes
+png(paste0(plot_path, 'multi_feature_progenitors.png'), width = ncol*10, height = nrow*10, units = "cm", res = 200)
+MultiFeaturePlot(seurat_data, plot_stage = TRUE, stage_col = "stage", gene_list = progenitor_genes, n_col = ncol, label = '')
+graphics.off()
+
+
+# add progenitor cell types to metadata
+progenitor_clusters <- c("Placodal progenitors?" = 0, "Neural/NC progenitors?" = 6, "Naive ectoderm?" = 2, "Forebrain progenitors?" = 9, "Neural progenitors?" = 8)
+
+seurat_data@meta.data$progenitor_clusters <- unlist(lapply(seurat_data@meta.data$seurat_clusters, function(x){
+  ifelse(any(progenitor_clusters %in% x), names(progenitor_clusters)[progenitor_clusters %in% x], NA)
+}))
+
+# plot annotated np clusters
+png(paste0(plot_path, "progenitor_clusters.png"), width = 13, height = 10, res = 200, units = "cm")
+DimPlot(seurat_data, group.by = "progenitor_clusters")  + ggtitle("Clusters") + theme(plot.title = element_text(hjust = 0.5))
+graphics.off()
+
+# plot dotplot for NP genes and clusters
+seurat_data@meta.data$progenitor_clusters <- factor(seurat_data@meta.data$progenitor_clusters, levels = c("Placodal progenitors?", "Naive ectoderm?", "Neural/NC progenitors?", "Neural progenitors?", "Forebrain progenitors?"))
+
+png(paste0(plot_path, "progenitors_dotplot.png"), width = 25, height = 10, res = 200, units = "cm")
+DotPlot(seurat_data[, !is.na(seurat_data@meta.data$progenitor_clusters)], group.by = "progenitor_clusters", features = rev(progenitor_genes)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+graphics.off()
+

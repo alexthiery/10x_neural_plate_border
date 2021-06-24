@@ -111,3 +111,44 @@ nrow = ceiling((length(names(gms))+1)/ncol)
 png(paste0(plot_path, 'multi_feature_module_score.png'), width = ncol*10, height = nrow*10, units = "cm", res = 200)
 MultiFeaturePlot(seurat_data, gene_list = names(gms), n_col = ncol, label = 'UMAPs showing gene module scores')
 graphics.off()
+
+# 
+# 
+# ############# Plot latent time for selected custom modules
+# 
+# tissues <- list("Placodal" = c("GM: 7", "GM: 8", "GM: 9"),
+#           "Progenitor" = c("GM: 10", "GM: 11", "GM: 13"),
+#           "Neural" = c("GM: 36", "GM: 37", "GM: 39", "GM: 43"),
+#           "Neural crest" = c("GM: 40", "GM: 41"))
+# 
+# colours <- c("Placodal" = "#7D08AC", "Progenitor" = "#32CC28", "Neural" = "#F9E300", "Neural crest" = "#2A50DF")
+# 
+# temp_plot_data <- plot_data %>%
+#   filter(module %in% unlist(tissues)) %>%
+#   mutate(tissue = unlist(reverseSplit(tissues)[module])) %>%
+#   mutate(colour = colours[tissue]) %>%
+#   mutate(tissue = factor(tissue, levels=c("Placodal", "Progenitor", "Neural", "Neural crest")))
+# 
+# # Extract columns for plotting
+# colours = temp_plot_data %>% dplyr::pull(colour, module)
+# colours = colours[!duplicated(names(colours))]
+# 
+# # Mean and SE summary data
+# plot_data_summary <- temp_plot_data %>%
+#   mutate(rank_bin = latent_time - (latent_time %% 0.025)) %>%
+#   group_by(rank_bin, module) %>% 
+#   summarise(mn = mean(module_score),
+#             se = sd(module_score)/sqrt(n()))
+# 
+# # Plot GAM for module score without standard error
+# png(paste0(plot_path, 'select_mod_latent_time.png'), height = 20, width = 15, units = 'cm', res = 400)
+# ggplot(temp_plot_data, aes(x = latent_time, y = module_score, colour = module)) +
+#   scale_color_manual(values=colours) +
+#   geom_smooth(method="gam", se=FALSE) +
+#   xlab("Latent time") + ylab("Gene module score") +
+#   facet_grid(rows = vars(tissue)) +
+#   theme_classic() +
+#   theme(legend.position = "none")
+# graphics.off()
+# 
+# 
