@@ -145,12 +145,12 @@ if(length(unique(seurat_data$run)) > 1){
   ncell = ncol(seurat_data)
   ngene = length(unlist(antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content))
   
-  png(paste0(plot_path, 'unbiasedGMs_DE_batchfilt_rownames.png'), height = round(ngene/2), width = 75, units = 'cm', res = 600)
+  png(paste0(plot_path, 'unbiasedGMs_DE_batchfilt_rownames.png'), height = round(ngene/3), width = 75, units = 'cm', res = 600)
   GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content,
                      show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15, fontsize_row = 10)
   graphics.off()
   
-  png(paste0(plot_path, 'unbiasedGMs_DE_batchfilt.png'), height = round(ngene/2), width = 75, units = 'cm', res = 600)
+  png(paste0(plot_path, 'unbiasedGMs_DE_batchfilt.png'), height = round(ngene/10), width = 75, units = 'cm', res = 600)
   GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content,
                      show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15, fontsize_row = 10)
   graphics.off()
