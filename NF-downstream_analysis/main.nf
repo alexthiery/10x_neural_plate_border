@@ -102,5 +102,7 @@ workflow {
     ch_antler_data = EXPLORATORY_ANALYSIS.out.gene_modules_out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
     ch_antler_stage_data = SEURAT_STAGE_PROCESS.out.stage_gene_modules_out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
 
+    ch_seurat_data.concat(ch_seurat_stage_data).view()
+    
     EXPLORATORY_LATENT_TIME(ch_seurat_data.concat(ch_seurat_stage_data), ch_antler_data.concat(ch_antler_stage_data), SEURAT_SCVELO.out.scvelo_run_out_metadata)
 }
