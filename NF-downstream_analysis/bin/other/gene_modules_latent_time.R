@@ -9,6 +9,8 @@ library(tidyverse)
 library(Antler)
 library(RColorBrewer)
 library(scHelper)
+library(gridExtra)
+library(grid)
 
 spec = matrix(c(
   'runtype', 'l', 2, "character",
@@ -17,46 +19,24 @@ spec = matrix(c(
 opt = getopt(spec)
 
 # Set paths and load data
-{
-  if(length(commandArgs(trailingOnly = TRUE)) == 0){
-    cat('No command line arguments provided, paths are set for running interactively in Rstudio server\n')
-    
-    plot_path = "./output/NF-downstream_analysis_stacas/antler/stage_split/hh6_split_stage_data/gene_modules_latent_time/plots/"
-    rds_path = "./output/NF-downstream_analysis_stacas/antler/stage_split/hh6_split_stage_data/gene_modules_latent_time/rds_files/"
-    seurat_data_path = "./output/NF-downstream_analysis_stacas/seurat/stage_split/hh6_split_stage_data/stage_cluster/rds_files/"
-    antler_data_path = "./output/NF-downstream_analysis_stacas/antler/stage_split/hh6_split_stage_data/stage_gene_modules/rds_files/"
-    metadata_path = "./output/NF-downstream_analysis_stacas/scvelo/scvelo_run/hh6_split_stage_data/"
-    
-    ncores = 8
-    
-  } else if (opt$runtype == "nextflow"){
-    cat('pipeline running through Nextflow\n')
-    
-    plot_path = "./plots/"
-    rds_path = "./rds_files/"
-    seurat_data_path = "./input/rds_files"
-    antler_data_path = "./input/rds_files/"
-    metadata_path = "./input/metadata/"
-    ncores = opt$cores
-    
-    # Multi-core when running from command line
-    plan("multiprocess", workers = ncores)
-    options(future.globals.maxSize = 16* 1024^3) # 32gb
-    
-  } else {
-    stop("--runtype must be set to 'nextflow'")
-  }
-  
-  cat(paste0("script ran with ", ncores, " cores\n"))
-  dir.create(plot_path, recursive = T)
-  dir.create(rds_path, recursive = T)
-}
+plot_path = "./plots/"
+rds_path = "./rds_files/"
+data_path = "./input/"
+ncores = opt$cores
 
-metadata <- read.csv(list.files(metadata_path, pattern = "*.csv", full.names = TRUE))
+# Multi-core when running from command line
+plan("multiprocess", workers = ncores)
+options(future.globals.maxSize = 16* 1024^3) # 32gb
+
+cat(paste0("script ran with ", ncores, " cores\n"))
+dir.create(plot_path, recursive = T)
+dir.create(rds_path, recursive = T)
+
+metadata <- read.csv(list.files(data_path, pattern = "*.csv", full.names = TRUE))
 
 metadata$CellID <- paste0(metadata$CellID, "-1")
 
-seurat_data <- readRDS(list.files(seurat_data_path, pattern = "*.RDS", full.names = TRUE))
+seurat_data <- readRDS(list.files(data_path, pattern = "*.RDS", full.names = TRUE)[!list.files(data_path, pattern = "*.RDS") %>% grepl('antler', .)])
 
 # Rename cellIDs to match seurat data based on string match
 new_names <- unlist(lapply(metadata$CellID, function(x) rownames(seurat_data@meta.data)[grep(x, rownames(seurat_data@meta.data))]))
@@ -76,10 +56,7 @@ seurat_data@meta.data <- metadata
 multi_run <- ifelse(length(unique(seurat_data$run)) > 1, TRUE, FALSE)
 
 # load antler data
-antler_data <- readRDS(list.files(antler_data_path, pattern = "*out.RDS", full.names = TRUE))
-
-
-
+antler_data <- readRDS(list.files(data_path, pattern = "antler_out.RDS", full.names = TRUE))
 
 #####################################################################################################
 #                           calculate module scores                   #

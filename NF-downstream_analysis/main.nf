@@ -99,14 +99,6 @@ workflow {
         SEURAT_SCVELO( ch_seurat_h5ad, MERGE_LOOM.out.loom.map{it[1]}, ch_seurat_annotations.map{it[1]} ) // Channel: [[meta], seurat.h5ad], Channel: merged.loom, Channel: seurat_annotations.csv
     }
 
-    // seurat_data = SEURAT_FILTERING.out.contamination_filt_out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0]]}
-    // antler_data = EXPLORATORY_ANALYSIS.out.gene_modules_out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0]]}
-    // scvelo_data = SEURAT_SCVELO.out.scvelo_run_out_metadata.map{[it[0], it[1].findAll{it =~ /csv/}[0]]}
-
-    // temp = seurat_data.combine(antler_data, by: 0).combine(scvelo_data, by: 0)
-    // ch_gene_module_latent_time = temp.map{[it[0], [it[1], it[2], it[3]]]}
-    // GENE_MODULE_LATENT_TIME(ch_gene_module_latent_time)
-
 
     seurat_data = SEURAT_FILTERING.out.contamination_filt_out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]}
     antler_data = EXPLORATORY_ANALYSIS.out.gene_modules_out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]}
