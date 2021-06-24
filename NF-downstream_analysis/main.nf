@@ -107,8 +107,8 @@ workflow {
     // GENE_MODULE_LATENT_TIME(ch_gene_module_latent_time)
 
 
-    seurat_data = SEURAT_FILTERING.out.contamination_filt_out.map{[it[0], it[1].findAll{it =~ /rds_files/}.listFiles()]}
-    antler_data = EXPLORATORY_ANALYSIS.out.gene_modules_out.map{[it[0], it[1].findAll{it =~ /rds_files/}.listFiles()]}
+    seurat_data = SEURAT_FILTERING.out.contamination_filt_out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()]}
+    antler_data = EXPLORATORY_ANALYSIS.out.gene_modules_out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()]}
     // scvelo_data = SEURAT_SCVELO.out.scvelo_run_out_metadata.map{[it[0], it[1].findAll{it =~ /csv/}[0]]}
 
     // seurat_data.map{it[1].listFiles()}.view()
