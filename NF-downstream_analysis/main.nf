@@ -94,17 +94,13 @@ workflow {
         SEURAT_SCVELO( ch_seurat_h5ad, MERGE_LOOM.out.loom.map{it[1]}, ch_seurat_annotations.map{it[1]} ) // Channel: [[meta], seurat.h5ad], Channel: merged.loom, Channel: seurat_annotations.csv
     }
 
-    // ch_seurat_data = SEURAT_FILTERING.out.contamination_filt_out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
-    // ch_antler_data = EXPLORATORY_ANALYSIS.out.gene_modules_out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
+
     // ch_scvelo_data = SEURAT_SCVELO.out.scvelo_run_out_metadata.map{[it[0], it[1].findAll{it =~ /csv/}[0]]} //Channel: [[meta], *.csv]
 
-    // EXPLORATORY_LATENT_TIME(ch_seurat_data, ch_antler_data, ch_scvelo_data)
+    ch_seurat_data = SEURAT_FILTERING.out.contamination_filt_out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
+    ch_seurat_stage_data = SEURAT_STAGE_PROCESS.out.stage_cluster_out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
+    ch_antler_data = EXPLORATORY_ANALYSIS.out.gene_modules_out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
+    ch_antler_stage_data = SEURAT_STAGE_PROCESS.out.stage_gene_modules_out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
 
-    SEURAT_SCVELO.out.scvelo_run_out_metadata.view()
-
-    ch_seurat_data = SEURAT_STAGE_PROCESS.out.stage_cluster_out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
-    ch_antler_data = SEURAT_STAGE_PROCESS.out.stage_gene_modules_out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
-    ch_scvelo_data = SEURAT_SCVELO.out.scvelo_run_out_metadata.map{[it[0], it[1].findAll{it =~ /csv/}[0]]} //Channel: [[meta], *.csv]
-
-    EXPLORATORY_LATENT_TIME(ch_seurat_data, ch_antler_data, ch_scvelo_data)
+    EXPLORATORY_LATENT_TIME(ch_seurat_data.concat(ch_seurat_stage_data), ch_antler_data.concat(ch_antler_stage_data), SEURAT_SCVELO.out.scvelo_run_out_metadata)
 }
