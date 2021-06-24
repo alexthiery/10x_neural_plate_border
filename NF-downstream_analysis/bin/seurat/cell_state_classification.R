@@ -79,7 +79,7 @@ nrow = ceiling((length(plac_nc_genes)+1)/ncol)
 
 # plot expression of NC and placodal genes
 png(paste0(plot_path, 'multi_feature_plac_nc.png'), width = ncol*10, height = nrow*10, units = "cm", res = 200)
-MultiFeaturePlot(seurat_data, plot_stage = TRUE, gene_list = plac_nc_genes, n_col = ncol, label = '')
+MultiFeaturePlot(seurat_data, plot_stage = TRUE, stage_col = "stage", gene_list = plac_nc_genes, n_col = ncol, label = '')
 graphics.off()
 
 
@@ -121,7 +121,7 @@ nrow = ceiling((length(np_genes)+1)/ncol)
 
 # plot expression of np genes
 png(paste0(plot_path, 'multi_feature_np.png'), width = ncol*10, height = nrow*10, units = "cm", res = 200)
-MultiFeaturePlot(seurat_data, plot_stage = TRUE, gene_list = np_genes, n_col = ncol, label = '')
+MultiFeaturePlot(seurat_data, plot_stage = TRUE, stage_col = "stage", gene_list = np_genes, n_col = ncol, label = '')
 graphics.off()
 
 
