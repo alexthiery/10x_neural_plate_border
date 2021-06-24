@@ -87,6 +87,7 @@ workflow {
 
 
     if(!skip_scvelo){
+        ch_seurat_h5ad = ch_seurat_h5ad.filter{it[0].sample_id == 'NF-scRNAseq_alignment_out'}
         // Set channel for input looms
         METADATA.out
             .filter{ it[0].sample_id == 'NF-scRNAseq_alignment_out' }
@@ -109,9 +110,13 @@ workflow {
 
     seurat_data = SEURAT_FILTERING.out.contamination_filt_out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]}
     antler_data = EXPLORATORY_ANALYSIS.out.gene_modules_out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]}
-    // scvelo_data = SEURAT_SCVELO.out.scvelo_run_out_metadata.map{[it[0], it[1].findAll{it =~ /csv/}[0]]}
+    scvelo_data = SEURAT_SCVELO.out.scvelo_run_out_metadata.map{[it[0], it[1].findAll{it =~ /csv/}[0]]}
 
-    temp = seurat_data.combine(antler_data, by: 0)
-    ch_gene_module_latent_time = temp.map{[it[0], [it[1], it[2]]]}.view()
+    temp = seurat_data.combine(antler_data, by: 0).combine(scvelo_data, by: 0)
+
+    ch_gene_module_latent_time = temp.map{[it[0], [it[1], it[2], it[3]]]}
+
+    ch_gene_module_latent_time.view()
+
     GENE_MODULE_LATENT_TIME(ch_gene_module_latent_time)
 }
