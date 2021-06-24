@@ -40,6 +40,8 @@ include {SEURAT_SCVELO} from "$baseDir/subworkflows/seurat_scvelo/main"         
 
 include {EXPLORATORY_LATENT_TIME} from "$baseDir/subworkflows/exploratory_latent_time/main" addParams(  gene_modules_latent_time_options: modules['gene_modules_latent_time'])
 
+include {EXPLORATORY_LATENT_TIME as STAGE_EXPLORATORY_LATENT_TIME} from "$baseDir/subworkflows/exploratory_latent_time/main" addParams(  gene_modules_latent_time_options: modules['stage_gene_modules_latent_time'])
+
 include {SEURAT_SUBSET_H5AD} from "$baseDir/subworkflows/seurat_subset_h5ad/main"       addParams(  contamination_filt_h5ad_options:    modules['contamination_filt_h5ad'] )
 
 workflow {
@@ -94,15 +96,11 @@ workflow {
         SEURAT_SCVELO( ch_seurat_h5ad, MERGE_LOOM.out.loom.map{it[1]}, ch_seurat_annotations.map{it[1]} ) // Channel: [[meta], seurat.h5ad], Channel: merged.loom, Channel: seurat_annotations.csv
     }
 
-
-    // ch_scvelo_data = SEURAT_SCVELO.out.scvelo_run_out_metadata.map{[it[0], it[1].findAll{it =~ /csv/}[0]]} //Channel: [[meta], *.csv]
-
     ch_seurat_data = SEURAT_FILTERING.out.contamination_filt_out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
-    ch_seurat_stage_data = SEURAT_STAGE_PROCESS.out.stage_cluster_out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
     ch_antler_data = EXPLORATORY_ANALYSIS.out.gene_modules_out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
-    ch_antler_stage_data = SEURAT_STAGE_PROCESS.out.stage_gene_modules_out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
-
-    ch_seurat_data.concat(ch_seurat_stage_data).view()
-    
     EXPLORATORY_LATENT_TIME(ch_seurat_data.concat(ch_seurat_stage_data), ch_antler_data.concat(ch_antler_stage_data), SEURAT_SCVELO.out.scvelo_run_out_metadata)
+
+    ch_seurat_stage_data = SEURAT_STAGE_PROCESS.out.stage_cluster_out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
+    ch_antler_stage_data = SEURAT_STAGE_PROCESS.out.stage_gene_modules_out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
+    STAGE_EXPLORATORY_LATENT_TIME(ch_seurat_data.concat(ch_seurat_stage_data), ch_antler_data.concat(ch_antler_stage_data), SEURAT_SCVELO.out.scvelo_run_out_metadata)
 }
