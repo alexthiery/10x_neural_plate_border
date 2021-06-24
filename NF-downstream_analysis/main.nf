@@ -67,9 +67,9 @@ workflow {
         ch_seurat_h5ad = SEURAT_SUBSET_H5AD.out.contamination_filt_h5ad_out
         ch_seurat_annotations = SEURAT_FILTERING.out.annotations
 
-        SEURAT_SUBSET_H5AD.out.contamination_filt_h5ad_out.view()
+        SEURAT_FILTERING.out.contamination_filt_out.view()
         EXPLORATORY_ANALYSIS.out.view()
-        
+
         SEURAT_STAGE_PROCESS.out.stage_cluster_out.view()
         SEURAT_STAGE_PROCESS.out.stage_gene_modules_out.view()
 
