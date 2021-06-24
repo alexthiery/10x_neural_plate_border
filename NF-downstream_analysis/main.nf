@@ -41,6 +41,11 @@ include {SEURAT_SCVELO} from "$baseDir/subworkflows/seurat_scvelo/main"         
 include {SEURAT_SUBSET_H5AD} from "$baseDir/subworkflows/seurat_subset_h5ad/main"       addParams(  contamination_filt_h5ad_options:    modules['contamination_filt_h5ad'] )
 
 
+def analysis_scripts = [:]
+
+include {GENE_MODULE_LATENT_TIME} from "$baseDir/modules/local/r/main"                  addParams(  options:                            modules['gene_module_latent_time'],
+                                                                                                    script: file("$baseDir/bin/other/gene_modules_latent_time.R", checkIfExists: true) )
+
 workflow {
 
     METADATA( params.input )
@@ -66,12 +71,6 @@ workflow {
         
         ch_seurat_h5ad = SEURAT_SUBSET_H5AD.out.contamination_filt_h5ad_out
         ch_seurat_annotations = SEURAT_FILTERING.out.annotations
-
-        SEURAT_FILTERING.out.contamination_filt_out.view()
-        EXPLORATORY_ANALYSIS.out.view()
-
-        SEURAT_STAGE_PROCESS.out.stage_cluster_out.view()
-        SEURAT_STAGE_PROCESS.out.stage_gene_modules_out.view()
 
 
    } else {
@@ -100,4 +99,12 @@ workflow {
 
         SEURAT_SCVELO.out.scvelo_run_out_metadata.view()
     }
+
+    seurat_data = SEURAT_FILTERING.out.contamination_filt_out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0]]}
+    antler_data = EXPLORATORY_ANALYSIS.out.gene_modules_out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0]]}
+    scvelo_data = SEURAT_SCVELO.out.scvelo_run_out_metadata.map{[it[0], it[1].findAll{it =~ /csv/}[0]]}
+
+    temp = seurat_data.combine(antler_data, by: 0).combine(scvelo_data, by: 0)
+    ch_gene_module_latent_time = temp.map{[it[0], [it[1], it[2], it[3]]]}
+    GENE_MODULE_LATENT_TIME(ch_gene_module_latent_time)
 }
