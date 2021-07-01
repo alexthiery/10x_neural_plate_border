@@ -37,12 +37,16 @@ include {MERGE_LOOM} from "$baseDir/modules/local/merge_loom/main"              
 
 include {SEURAT_SCVELO} from "$baseDir/subworkflows/seurat_scvelo/main"                 addParams(  seurat_intersect_loom_options:      modules['seurat_intersect_loom'],
                                                                                                     scvelo_run_options:                 modules['scvelo_run'] )
-
+                                                                                                    
 include {SEURAT_SUBSET_H5AD} from "$baseDir/subworkflows/seurat_subset_h5ad/main"       addParams(  contamination_filt_h5ad_options:    modules['contamination_filt_h5ad'] )
+
+include {EXPLORATORY_LATENT_TIME} from "$baseDir/subworkflows/exploratory_latent_time/main" addParams( gene_modules_latent_time_options: modules['gene_modules_latent_time'],
+                                                                                                       cell_state_classification_options: modules['cell_state_classification'])
+
+include {EXPLORATORY_LATENT_TIME as STAGE_EXPLORATORY_LATENT_TIME} from "$baseDir/subworkflows/exploratory_latent_time/main" addParams(  gene_modules_latent_time_options: modules['stage_gene_modules_latent_time'])
 
 
 workflow {
-
     METADATA( params.input )
 
     /*------------------------------------------------------------------------------------*/
@@ -67,6 +71,7 @@ workflow {
         ch_seurat_h5ad = SEURAT_SUBSET_H5AD.out.contamination_filt_h5ad_out
         ch_seurat_annotations = SEURAT_FILTERING.out.annotations
 
+
    } else {
        seurat_h5ad = [[[sample_id:'NF-scRNAseq_alignment_out'], file(params.seurat_h5ad, checkIfExists: true)]]
        ch_seurat_h5ad = Channel.from(seurat_h5ad)
@@ -81,6 +86,7 @@ workflow {
 
 
     if(!skip_scvelo){
+        // ch_seurat_h5ad = ch_seurat_h5ad.filter{it[0].sample_id == 'NF-scRNAseq_alignment_out'}
         // Set channel for input looms
         METADATA.out
             .filter{ it[0].sample_id == 'NF-scRNAseq_alignment_out' }
@@ -91,4 +97,12 @@ workflow {
         
         SEURAT_SCVELO( ch_seurat_h5ad, MERGE_LOOM.out.loom.map{it[1]}, ch_seurat_annotations.map{it[1]} ) // Channel: [[meta], seurat.h5ad], Channel: merged.loom, Channel: seurat_annotations.csv
     }
+
+    ch_seurat_data = SEURAT_FILTERING.out.contamination_filt_out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
+    ch_antler_data = EXPLORATORY_ANALYSIS.out.gene_modules_out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
+    EXPLORATORY_LATENT_TIME(ch_seurat_data, ch_antler_data, SEURAT_SCVELO.out.scvelo_run_out_metadata)
+
+    ch_seurat_stage_data = SEURAT_STAGE_PROCESS.out.stage_cluster_out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
+    ch_antler_stage_data = SEURAT_STAGE_PROCESS.out.stage_gene_modules_out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
+    STAGE_EXPLORATORY_LATENT_TIME(ch_seurat_stage_data, ch_antler_stage_data, SEURAT_SCVELO.out.scvelo_run_out_metadata)
 }

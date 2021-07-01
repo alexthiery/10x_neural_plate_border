@@ -148,6 +148,11 @@ png(paste0(plot_path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
 ClustStagePlot(contamination_filt_data, stage_col = "stage")
 graphics.off()
 
+# Check integration on final filtered data
+png(paste0(plot_path, "CheckIntegration.png"), width = 25, height = 10, res = 200, units = "cm")
+CheckIntegration(contamination_filt_data, xlim = c(-10, 10), ylim = c(-10, 10))
+graphics.off()
+
 # Plot QC for each cluster
 png(paste0(plot_path, "QCPlot.png"), width=40, height=28, units = 'cm', res = 200)
 QCPlot(contamination_filt_data)

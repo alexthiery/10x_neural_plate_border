@@ -82,9 +82,6 @@ antler_data$gene_modules$identify(
   mod_consistency_thres = 0.4,  # ratio of expressed genes among "positive" cells
   process_plots         = TRUE)
 
-saveRDS(antler_data, paste0(rds_path, "antler.RDS"))
-# antler <- readRDS(paste0(rds_path, "antler_all.RDS"))
-
 # detect if stage contains more than 1 seq batch
 if(length(unique(seurat_data$run)) > 1){metadata <- c("seurat_clusters", "run")} else {metadata <- "seurat_clusters"}
 
@@ -101,7 +98,7 @@ graphics.off()
 
 ########## DE GMs ##############
 # Plot gene modules with at least 50% of genes DE > 0.25 logFC & FDR < 0.001
-gms <- DEGeneModules(seurat_data, antler_data$gene_modules$get("unbiasedGMs"), logfc = 0.25, pval = 0.001, selected_gene_proportion = 0.5)
+gms <- DEGeneModules(seurat_data, antler_data$gene_modules$get("unbiasedGMs"), logfc = 0.5, pval = 0.001, selected_gene_proportion = 0.5)
 
 # save unbiasedGMs_DE in antler object
 antler_data$gene_modules$set(name= "unbiasedGMs_DE", content = gms)
@@ -124,7 +121,7 @@ graphics.off()
 # Filter gene modules which are deferentially expressed across batches
 if(length(unique(seurat_data$run)) > 1){
   
-  batch_gms <- DEGeneModules(seurat_data, antler_data$gene_modules$get("unbiasedGMs"), logfc = 0.25, pval = 0.001, selected_gene_proportion = 0.5, active_ident = 'run')
+  batch_gms <- DEGeneModules(seurat_data, antler_data$gene_modules$get("unbiasedGMs"), logfc = 0.5, pval = 0.001, selected_gene_proportion = 0.5, active_ident = 'run')
   gms <- antler_data$gene_modules$lists$unbiasedGMs_DE$content[!names(antler_data$gene_modules$lists$unbiasedGMs_DE$content) %in% names(batch_gms)]
   
   # save unbiasedGMs_DE in antler object
