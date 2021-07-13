@@ -107,7 +107,7 @@ ngene = length(unlist(antler_data$gene_modules$lists$unbiasedGMs$content))
 
 metadata = c("stage", "seurat_clusters", "run")
 
-png(paste0(plot_path, 'unbiasedGMs.png'), height = round(ngene/10), width = 75, units = 'cm', res = 600)
+png(paste0(plot_path, 'unbiasedGMs.png'), height = round(ngene/8), width = 75, units = 'cm', res = 600)
 GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs$content,
                    show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15)
 graphics.off()
@@ -128,7 +128,7 @@ GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules 
                    show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15, fontsize_row = 10)
 graphics.off()
 
-png(paste0(plot_path, 'unbiasedGMs_DE.png'), height = round(ngene/10), width = 75, units = 'cm', res = 600)
+png(paste0(plot_path, 'unbiasedGMs_DE.png'), height = round(ngene/8), width = 75, units = 'cm', res = 600)
 GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE$content,
                    show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15, fontsize_row = 10)
 graphics.off()
@@ -150,7 +150,7 @@ if(length(unique(seurat_data$run)) > 1){
                      show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15, fontsize_row = 10)
   graphics.off()
   
-  png(paste0(plot_path, 'unbiasedGMs_DE_batchfilt.png'), height = round(ngene/10), width = 60, units = 'cm', res = 1000)
+  png(paste0(plot_path, 'unbiasedGMs_DE_batchfilt.png'), height = round(ngene/8), width = 60, units = 'cm', res = 1000)
   GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content,
                      show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15, fontsize_row = 10)
   graphics.off()
@@ -192,7 +192,7 @@ ngene = length(unlist(antler_data$gene_modules$lists$GMs200$content))
 
 metadata = c("stage", "seurat_clusters", "run")
 
-png(paste0(plot_path, 'GMs200.png'), height = round(ngene/10), width = 75, units = 'cm', res = 600)
+png(paste0(plot_path, 'GMs200.png'), height = round(ngene/8), width = 75, units = 'cm', res = 600)
 GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, gene_modules = antler_data$gene_modules$lists$GMs200$content,
                    show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 13)
 graphics.off()
@@ -213,7 +213,7 @@ GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules 
                    show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15, fontsize_row = 10)
 graphics.off()
 
-png(paste0(plot_path, 'GMs200_DE.png'), height = round(ngene/10), width = 75, units = 'cm', res = 600)
+png(paste0(plot_path, 'GMs200_DE.png'), height = round(ngene/8), width = 75, units = 'cm', res = 600)
 GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$GMs200_DE$content,
                    show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15, fontsize_row = 10)
 graphics.off()
@@ -265,7 +265,7 @@ export_antler_modules <- function(antler_object, publish_dir, names_list){
   for(gm_list in names_list){
     mods = antler_data$gene_modules$lists[[gm_list]]$content
     for (i in seq(length(mods))) {
-      modname = base::names(mods)
+      modname = base::names(mods)[i]
       if (is.null(modname)) {
         modname = paste0("GM: ", i)
       }
