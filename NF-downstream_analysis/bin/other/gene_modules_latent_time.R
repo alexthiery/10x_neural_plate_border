@@ -33,10 +33,12 @@ dir.create(plot_path, recursive = T)
 dir.create(rds_path, recursive = T)
 
 metadata <- read.csv(list.files(data_path, pattern = "*.csv", full.names = TRUE))
+# metadata <- read.csv('./output/NF-downstream_analysis_stacas/scvelo/scvelo_run/NF-scRNAseq_alignment_out/NF-scRNAseq_alignment_out_metadata.csv')
 
 metadata$CellID <- paste0(metadata$CellID, "-1")
 
 seurat_data <- readRDS(list.files(data_path, pattern = "*.RDS", full.names = TRUE)[!list.files(data_path, pattern = "*.RDS") %>% grepl('antler', .)])
+# seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/seurat/6_contamination_filt/rds_files/contamination_filt_data.RDS')
 
 # Rename cellIDs to match seurat data based on string match
 new_names <- unlist(lapply(metadata$CellID, function(x) rownames(seurat_data@meta.data)[grep(x, rownames(seurat_data@meta.data))]))
@@ -57,7 +59,7 @@ multi_run <- ifelse(length(unique(seurat_data$run)) > 1, TRUE, FALSE)
 
 # load antler data
 antler_data <- readRDS(list.files(data_path, pattern = "antler_out.RDS", full.names = TRUE))
-
+# antler_data <- readRDS('./output/NF-downstream_analysis_stacas/antler/gene_modules/rds_files/antler_out.RDS')
 #####################################################################################################
 #                           calculate module scores                   #
 #####################################################################################################
