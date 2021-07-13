@@ -18,8 +18,8 @@ opt = getopt(spec)
   if(length(commandArgs(trailingOnly = TRUE)) == 0){
     cat('No command line arguments provided, paths are set for running interactively in Rstudio server\n')
 
-    plot_path = "./output/NF-downstream_analysis/seurat/1_integration/plots/"
-    rds_path = "./output/NF-downstream_analysis/seurat/1_integration/rds_files/"
+    plot_path = "./output/NF-downstream_analysis_stacas/seurat/1_integration/plots/"
+    rds_path = "./output/NF-downstream_analysis_stacas/seurat/1_integration/rds_files/"
     data_path = "./output/NF-scRNAseq_alignment/cellranger/count/filtered_feature_bc_matrix"
     ncores = 8
 
@@ -86,9 +86,9 @@ seurat_split <- lapply(seurat_split, function(x) {
 # Get array of all genes across all datasets in order to integrate using all features
 all_features <- lapply(seurat_split, row.names) %>% Reduce(intersect, .)
 # Find anchors used for integration
-integration_data <- Run.STACAS(seurat_split, dims = 1:30, anchor.features = 2000)
+integration_data <- Run.STACAS(seurat_split, dims = 1:20, anchor.features = 500)
 # Integrate data
-integration_data <- IntegrateData(anchorset = integration_data, dims = 1:30, features.to.integrate = all_features)
+integration_data <- IntegrateData(anchorset = integration_data, dims = 1:20, features.to.integrate = all_features)
 
 # Add seurat gene annotation dataframe to misc slot
 integration_data@misc[['annotations']] <- read.table(paste0(input[1,'path'], '/features.tsv.gz'), col.names = c('Accession', 'Gene', 'V3', 'V4'))[,1:2]
