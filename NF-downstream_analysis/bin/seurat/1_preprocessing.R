@@ -214,7 +214,7 @@ names(seurat_split) <- names(pc_cutoff)
 # Find optimal cluster resolution
 for(run in names(seurat_split)){
   png(paste0(plot_path, "clustree_run_", run, ".png"), width=70, height=35, units = 'cm', res = 200)
-  ClustRes(seurat_object = seurat_split[[run]], by = 0.2, prefix = 'integrated_snn_res.')
+  ClustRes(seurat_object = seurat_split[[run]], by = 0.2)
   graphics.off()
 }
 
