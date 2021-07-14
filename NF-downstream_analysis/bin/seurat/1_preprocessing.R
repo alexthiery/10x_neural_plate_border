@@ -64,14 +64,18 @@ seurat_all@meta.data[["stage"]] <- gsub("-.*", "", as.character(seurat_all@meta.
 # Convert metadata character cols to factors
 seurat_all@meta.data[sapply(seurat_all@meta.data, is.character)] <- lapply(seurat_all@meta.data[sapply(seurat_all@meta.data, is.character)], as.factor)
 
+# Make seurat gene annotation dataframe and save
+annotations <- read.table(paste0(input[1,'path'], '/features.tsv.gz'), col.names = c('Accession', 'Gene', 'V3', 'V4'))[,1:2]
+# make gene names unique in annotations dataframe in order to match seurat annotations
+annotations$Gene <- make.unique(temp$Gene)
+# Save annnotation dataframe
+write.table(annotations, 'seurat_annotations.csv', row.names=FALSE, quote=FALSE, sep=',')
+
 # Remove genes expressed in fewer than 5 cells
 seurat_all <- DietSeurat(seurat_all, features = names(which(Matrix::rowSums(GetAssayData(seurat_all) > 0) >=5)))
 
 # Store mitochondrial percentage in object meta data
 seurat_all <- PercentageFeatureSet(seurat_all, pattern = "^MT-", col.name = "percent.mt")
-
-
-
 
 # make dataframe with different filtering parameters which can be put into a loop for carrying out downstream analysis
 filter_thresholds <- data.frame(gene_min = c(0, 750, 1000, 1500), gene_max = c(Inf, 7000, 6000, 5000), MT_max = c(Inf, 15, 15, 15), row.names = c("unfilt", "low", "med", "high"))
@@ -253,4 +257,3 @@ preprocessing_data <- lapply(seurat_split, function(x) {
 })
 
 saveRDS(preprocessing_data, paste0(rds_path, "preprocessing_data.RDS"), compress = FALSE)
-

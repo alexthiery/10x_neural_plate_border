@@ -59,13 +59,6 @@ integration_data <- Run.STACAS(seurat_split, dims = 1:20, anchor.features = 500)
 # Integrate data
 integration_data <- IntegrateData(anchorset = integration_data, dims = 1:20, features.to.integrate = all_features)
 
-# Add seurat gene annotation dataframe to misc slot
-integration_data@misc[['annotations']] <- read.table(paste0(input[1,'path'], '/features.tsv.gz'), col.names = c('Accession', 'Gene', 'V3', 'V4'))[,1:2]
-integration_data@misc$annotations$Gene <- make.unique(integration_data@misc$annotations$Gene)
-
-# Save annnotation dataframe
-write.table(integration_data@misc$annotations, 'seurat_annotations.csv', row.names=FALSE, quote=FALSE, sep=',')
-
 # specify that we will perform downstream analysis on the corrected data note that the original
 # unmodified data still resides in the 'RNA' assay
 DefaultAssay(integration_data) <- "integrated"
