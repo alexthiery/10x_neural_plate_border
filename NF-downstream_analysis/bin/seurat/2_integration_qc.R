@@ -125,6 +125,9 @@ cluster_order <- OrderCellClusters(seurat_object = integration_qc_data, col_to_s
 # Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
 top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_log2FC) %>% arrange(factor(cluster, levels = cluster_order))
 
+# Save RDS
+saveRDS(integration_qc_data, paste0(rds_path, "integration_qc_data.RDS"), compress = FALSE)
+
 png(paste0(plot_path, 'HM.top15.DE.integration_qc_data.png'), height = 75, width = 100, units = 'cm', res = 500)
 TenxPheatmap(data = integration_qc_data, metadata = c("seurat_clusters", "stage"), custom_order_column = "seurat_clusters",
               custom_order = cluster_order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters", assay = 'RNA')
