@@ -118,5 +118,17 @@ png(paste0(plot_path, "CheckIntegration.png"), width=60, height=20, units = 'cm'
 CheckIntegration(integration_qc_data)
 graphics.off()
 
+# Find differentially expressed genes and plot heatmap of top DE genes for each cluster
+markers <- FindAllMarkers(integration_qc_data, only.pos = T, logfc.threshold = 0.25, assay = "RNA")
+# get automated cluster order based on percentage of cells in adjacent stages
+cluster_order <- OrderCellClusters(seurat_object = integration_qc_data, col_to_sort = seurat_clusters, sort_by = stage)
+# Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
+top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_log2FC) %>% arrange(factor(cluster, levels = cluster_order))
+
+png(paste0(plot_path, 'HM.top15.DE.integration_qc_data.png'), height = 75, width = 100, units = 'cm', res = 500)
+TenxPheatmap(data = integration_qc_data, metadata = c("seurat_clusters", "stage"), custom_order_column = "seurat_clusters",
+              custom_order = cluster_order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters", assay = 'RNA')
+graphics.off()
+
 # Save RDS
 saveRDS(integration_qc_data, paste0(rds_path, "integration_qc_data.RDS"), compress = FALSE)

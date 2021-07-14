@@ -20,7 +20,7 @@ opt = getopt(spec)
 
     plot_path = "./output/NF-downstream_analysis_stacas/seurat/1_integration/plots/"
     rds_path = "./output/NF-downstream_analysis_stacas/seurat/1_integration/rds_files/"
-    data_path = "./output/NF-scRNAseq_alignment/cellranger/count/filtered_feature_bc_matrix"
+    data_path = "./output/NF-downstream_analysis/seurat/1_integration/rds_files/"
     ncores = 8
 
   } else if (opt$runtype == "nextflow"){
@@ -28,7 +28,7 @@ opt = getopt(spec)
 
     plot_path = "./plots/"
     rds_path = "./rds_files/"
-    data_path = "./input/filtered_feature_bc_matrix"
+    data_path = "./input/rds_files/"
     ncores = opt$cores
 
     # Multi-core when running from command line
@@ -44,38 +44,7 @@ opt = getopt(spec)
   dir.create(rds_path, recursive = T)
 }
 
-# Make dataframe with stage and replicate info extracted from path
-input <- list.dirs(data_path, recursive = FALSE, full.names = TRUE)
-input <- data.frame(sample = sub('.*/', '', input), run = str_split(sub('.*/', '', input), pattern = "-", simplify = T)[,2], path = input)
-
-# Init list of seurat objects then merge
-seurat_list <- apply(input, 1, function(x) CreateSeuratObject(counts= Read10X(data.dir = x[["path"]]), project = x[["sample"]]))
-names(seurat_list) <- input$sample
-seurat_all <- merge(x = seurat_list[[1]], y=seurat_list[-1], add.cell.ids = names(seurat_list), project = "chick.10x")
-
-# Add metadata col for seq run
-seurat_all@meta.data[["run"]] <- gsub(".*-", "", as.character(seurat_all@meta.data$orig.ident))
-seurat_all@meta.data[["stage"]] <- gsub("-.*", "", as.character(seurat_all@meta.data$orig.ident))
-
-# Convert metadata character cols to factors
-seurat_all@meta.data[sapply(seurat_all@meta.data, is.character)] <- lapply(seurat_all@meta.data[sapply(seurat_all@meta.data, is.character)], as.factor)
-
-# Remove genes expressed in fewer than 5 cells
-seurat_all <- DietSeurat(seurat_all, features = names(which(Matrix::rowSums(GetAssayData(seurat_all) > 0) >=5)))
-
-# Store mitochondrial percentage in object meta data
-seurat_all <- PercentageFeatureSet(seurat_all, pattern = "^MT-", col.name = "percent.mt")
-
-# Remove data which do not pass filter threshold
-seurat_all <- subset(seurat_all, subset = c(nFeature_RNA > 1000 & nFeature_RNA < 6000 & percent.mt < 15))
-
-
-#####################################################################################################
-#                           Integrate data from different 10x runs                                  #
-####################################################################################################
-
-# Split object by run and find integration points
-seurat_split <- SplitObject(seurat_all, split.by = "run")
+seurat_split <- readRDS(list.files(data_path, full.names = TRUE))
 
 # Log normalize data and find variable features
 seurat_split <- lapply(seurat_split, function(x) {
