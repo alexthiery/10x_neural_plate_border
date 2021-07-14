@@ -67,7 +67,7 @@ seurat_all@meta.data[sapply(seurat_all@meta.data, is.character)] <- lapply(seura
 # Make seurat gene annotation dataframe and save
 annotations <- read.table(paste0(input[1,'path'], '/features.tsv.gz'), col.names = c('Accession', 'Gene', 'V3', 'V4'))[,1:2]
 # make gene names unique in annotations dataframe in order to match seurat annotations
-annotations$Gene <- make.unique(temp$Gene)
+annotations$Gene <- make.unique(annotations$Gene)
 # Save annnotation dataframe
 write.table(annotations, 'seurat_annotations.csv', row.names=FALSE, quote=FALSE, sep=',')
 
