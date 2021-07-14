@@ -20,15 +20,16 @@ analysis_scripts.sex_filt           = file("$baseDir/bin/seurat/4_sex_filt.R", c
 analysis_scripts.cell_cycle         = file("$baseDir/bin/seurat/5_cell_cycle.R", checkIfExists: true)
 analysis_scripts.contamination_filt = file("$baseDir/bin/seurat/6_contamination_filt.R", checkIfExists: true)
 
+params.preprocessing_options        = [:]
 params.integration_options          = [:]
 params.integration_qc_options       = [:]
-params.poor_cluster_filt_options    = [:]
+// params.poor_cluster_filt_options    = [:]
 params.sex_filt_options             = [:]
 params.cell_cycle_options           = [:]
 params.contamination_filt_options   = [:]
 
 // Include Seurat R processes
-include {R as PREPROCESSING} from "$baseDir/modules/local/r/main"               addParams(        options: params.preprocessing_options,
+include {R as PREPROCESSING} from "$baseDir/modules/local/r/main"               addParams(      options: params.preprocessing_options,
                                                                                                 script: analysis_scripts.preprocessing )
 
 include {R as INTEGRATION} from "$baseDir/modules/local/r/main"               addParams(        options: params.integration_options,
