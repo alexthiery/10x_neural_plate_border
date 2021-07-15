@@ -164,6 +164,31 @@ ggplot(filter_qc, aes(x=variable, y=value, group=orig.ident)) +
 graphics.off()
 
 
+# Plot violins for nCount, nFeature and percent.mt at different filtering thresholds
+filter_qc <- lapply(rownames(filter_thresholds), function(condition){
+  seurat_all@meta.data %>%
+    filter(nFeature_RNA > filter_thresholds[condition,'gene_min']) %>%
+    filter(nFeature_RNA < filter_thresholds[condition,'gene_max']) %>%
+    filter(percent.mt < filter_thresholds[condition,'MT_max']) %>%
+    dplyr::select(orig.ident, nCount_RNA, nFeature_RNA, percent.mt) %>%
+    mutate(filter_condition = !!condition)
+})
+
+filter_qc <- do.call(rbind, filter_qc) %>%
+  mutate(filter_condition = factor(filter_condition, rownames(filter_thresholds))) %>%
+  mutate(nCount_RNA = ifelse(nCount_RNA >= 100000, 100000, nCount_RNA)) %>% # limit max RNA to 100k
+  reshape2::melt()
+
+png(paste0(plot_path, 'violins_filter_thresholds.png'), height = 18, width = 30, units = 'cm', res = 400)
+ggplot(filter_qc, aes(x = filter_condition, y = value, fill = orig.ident)) +
+  geom_violin() +
+  facet_wrap(~ variable, nrow = 3, strip.position = "left", scales = "free_y") +
+  theme_minimal() +
+  theme(axis.title.x=element_blank()) +
+  theme(axis.title.y=element_blank()) +
+  theme(strip.placement = "outside")
+graphics.off()
+
 ##########################################################################
 ############# Remove data which do not pass filter threshold #############
 
