@@ -20,9 +20,9 @@ if(params.debug) {log.info Headers.build_debug_param_summary(params, params.mono
 
 include {METADATA} from "$baseDir/subworkflows/metadata/main"
 
-include {SEURAT_FILTERING} from "$baseDir/subworkflows/seurat_filtering/main"           addParams(  integration_options:                modules['integration'],
+include {SEURAT_FILTERING} from "$baseDir/subworkflows/seurat_filtering/main"           addParams(  preprocessing_options:              modules['preprocessing'],
+                                                                                                    integration_options:                modules['integration'],
                                                                                                     integration_qc_options:             modules['integration_qc'],
-                                                                                                    poor_cluster_filt_options:          modules['poor_cluster_filt'],
                                                                                                     sex_filt_options:                   modules['sex_filt'],
                                                                                                     cell_cycle_options:                 modules['cell_cycle'],
                                                                                                     contamination_filt_options:         modules['contamination_filt'] )
