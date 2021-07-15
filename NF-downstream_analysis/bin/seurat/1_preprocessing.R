@@ -78,7 +78,7 @@ seurat_all <- DietSeurat(seurat_all, features = names(which(Matrix::rowSums(GetA
 seurat_all <- PercentageFeatureSet(seurat_all, pattern = "^MT-", col.name = "percent.mt")
 
 # make dataframe with different filtering parameters which can be put into a loop for carrying out downstream analysis
-filter_thresholds <- data.frame(gene_min = c(0, 750, 1000, 1500), gene_max = c(Inf, 7000, 6000, 5000), MT_max = c(Inf, 15, 15, 15), row.names = c("unfilt", "low", "med", "high"))
+filter_thresholds <- data.frame(gene_min = c(0, 1000, 1500, 2000), gene_max = c(Inf, 7000, 6500, 6000), MT_max = c(Inf, 15, 15, 15), row.names = c("unfilt", "low", "med", "high"))
 
 # Plot remaining cells following different filter thresholds
 filter_qc <- lapply(rownames(filter_thresholds), function(condition){
