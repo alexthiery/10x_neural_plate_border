@@ -204,7 +204,7 @@ pc_cutoff <- lapply(seurat_split, ElbowCutoff)
 # Run clustering and UMAP at different PCA cutoffs - save this output to compare the optimal number of PCs to be used
 for(run in names(seurat_split)){
   png(paste0(plot_path, "UMAP_PCA_comparison_run_", run, ".png"), width=40, height=30, units = 'cm', res = 200)
-  print(PCALevelComparison(seurat_split[[run]], PCA_levels = c(15, 20, 25, 30), cluster_res = 1))
+  print(PCALevelComparison(seurat_split[[run]], PCA_levels = c(pc_cutoff[[run]]-5, pc_cutoff[[run]], pc_cutoff[[run]]+5, pc_cutoff[[run]]+10), cluster_res = 1))
   graphics.off()
 }
 

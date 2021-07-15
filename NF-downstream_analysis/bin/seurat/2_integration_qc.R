@@ -77,7 +77,7 @@ pc_cutoff <- ElbowCutoff(integration_qc_data)
 
 # Run clustering and UMAP at different PCA cutoffs - save this output to compare the optimal number of PCs to be used
 png(paste0(plot_path, "UMAP_PCA_comparison.png"), width=40, height=30, units = 'cm', res = 200)
-PCALevelComparison(integration_qc_data, PCA_levels = c(10, 15, 20, 25), cluster_res = 1)
+PCALevelComparison(integration_qc_data, PCA_levels = c(pc_cutoff-5, pc_cutoff, pc_cutoff+5, pc_cutoff+10), cluster_res = 1)
 graphics.off()
 
 # Use clustering resolution = 0.5 for filtering
