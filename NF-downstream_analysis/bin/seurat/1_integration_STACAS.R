@@ -59,10 +59,13 @@ integration_data <- Run.STACAS(seurat_split, dims = 1:20, anchor.features = 500)
 # Integrate data
 integration_data <- IntegrateData(anchorset = integration_data, dims = 1:20, features.to.integrate = all_features)
 
-# specify that we will perform downstream analysis on the corrected data note that the original
-# unmodified data still resides in the 'RNA' assay
-DefaultAssay(integration_data) <- "integrated"
 
+# unmodified data still resides in the 'RNA' assay
+# Scale both RNA and integrated assays. RNA used for heatmaps and DEA, integration for clustering
+DefaultAssay(integration_data) <- "RNA"
+integration_data <- ScaleData(integration_data, features = rownames(integration_data), vars.to.regress = "percent.mt")
+
+DefaultAssay(integration_data) <- "integrated"
 integration_data <- ScaleData(integration_data, features = rownames(integration_data), vars.to.regress = "percent.mt")
 
 # Save RDS after integration
