@@ -33,6 +33,10 @@ include {SEURAT_STAGE_PROCESS} from "$baseDir/subworkflows/seurat_stage_process/
                                                                                                     stage_cluster_options:              modules['stage_cluster'],
                                                                                                     stage_gene_modules_options:         modules['stage_gene_modules'])
 
+include {SEURAT_RUN_PROCESS} from "$baseDir/subworkflows/seurat_run_process/main"   addParams(  run_split_options:                modules['run_split'])
+                                                                                                    // run_cluster_options:              modules['run_cluster'],
+                                                                                                    // run_gene_modules_options:         modules['run_gene_modules'])
+                                                                                                    
 include {MERGE_LOOM} from "$baseDir/modules/local/merge_loom/main"                      addParams(  options:                            modules['merge_loom'] )
 
 include {SEURAT_SCVELO} from "$baseDir/subworkflows/seurat_scvelo/main"                 addParams(  seurat_intersect_loom_options:      modules['seurat_intersect_loom'],
@@ -62,6 +66,8 @@ workflow {
         SEURAT_FILTERING( ch_scRNAseq_counts )
         
         SEURAT_STAGE_PROCESS( SEURAT_FILTERING.out.contamination_filt_out )
+
+        SEURAT_RUN_PROCESS( SEURAT_FILTERING.out.contamination_filt_out )
 
         EXPLORATORY_ANALYSIS( SEURAT_FILTERING.out.contamination_filt_out )
         
