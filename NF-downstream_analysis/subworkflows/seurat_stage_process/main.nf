@@ -7,7 +7,7 @@
 --------------------------------------------------------------------------------------*/
 
 def analysis_scripts                    = [:]
-analysis_scripts.stage_split            = file("$baseDir/bin/seurat/seurat_split.R", checkIfExists: true)
+analysis_scripts.stage_split            = file("$baseDir/bin/seurat/split_seurat.R", checkIfExists: true)
 analysis_scripts.stage_cluster          = file("$baseDir/bin/seurat/stage_cluster.R", checkIfExists: true)
 analysis_scripts.stage_gene_modules     = file("$baseDir/bin/other/stage_gene_modules.R", checkIfExists: true)
 
