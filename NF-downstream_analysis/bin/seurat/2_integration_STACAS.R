@@ -18,9 +18,9 @@ opt = getopt(spec)
   if(length(commandArgs(trailingOnly = TRUE)) == 0){
     cat('No command line arguments provided, paths are set for running interactively in Rstudio server\n')
 
-    plot_path = "./output/NF-downstream_analysis_stacas/seurat/1_integration/plots/"
-    rds_path = "./output/NF-downstream_analysis_stacas/seurat/1_integration/rds_files/"
-    data_path = "./output/NF-downstream_analysis/seurat/1_integration/rds_files/"
+    plot_path = "./output/NF-downstream_analysis_stacas/seurat/2_integration/plots/"
+    rds_path = "./output/NF-downstream_analysis_stacas/seurat/2_integration/rds_files/"
+    data_path = "./output/NF-downstream_analysis/seurat/1_preprocessing/rds_files/"
     ncores = 8
 
   } else if (opt$runtype == "nextflow"){

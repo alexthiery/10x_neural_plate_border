@@ -26,7 +26,7 @@ opt = getopt(spec)
 
     plot_path = "./output/NF-downstream_analysis/seurat/4_sex_filt/plots/"
     rds_path = "./output/NF-downstream_analysis/seurat/4_sex_filt/rds_files/"
-    data_path = "./output/NF-downstream_analysis/seurat/3_poor_cluster_filt/rds_files/"
+    data_path = "./output/NF-downstream_analysis/seurat/3_integration_qc/rds_files/"
     
     ncores = 8
 
