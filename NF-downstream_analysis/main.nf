@@ -20,19 +20,24 @@ if(params.debug) {log.info Headers.build_debug_param_summary(params, params.mono
 
 include {METADATA} from "$baseDir/subworkflows/metadata/main"
 
-include {SEURAT_FILTERING} from "$baseDir/subworkflows/seurat_filtering/main"           addParams(  integration_options:                modules['integration'],
+include {SEURAT_FILTERING} from "$baseDir/subworkflows/seurat_filtering/main"           addParams(  preprocessing_options:              modules['preprocessing'],
+                                                                                                    integration_options:                modules['integration'],
                                                                                                     integration_qc_options:             modules['integration_qc'],
-                                                                                                    poor_cluster_filt_options:          modules['poor_cluster_filt'],
                                                                                                     sex_filt_options:                   modules['sex_filt'],
                                                                                                     cell_cycle_options:                 modules['cell_cycle'],
                                                                                                     contamination_filt_options:         modules['contamination_filt'] )
 
-include {EXPLORATORY_ANALYSIS} from "$baseDir/subworkflows/exploratory_analysis/main"   addParams(  gene_module_options:                modules['gene_modules'] )
+include {EXPLORATORY_ANALYSIS} from "$baseDir/subworkflows/exploratory_analysis/main"   addParams(  gene_module_options:                modules['gene_modules'],
+                                                                                                    scatterplot3d_options: modules['scatterplot3'])
 
 include {SEURAT_STAGE_PROCESS} from "$baseDir/subworkflows/seurat_stage_process/main"   addParams(  stage_split_options:                modules['stage_split'],
                                                                                                     stage_cluster_options:              modules['stage_cluster'],
                                                                                                     stage_gene_modules_options:         modules['stage_gene_modules'])
 
+include {SEURAT_RUN_PROCESS} from "$baseDir/subworkflows/seurat_run_process/main"   addParams(  run_split_options:                modules['run_split'])
+                                                                                                    // run_cluster_options:              modules['run_cluster'],
+                                                                                                    // run_gene_modules_options:         modules['run_gene_modules'])
+                                                                                                    
 include {MERGE_LOOM} from "$baseDir/modules/local/merge_loom/main"                      addParams(  options:                            modules['merge_loom'] )
 
 include {SEURAT_SCVELO} from "$baseDir/subworkflows/seurat_scvelo/main"                 addParams(  seurat_intersect_loom_options:      modules['seurat_intersect_loom'],
@@ -62,6 +67,8 @@ workflow {
         SEURAT_FILTERING( ch_scRNAseq_counts )
         
         SEURAT_STAGE_PROCESS( SEURAT_FILTERING.out.contamination_filt_out )
+
+        SEURAT_RUN_PROCESS( SEURAT_FILTERING.out.contamination_filt_out )
 
         EXPLORATORY_ANALYSIS( SEURAT_FILTERING.out.contamination_filt_out )
         

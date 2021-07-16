@@ -26,7 +26,7 @@ opt = getopt(spec)
 
     plot_path = "./output/NF-downstream_analysis/seurat/4_sex_filt/plots/"
     rds_path = "./output/NF-downstream_analysis/seurat/4_sex_filt/rds_files/"
-    data_path = "./output/NF-downstream_analysis/seurat/3_poor_cluster_filt/rds_files/"
+    data_path = "./output/NF-downstream_analysis/seurat/3_integration_qc/rds_files/"
     
     ncores = 8
 
@@ -165,7 +165,7 @@ graphics.off()
 pc_cutoff <- ElbowCutoff(sex_filt_data)
 
 png(paste0(plot_path, "UMAP_PCA_comparison.png"), width=40, height=30, units = 'cm', res = 200)
-PCALevelComparison(sex_filt_data, PCA_levels = c(10, 15, 20, 25), cluster_res = 0.5)
+PCALevelComparison(sex_filt_data, PCA_levels = c(pc_cutoff-5, pc_cutoff, pc_cutoff+5, pc_cutoff+10), cluster_res = 0.5)
 graphics.off()
 
 sex_filt_data <- FindNeighbors(sex_filt_data, dims = 1:pc_cutoff, verbose = FALSE)

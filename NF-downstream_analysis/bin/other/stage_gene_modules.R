@@ -89,7 +89,7 @@ if(length(unique(seurat_data$run)) > 1){metadata <- c("seurat_clusters", "run")}
 ncell = ncol(seurat_data)
 ngene = length(unlist(antler_data$gene_modules$lists$unbiasedGMs$content))
 
-png(paste0(plot_path, 'unbiasedGMs'), height = round(ngene/15), width = round(ncell/50), units = 'cm', res = 800)
+png(paste0(plot_path, 'unbiasedGMs.png'), height = round(ngene/15), width = round(ncell/50), units = 'cm', res = 400)
 GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs$content,
                    show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = "seurat_clusters")
 graphics.off()

@@ -12,29 +12,29 @@ if(params.integration && params.integration != 'Seurat' && params.integration !=
 }
 
 def analysis_scripts = [:]
-analysis_scripts.integration        = params.integration == 'Seurat' ? file("$baseDir/bin/seurat/1_integration.R", checkIfExists: true) : file("$baseDir/bin/seurat/1_integration_STACAS.R", checkIfExists: true)
-analysis_scripts.integration_qc     = file("$baseDir/bin/seurat/2_integration_qc.R", checkIfExists: true)
-analysis_scripts.poor_cluster_filt  = file("$baseDir/bin/seurat/3_poor_cluster_filt.R", checkIfExists: true)
+analysis_scripts.preprocessing     = file("$baseDir/bin/seurat/1_preprocessing.R", checkIfExists: true)
+analysis_scripts.integration        = params.integration == 'Seurat' ? file("$baseDir/bin/seurat/2_integration.R", checkIfExists: true) : file("$baseDir/bin/seurat/2_integration_STACAS.R", checkIfExists: true)
+analysis_scripts.integration_qc     = file("$baseDir/bin/seurat/3_integration_qc.R", checkIfExists: true)
 analysis_scripts.sex_filt           = file("$baseDir/bin/seurat/4_sex_filt.R", checkIfExists: true)
 analysis_scripts.cell_cycle         = file("$baseDir/bin/seurat/5_cell_cycle.R", checkIfExists: true)
 analysis_scripts.contamination_filt = file("$baseDir/bin/seurat/6_contamination_filt.R", checkIfExists: true)
 
+params.preprocessing_options        = [:]
 params.integration_options          = [:]
 params.integration_qc_options       = [:]
-params.poor_cluster_filt_options    = [:]
 params.sex_filt_options             = [:]
 params.cell_cycle_options           = [:]
 params.contamination_filt_options   = [:]
 
 // Include Seurat R processes
+include {R as PREPROCESSING} from "$baseDir/modules/local/r/main"               addParams(      options: params.preprocessing_options,
+                                                                                                script: analysis_scripts.preprocessing )
+
 include {R as INTEGRATION} from "$baseDir/modules/local/r/main"               addParams(        options: params.integration_options,
                                                                                                 script: analysis_scripts.integration )
 
 include {R as INTEGRATION_QC} from "$baseDir/modules/local/r/main"            addParams(        options: params.integration_qc_options,
                                                                                                 script: analysis_scripts.integration_qc )
-
-include {R as POOR_CLUSTER_FILT} from "$baseDir/modules/local/r/main"         addParams(        options: params.poor_cluster_filt_options,
-                                                                                                script: analysis_scripts.poor_cluster_filt )
 
 include {R as SEX_FILT} from "$baseDir/modules/local/r/main"                  addParams(        options: params.sex_filt_options,
                                                                                                 script: analysis_scripts.sex_filt )
@@ -63,19 +63,19 @@ workflow SEURAT_FILTERING {
 
     main:
     // Run Seurat pipeline
-    INTEGRATION( cellranger_filtered_feature_bc_matrix )
+    PREPROCESSING( cellranger_filtered_feature_bc_matrix )
+    INTEGRATION( PREPROCESSING.out )
     INTEGRATION_QC( INTEGRATION.out )
-    POOR_CLUSTER_FILT( INTEGRATION_QC.out )
-    SEX_FILT( POOR_CLUSTER_FILT.out )
+    SEX_FILT( INTEGRATION_QC.out )
     CELL_CYCLE( SEX_FILT.out )
     CONTAMINATION_FILT( CELL_CYCLE.out )
 
     
     emit:
-    annotations                 = INTEGRATION.out.map{[it[0], it[1].findAll{it =~ /seurat_annotations.csv/}[0]]} //Channel: [[meta], annotations]
+    preprocessing_out           = PREPROCESSING.out //Channel: [[meta], [output]]
+    annotations                 = PREPROCESSING.out.map{[it[0], it[1].findAll{it =~ /seurat_annotations.csv/}[0]]} //Channel: [[meta], annotations]
     integration_out             = INTEGRATION.out //Channel: [[meta], [output]]
     integration_qc_out          = INTEGRATION_QC.out //Channel: [[meta], [output]]
-    poor_cluster_filt_out       = POOR_CLUSTER_FILT.out //Channel: [[meta], [output]]
     sex_filt_out                = SEX_FILT.out //Channel: [[meta], [output]]
     cell_cycle_out              = CELL_CYCLE.out //Channel: [[meta], [output]]
     contamination_filt_out      = CONTAMINATION_FILT.out //Channel: [[meta], [output]]

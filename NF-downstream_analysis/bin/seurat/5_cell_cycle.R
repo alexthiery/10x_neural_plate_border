@@ -82,7 +82,7 @@ graphics.off()
 pc_cutoff <- ElbowCutoff(cell_cycle_data)
 
 png(paste0(plot_path, "UMAP_PCA_comparison.png"), width=40, height=30, units = 'cm', res = 200)
-PCALevelComparison(cell_cycle_data, PCA_levels = c(10, 15, 20, 25), cluster_res = 0.5)
+PCALevelComparison(cell_cycle_data, PCA_levels = c(pc_cutoff-5, pc_cutoff, pc_cutoff+5, pc_cutoff+10), cluster_res = 0.5)
 graphics.off()
 
 # Use PCA=15 as elbow plot is relatively stable across stages
