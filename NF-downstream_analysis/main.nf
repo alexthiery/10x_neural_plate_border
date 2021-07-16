@@ -27,7 +27,8 @@ include {SEURAT_FILTERING} from "$baseDir/subworkflows/seurat_filtering/main"   
                                                                                                     cell_cycle_options:                 modules['cell_cycle'],
                                                                                                     contamination_filt_options:         modules['contamination_filt'] )
 
-include {EXPLORATORY_ANALYSIS} from "$baseDir/subworkflows/exploratory_analysis/main"   addParams(  gene_module_options:                modules['gene_modules'] )
+include {EXPLORATORY_ANALYSIS} from "$baseDir/subworkflows/exploratory_analysis/main"   addParams(  gene_module_options:                modules['gene_modules'],
+                                                                                                    scatterplot3d_options: modules['scatterplot3'])
 
 include {SEURAT_STAGE_PROCESS} from "$baseDir/subworkflows/seurat_stage_process/main"   addParams(  stage_split_options:                modules['stage_split'],
                                                                                                     stage_cluster_options:              modules['stage_cluster'],

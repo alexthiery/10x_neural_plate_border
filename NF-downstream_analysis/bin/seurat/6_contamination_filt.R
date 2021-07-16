@@ -126,7 +126,7 @@ png(paste0(plot_path, "ElbowCutoff.png"), width=30, height=20, units = 'cm', res
 ElbowCutoff(contamination_filt_data, return = 'plot')
 graphics.off()
 
-# over-ride automatic pc detection in order to increase variation included in umap
+# automatically determine elbow
 pc_cutoff <- ElbowCutoff(contamination_filt_data)
 
 png(paste0(plot_path, "UMAP_PCA_comparison.png"), width=40, height=30, units = 'cm', res = 200)
