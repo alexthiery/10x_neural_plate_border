@@ -44,7 +44,7 @@ workflow EXPLORATORY_ANALYSIS {
     // Run Seurat pipeline
     GENE_MODULES( seurat_out )
     CELL_STATE_CLASSIFICATION( seurat_out )
-    SCATTERPLOT3D(CELL_STATE_CLASSIFICATION.out)
+    SCATTERPLOT3D(seurat_out)
     
     emit:
     gene_modules_out = GENE_MODULES.out //Channel: [[meta], [output]]
