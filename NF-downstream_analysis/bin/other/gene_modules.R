@@ -107,7 +107,7 @@ ngene = length(unlist(antler_data$gene_modules$lists$unbiasedGMs$content))
 
 metadata = c("stage", "seurat_clusters", "run")
 
-png(paste0(plot_path, 'unbiasedGMs.png'), height = round(ngene/8), width = 75, units = 'cm', res = 600)
+png(paste0(plot_path, 'unbiasedGMs.png'), height = round(ngene/8), width = 75, units = 'cm', res = 400)
 GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs$content,
                    show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15)
 graphics.off()
