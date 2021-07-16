@@ -9,7 +9,7 @@
 def analysis_scripts                            = [:]
 analysis_scripts.gene_modules                   = file("$baseDir/bin/other/gene_modules.R", checkIfExists: true)
 analysis_scripts.cell_state_classification      = file("$baseDir/bin/seurat/cell_state_classification.R", checkIfExists: true)
-analysis_scripts.scatterplot3                   = file("$baseDir/bin/seurat/scatterplot3d.R", checkIfExists: true)
+analysis_scripts.scatterplot3                   = file("$baseDir/bin/other/scatterplot3d.R", checkIfExists: true)
 
 params.gene_module_options                      = [:]
 params.cell_state_classification_options        = [:]
