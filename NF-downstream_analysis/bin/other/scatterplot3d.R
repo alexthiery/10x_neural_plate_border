@@ -49,25 +49,22 @@ plot_data <- FetchData(object = seurat_data, vars = c("UMAP_1", "UMAP_2", "UMAP_
 plot_data <- plot_data %>% arrange(seurat_clusters)
 
 plot_colours <- scHelper::ggPlotColours(n = length(unique(plot_data$seurat_clusters)))[
-  as.numeric(lot_data$seurat_clusters)]
+  as.numeric(plot_data$seurat_clusters)]
 
 # plot scatterplots in 3 diff orientations
-par(mai = c(0.5, 0.5, 0.5, 0.5))
+par(mar = c(0.1, 0.1, 0.1, 0.1))
 
-png(filename = paste0(plot_path, "scatterplot3d_1.png"), width = 8, height = 6, units = "in", res = 300
+png(filename = paste0(plot_path, "scatterplot3d_1.png"), width = 8, height = 6, units = "in", res = 300)
 scatterplot3d(x = plot_data$UMAP_1, y = plot_data$UMAP_2, z = plot_data$UMAP_3,
-              color=viridis(20)[plot_data$seurat_clusters],
-              cex.symbols = 1, pch = 19, angle = -30)
+              color=plot_colours, cex.symbols = 0.3, pch = 19, angle = -30)
 graphics.off()
 
-png(filename = paste0(plot_path, "scatterplot3d_2.png"), width = 8, height = 6, units = "in", res = 300
+png(filename = paste0(plot_path, "scatterplot3d_2.png"), width = 8, height = 6, units = "in", res = 300)
 scatterplot3d(x = plot_data$UMAP_2, y = plot_data$UMAP_3, z = plot_data$UMAP_1,
-              color=viridis(20)[plot_data$seurat_clusters],
-              cex.symbols = 1, pch = 19, angle = -30)
+              color=plot_colours, cex.symbols = 0.3, pch = 19, angle = -30)
 graphics.off()
 
-png(filename = paste0(plot_path, "scatterplot3d_2.png"), width = 8, height = 6, units = "in", res = 300
+png(filename = paste0(plot_path, "scatterplot3d_2.png"), width = 8, height = 6, units = "in", res = 300)
 scatterplot3d(x = plot_data$UMAP_3, y = plot_data$UMAP_1, z = plot_data$UMAP_2,
-              color=viridis(20)[plot_data$seurat_clusters],
-              cex.symbols = 1, pch = 19, angle = -30)
+              color=plot_colours, cex.symbols = 0.3, pch = 19, angle = -30)
 graphics.off()
