@@ -1,6 +1,7 @@
 #!/usr/bin/env Rscript
 
-# Load packages
+# Define arguments for Rscript
+library(getopt)
 library(Seurat)
 library(scHelper)
 library(tidyverse)
