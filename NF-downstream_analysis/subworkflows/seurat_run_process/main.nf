@@ -8,21 +8,21 @@
 
 def analysis_scripts                    = [:]
 analysis_scripts.run_split            = file("$baseDir/bin/seurat/split_seurat.R", checkIfExists: true)
-// analysis_scripts.run_cluster          = file("$baseDir/bin/seurat/run_cluster.R", checkIfExists: true)
-// analysis_scripts.run_gene_modules     = file("$baseDir/bin/other/run_gene_modules.R", checkIfExists: true)
+analysis_scripts.run_cluster          = file("$baseDir/bin/seurat/stage_cluster.R", checkIfExists: true)
+analysis_scripts.run_gene_modules     = file("$baseDir/bin/other/stage_gene_modules.R", checkIfExists: true)
 
 params.run_split_options              = [:]
-// params.run_cluster_options            = [:]
-// params.run_gene_modules_options       = [:]
+params.run_cluster_options            = [:]
+params.run_gene_modules_options       = [:]
 
 // Include Seurat R processes
 include {R as RUN_SPLIT} from "$baseDir/modules/local/r/main"                 addParams(  options: params.run_split_options,
                                                                                             script: analysis_scripts.run_split )
 
-// include {R as RUN_CLUSTER} from "$baseDir/modules/local/r/main"               addParams(  options: params.run_cluster_options,
+include {R as RUN_CLUSTER} from "$baseDir/modules/local/r/main"               addParams(  options: params.run_cluster_options,
 //                                                                                             script: analysis_scripts.run_cluster )
 
-// include {R as RUN_GENE_MODULES} from "$baseDir/modules/local/r/main"          addParams(  options: params.run_gene_modules_options,
+include {R as RUN_GENE_MODULES} from "$baseDir/modules/local/r/main"          addParams(  options: params.run_gene_modules_options,
 //                                                                                             script: analysis_scripts.run_gene_modules )
 /*-----------------------------------------------------------------------------------------------------------------------------
 Log
@@ -49,9 +49,9 @@ workflow SEURAT_RUN_PROCESS {
         .map { row -> [[sample_id:row.name.replaceFirst(~/\.[^\.]+$/, '')], row] }
         .set { ch_split_run }
 
-    // RUN_CLUSTER( ch_split_run )
+    RUN_CLUSTER( ch_split_run )
 
-    // RUN_GENE_MODULES( RUN_CLUSTER.out )
+    RUN_GENE_MODULES( RUN_CLUSTER.out )
 
     // emit:
     // run_cluster_out   = RUN_CLUSTER.out //Channel: [[meta], [output]]
