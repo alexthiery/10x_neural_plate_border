@@ -65,7 +65,7 @@ scatterplot3d(x = plot_data$UMAP_2, y = plot_data$UMAP_3, z = plot_data$UMAP_1,
               color=plot_colours, cex.symbols = 0.3, pch = 19, angle = -30)
 graphics.off()
 
-png(filename = paste0(plot_path, "scatterplot3d_2.png"), width = 8, height = 6, units = "in", res = 300)
+png(filename = paste0(plot_path, "scatterplot3d_3.png"), width = 8, height = 6, units = "in", res = 300)
 scatterplot3d(x = plot_data$UMAP_3, y = plot_data$UMAP_1, z = plot_data$UMAP_2,
               color=plot_colours, cex.symbols = 0.3, pch = 19, angle = -30)
 graphics.off()
