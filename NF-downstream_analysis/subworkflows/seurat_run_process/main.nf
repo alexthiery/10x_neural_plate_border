@@ -16,14 +16,14 @@ params.run_cluster_options            = [:]
 params.run_gene_modules_options       = [:]
 
 // Include Seurat R processes
-include {R as RUN_SPLIT} from "$baseDir/modules/local/r/main"                 addParams(  options: params.run_split_options,
+include {R as RUN_SPLIT} from "$baseDir/modules/local/r/main"                 addParams(    options: params.run_split_options,
                                                                                             script: analysis_scripts.run_split )
 
-include {R as RUN_CLUSTER} from "$baseDir/modules/local/r/main"               addParams(  options: params.run_cluster_options,
-//                                                                                             script: analysis_scripts.run_cluster )
+include {R as RUN_CLUSTER} from "$baseDir/modules/local/r/main"               addParams(    options: params.run_cluster_options,
+                                                                                            script: analysis_scripts.run_cluster )
 
-include {R as RUN_GENE_MODULES} from "$baseDir/modules/local/r/main"          addParams(  options: params.run_gene_modules_options,
-//                                                                                             script: analysis_scripts.run_gene_modules )
+include {R as RUN_GENE_MODULES} from "$baseDir/modules/local/r/main"          addParams(    options: params.run_gene_modules_options,
+                                                                                            script: analysis_scripts.run_gene_modules )
 /*-----------------------------------------------------------------------------------------------------------------------------
 Log
 -------------------------------------------------------------------------------------------------------------------------------*/
