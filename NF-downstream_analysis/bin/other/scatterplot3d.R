@@ -32,7 +32,6 @@ opt = getopt(spec)
   }
 
   dir.create(plot_path, recursive = T)
-  dir.create(rds_path, recursive = T)
 }
 
 seurat_data <- readRDS(list.files(data_path, full.names = TRUE))
