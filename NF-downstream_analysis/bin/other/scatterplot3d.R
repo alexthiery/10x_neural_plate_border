@@ -33,39 +33,38 @@ opt = getopt(spec)
   dir.create(plot_path, recursive = T)
   dir.create(rds_path, recursive = T)
 }
-print(list.files(data_path, full.names = TRUE))
 
 seurat_data <- readRDS(list.files(data_path, full.names = TRUE))
 
-# seurat_data <- RunPCA(object = seurat_data, verbose = FALSE)
-# # automatically determine elbow
-# pc_cutoff <- ElbowCutoff(seurat_data)
-# seurat_data <- FindNeighbors(seurat_data, dims = 1:pc_cutoff, verbose = FALSE)
-# seurat_data <- RunUMAP(seurat_data, dims = 1:pc_cutoff, verbose = FALSE, n.components = 3L)
+seurat_data <- RunPCA(object = seurat_data, verbose = FALSE)
+# automatically determine elbow
+pc_cutoff <- ElbowCutoff(seurat_data)
+seurat_data <- FindNeighbors(seurat_data, dims = 1:pc_cutoff, verbose = FALSE)
+seurat_data <- RunUMAP(seurat_data, dims = 1:pc_cutoff, verbose = FALSE, n.components = 3L)
 
-# # extract dims for plotting
-# plot_data <- FetchData(object = seurat_data, vars = c("UMAP_1", "UMAP_2", "UMAP_3", "seurat_clusters")) %>%
-#   rownames_to_column(var = "cell_id")
+# extract dims for plotting
+plot_data <- FetchData(object = seurat_data, vars = c("UMAP_1", "UMAP_2", "UMAP_3", "seurat_clusters")) %>%
+  rownames_to_column(var = "cell_id")
 
-# plot_data <- plot_data %>% arrange(seurat_clusters)
+plot_data <- plot_data %>% arrange(seurat_clusters)
 
-# plot_colours <- scHelper::ggPlotColours(n = length(unique(plot_data$seurat_clusters)))[
-#   as.numeric(plot_data$seurat_clusters)]
+plot_colours <- scHelper::ggPlotColours(n = length(unique(plot_data$seurat_clusters)))[
+  as.numeric(plot_data$seurat_clusters)]
 
-# # plot scatterplots in 3 diff orientations
-# par(mar = c(0.1, 0.1, 0.1, 0.1))
+# plot scatterplots in 3 diff orientations
+par(mar = c(0.1, 0.1, 0.1, 0.1))
 
-# png(filename = paste0(plot_path, "scatterplot3d_1.png"), width = 8, height = 6, units = "in", res = 300)
-# scatterplot3d(x = plot_data$UMAP_1, y = plot_data$UMAP_2, z = plot_data$UMAP_3,
-#               color=plot_colours, cex.symbols = 0.3, pch = 19, angle = -30)
-# graphics.off()
+png(filename = paste0(plot_path, "scatterplot3d_1.png"), width = 8, height = 6, units = "in", res = 300)
+scatterplot3d(x = plot_data$UMAP_1, y = plot_data$UMAP_2, z = plot_data$UMAP_3,
+              color=plot_colours, cex.symbols = 0.3, pch = 19, angle = -30)
+graphics.off()
 
-# png(filename = paste0(plot_path, "scatterplot3d_2.png"), width = 8, height = 6, units = "in", res = 300)
-# scatterplot3d(x = plot_data$UMAP_2, y = plot_data$UMAP_3, z = plot_data$UMAP_1,
-#               color=plot_colours, cex.symbols = 0.3, pch = 19, angle = -30)
-# graphics.off()
+png(filename = paste0(plot_path, "scatterplot3d_2.png"), width = 8, height = 6, units = "in", res = 300)
+scatterplot3d(x = plot_data$UMAP_2, y = plot_data$UMAP_3, z = plot_data$UMAP_1,
+              color=plot_colours, cex.symbols = 0.3, pch = 19, angle = -30)
+graphics.off()
 
-# png(filename = paste0(plot_path, "scatterplot3d_2.png"), width = 8, height = 6, units = "in", res = 300)
-# scatterplot3d(x = plot_data$UMAP_3, y = plot_data$UMAP_1, z = plot_data$UMAP_2,
-#               color=plot_colours, cex.symbols = 0.3, pch = 19, angle = -30)
-# graphics.off()
+png(filename = paste0(plot_path, "scatterplot3d_2.png"), width = 8, height = 6, units = "in", res = 300)
+scatterplot3d(x = plot_data$UMAP_3, y = plot_data$UMAP_1, z = plot_data$UMAP_2,
+              color=plot_colours, cex.symbols = 0.3, pch = 19, angle = -30)
+graphics.off()
