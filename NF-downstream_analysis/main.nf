@@ -35,7 +35,7 @@ include {SEURAT_STAGE_PROCESS} from "$baseDir/subworkflows/seurat_stage_process/
                                                                                                     stage_cluster_options:              modules['stage_cluster'],
                                                                                                     stage_gene_modules_options:         modules['stage_gene_modules'])
 
-include {SEURAT_RUN_PROCESS} from "$baseDir/subworkflows/seurat_run_process/main"   addParams(  run_split_options:                modules['run_split']
+include {SEURAT_RUN_PROCESS} from "$baseDir/subworkflows/seurat_run_process/main"   addParams(  run_split_options:                modules['run_split'],
                                                                                                     run_cluster_options:              modules['run_cluster'],
                                                                                                     run_gene_modules_options:         modules['run_gene_modules'])
                                                                                                     
