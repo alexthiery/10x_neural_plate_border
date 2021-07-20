@@ -72,7 +72,7 @@ contamination_filt_data <- AverageGeneModules(seurat_obj = contamination_filt_da
 
 # Plot distribution of contamination gene modules
 png(paste0(plot_path, "ContaminationClustersBoxPLot.png"), width = 40, height = 30, units = "cm", res = 200)
-PlotContamination(seurat_obj = contamination_filt_data, gene_list = genes, quantiles = c(0.1, 0.90), ncol = 2)
+PlotCelltype(seurat_obj = contamination_filt_data, gene_list = genes, quantiles = c(0.1, 0.90), ncol = 2)
 graphics.off()
 
 contaminating_clusters <- IdentifyOutliers(seurat_obj = contamination_filt_data, metrics = names(genes), quantiles = c(0.1, 0.90), intersect_metrics = FALSE)
