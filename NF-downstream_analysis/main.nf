@@ -28,15 +28,16 @@ include {SEURAT_FILTERING} from "$baseDir/subworkflows/seurat_filtering/main"   
                                                                                                     contamination_filt_options:         modules['contamination_filt'] )
 
 include {EXPLORATORY_ANALYSIS} from "$baseDir/subworkflows/exploratory_analysis/main"   addParams(  gene_module_options:                modules['gene_modules'],
-                                                                                                    scatterplot3d_options: modules['scatterplot3'])
+                                                                                        cell_state_classification_options: modules['cell_state_classification'],
+                                                                                        scatterplot3d_options: modules['scatterplot3d'])
 
 include {SEURAT_STAGE_PROCESS} from "$baseDir/subworkflows/seurat_stage_process/main"   addParams(  stage_split_options:                modules['stage_split'],
                                                                                                     stage_cluster_options:              modules['stage_cluster'],
                                                                                                     stage_gene_modules_options:         modules['stage_gene_modules'])
 
-include {SEURAT_RUN_PROCESS} from "$baseDir/subworkflows/seurat_run_process/main"   addParams(  run_split_options:                modules['run_split'])
-                                                                                                    // run_cluster_options:              modules['run_cluster'],
-                                                                                                    // run_gene_modules_options:         modules['run_gene_modules'])
+include {SEURAT_RUN_PROCESS} from "$baseDir/subworkflows/seurat_run_process/main"   addParams(  run_split_options:                modules['run_split'],
+                                                                                                    run_cluster_options:              modules['run_cluster'],
+                                                                                                    run_gene_modules_options:         modules['run_gene_modules'])
                                                                                                     
 include {MERGE_LOOM} from "$baseDir/modules/local/merge_loom/main"                      addParams(  options:                            modules['merge_loom'] )
 
