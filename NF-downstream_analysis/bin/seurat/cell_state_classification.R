@@ -60,35 +60,43 @@ DefaultAssay(seurat_data) <- "RNA"
 #                                      Cell state classification                                    #
 ########################################################################################################
 
-###################### Nerual crest and placode cell type identification ###################### 
-plac_nc_genes <- c(
-  # delaminating NC
-  "ETS1", "SOX10", "SOX8", "LMO4",  "TFAP2B", "SOX9",
-  # NPB
-  "DRAXIN", "TFAP2A", "MSX1", "CSRNP1", "PAX7", "BMP5", "MSX2",
-  # NC
-  "WNT6",
-  # Placodes
-  "PITX1", "PITX2", "ZNF385C",  "SIX1", "EYA2", "DLX6", "HOMER2", 'SIX3', 'SHISA2',
-  # Epidermis
-  "KRT18", "KRT7", "GATA2"
-)
+cell_type_markers <- list(delaminating_nc = c("ETS1", "SOX10", "SOX8", "TFAP2B", "FOXD3"),
+     early_nc = c("MSX1", "CSRNP1", "PAX7", "BMP5"),
+     placodes = c("SIX1", "EYA2"),
+     epidermis = c("KRT18", "KRT7"),
+     hindbrain = c("GBX2", "HOXA2", "HOXA3", "HOXB2", "KROX20", "SOX2", "SOX21"),
+     midbrain = c("WNT4", "PAX2", "FGF8", "WNT1", "SOX2", "SOX21"),
+     forebrain = c("PAX6", "OLIG2" , "SIX3", "SOX2", "SOX21"),
+     ventral_floor = c("SHH", "NKX2-2", "FOXA2"))
 
-ncol = ceiling((length(plac_nc_genes)+1)/8)+1
-nrow = ceiling((length(plac_nc_genes)+1)/ncol)
 
-# plot expression of NC and placodal genes
-png(paste0(plot_path, 'multi_feature_plac_nc.png'), width = ncol*10, height = nrow*10, units = "cm", res = 200)
-MultiFeaturePlot(seurat_data, plot_stage = TRUE, stage_col = "stage", gene_list = plac_nc_genes, n_col = ncol, label = '')
+# Calculate average module expression for contamination gene list
+seurat_data <- AverageGeneModules(seurat_obj = seurat_data, gene_list = cell_type_markers)
+
+# Plot distribution of contamination gene modules
+png(paste0(plot_path, "CelltypeClustersBoxPLot.png"), width = 40, height = 30, units = "cm", res = 200)
+PlotCelltype(seurat_obj = seurat_data, gene_list = cell_type_markers, quantiles = 0.80, ncol = 2)
+graphics.off()
+
+seurat_data <- ClusterClassification(seurat_obj = seurat_data, metrics = names(cell_type_markers), quantile = 0.9)
+
+# Plot UMAP for cell type annotations
+png(paste0(plot_path, "scHelperCelltypeUMAP.png"), width=40, height=20, units = 'cm', res = 200)
+DimPlot(seurat_data, group.by = "scHelper_cell_type")
 graphics.off()
 
 
-# add neural crest and placodal cell types to metadata
-plac_nc_clusters <- c("Delaminating NC" = 14, "NC Progenitors" = 12, "Epi/Plac Progenitors" = 0, "Placodes" = 16, "Epidermis" = 15)
+# Plot multi feature plot
+nc_genes = cell_type_markers[c("early_nc", "delaminating_nc")]
 
-seurat_data@meta.data$plac_nc_clusters <- unlist(lapply(seurat_data@meta.data$seurat_clusters, function(x){
-  ifelse(any(plac_nc_clusters %in% x), names(plac_nc_clusters)[plac_nc_clusters %in% x], NA)
-}))
+ncol = ceiling((length(unlist(nc_genes))+1)/8)+1
+nrow = ceiling((length(unlist(nc_genes))+1)/ncol)
+
+# plot expression of NC and placodal genes
+png(paste0(plot_path, 'multi_feature_nc.png'), width = ncol*10, height = nrow*10, units = "cm", res = 200)
+MultiFeaturePlot(seurat_data, plot_stage = TRUE, stage_col = "stage", gene_list = unlist(nc_genes), n_col = ncol, label = '')
+graphics.off()
+
 
 # plot annotated neural crest and placodal clusters
 png(paste0(plot_path, "plac_nc_clusters.png"), width = 13, height = 10, res = 200, units = "cm")
@@ -176,4 +184,6 @@ png(paste0(plot_path, "progenitors_dotplot.png"), width = 25, height = 10, res =
 DotPlot(seurat_data[, !is.na(seurat_data@meta.data$progenitor_clusters)], group.by = "progenitor_clusters", features = rev(progenitor_genes)) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 graphics.off()
+
+
 
