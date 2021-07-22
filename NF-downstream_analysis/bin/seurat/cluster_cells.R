@@ -17,7 +17,7 @@ library(scHelper)
 option_list <- list(
     make_option(c("-r", "--runtype"), action = "store", type = "character", help = "Specify whether running through through 'nextflow' in order to switch paths"),
     make_option(c("-c", "--cores"), action = "store", type = "integer", help = "Number of CPUs"),
-    make_option(c("-cr", "--clustres"), action = "store", type = "double", help = "Clustering resolution. Default is 0.5", default = 0.5),
+    make_option(c("", "--clustres"), action = "store", type = "double", help = "Clustering resolution. Default is 0.5", default = 0.5),
     make_option(c("", "--verbose"), action = "store_true", type = "logical", help = "Verbose", default = FALSE)
     )
 
