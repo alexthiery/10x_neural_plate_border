@@ -10,12 +10,15 @@ def analysis_scripts                            = [:]
 analysis_scripts.scatterplot3d                  = file("$baseDir/bin/other/scatterplot3d.R", checkIfExists: true)
 analysis_scripts.gene_modules                   = file("$baseDir/bin/other/gene_modules.R", checkIfExists: true)
 analysis_scripts.cell_state_classification      = file("$baseDir/bin/seurat/cell_state_classification.R", checkIfExists: true)
-analysis_scripts.subset_npb                   = file("$baseDir/bin/seurat/subset_cells.R", checkIfExists: true)
+analysis_scripts.subset_npb                     = file("$baseDir/bin/seurat/subset_cells.R", checkIfExists: true)
+analysis_scripts.cluster_npb                     = file("$baseDir/bin/seurat/cluster_cells.R", checkIfExists: true)
+
 
 params.scatterplot3d_options                    = [:]
 params.gene_module_options                      = [:]
 params.cell_state_classification_options        = [:]
-params.subset_npb_options                    = [:]
+params.subset_npb_options                       = [:]
+params.cluster_npb_options                       = [:]
 
 // Include R processes
 
@@ -31,6 +34,8 @@ include {R as CELL_STATE_CLASSIFICATION} from "$baseDir/modules/local/r/main"   
 include {R as SUBSET_NPB} from "$baseDir/modules/local/r/main"                  addParams(      options: params.subset_npb_options,
                                                                                                 script: analysis_scripts.subset_npb )
 
+include {R as CLUSTER_NPB} from "$baseDir/modules/local/r/main"                  addParams(     options: params.cluster_npb_options,
+                                                                                                script: analysis_scripts.cluster_npb )
 
 /*-----------------------------------------------------------------------------------------------------------------------------
 Log
@@ -54,9 +59,11 @@ workflow EXPLORATORY_ANALYSIS {
 
     CELL_STATE_CLASSIFICATION( seurat_out )
     SUBSET_NPB( CELL_STATE_CLASSIFICATION.out )
+    CLUSTER_NPB( SUBSET_NPB.out )
     
     emit:
     gene_modules_out = GENE_MODULES.out //Channel: [[meta], [output]]
     cell_state_classification_out = CELL_STATE_CLASSIFICATION.out //Channel: [[meta], [output]]
+    cluster_npb_out = CLUSTER_NPB.out //Channel: [[meta], [output]]
 }
 
