@@ -1,18 +1,8 @@
 #!/usr/bin/env Rscript
 
 # Load packages
-library(getopt)
 library(Seurat)
 library(optparse)
-
-# spec = matrix(c(
-#   'runtype', 'l', 2, "character",
-#   'cores', 'c', 2, "integer",
-#   'groups', 's', 2, "character", # classification of cells to subset from dataset
-#   'meta_col', 'm', 2, "character" # name of metadata column which relates to 'groups' above
-# ), byrow=TRUE, ncol=4)
-
-# opt = getopt(spec)
 
 # Read in command line opts
 option_list <- list(
@@ -35,22 +25,15 @@ groups <- strsplit(opt$groups, ",")[[1]]
 plot_path = "./plots/"
 rds_path = "./rds_files/"
 data_path = "./input/rds_files/"
+# data_path = "./work/ea/5c0a3b1de2e01d4da0b44976430c0d/rds_files/"
 
 dir.create(plot_path, recursive = T)
 dir.create(rds_path, recursive = T)
 
+print(list.files(data_path, full.names = TRUE))
 seurat_data <- readRDS(list.files(data_path, full.names = TRUE))
-seurat_subset <- subset(seurat_data, subset = opt$meta_col %in% groups)
+seurat_subset <- subset(seurat_data, subset = !!as.symbol(opt$meta_col) %in% groups)
 
 # save RDS object for each stage/run
 saveRDS(seurat_subset, paste0(rds_path, "seurat_subset.RDS"), compress = FALSE)
-
-
-
-
-
-
-
-
-
 
