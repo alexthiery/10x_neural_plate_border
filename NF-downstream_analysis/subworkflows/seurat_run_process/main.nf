@@ -53,8 +53,8 @@ workflow SEURAT_RUN_PROCESS {
 
     RUN_GENE_MODULES( RUN_CLUSTER.out )
 
-    // emit:
-    // run_cluster_out   = RUN_CLUSTER.out //Channel: [[meta], [output]]
-    // run_gene_modules_out = RUN_GENE_MODULES.out //Channel: [[meta], [output]]
+    emit:
+    run_cluster_out   = RUN_CLUSTER.out //Channel: [[meta], [output]]
+    run_gene_modules_out = RUN_GENE_MODULES.out //Channel: [[meta], [output]]
 }
 

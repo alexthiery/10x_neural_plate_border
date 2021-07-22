@@ -42,6 +42,7 @@ RUN   R -e "install.packages('future')" && \
       R -e "install.packages('clustree')" && \
       R -e "install.packages('gridExtra')" && \
       R -e "install.packages('getopt')" && \
+      R -e "install.packages('optparse')" && \
       R -e "install.packages('pheatmap')" && \
       R -e "install.packages('Seurat')" && \
       R -e "remotes::install_github('mojaveazure/seurat-disk')" && \
