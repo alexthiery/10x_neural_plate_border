@@ -36,7 +36,7 @@ include {R as SUBSET_NPB} from "$baseDir/modules/local/r/main"                  
 Log
 -------------------------------------------------------------------------------------------------------------------------------*/
 
-if(params.debug) {log.info Headers.build_debug_scripts_summary(analysis_scripts, params.monochrome_logs)}
+if(params.debug) {log.info Headers.build_debug_scripts_summary(params, analysis_scripts, params.monochrome_logs)}
 
 
 /*------------------------------------------------------------------------------------
