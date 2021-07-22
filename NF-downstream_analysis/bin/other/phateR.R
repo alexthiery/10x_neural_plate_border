@@ -20,8 +20,8 @@ opt = getopt(spec)
   if(length(commandArgs(trailingOnly = TRUE)) == 0){
     cat('No command line arguments provided, paths are set for running interactively in Rstudio server\n')
     
-    plot_path = "./output/NF-downstream_analysis/phateR/plots/"
-    data_path = "./output/NF-downstream_analysis/seurat/6_contamination_filt/rds_files/"
+    plot_path = "./output/NF-downstream_analysis_stacas/phateR/plots/"
+    data_path = "./output/NF-downstream_analysis_stacas/seurat/6_contamination_filt/rds_files/"
     
     ncores = 8
     
@@ -44,7 +44,7 @@ opt = getopt(spec)
   dir.create(plot_path, recursive = T)
 }
 
-seurat_data <- readRDS(paste0(data_path, 'contamination_filt_data_uncomp.RDS'))
+seurat_data <- readRDS(list.files(data_path, full.names = TRUE))
 
 DefaultAssay(seurat_data) <- 'integrated'
 
