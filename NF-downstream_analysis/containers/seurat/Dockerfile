@@ -46,7 +46,7 @@ RUN   R -e "install.packages('future')" && \
       R -e "install.packages('pheatmap')" && \
       R -e "install.packages('Seurat')" && \
       R -e "remotes::install_github('mojaveazure/seurat-disk')" && \
-      R -e "remotes::install_github('satijalab/seurat-wrappers')" && \
+      # R -e "remotes::install_github('satijalab/seurat-wrappers', upgrade = 'default')" && \
       R -e "BiocManager::install('limma')" && \
       R -e "remotes::install_github('carmonalab/STACAS')"
 
