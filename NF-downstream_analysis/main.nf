@@ -29,7 +29,8 @@ include {SEURAT_FILTERING} from "$baseDir/subworkflows/seurat_filtering/main"   
 
 include {EXPLORATORY_ANALYSIS} from "$baseDir/subworkflows/exploratory_analysis/main"           addParams(  gene_module_options:                modules['gene_modules'],
                                                                                                             cell_state_classification_options:  modules['cell_state_classification'],
-                                                                                                            scatterplot3d_options:              modules['scatterplot3d'])
+                                                                                                            scatterplot3d_options:              modules['scatterplot3d'],
+                                                                                                            subset_npb_options:                 modules['subset_npb'])
 
 include {SEURAT_STAGE_PROCESS} from "$baseDir/subworkflows/seurat_stage_process/main"           addParams(  stage_split_options:                modules['stage_split'],
                                                                                                             stage_cluster_options:              modules['stage_cluster'],
