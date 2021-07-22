@@ -26,6 +26,6 @@ workflow SEURAT_SCVELO {
     SCVELO_RUN (SEURAT_INTERSECT_LOOM.out.loom) //channel: [[meta], loom]
 
     emit:
-    scvelo_run_out_metadata   = SCVELO_RUN.out.csv //Channel: [[meta], csv]
-    scvelo_run_out_h5ad   = SCVELO_RUN.out.h5ad //Channel: [[meta], h5ad]
+    scvelo_run_out_metadata     = SCVELO_RUN.out.csv //Channel: [[meta], csv]
+    scvelo_run_out_h5ad         = SCVELO_RUN.out.h5ad //Channel: [[meta], h5ad]
 }

@@ -20,34 +20,34 @@ if(params.debug) {log.info Headers.build_debug_param_summary(params, params.mono
 
 include {METADATA} from "$baseDir/subworkflows/metadata/main"
 
-include {SEURAT_FILTERING} from "$baseDir/subworkflows/seurat_filtering/main"           addParams(  preprocessing_options:              modules['preprocessing'],
-                                                                                                    integration_options:                modules['integration'],
-                                                                                                    integration_qc_options:             modules['integration_qc'],
-                                                                                                    sex_filt_options:                   modules['sex_filt'],
-                                                                                                    cell_cycle_options:                 modules['cell_cycle'],
-                                                                                                    contamination_filt_options:         modules['contamination_filt'] )
+include {SEURAT_FILTERING} from "$baseDir/subworkflows/seurat_filtering/main"                   addParams(  preprocessing_options:              modules['preprocessing'],
+                                                                                                            integration_options:                modules['integration'],
+                                                                                                            integration_qc_options:             modules['integration_qc'],
+                                                                                                            sex_filt_options:                   modules['sex_filt'],
+                                                                                                            cell_cycle_options:                 modules['cell_cycle'],
+                                                                                                            contamination_filt_options:         modules['contamination_filt'] )
 
-include {EXPLORATORY_ANALYSIS} from "$baseDir/subworkflows/exploratory_analysis/main"   addParams(  gene_module_options:                modules['gene_modules'],
-                                                                                        cell_state_classification_options: modules['cell_state_classification'],
-                                                                                        scatterplot3d_options: modules['scatterplot3d'])
+include {EXPLORATORY_ANALYSIS} from "$baseDir/subworkflows/exploratory_analysis/main"           addParams(  gene_module_options:                modules['gene_modules'],
+                                                                                                            cell_state_classification_options:  modules['cell_state_classification'],
+                                                                                                            scatterplot3d_options:              modules['scatterplot3d'])
 
-include {SEURAT_STAGE_PROCESS} from "$baseDir/subworkflows/seurat_stage_process/main"   addParams(  stage_split_options:                modules['stage_split'],
-                                                                                                    stage_cluster_options:              modules['stage_cluster'],
-                                                                                                    stage_gene_modules_options:         modules['stage_gene_modules'])
+include {SEURAT_STAGE_PROCESS} from "$baseDir/subworkflows/seurat_stage_process/main"           addParams(  stage_split_options:                modules['stage_split'],
+                                                                                                            stage_cluster_options:              modules['stage_cluster'],
+                                                                                                            stage_gene_modules_options:         modules['stage_gene_modules'])
 
-include {SEURAT_RUN_PROCESS} from "$baseDir/subworkflows/seurat_run_process/main"   addParams(  run_split_options:                modules['run_split'],
-                                                                                                    run_cluster_options:              modules['run_cluster'],
-                                                                                                    run_gene_modules_options:         modules['run_gene_modules'])
+include {SEURAT_RUN_PROCESS} from "$baseDir/subworkflows/seurat_run_process/main"               addParams(  run_split_options:                  modules['run_split'],
+                                                                                                            run_cluster_options:                modules['run_cluster'],
+                                                                                                            run_gene_modules_options:           modules['run_gene_modules'])
                                                                                                     
-include {MERGE_LOOM} from "$baseDir/modules/local/merge_loom/main"                      addParams(  options:                            modules['merge_loom'] )
+include {MERGE_LOOM} from "$baseDir/modules/local/merge_loom/main"                              addParams(  options:                            modules['merge_loom'] )
 
-include {SEURAT_SCVELO} from "$baseDir/subworkflows/seurat_scvelo/main"                 addParams(  seurat_intersect_loom_options:      modules['seurat_intersect_loom'],
-                                                                                                    scvelo_run_options:                 modules['scvelo_run'] )
+include {SEURAT_SCVELO} from "$baseDir/subworkflows/seurat_scvelo/main"                         addParams(  seurat_intersect_loom_options:      modules['seurat_intersect_loom'],
+                                                                                                            scvelo_run_options:                 modules['scvelo_run'] )
                                                                                                     
-include {SEURAT_SUBSET_H5AD} from "$baseDir/subworkflows/seurat_subset_h5ad/main"       addParams(  contamination_filt_h5ad_options:    modules['contamination_filt_h5ad'] )
+include {SEURAT_SUBSET_H5AD} from "$baseDir/subworkflows/seurat_subset_h5ad/main"               addParams(  contamination_filt_h5ad_options:    modules['contamination_filt_h5ad'] )
 
-include {EXPLORATORY_LATENT_TIME} from "$baseDir/subworkflows/exploratory_latent_time/main" addParams( gene_modules_latent_time_options: modules['gene_modules_latent_time'],
-                                                                                                       cell_state_classification_options: modules['cell_state_classification'])
+include {EXPLORATORY_LATENT_TIME} from "$baseDir/subworkflows/exploratory_latent_time/main"     addParams(  gene_modules_latent_time_options:   modules['gene_modules_latent_time'],
+                                                                                                            cell_state_classification_options:  modules['cell_state_classification'])
 
 include {EXPLORATORY_LATENT_TIME as STAGE_EXPLORATORY_LATENT_TIME} from "$baseDir/subworkflows/exploratory_latent_time/main" addParams(  gene_modules_latent_time_options: modules['stage_gene_modules_latent_time'])
 
@@ -58,53 +58,51 @@ workflow {
     /*------------------------------------------------------------------------------------*/
     /* Run inital seurat pipeline
     --------------------------------------------------------------------------------------*/
-   if(!skip_seurat_filtering){
-        // Set channel for cellranger counts
-        METADATA.out
-            .filter{ it[0].sample_id == 'NF-scRNAseq_alignment_out' }
-            .map {[it[0], it[1].collect{ file(it+"/cellranger/count/filtered_feature_bc_matrix", checkIfExists: true) }]}
-            .set {ch_scRNAseq_counts}
+    // Set channel for cellranger counts
+    METADATA.out
+        .filter{ it[0].sample_id == 'NF-scRNAseq_alignment_out' }
+        .map {[it[0], it[1].collect{ file(it+"/cellranger/count/filtered_feature_bc_matrix", checkIfExists: true) }]}
+        .set {ch_scRNAseq_counts}
 
-        SEURAT_FILTERING( ch_scRNAseq_counts )
-        
-        SEURAT_STAGE_PROCESS( SEURAT_FILTERING.out.contamination_filt_out )
-
-        SEURAT_RUN_PROCESS( SEURAT_FILTERING.out.contamination_filt_out )
-
-        EXPLORATORY_ANALYSIS( SEURAT_FILTERING.out.contamination_filt_out )
-        
-        // Convert seurat to h5ad format
-        SEURAT_SUBSET_H5AD( SEURAT_FILTERING.out.contamination_filt_out.concat(SEURAT_STAGE_PROCESS.out.stage_cluster_out) )
-        
-        ch_seurat_h5ad = SEURAT_SUBSET_H5AD.out.contamination_filt_h5ad_out
-        ch_seurat_annotations = SEURAT_FILTERING.out.annotations
+    SEURAT_FILTERING( ch_scRNAseq_counts )
 
 
-   } else {
-       seurat_h5ad = [[[sample_id:'NF-scRNAseq_alignment_out'], file(params.seurat_h5ad, checkIfExists: true)]]
-       ch_seurat_h5ad = Channel.from(seurat_h5ad)
+    /*------------------------------------------------------------------------------------*/
+    /* Split data and cluster batches and stages separately (+GMs)
+    --------------------------------------------------------------------------------------*/    
+    SEURAT_STAGE_PROCESS( SEURAT_FILTERING.out.contamination_filt_out )
+    SEURAT_RUN_PROCESS( SEURAT_FILTERING.out.contamination_filt_out )
 
-       seurat_annotations = [[[sample_id:'NF-scRNAseq_alignment_out'], file(params.seurat_annotations, checkIfExists: true)]]
-       ch_seurat_annotations = Channel.from(seurat_annotations)
-   }
+    /*------------------------------------------------------------------------------------*/
+    /* Run exploratory analysis
+    --------------------------------------------------------------------------------------*/
+
+
+    EXPLORATORY_ANALYSIS( SEURAT_FILTERING.out.contamination_filt_out )
+    
+
+
+
 
     /*------------------------------------------------------------------------------------*/
     /* Prepare inputs for scVelo
     --------------------------------------------------------------------------------------*/
+   
+    // Set channel for input looms
+    METADATA.out
+        .filter{ it[0].sample_id == 'NF-scRNAseq_alignment_out' }
+        .map {[it[0], it[1].collect{ file(it+"/velocyto", checkIfExists: true) }]}
+        .set {ch_loomInput}
 
+    MERGE_LOOM( ch_loomInput )
 
-    if(!skip_scvelo){
-        // ch_seurat_h5ad = ch_seurat_h5ad.filter{it[0].sample_id == 'NF-scRNAseq_alignment_out'}
-        // Set channel for input looms
-        METADATA.out
-            .filter{ it[0].sample_id == 'NF-scRNAseq_alignment_out' }
-            .map {[it[0], it[1].collect{ file(it+"/velocyto", checkIfExists: true) }]}
-            .set {ch_loomInput}
-
-        MERGE_LOOM( ch_loomInput )
-        
-        SEURAT_SCVELO( ch_seurat_h5ad, MERGE_LOOM.out.loom.map{it[1]}, ch_seurat_annotations.map{it[1]} ) // Channel: [[meta], seurat.h5ad], Channel: merged.loom, Channel: seurat_annotations.csv
-    }
+    // Combine seurat, seurat_stage and seurat_run data into a single channel and convert to h5ad format
+    SEURAT_SUBSET_H5AD( SEURAT_FILTERING.out.contamination_filt_out.concat(SEURAT_STAGE_PROCESS.out.stage_cluster_out).concat(SEURAT_RUN_PROCESS.out.run_cluster_out) )
+    ch_seurat_h5ad = SEURAT_SUBSET_H5AD.out.contamination_filt_h5ad_out
+    ch_seurat_annotations = SEURAT_FILTERING.out.annotations
+    
+    // Run scVelo
+    SEURAT_SCVELO( ch_seurat_h5ad, MERGE_LOOM.out.loom.map{it[1]}, ch_seurat_annotations.map{it[1]} ) // Channel: [[meta], seurat.h5ad], Channel: merged.loom, Channel: seurat_annotations.csv
 
     ch_seurat_data = SEURAT_FILTERING.out.contamination_filt_out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
     ch_antler_data = EXPLORATORY_ANALYSIS.out.gene_modules_out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
