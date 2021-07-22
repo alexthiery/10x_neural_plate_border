@@ -4,7 +4,6 @@
 library(getopt)
 library(Seurat)
 library(SeuratDisk)
-library(SeuratWrappers)
 
 spec = matrix(c(
   'assay', 'a', 2, "character",
