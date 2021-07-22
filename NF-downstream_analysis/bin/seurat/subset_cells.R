@@ -29,7 +29,7 @@ opt <- parse_args(opt_parser)
 if(opt$verbose) print(opt)
 
 # Split group opt by 
-groups <- strsplit(opt$groups, ",")[[1]])
+groups <- strsplit(opt$groups, ",")[[1]]
 
 # Set paths and load data
 plot_path = "./plots/"
