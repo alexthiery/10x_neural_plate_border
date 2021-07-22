@@ -29,7 +29,9 @@ include {SEURAT_FILTERING} from "$baseDir/subworkflows/seurat_filtering/main"   
 
 include {EXPLORATORY_ANALYSIS} from "$baseDir/subworkflows/exploratory_analysis/main"           addParams(  gene_module_options:                modules['gene_modules'],
                                                                                                             cell_state_classification_options:  modules['cell_state_classification'],
-                                                                                                            scatterplot3d_options:              modules['scatterplot3d'])
+                                                                                                            scatterplot3d_options:              modules['scatterplot3d'],
+                                                                                                            subset_npb_options:                 modules['subset_npb'],
+                                                                                                            cluster_npb_options:                modules['cluster_npb'])
 
 include {SEURAT_STAGE_PROCESS} from "$baseDir/subworkflows/seurat_stage_process/main"           addParams(  stage_split_options:                modules['stage_split'],
                                                                                                             stage_cluster_options:              modules['stage_cluster'],
@@ -97,7 +99,7 @@ workflow {
     MERGE_LOOM( ch_loomInput )
 
     // Combine seurat, seurat_stage and seurat_run data into a single channel and convert to h5ad format
-    SEURAT_SUBSET_H5AD( SEURAT_FILTERING.out.contamination_filt_out.concat(SEURAT_STAGE_PROCESS.out.stage_cluster_out).concat(SEURAT_RUN_PROCESS.out.run_cluster_out) )
+    SEURAT_SUBSET_H5AD( SEURAT_FILTERING.out.contamination_filt_out.concat(SEURAT_STAGE_PROCESS.out.stage_cluster_out).concat(SEURAT_RUN_PROCESS.out.run_cluster_out).concat(EXPLORATORY_ANALYSIS.out.cluster_npb_out) )
     ch_seurat_h5ad = SEURAT_SUBSET_H5AD.out.contamination_filt_h5ad_out
     ch_seurat_annotations = SEURAT_FILTERING.out.annotations
     

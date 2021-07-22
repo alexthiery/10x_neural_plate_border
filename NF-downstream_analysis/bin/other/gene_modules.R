@@ -107,7 +107,7 @@ ngene = length(unlist(antler_data$gene_modules$lists$unbiasedGMs$content))
 
 metadata = c("stage", "seurat_clusters", "run")
 
-png(paste0(plot_path, 'unbiasedGMs.png'), height = round(ngene/8), width = 75, units = 'cm', res = 400)
+png(paste0(plot_path, 'unbiasedGMs.png'), height = 150, width = 75, units = 'cm', res = 400)
 GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs$content,
                    show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15)
 graphics.off()
@@ -192,7 +192,7 @@ ngene = length(unlist(antler_data$gene_modules$lists$GMs200$content))
 
 metadata = c("stage", "seurat_clusters", "run")
 
-png(paste0(plot_path, 'GMs200.png'), height = round(ngene/8), width = 75, units = 'cm', res = 600)
+png(paste0(plot_path, 'GMs200.png'), height = 150, width = 75, units = 'cm', res = 400)
 GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, gene_modules = antler_data$gene_modules$lists$GMs200$content,
                    show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 13)
 graphics.off()
@@ -213,7 +213,7 @@ GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules 
                    show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15, fontsize_row = 10)
 graphics.off()
 
-png(paste0(plot_path, 'GMs200_DE.png'), height = round(ngene/8), width = 75, units = 'cm', res = 600)
+png(paste0(plot_path, 'GMs200_DE.png'), height = round(gene/8), width = 75, units = 'cm', res = 400)
 GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$GMs200_DE$content,
                    show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15, fontsize_row = 10)
 graphics.off()
