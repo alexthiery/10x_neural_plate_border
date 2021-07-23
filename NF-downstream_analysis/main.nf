@@ -46,7 +46,7 @@ include {MERGE_LOOM} from "$baseDir/modules/local/merge_loom/main"              
 include {SEURAT_SCVELO} from "$baseDir/subworkflows/seurat_scvelo/main"                         addParams(  seurat_intersect_loom_options:      modules['seurat_intersect_loom'],
                                                                                                             scvelo_run_options:                 modules['scvelo_run'] )
                                                                                                     
-include {SEURAT_SUBSET_H5AD} from "$baseDir/subworkflows/seurat_subset_h5ad/main"               addParams(  contamination_filt_h5ad_options:    modules['contamination_filt_h5ad'] )
+include {SEURAT_H5AD} from "$baseDir/modules/local/seurat_h5ad/main"                                  addParams(  options:                            modules['seurat_h5ad'] )
 
 include {EXPLORATORY_LATENT_TIME} from "$baseDir/subworkflows/exploratory_latent_time/main"     addParams(  gene_modules_latent_time_options:   modules['gene_modules_latent_time'],
                                                                                                             cell_state_classification_options:  modules['cell_state_classification'])
@@ -99,8 +99,8 @@ workflow {
     MERGE_LOOM( ch_loomInput )
 
     // Combine seurat, seurat_stage and seurat_run data into a single channel and convert to h5ad format
-    SEURAT_SUBSET_H5AD( SEURAT_FILTERING.out.contamination_filt_out.concat(SEURAT_STAGE_PROCESS.out.stage_cluster_out).concat(SEURAT_RUN_PROCESS.out.run_cluster_out).concat(EXPLORATORY_ANALYSIS.out.cluster_npb_out) )
-    ch_seurat_h5ad = SEURAT_SUBSET_H5AD.out.contamination_filt_h5ad_out
+    SEURAT_H5AD( SEURAT_FILTERING.out.contamination_filt_out.concat(SEURAT_STAGE_PROCESS.out.stage_cluster_out).concat(SEURAT_RUN_PROCESS.out.run_cluster_out).concat(EXPLORATORY_ANALYSIS.out.cluster_npb_out) )
+    ch_seurat_h5ad = SEURAT_H5AD.out
     ch_seurat_annotations = SEURAT_FILTERING.out.annotations
     
     // Run scVelo
