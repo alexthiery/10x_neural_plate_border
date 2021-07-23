@@ -20,7 +20,8 @@ seurat_object <- readRDS(list.files(data_path, full.names = TRUE, recursive = TR
 DefaultAssay(seurat_object) <- opt$assay
 seurat_object <- DietSeurat(seurat_object, counts = TRUE, assays = opt$assay, dimreducs = c('pca', 'umap'))
 
-SaveH5Seurat(seurat_object, filename = paste0(opt$outfile, '.h5Seurat'))
+# SaveH5Seurat sometimes encounters a recursion error. File is already written by this point so error can be ignored with try().
+try(SaveH5Seurat(seurat_object, filename = paste0(opt$outfile, '.h5Seurat')), silent = TRUE)
 Convert(paste0(opt$outfile, '.h5Seurat'), dest = "h5ad")
 
 # Remove intermediate h5Seurat file
