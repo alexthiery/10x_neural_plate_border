@@ -30,11 +30,11 @@ seurat_object <- DietSeurat(seurat_object, counts = TRUE, assays = opt$assay, di
 # if --group_by is specified, generate cell colours gor group_by column
 if(!is.null(opt[['group_by']]) && opt[['group_by']] %in% colnames(seurat_object@meta.data)){
   # Set group_by coloumn as factor in order to re-order metadata accordingly
-  seurat_object@meta.data[[group_by]] <- as.factor(seurat_object@meta.data[[group_by]])
+  seurat_object@meta.data[[group_by]] <- as.factor(seurat_object@meta.data[[opt[[group_by]]]])
   # Order metadata based on factor leve
   seurat_object@meta.data <- seurat_object@meta.data[order(seurat_object@meta.data$seurat_clusters),]
   # Set default seurat identities to group_by variable
-  Idents(seurat_object) <- group_by
+  Idents(seurat_object) <- opt[[group_by]]
   # Get default ggplot colours
   ggcolours <- ggPlotColours(length(levels(seurat_object@active.ident)))
   # Vectorise colours based on seurat identities
