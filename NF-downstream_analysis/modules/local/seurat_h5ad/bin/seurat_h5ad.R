@@ -28,7 +28,7 @@ DefaultAssay(seurat_object) <- opt$assay
 seurat_object <- DietSeurat(seurat_object, counts = TRUE, assays = opt$assay, dimreducs = c('pca', 'umap'))
 
 # if --group_by is specified, generate cell colours gor group_by column
-if(!is.null(opt[[group_by]]) && opt[[group_by]] %in% colnames(seurat_object@meta.data)){
+if(!is.null(opt[['group_by']]) && opt[['group_by']] %in% colnames(seurat_object@meta.data)){
   # Set group_by coloumn as factor in order to re-order metadata accordingly
   seurat_object@meta.data[[group_by]] <- as.factor(seurat_object@meta.data[[group_by]])
   # Order metadata based on factor leve
