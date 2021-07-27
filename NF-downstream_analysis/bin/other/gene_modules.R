@@ -213,7 +213,7 @@ GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules 
                    show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15, fontsize_row = 10)
 graphics.off()
 
-png(paste0(plot_path, 'GMs200_DE.png'), height = round(gene/8), width = 75, units = 'cm', res = 400)
+png(paste0(plot_path, 'GMs200_DE.png'), height = round(ngene/8), width = 75, units = 'cm', res = 400)
 GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$GMs200_DE$content,
                    show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15, fontsize_row = 10)
 graphics.off()
