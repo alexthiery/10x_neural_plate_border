@@ -9,7 +9,7 @@ library(optparse)
 # Read in command line opts
 option_list <- list(
   make_option(c("-a", "--assay"), action = "store", type = "character", help = "Assay to export from seurat object ('Integrated' or 'RNA')", default = 'Integrated'),
-  make_option(c("-o", "--outfile"), action = "store", type = "integer", help = "Name of outfile"),
+  make_option(c("-o", "--outfile"), action = "store", type = "character", help = "Name of outfile"),
   make_option(c("-g", "--group_by"), action = "store", type = "character", help = "Name of metadata column containing groups to colour by"),
   make_option(c("", "--verbose"), action = "store_true", type = "logical", help = "Verbose", default = FALSE)
 )
