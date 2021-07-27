@@ -35,7 +35,7 @@ DefaultAssay(seurat_object) <- opt$assay
 seurat_object <- DietSeurat(seurat_object, counts = TRUE, assays = opt$assay, dimreducs = c('pca', 'umap'))
 
 # remove anything from misc slot as depending on the contents this can cause recursion errors
-seurat_test@misc <- list()
+seurat_object@misc <- list()
 
 # if --group_by is specified, generate cell colours gor group_by column
 if(!is.null(opt[['group_by']]) && opt[['group_by']] %in% colnames(seurat_object@meta.data)){
