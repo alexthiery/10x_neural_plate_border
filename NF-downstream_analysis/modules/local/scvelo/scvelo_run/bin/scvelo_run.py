@@ -20,12 +20,11 @@ def parse_args(args=None):
     parser.add_argument('-b', '--batchColumn', type=str, help="Name of batch column.", default=None, metavar='')
     parser.add_argument('-g', '--genes', help="Genes of interest to plot on velocity.", nargs='+')
     parser.add_argument('-n', '--ncores', type=int, help="Number of cores used for parallelisation.", metavar='', default=1)
-    # parser.add_argument('-r', '--ram', type=int, help="Max memory usage in Gigabyte.", metavar='', default=12)
     parser.add_argument('-d', '--dpi', type=int, help='Set DPI for plots.', default='240')
     parser.add_argument('-gd', '--geneDiscovery', type=bool, help='Run unbiased gene discovery.', default=True)
     parser.add_argument('-f', '--forceCol', type=bool, help='Force plotting color bars.', default=False)
     parser.add_argument('-cr', '--cellRank', type=bool, help='Run cellRank lineage inference.', default=True)
-    parser.add_argument('-cc', '--coloursColumn', type=bool, help='Name of cell colours column.', default=None)
+    parser.add_argument('-cc', '--coloursColumn', type=str, help='Name of cell colours column.', default=None)
     return parser.parse_args(args)
 
 # def check_args(args=None):
@@ -257,14 +256,13 @@ def main(args=None):
     scv.logging.print_version()
     scv.settings.plot_prefix = "" # remove plot prefix
     scv.settings.n_jobs = args.ncores  # set max width size for presenter view
-    # scv.settings.max_memory = args.ram  # for beautified visualization
     
     adata = read_loom(loom_path=args.input, clusterColumn=args.clusterColumn, stageColumn=args.stageColumn, batchColumn=args.batchColumn)
     
     # Set plotting colours if available
     if args.coloursColumn is not None:
         print('Setting cluster colours using ' + args.coloursColumn + ' column')
-        adata.uns[args.clusterColumn + '_colors'] = list(set(adata.obs[args.coloursColumn]))
+        adata.uns[args.coloursColumn + '_colors'] = list(set(adata.obs[args.coloursColumn]))
     
     plot_proportions(adata=adata, clusterColumn=args.clusterColumn)
     
