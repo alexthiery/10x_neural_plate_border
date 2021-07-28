@@ -5,6 +5,7 @@ import sys
 import argparse
 import scvelo as scv
 import cellrank as cr
+import numpy as np
 
 
 def parse_args(args=None):
@@ -45,6 +46,11 @@ def read_loom(loom_path, clusterColumn, stageColumn, batchColumn):
     if batchColumn is not None:   
         adata.obs[batchColumn]=adata.obs[batchColumn].astype('category')
     return(adata)
+
+# extract unique elements in a list whilst preserving their order of appearance in the list
+def unique(sequence):
+    seen = set()
+    return [x for x in sequence if not (x in seen or seen.add(x))]
 
 # Plot splice proportions
 def plot_proportions(adata, clusterColumn):
@@ -171,8 +177,6 @@ def identify_lineages(adata, clusterColumn, plot_dir="", prefix="", dpi=240, wei
         os.makedirs(scv.settings.figdir+plot_dir)
         
     cr.tl.terminal_states(adata, cluster_key=clusterColumn, weight_connectivities=weight_connectivities)
-    # re-index to solve index bugs
-    adata.obs = adata.obs.reindex(copy=False)
     cr.pl.terminal_states(adata, discrete=True, save=plot_dir+prefix+'terminal_states.png', dpi=dpi)
     
     cr.tl.initial_states(adata, cluster_key=clusterColumn)
@@ -264,7 +268,8 @@ def main(args=None):
     # Set plotting colours if available
     if args.coloursColumn is not None:
         print('Setting cluster colours using ' + args.coloursColumn + ' column')
-        adata.uns[args.coloursColumn + '_colors'] = list(set(adata.obs[args.coloursColumn]))
+        # Extract cell colours for plotting
+        adata.uns[args.coloursColumn + '_colors'] = unique(adata.obs[args.coloursColumn])
     
     plot_proportions(adata=adata, clusterColumn=args.clusterColumn)
     
