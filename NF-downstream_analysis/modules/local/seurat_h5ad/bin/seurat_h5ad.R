@@ -22,7 +22,7 @@ if(opt$verbose) print(opt)
 cat('pipeline running through Nextflow\n')
 data_path = "./input/rds_files/"
 
-# Options for testing
+# # Options for testing
 # opt <- list()
 # opt$assay = 'integrated'
 # opt$outfile = 'seurat'
@@ -40,9 +40,7 @@ seurat_object@misc <- list()
 # if --group_by is specified, generate cell colours gor group_by column
 if(!is.null(opt[['group_by']]) && opt[['group_by']] %in% colnames(seurat_object@meta.data)){
   # Set group_by coloumn as factor in order to re-order metadata accordingly
-  seurat_object@meta.data$group_by <- as.factor(seurat_object@meta.data[[opt$group_by]])
-  # Order metadata based on factor leve
-  seurat_object@meta.data <- seurat_object@meta.data[order(seurat_object@meta.data$seurat_clusters),]
+  seurat_object@meta.data[[opt$group_by]] <- as.factor(seurat_object@meta.data[[opt$group_by]])
   # Set default seurat identities to group_by variable
   Idents(seurat_object) <- opt$group_by
   # Get default ggplot colours
@@ -63,5 +61,3 @@ Convert(paste0(opt$outfile, '.h5Seurat'), dest = "h5ad")
 
 # Remove intermediate h5Seurat file
 file.remove(paste0(opt$outfile, '.h5Seurat'))
-
-
