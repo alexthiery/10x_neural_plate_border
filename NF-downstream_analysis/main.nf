@@ -31,7 +31,7 @@ include {SEURAT_FILTERING} from "$baseDir/subworkflows/seurat_filtering/main"   
 // Modules and subworkflows for running scVelo/cellrank                                             
 include {MERGE_LOOM} from "$baseDir/modules/local/merge_loom/main"                              addParams(  options:                                modules['merge_loom'] )
 
-include {SEURAT_FILTERED_PROCESS} from "$baseDir/subworkflows/seurat_filtered_process/main"     addParams(  scatterplot3d_options:                  modules['scatterplot3d']
+include {SEURAT_FILTERED_PROCESS} from "$baseDir/subworkflows/seurat_filtered_process/main"     addParams(  scatterplot3d_options:                  modules['scatterplot3d'],
                                                                                                             gene_module_options:                    modules['gene_modules'],
                                                                                                             state_classification_options:           modules['state_classification'],seurat_h5ad_options:                    modules['seurat_h5ad'],
                                                                                                             seurat_intersect_loom_options:          modules['seurat_intersect_loom'],
