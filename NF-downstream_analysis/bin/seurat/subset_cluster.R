@@ -82,17 +82,31 @@ ClustRes(seurat_object = seurat_data, by = 0.2, prefix = "integrated_snn_res.")
 graphics.off()
 
 # Cluster data
-seurat_data <- FindClusters(seurat_data, resolution = 1)
+seurat_data <- FindClusters(seurat_data, resolution = opt$clustres)
 
 # Plot UMAP for clusters and developmental stage
 png(paste0(plot_path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
 ClustStagePlot(seurat_data, stage_col = "stage")
 graphics.off()
 
-# Check integration on final filtered data
-png(paste0(plot_path, "CheckIntegration.png"), width = 25, height = 10, res = 200, units = "cm")
-CheckIntegration(seurat_data, xlim = c(-10, 10), ylim = c(-10, 10))
+
+
+# Plot UMAP for developmental stage, clusters and integration (if subset contains more than one batch)
+plots <- list()
+if(length(unique(seurat_data$stage)) > 1){
+    plots$stage_plot <- DimPlot(seurat_data, group.by = "stage") + ggtitle(paste("Developmental stage")) + theme(plot.title = element_text(hjust = 0.5))
+}
+
+plots$cluster_plot <- DimPlot(seurat_data, group.by = "seurat_clusters") + ggtitle(paste("Clusters")) + theme(plot.title = element_text(hjust = 0.5))
+
+if(length(unique(seurat_data$run)) > 1){
+    plots$integration_plot <- DimPlot(seurat_data, group.by = "run") + ggtitle(paste("Batches")) + theme(plot.title = element_text(hjust = 0.5))
+}
+
+png(paste0(plot_path, "UMAP.png"), width=20*length(plots), height=20, units = 'cm', res = 200)
+do.call("grid.arrange", c(plots, nrow=1))
 graphics.off()
+
 
 # Plot QC for each cluster
 png(paste0(plot_path, "QCPlot.png"), width=40, height=28, units = 'cm', res = 200)

@@ -8,8 +8,8 @@
 
 def analysis_scripts                                = [:]
 analysis_scripts.clusters_subset                    = file("$baseDir/bin/seurat/subset_cells.R", checkIfExists: true)
-analysis_scripts.clusters_cluster                   = file("$baseDir/bin/seurat/cluster_cells.R", checkIfExists: true)
-analysis_scripts.clusters_gene_modules              = file("$baseDir/bin/other/clusters_gene_modules.R", checkIfExists: true)
+analysis_scripts.clusters_cluster                   = file("$baseDir/bin/seurat/subset_cluster.R", checkIfExists: true)
+analysis_scripts.clusters_gene_modules              = file("$baseDir/bin/other/subset_gene_modules.R", checkIfExists: true)
 analysis_scripts.clusters_state_classification      = file("$baseDir/bin/seurat/state_classification.R", checkIfExists: true)
 
 params.clusters_subset_options                      = [:]

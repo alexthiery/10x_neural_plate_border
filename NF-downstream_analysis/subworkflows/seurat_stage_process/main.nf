@@ -8,8 +8,8 @@
 
 def analysis_scripts                                = [:]
 analysis_scripts.stage_split                        = file("$baseDir/bin/seurat/split_seurat.R", checkIfExists: true)
-analysis_scripts.stage_cluster                      = file("$baseDir/bin/seurat/stage_cluster.R", checkIfExists: true)
-analysis_scripts.stage_gene_modules                 = file("$baseDir/bin/other/stage_gene_modules.R", checkIfExists: true)
+analysis_scripts.stage_cluster                      = file("$baseDir/bin/seurat/subset_cluster.R", checkIfExists: true)
+analysis_scripts.stage_gene_modules                 = file("$baseDir/bin/other/subset_gene_modules.R", checkIfExists: true)
 analysis_scripts.stage_state_classification         = file("$baseDir/bin/seurat/state_classification.R", checkIfExists: true)
 
 params.stage_split_options                          = [:]
