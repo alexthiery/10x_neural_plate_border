@@ -41,24 +41,24 @@ include {SEURAT_STAGE_PROCESS} from "$baseDir/subworkflows/seurat_stage_process/
                                                                                                             stage_gene_modules_options:             modules['stage_gene_modules'],
                                                                                                             stage_state_classification_options:     modules['stage_state_classification'],
                                                                                                             seurat_h5ad_options:                    modules['seurat_h5ad'],
-                                                                                                            seurat_intersect_loom_options:          modules['seurat_intersect_loom'],
-                                                                                                            scvelo_run_options:                     modules['scvelo_run'])
+                                                                                                            seurat_intersect_loom_options:          modules['stage_seurat_intersect_loom'],
+                                                                                                            scvelo_run_options:                     modules['stage_scvelo_run'])
 
 include {SEURAT_RUN_PROCESS} from "$baseDir/subworkflows/seurat_run_process/main"               addParams(  run_split_options:                      modules['run_split'],
                                                                                                             run_cluster_options:                    modules['run_cluster'],
                                                                                                             run_gene_modules_options:               modules['run_gene_modules'],
                                                                                                             run_state_classification_options:       modules['run_state_classification'],
                                                                                                             seurat_h5ad_options:                    modules['seurat_h5ad'],
-                                                                                                            seurat_intersect_loom_options:          modules['seurat_intersect_loom'],
-                                                                                                            scvelo_run_options:                     modules['scvelo_run'])
+                                                                                                            seurat_intersect_loom_options:          modules['run_seurat_intersect_loom'],
+                                                                                                            scvelo_run_options:                     modules['run_scvelo_run'])
 
 include {SEURAT_CLUSTERS_PROCESS} from "$baseDir/subworkflows/seurat_run_process/main"          addParams(  clusters_subset_options:                modules['clusters_subset'],
                                                                                                             clusters_cluster_options:               modules['clusters_cluster'],
                                                                                                             clusters_gene_modules_options:          modules['clusters_gene_modules'],
                                                                                                             clusters_state_classification_options:  modules['clusters_state_classification'],
                                                                                                             seurat_h5ad_options:                    modules['seurat_h5ad'],
-                                                                                                            seurat_intersect_loom_options:          modules['seurat_intersect_loom'],
-                                                                                                            scvelo_run_options:                     modules['scvelo_run'])
+                                                                                                            seurat_intersect_loom_options:          modules['clusters_seurat_intersect_loom'],
+                                                                                                            scvelo_run_options:                     modules['clusters_scvelo_run'])
 
 
 // Subworkflow for exploratory analysis post scVelo
