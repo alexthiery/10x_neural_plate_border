@@ -77,8 +77,10 @@ workflow SEURAT_RUN_PROCESS {
     SEURAT_SCVELO( SEURAT_H5AD.out, loom, annotations ) // Channel: [[meta], seurat.h5ad], Channel: merged.loom, Channel: seurat_annotations.csv
 
     emit:
-    run_cluster_out                     = RUN_CLUSTER.out                   //Channel: [[meta], [output]]
-    run_gene_modules_out                = RUN_GENE_MODULES.out              //Channel: [[meta], [output]]
-    run_state_classification_out        = RUN_STATE_CLASSIFICATION.out      //Channel: [[meta], [output]]
-    run_scvelo_out                      = SEURAT_SCVELO.out                 //Channel:
+    run_cluster_out                     = RUN_CLUSTER.out                               //Channel: [[meta], [output]]
+    run_gene_modules_out                = RUN_GENE_MODULES.out                          //Channel: [[meta], [output]]
+    run_state_classification_out        = RUN_STATE_CLASSIFICATION.out                  //Channel: [[meta], [output]]   
+
+    run_scvelo_run_out_metadata         = SEURAT_SCVELO.out.scvelo_run_out_metadata     //Channel: [[meta], csv]
+    run_scvelo_run_out_5had             = SEURAT_SCVELO.out .scvelo_run_out_h5ad        //Channel: [[meta], h5ad]
 }

@@ -76,9 +76,11 @@ workflow SEURAT_STAGE_PROCESS {
     SEURAT_SCVELO( SEURAT_H5AD.out, loom, annotations ) // Channel: [[meta], seurat.h5ad], Channel: merged.loom, Channel: seurat_annotations.csv
 
     emit:
-    stage_cluster_out                   = STAGE_CLUSTER.out                 //Channel: [[meta], [output]]
-    stage_gene_modules_out              = STAGE_GENE_MODULES.out            //Channel: [[meta], [output]]
-    stage_state_classification_out      = STAGE_STATE_CLASSIFICATION.out    //Channel: [[meta], [output]]
-    stage_scvelo_out                    = SEURAT_SCVELO.out                 //Channel:
+    stage_cluster_out                   = STAGE_CLUSTER.out                             //Channel: [[meta], [output]]
+    stage_gene_modules_out              = STAGE_GENE_MODULES.out                        //Channel: [[meta], [output]]
+    stage_state_classification_out      = STAGE_STATE_CLASSIFICATION.out                //Channel: [[meta], [output]]
+
+    stage_scvelo_run_out_metadata       = SEURAT_SCVELO.out.scvelo_run_out_metadata     //Channel: [[meta], csv]
+    stage_scvelo_run_out_5had           = SEURAT_SCVELO.out .scvelo_run_out_h5ad        //Channel: [[meta], h5ad]
 }
 

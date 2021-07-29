@@ -76,9 +76,11 @@ workflow SEURAT_CLUSTERS_PROCESS {
     SEURAT_SCVELO( SEURAT_H5AD.out, loom, annotations ) // Channel: [[meta], seurat.h5ad], Channel: merged.loom, Channel: seurat_annotations.csv
 
     emit:
-    clusters_cluster_out                = CLUSTERS_CLUSTER.out              //Channel: [[meta], [output]]
-    clusters_gene_modules_out           = CLUSTERS_GENE_MODULES.out         //Channel: [[meta], [output]]
-    clusters_state_classification_out   = CLUSTERS_STATE_CLASSIFICATION.out //Channel: [[meta], [output]]
-    clusters_scvelo_out                 = SEURAT_SCVELO.out                 //Channel:
+    clusters_cluster_out                = CLUSTERS_CLUSTER.out                          //Channel: [[meta], [output]]
+    clusters_gene_modules_out           = CLUSTERS_GENE_MODULES.out                     //Channel: [[meta], [output]]
+    clusters_state_classification_out   = CLUSTERS_STATE_CLASSIFICATION.out             //Channel: [[meta], [output]]
+
+    clusters_scvelo_run_out_metadata    = SEURAT_SCVELO.out.scvelo_run_out_metadata     //Channel: [[meta], csv]
+    clusters_scvelo_run_out_5had        = SEURAT_SCVELO.out .scvelo_run_out_h5ad        //Channel: [[meta], h5ad]
 }
 
