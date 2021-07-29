@@ -34,7 +34,7 @@ options(future.globals.maxSize = 16* 1024^3) # 32gb
 # Set paths and load data
 plot_path = "./plots/"
 rds_path = "./rds_files/"
-data_path = "./input/rds_files/"
+data_path = "./input/"
 
 dir.create(plot_path, recursive = T)
 dir.create(rds_path, recursive = T)
