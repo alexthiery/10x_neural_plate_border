@@ -67,10 +67,6 @@ include {SEURAT_CLUSTERS_PROCESS} from "$baseDir/subworkflows/seurat_clusters_pr
                                                                                                             gene_modules_latent_time_options:       modules['clusters_gene_modules_latent_time'])
 
 
-// Subworkflow for exploratory analysis post scVelo
-include {SEURAT_FILTERED_PROCESS} from "$baseDir/subworkflows/seurat_filtered_process/main"     addParams(  gene_modules_latent_time_options:       modules['gene_modules_latent_time'],
-                                                                                                            cell_state_classification_options:      modules['cell_state_classification'])
-
 workflow {
     METADATA( params.input )
 
