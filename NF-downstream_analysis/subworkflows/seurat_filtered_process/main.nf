@@ -6,14 +6,14 @@
 /* Set scripts used for downstream exploratory analysis
 --------------------------------------------------------------------------------------*/
 
-def analysis_scripts                            = [:]
-analysis_scripts.scatterplot3d                  = file("$baseDir/bin/other/scatterplot3d.R", checkIfExists: true)
+def analysis_scripts                                = [:]
+analysis_scripts.scatterplot3d                      = file("$baseDir/bin/other/scatterplot3d.R", checkIfExists: true)
 analysis_scripts.gene_modules                       = file("$baseDir/bin/other/gene_modules.R", checkIfExists: true)
 analysis_scripts.state_classification               = file("$baseDir/bin/seurat/state_classification.R", checkIfExists: true)
 analysis_scripts.gene_modules_latent_time           = file("$baseDir/bin/other/gene_modules_latent_time.R", checkIfExists: true)
 
 params.scatterplot3d_options                        = [:]
-params.gene_modules_options                         = [:]
+params.gene_module_options                         = [:]
 params.state_classification_options                 = [:]
 params.seurat_h5ad_options                          = [:]
 params.seurat_intersect_loom_options                = [:]
