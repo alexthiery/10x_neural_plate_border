@@ -99,9 +99,9 @@ workflow {
     /*------------------------------------------------------------------------------------*/
     /* Split data and cluster batches and stages separately (+GMs)
     --------------------------------------------------------------------------------------*/ 
-    SEURAT_STAGE_PROCESS( SEURAT_FILTERING.out.contamination_filt_out, MERGE_LOOM.out.loom.map{it[1]}, ch_seurat_annotations.map{it[1]})  
-    SEURAT_RUN_PROCESS( SEURAT_FILTERING.out.contamination_filt_out, MERGE_LOOM.out.loom.map{it[1]}, ch_seurat_annotations.map{it[1]})
-    SEURAT_CLUSTERS_PROCESS( SEURAT_FILTERING.out.contamination_filt_out, MERGE_LOOM.out.loom.map{it[1]}, ch_seurat_annotations.map{it[1]})
+    SEURAT_STAGE_PROCESS( SEURAT_FILTERING.out.contamination_filt_out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]})  
+    SEURAT_RUN_PROCESS( SEURAT_FILTERING.out.contamination_filt_out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]})
+    SEURAT_CLUSTERS_PROCESS( SEURAT_FILTERING.out.contamination_filt_out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]})
 
 
     /*------------------------------------------------------------------------------------*/
