@@ -52,7 +52,7 @@ include {SEURAT_RUN_PROCESS} from "$baseDir/subworkflows/seurat_run_process/main
                                                                                                             seurat_intersect_loom_options:          modules['run_seurat_intersect_loom'],
                                                                                                             scvelo_run_options:                     modules['run_scvelo_run'])
 
-include {SEURAT_CLUSTERS_PROCESS} from "$baseDir/subworkflows/seurat_run_process/main"          addParams(  clusters_subset_options:                modules['clusters_subset'],
+include {SEURAT_CLUSTERS_PROCESS} from "$baseDir/subworkflows/seurat_clusters_process/main"          addParams(  clusters_subset_options:                modules['clusters_subset'],
                                                                                                             clusters_cluster_options:               modules['clusters_cluster'],
                                                                                                             clusters_gene_modules_options:          modules['clusters_gene_modules'],
                                                                                                             clusters_state_classification_options:  modules['clusters_state_classification'],
