@@ -13,7 +13,7 @@ analysis_scripts.state_classification               = file("$baseDir/bin/seurat/
 analysis_scripts.gene_modules_latent_time           = file("$baseDir/bin/other/gene_modules_latent_time.R", checkIfExists: true)
 
 params.scatterplot3d_options                        = [:]
-params.gene_module_options                         = [:]
+params.gene_module_options                          = [:]
 params.state_classification_options                 = [:]
 params.seurat_h5ad_options                          = [:]
 params.seurat_intersect_loom_options                = [:]
@@ -52,7 +52,9 @@ Workflow
 
 workflow SEURAT_FILTERED_PROCESS {
     take:
-    seurat_out //Channel: [[meta], [output]]
+    seurat_out      //Channel: [[meta], [plot_dir, rds_dir]]
+    loom            //Channel: merged.loom
+    annotations     //Channel: seurat_annotations.csv
 
     main:
     // Run processes on full filtered dataset
