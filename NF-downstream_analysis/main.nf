@@ -31,9 +31,12 @@ include {SEURAT_FILTERING} from "$baseDir/subworkflows/seurat_filtering/main"   
 // Modules and subworkflows for running scVelo/cellrank                                             
 include {MERGE_LOOM} from "$baseDir/modules/local/merge_loom/main"                              addParams(  options:                                modules['merge_loom'] )
 
-include {EXPLORATORY_ANALYSIS} from "$baseDir/subworkflows/exploratory_analysis/main"           addParams(  gene_module_options:                    modules['gene_modules'],
-                                                                                                            state_classification_options:           modules['state_classification'],
-                                                                                                            scatterplot3d_options:                  modules['scatterplot3d'])
+include {SEURAT_FILTERED_PROCESS} from "$baseDir/subworkflows/seurat_filtered_process/main"     addParams(  scatterplot3d_options:                  modules['scatterplot3d']
+                                                                                                            gene_module_options:                    modules['gene_modules'],
+                                                                                                            state_classification_options:           modules['state_classification'],seurat_h5ad_options:                    modules['seurat_h5ad'],
+                                                                                                            seurat_intersect_loom_options:          modules['seurat_intersect_loom'],
+                                                                                                            scvelo_run_options:                     modules['scvelo_run'],
+                                                                                                            gene_modules_latent_time_options:       modules['gene_modules_latent_time'])
 
 // Subworkflows for subset stage, run and clusters from seurat object and run downstream analysis pipelines
 include {SEURAT_STAGE_PROCESS} from "$baseDir/subworkflows/seurat_stage_process/main"           addParams(  split_options:                          modules['stage_split'],
@@ -65,7 +68,7 @@ include {SEURAT_CLUSTERS_PROCESS} from "$baseDir/subworkflows/seurat_clusters_pr
 
 
 // Subworkflow for exploratory analysis post scVelo
-include {EXPLORATORY_LATENT_TIME} from "$baseDir/subworkflows/exploratory_latent_time/main"     addParams(  gene_modules_latent_time_options:       modules['gene_modules_latent_time'],
+include {SEURAT_FILTERED_PROCESS} from "$baseDir/subworkflows/seurat_filtered_process/main"     addParams(  gene_modules_latent_time_options:       modules['gene_modules_latent_time'],
                                                                                                             cell_state_classification_options:      modules['cell_state_classification'])
 
 workflow {
@@ -81,7 +84,6 @@ workflow {
         .set {ch_scRNAseq_counts}
 
     SEURAT_FILTERING( ch_scRNAseq_counts )
-
         
     /*------------------------------------------------------------------------------------*/
     /* Prepare inputs for scVelo
@@ -95,12 +97,10 @@ workflow {
 
     MERGE_LOOM( ch_loomInput )
 
-
     /*------------------------------------------------------------------------------------*/
-    /* Run exploratory analysis
+    /* Run analysis on full filtered seurat object
     --------------------------------------------------------------------------------------*/
-    EXPLORATORY_ANALYSIS( SEURAT_FILTERING.out.contamination_filt_out )
-
+    SEURAT_FILTERED_PROCESS( SEURAT_FILTERING.out.contamination_filt_out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]})
 
     /*------------------------------------------------------------------------------------*/
     /* Split data and cluster batches and stages separately (+GMs)
@@ -108,10 +108,5 @@ workflow {
     SEURAT_STAGE_PROCESS( SEURAT_FILTERING.out.contamination_filt_out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]})  
     SEURAT_RUN_PROCESS( SEURAT_FILTERING.out.contamination_filt_out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]})
     SEURAT_CLUSTERS_PROCESS( EXPLORATORY_ANALYSIS.out.state_classification_out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]})
-
-
-    // ch_seurat_data = SEURAT_FILTERING.out.contamination_filt_out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
-    // ch_antler_data = EXPLORATORY_ANALYSIS.out.gene_modules_out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
-    // EXPLORATORY_LATENT_TIME(ch_seurat_data, ch_antler_data, SEURAT_SCVELO.out.scvelo_run_out_metadata)
 
 }
