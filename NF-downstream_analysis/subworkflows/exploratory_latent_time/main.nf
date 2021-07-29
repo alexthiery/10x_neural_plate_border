@@ -26,7 +26,7 @@ if(params.debug) {log.info Headers.build_debug_scripts_summary(analysis_scripts,
 Workflow
 --------------------------------------------------------------------------------------*/
 
-workflow GENE_MODULE_LATENT_TIME {
+workflow EXPLORATORY_LATENT_TIME {
     take:
     seurat_out //Channel: [[meta], *.rds_file]
     antler_out //Channel: [[meta], *.rds_file]
