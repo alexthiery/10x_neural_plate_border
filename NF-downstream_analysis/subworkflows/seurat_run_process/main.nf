@@ -65,7 +65,7 @@ workflow SEURAT_RUN_PROCESS {
         .map {row -> [row[0], row[1].findAll { it =~ ".*rds_files" }]}
         .flatMap {it[1][0].listFiles()}
         .map { row -> [[sample_id:row.name.replaceFirst(~/\.[^\.]+$/, '')], row] }
-        .set { ch_split_run }
+        .set { ch_split_run }                                                           //Channel: [[meta], rds_file]
 
     RUN_CLUSTER( ch_split_run )
     RUN_GENE_MODULES( RUN_CLUSTER.out )

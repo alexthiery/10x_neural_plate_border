@@ -97,17 +97,20 @@ workflow {
 
 
     /*------------------------------------------------------------------------------------*/
+    /* Run exploratory analysis
+    --------------------------------------------------------------------------------------*/
+    EXPLORATORY_ANALYSIS( SEURAT_FILTERING.out.contamination_filt_out )
+
+
+    /*------------------------------------------------------------------------------------*/
     /* Split data and cluster batches and stages separately (+GMs)
     --------------------------------------------------------------------------------------*/ 
     SEURAT_STAGE_PROCESS( SEURAT_FILTERING.out.contamination_filt_out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]})  
     SEURAT_RUN_PROCESS( SEURAT_FILTERING.out.contamination_filt_out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]})
-    SEURAT_CLUSTERS_PROCESS( SEURAT_FILTERING.out.contamination_filt_out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]})
+    SEURAT_CLUSTERS_PROCESS( EXPLORATORY_ANALYSIS.out.state_classification_out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]})
 
 
-    /*------------------------------------------------------------------------------------*/
-    /* Run exploratory analysis
-    --------------------------------------------------------------------------------------*/
-    EXPLORATORY_ANALYSIS( SEURAT_FILTERING.out.contamination_filt_out )
+
     
 
     // ch_seurat_data = SEURAT_FILTERING.out.contamination_filt_out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
