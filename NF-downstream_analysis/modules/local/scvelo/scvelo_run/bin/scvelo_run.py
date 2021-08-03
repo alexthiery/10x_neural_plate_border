@@ -36,7 +36,6 @@ def parse_args(args=None):
 #     elif not os.path.isfile(args.input):
 #         raise Exception(f"'--input': '{args.input}' is not a valid path.")
 
-
 # Read in loom data
 def read_loom(loom_path, clusterColumn, stageColumn, batchColumn):
     adata = scv.read(loom_path)

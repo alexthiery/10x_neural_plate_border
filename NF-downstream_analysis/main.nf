@@ -66,6 +66,12 @@ include {SEURAT_CLUSTERS_PROCESS} from "$baseDir/subworkflows/seurat_clusters_pr
                                                                                                             scvelo_run_options:                     modules['clusters_scvelo_run'],
                                                                                                             gene_modules_latent_time_options:       modules['clusters_gene_modules_latent_time'])
 
+include {SEURAT_H5AD} from "$baseDir/modules/local/seurat_h5ad/main"                            addParams(  options:                                modules['seurat_h5ad'] )
+
+include {SEURAT_SCVELO} from "$baseDir/subworkflows/seurat_scvelo/main"                         addParams(  seurat_intersect_loom_options:          modules['clusters_seurat_intersect_loom'],
+                                                                                                            scvelo_run_options:                     modules['clusters_scvelo_run'])
+
+
 
 workflow {
     METADATA( params.input )
@@ -96,13 +102,26 @@ workflow {
     /*------------------------------------------------------------------------------------*/
     /* Run analysis on full filtered seurat object
     --------------------------------------------------------------------------------------*/
-    SEURAT_FILTERED_PROCESS( SEURAT_FILTERING.out.contamination_filt_out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]})
+    SEURAT_FILTERED_PROCESS( SEURAT_FILTERING.out.contamination_filt_out)
 
     /*------------------------------------------------------------------------------------*/
     /* Split data and cluster batches and stages separately (+GMs)
     --------------------------------------------------------------------------------------*/ 
-    SEURAT_STAGE_PROCESS( SEURAT_FILTERING.out.contamination_filt_out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]})  
-    SEURAT_RUN_PROCESS( SEURAT_FILTERING.out.contamination_filt_out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]})
-    SEURAT_CLUSTERS_PROCESS( SEURAT_FILTERED_PROCESS.out.state_classification_out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]})
+    SEURAT_STAGE_PROCESS( SEURAT_FILTERING.out.contamination_filt_out)  
+    SEURAT_RUN_PROCESS( SEURAT_FILTERING.out.contamination_filt_out)
+    SEURAT_CLUSTERS_PROCESS( SEURAT_FILTERED_PROCESS.out.state_classification_out)
+    
 
+
+    SEURAT_H5AD( CLUSTER.out )
+    // Run scVelo
+    SEURAT_SCVELO( SEURAT_H5AD.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} ) // Channel: [[meta], seurat.h5ad], Channel: merged.loom, Channel: seurat_annotations.csv
+
+    // // Run gene module analysis across latent time
+    // ch_cluster_rds              = CLUSTER.out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
+    // ch_gene_modules_rds         = GENE_MODULES.out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
+    // ch_gene_module_latent_time  = ch_cluster_rds.combine(ch_gene_modules_rds, by: 0).combine(SEURAT_SCVELO.out.scvelo_run_out_metadata, by: 0)
+    // ch_gene_module_latent_time  = ch_gene_module_latent_time.map{[it[0], [it[1], it[2], it[3]]]}
+    
+    // GENE_MODULES_LATENT_TIME(ch_gene_module_latent_time)
 }
