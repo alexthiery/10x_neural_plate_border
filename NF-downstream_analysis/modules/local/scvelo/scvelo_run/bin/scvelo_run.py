@@ -177,6 +177,8 @@ def identify_lineages(adata, clusterColumn, plot_dir="", prefix="", dpi=240, wei
         os.makedirs(scv.settings.figdir+plot_dir)
         
     cr.tl.terminal_states(adata, cluster_key=clusterColumn, weight_connectivities=weight_connectivities)
+    # re-index to solve index bugs
+    adata.obs = adata.obs.reindex(copy=False)
     cr.pl.terminal_states(adata, discrete=True, save=plot_dir+prefix+'terminal_states.png', dpi=dpi)
     
     cr.tl.initial_states(adata, cluster_key=clusterColumn)
