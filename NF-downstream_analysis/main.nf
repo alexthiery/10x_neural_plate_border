@@ -110,10 +110,10 @@ workflow {
     SEURAT_STAGE_PROCESS( SEURAT_FILTERING.out.contamination_filt_out)  
     SEURAT_RUN_PROCESS( SEURAT_FILTERING.out.contamination_filt_out)
     SEURAT_CLUSTERS_PROCESS( SEURAT_FILTERED_PROCESS.out.state_classification_out)
-    
 
 
-    SEURAT_H5AD( CLUSTER.out )
+
+    SEURAT_H5AD( SEURAT_STAGE_PROCESS.out.cluster_out.concat(SEURAT_RUN_PROCESS.out.cluster_out).concat(SEURAT_CLUSTERS_PROCESS.out.cluster_out) )
     // Run scVelo
     SEURAT_SCVELO( SEURAT_H5AD.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} ) // Channel: [[meta], seurat.h5ad], Channel: merged.loom, Channel: seurat_annotations.csv
 
