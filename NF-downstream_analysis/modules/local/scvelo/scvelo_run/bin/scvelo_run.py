@@ -6,6 +6,7 @@ import argparse
 import scvelo as scv
 import cellrank as cr
 import numpy as np
+import warnings
 
 
 def parse_args(args=None):
@@ -177,8 +178,6 @@ def identify_lineages(adata, clusterColumn, plot_dir="", prefix="", dpi=240, wei
         os.makedirs(scv.settings.figdir+plot_dir)
         
     cr.tl.terminal_states(adata, cluster_key=clusterColumn, weight_connectivities=weight_connectivities)
-    # re-index to solve index bugs
-    adata.obs = adata.obs.reindex(copy=False)
     cr.pl.terminal_states(adata, discrete=True, save=plot_dir+prefix+'terminal_states.png', dpi=dpi)
     
     cr.tl.initial_states(adata, cluster_key=clusterColumn)
@@ -238,6 +237,18 @@ def run_scvelo_dynamical(adata, args):
     plot_velocity(adata=adata, clusterColumn=args.clusterColumn, plot_dir="diff_kinetics/", dpi=args.dpi)
     return(adata)
 
+def write_lineage_probs(adata):
+    for lineage in adata.obsm['to_terminal_states'].names:
+        colname = lineage + '_lineage_probs'
+        if colname in adata.obs.columns:
+            warnings.warn(colname + ' is already specified in adata.obs. Overriding original entry.')
+            del adata.obs[colname]
+        
+        adata.obs[colname] = adata.obsm['to_terminal_states'][lineage]
+    
+    print('Adding terminal states to metadata')
+    adata.obs = adata.obs.reindex(copy=False)
+    return(adata)
     
 def run_cellRank(adata, args):
     if args.velocityMode != 'dynamical':
@@ -249,6 +260,8 @@ def run_cellRank(adata, args):
     # Calculate latent time using CellRank root_key and end_key cells
     scv.tl.recover_latent_time(adata, root_key="initial_states_probs", end_key="terminal_states_probs")
     directed_paga(adata, clusterColumn=args.clusterColumn, plot_dir = 'cell_rank/', dpi=args.dpi)
+    
+    adata = write_lineage_probs(adata)
 
     print('Calculating lineage drivers')
     cr.tl.lineage_drivers(adata)
