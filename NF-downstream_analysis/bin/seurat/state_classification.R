@@ -52,6 +52,7 @@ opt = getopt(spec)
 }
 
 seurat_data <- readRDS(list.files(data_path, full.names = TRUE))
+# seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/filtered_seurat/seurat/state_classification/rds_files/cell_state_classification.RDS')
 
 # Set RNA to default assay for plotting expression data
 DefaultAssay(seurat_data) <- "RNA"
@@ -60,40 +61,51 @@ DefaultAssay(seurat_data) <- "RNA"
 #                                      Cell state classification                                    #
 ########################################################################################################
 
+# ENSGALG00000030902 == SNAIL2
+
 cell_type_markers <- list(delaminating_nc = c("ETS1", "LMO4", "SOX10", "SOX8", "FOXD3"),
                           nc = c("ETS1", "ENSGALG00000030902", "FOXD3", "TFAP2B", "TFAP2A"),
                           npb = c("PAX7", "MSX1", "SIX1", "DLX5", "DLX6", "TFAP2B", "TFAP2A", "TFAP2C", "ZIC1"),
-                          placodes = c("SIX1", "SIX4", "EYA2", "GATA2", "GATA3", "FOXI1", "DLX3", "DLX5", "DLX6", "TFAP2A", "TFAP2C"),
-                          PPR = c("SIX1", "EYA2", "DLX5", "DLX6"),
-                          aPPR = c("SIX1", "EYA2", "DLX5", "DLX6", "SIX3", "OTX2"),
-                          pPPR = c("SIX1", "EYA2", "DLX5", "DLX6", "GBX2"),
-                          # epidermis = c("KRT18", "KRT7"),
-                          hindbrain = c("GBX2", "HOXA2", "HOXA3", "HOXB2", "KROX20", "SOX2"),
-                          midbrain = c("WNT4", "PAX2", "FGF8", "WNT1", "SOX2"),
-                          forebrain = c("PAX6", "OLIG2" , "SIX3", "SOX2"),
-                          # ventral_floor = c("SHH", "NKX2-2", "FOXA2"),
-                          neural_progenitor= c("SOX2", "SOX21", "FRZB", "LMO1"),
-                          anterior_neural_progenitor = c("SOX2", "SOX21", "FRZB", "LMO1", "PAX6", "OTX2", "SIX3"),
-                          posterior_neural_progenitor = c("SOX2", "SOX21", "FRZB", "LMO1", "GBX2"))
+                          placodes = c("SIX1", "EYA1", "EYA2", "DLX3", "DLX5", "DLX6", "GATA2", "GATA3"),
+                          placodal_progenitors = c("DLX5", "DLX6", "GATA2", "GATA3"),
+                          # PPR = c("SIX1", "EYA2", "DLX5", "DLX6"),
+                          # aPPR = c("SIX1", "EYA2", "DLX5", "DLX6", "SIX3", "OTX2"),
+                          # pPPR = c("SIX1", "EYA2", "DLX5", "DLX6", "GBX2"),
+                          non_neural = c("EPAS1", "MSX2", "GATA2", "GATA3", "VGLL1", "GRHL3"),
+                          hindbrain = c("GBX2", "HOXA2", "HOXA3", "HOXB2", "KROX20", "SOX2", "SOX21"),
+                          midbrain = c("WNT4", "PAX2", "FGF8", "WNT1", "OTX2", "SOX2", "SOX21"),
+                          forebrain = c("PAX6" , "SIX3", "OTX2", "SOX2", "SOX21"),
+                          early_hindbrain = c("GBX2", "SOX2", "SOX3", "FRZB"),
+                          early_midbrain = c("WNT4", "OTX2", "SOX2", "SOX3", "FRZB"),
+                          early_forebrain = c("PAX6" , "SIX3", "OTX2", "SOX2", "SOX3", "FRZB"),
+                          neural_progrenitors = c("SOX3", "SOX2", "FRZB", "LMO1"))
+# ventral_floor = c("SHH", "NKX2-2", "FOXA2"),
+# neural_progenitors = c("SOX21", "FRZB", "LMO1"))
+# anterior_neural_progenitor = c("SOX2", "SOX21", "FRZB", "LMO1", "PAX6", "OTX2", "SIX3"),
+# posterior_neural_progenitor = c("SOX2", "SOX21", "FRZB", "LMO1", "GBX2"))
 
 
-# Calculate average module expression for contamination gene list
-# seurat_data <- AverageGeneModules(seurat_obj = seurat_data, gene_list = cell_type_markers)
+seurat_data <- ClusterClassification(seurat_obj = seurat_data, cell_type_markers = cell_type_markers, quantile = 0.8, plot_path = paste0(plot_path, "scHelper_log/"))
 
-# # Plot distribution of contamination gene modules
-# png(paste0(plot_path, "CelltypeClustersBoxPLot.png"), width = 40, height = 30, units = "cm", res = 200)
-# PlotCelltype(seurat_obj = seurat_data, gene_list = cell_type_markers, quantiles = 0.90, ncol = 2)
-# graphics.off()
-
-seurat_data <- ClusterClassification(seurat_obj = seurat_data, cell_type_markers = cell_type_markers, quantile = 0.8, plot_path = paste0(plot_path, "scHelper_log/"), fast = TRUE)
-
-
-# Plot UMAP for cell type annotations
-png(paste0(plot_path, "scHelper_celltype_umap.png"), width=40, height=20, units = 'cm', res = 200)
-DimPlot(seurat_data, group.by = "scHelper_cell_type")
+# Plot UMAP for clusters and developmental stage
+png(paste0(plot_path, "scHelper_celltype_umap.png"), width=50, height=20, units = 'cm', res = 200)
+ClustStagePlot(seurat_data, stage_col = "stage", cluster_col = "scHelper_cell_type")
 graphics.off()
 
 saveRDS(seurat_data, paste0(rds_path, "cell_state_classification.RDS"), compress = FALSE)
+
+# 
+# 
+# genes <- c("SOX10", "DLX2", "SIX1", "TEAD3", "TEAD4", "SOX21", "SOX2")
+# 
+# for(i in genes){
+#   png(paste0(plot_path, "temp_", i, ".png"), width=25, height=20, units = 'cm', res = 200)
+#   print(Seurat::VlnPlot(seurat_data, i, group.by = 'scHelper_cell_type'))
+#   graphics.off()
+# }
+# 
+
+
 
 # 
 # # Plot multi feature plot
