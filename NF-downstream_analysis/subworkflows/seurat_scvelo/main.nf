@@ -21,7 +21,7 @@ workflow SEURAT_SCVELO {
         .combine(loom)
         .combine(annotations)
         .set{ch_scveloInput}
-
+        
     SEURAT_INTERSECT_LOOM ( ch_scveloInput ) //channel: [[meta], seurat, loom, annotations]
     SCVELO_RUN (SEURAT_INTERSECT_LOOM.out.loom) //channel: [[meta], loom]
 

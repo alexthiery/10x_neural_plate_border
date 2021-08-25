@@ -4,6 +4,9 @@ import os
 import sys
 import argparse
 import scvelo as scv
+import cellrank as cr
+import numpy as np
+import warnings
 
 
 def parse_args(args=None):
@@ -19,10 +22,11 @@ def parse_args(args=None):
     parser.add_argument('-b', '--batchColumn', type=str, help="Name of batch column.", default=None, metavar='')
     parser.add_argument('-g', '--genes', help="Genes of interest to plot on velocity.", nargs='+')
     parser.add_argument('-n', '--ncores', type=int, help="Number of cores used for parallelisation.", metavar='', default=1)
-    # parser.add_argument('-r', '--ram', type=int, help="Max memory usage in Gigabyte.", metavar='', default=12)
     parser.add_argument('-d', '--dpi', type=int, help='Set DPI for plots.', default='240')
     parser.add_argument('-gd', '--geneDiscovery', type=bool, help='Run unbiased gene discovery.', default=True)
     parser.add_argument('-f', '--forceCol', type=bool, help='Force plotting color bars.', default=False)
+    parser.add_argument('-cr', '--cellRank', type=bool, help='Run cellRank lineage inference.', default=True)
+    parser.add_argument('-cc', '--coloursColumn', type=str, help='Name of cell colours column.', default=None)
     return parser.parse_args(args)
 
 # def check_args(args=None):
@@ -31,7 +35,6 @@ def parse_args(args=None):
 #             raise Exception("'--loomOutput' must be specified when '--input' is a directory containing loom files to concatenate.")
 #     elif not os.path.isfile(args.input):
 #         raise Exception(f"'--input': '{args.input}' is not a valid path.")
-
 
 # Read in loom data
 def read_loom(loom_path, clusterColumn, stageColumn, batchColumn):
@@ -43,6 +46,11 @@ def read_loom(loom_path, clusterColumn, stageColumn, batchColumn):
     if batchColumn is not None:   
         adata.obs[batchColumn]=adata.obs[batchColumn].astype('category')
     return(adata)
+
+# extract unique elements in a list whilst preserving their order of appearance in the list
+def unique(sequence):
+    seen = set()
+    return [x for x in sequence if not (x in seen or seen.add(x))]
 
 # Plot splice proportions
 def plot_proportions(adata, clusterColumn):
@@ -164,6 +172,102 @@ def calc_diff_kinetics(adata, clusterColumn, plot_dir=""):
     scv.pl.scatter(adata, basis=top_genes[20:40], ncols=5, add_outline='fit_diff_kinetics', frameon=False, add_linfit=True, linewidth=2, save=plot_dir+"/top_genes_diff_kinetics_21-40.png")
     return(adata)
 
+def identify_lineages(adata, clusterColumn, plot_dir="", prefix="", dpi=240, weight_connectivities=0.2):
+    if plot_dir != "" and not os.path.exists(scv.settings.figdir+plot_dir):
+        os.makedirs(scv.settings.figdir+plot_dir)
+        
+    cr.tl.terminal_states(adata, cluster_key=clusterColumn, weight_connectivities=weight_connectivities)
+    # re-index to solve index bugs
+    adata.obs = adata.obs.reindex(copy=False)
+    cr.pl.terminal_states(adata, discrete=True, save=plot_dir+prefix+'terminal_states.png', dpi=dpi)
+    
+    cr.tl.initial_states(adata, cluster_key=clusterColumn)
+    # re-index to solve index bugs
+    adata.obs = adata.obs.reindex(copy=False)
+    cr.pl.initial_states(adata, discrete=True, save=plot_dir+prefix+'initial_states.png', dpi=dpi)
+    
+    cr.tl.lineages(adata)
+    cr.pl.lineages(adata, same_plot=False, save=plot_dir+prefix+'lineages.png', dpi=dpi)
+    cr.pl.lineages(adata, same_plot=True, save=plot_dir+prefix+'lineages_overlap.png', dpi=dpi)
+    return(adata)
+
+def directed_paga(adata, clusterColumn, plot_dir="", prefix="", dpi=240, weight_connectivities=0.2):
+    if plot_dir != "" and not os.path.exists(scv.settings.figdir+plot_dir):
+        os.makedirs(scv.settings.figdir+plot_dir)
+        
+    scv.tl.paga(adata, groups=clusterColumn, root_key="initial_states_probs", end_key="terminal_states_probs",
+                use_time_prior="velocity_pseudotime")
+    cr.pl.cluster_fates(adata, mode="paga_pie", cluster_key=clusterColumn, basis="umap",
+                        legend_kwargs={"loc": "top right out"}, legend_loc="top left out", node_size_scale=5,
+                        edge_width_scale=1, max_edge_width=4, title="directed PAGA",
+                        save=plot_dir+prefix+'directed_paga.png', dpi=dpi)
+    
+
+    
+# functions for running scvelo/cellrank subworkflows
+def run_scvelo_deterministic(adata, args):
+    if args.geneDiscovery == True:
+        # Identify and plot genes that have cluster-specific differential velocity expression
+        top_cluster_genes = ident_top_genes(adata, args.clusterColumn)
+        plot_genes(adata=adata, genes_dict=top_cluster_genes, clusterColumn=args.clusterColumn, plot_dir = 'gene_discovery/', dpi=args.dpi)
+        plot_differentiation(adata, clusterColumn=args.clusterColumn, dpi=args.dpi)
+        
+    # Plot velocity for manual GOI
+    if args.genes is not None:
+        manual_genes = {args.genes[i]: args.genes[i] for i in range(0, len(args.genes))}
+        plot_genes(adata=adata, genes_dict=manual_genes, clusterColumn=args.clusterColumn, plot_dir = 'goi/', dpi=args.dpi)
+    
+    return(adata)
+
+
+def run_scvelo_dynamical(adata, args):
+    adata = latent_time(adata, dpi=args.dpi)
+    if args.geneDiscovery == True:
+        plot_latent_time_heatmap(adata, clusterColumn = args.clusterColumn, stageColumn = args.stageColumn, forceCol = args.forceCol, batchColumn = args.batchColumn, plot_dir='gene_discovery_dynamical/')
+        # Identify and plot genes that have cluster-specific differential velocity expression
+        top_cluster_genes = ident_top_genes_dynamical(adata, clusterColumn = args.clusterColumn)
+        plot_genes_dynamical(adata, genes_dict=top_cluster_genes, clusterColumn=args.clusterColumn, plot_dir = 'gene_discovery_dynamical/', dpi=args.dpi)
+    # Plot velocity for manual GOI
+    if args.genes is not None:
+        manual_genes = {args.genes[i]: args.genes[i] for i in range(0, len(args.genes))}
+        plot_genes_dynamical(adata=adata, genes_dict=manual_genes, clusterColumn=args.clusterColumn, plot_dir = 'goi_dynamical/', dpi=args.dpi)
+
+    print('Calculating differential kinetics and recomputing velocity')
+    adata = calc_diff_kinetics(adata=adata, clusterColumn=args.clusterColumn, plot_dir="")
+    adata = calc_velocity(adata=adata, velocityMode=args.velocityMode, ncores=args.ncores, diffKinetics=True, groupby=args.clusterColumn)
+    plot_velocity(adata=adata, clusterColumn=args.clusterColumn, plot_dir="diff_kinetics/", dpi=args.dpi)
+    return(adata)
+
+def write_lineage_probs(adata):
+    for lineage in adata.obsm['to_terminal_states'].names:
+        colname = lineage + '_lineage_probs'
+        if colname in adata.obs.columns:
+            warnings.warn(colname + ' is already specified in adata.obs. Overriding original entry.')
+            del adata.obs[colname]
+        
+        adata.obs[colname] = adata.obsm['to_terminal_states'][lineage]
+    
+    print('Adding terminal states to metadata')
+    adata.obs = adata.obs.reindex(copy=False)
+    return(adata)
+    
+def run_cellRank(adata, args):
+    if args.velocityMode != 'dynamical':
+        sys.exit('--velocityMode must be set to "dynamical" in order to run cellRank')
+
+    print('Running cellRank')
+
+    adata = identify_lineages(adata, clusterColumn=args.clusterColumn, plot_dir = 'cell_rank/', dpi=args.dpi)
+    # Calculate latent time using CellRank root_key and end_key cells
+    scv.tl.recover_latent_time(adata, root_key="initial_states_probs", end_key="terminal_states_probs")
+    directed_paga(adata, clusterColumn=args.clusterColumn, plot_dir = 'cell_rank/', dpi=args.dpi)
+    
+    adata = write_lineage_probs(adata)
+
+    print('Calculating lineage drivers')
+    cr.tl.lineage_drivers(adata)
+    return(adata)
+
 
 def main(args=None):
     
@@ -174,64 +278,51 @@ def main(args=None):
     scv.logging.print_version()
     scv.settings.plot_prefix = "" # remove plot prefix
     scv.settings.n_jobs = args.ncores  # set max width size for presenter view
-    # scv.settings.max_memory = args.ram  # for beautified visualization
     
     adata = read_loom(loom_path=args.input, clusterColumn=args.clusterColumn, stageColumn=args.stageColumn, batchColumn=args.batchColumn)
+    
+    # Set plotting colours if available
+    if args.coloursColumn is not None:
+        print('Setting cluster colours using ' + args.coloursColumn + ' column')
+        # Extract cell colours for plotting
+        adata.uns[args.coloursColumn + '_colors'] = unique(adata.obs[args.coloursColumn])
+    
     plot_proportions(adata=adata, clusterColumn=args.clusterColumn)
     
     adata = preprocess_anndata(adata=adata)
     adata = calc_moments(adata=adata)
     adata = calc_velocity(adata=adata, velocityMode=args.velocityMode, ncores=args.ncores)
     plot_velocity(adata=adata, clusterColumn=args.clusterColumn, dpi=args.dpi)
-    
 
     # Calculate velocity pseudotime and paga graph and plot
     velocity_pseudotime(adata, dpi=args.dpi)
     adata, paga_df = paga(adata, clusterColumn=args.clusterColumn, dpi=args.dpi)
     
-    
     # Run dynamical or deterministic models and plot genes
     if args.velocityMode == 'deterministic':
-        if args.geneDiscovery == True:
-            # Identify and plot genes that have cluster-specific differential velocity expression
-            top_cluster_genes = ident_top_genes(adata, args.clusterColumn)
-            plot_genes(adata=adata, genes_dict=top_cluster_genes, clusterColumn=args.clusterColumn, plot_dir = 'gene_discovery/', dpi=args.dpi)
-            plot_differentiation(adata, clusterColumn=args.clusterColumn, dpi=args.dpi)
-        # Plot velocity for manual GOI
-        if args.genes is not None:
-            manual_genes = {args.genes[i]: args.genes[i] for i in range(0, len(args.genes))}
-            plot_genes(adata=adata, genes_dict=manual_genes, clusterColumn=args.clusterColumn, plot_dir = 'goi/', dpi=args.dpi)
+        adata = run_scvelo_deterministic(adata, args)
     
     if args.velocityMode == 'dynamical':
-        adata = latent_time(adata, dpi=args.dpi)
-        if args.geneDiscovery == True:
-            plot_latent_time_heatmap(adata, clusterColumn = args.clusterColumn, stageColumn = args.stageColumn, forceCol = args.forceCol, batchColumn = args.batchColumn, plot_dir='gene_discovery_dynamical/')
-            # Identify and plot genes that have cluster-specific differential velocity expression
-            top_cluster_genes = ident_top_genes_dynamical(adata, clusterColumn = args.clusterColumn)
-            plot_genes_dynamical(adata, genes_dict=top_cluster_genes, clusterColumn=args.clusterColumn, plot_dir = 'gene_discovery_dynamical/', dpi=args.dpi)
-        # Plot velocity for manual GOI
-        if args.genes is not None:
-            manual_genes = {args.genes[i]: args.genes[i] for i in range(0, len(args.genes))}
-            plot_genes_dynamical(adata=adata, genes_dict=manual_genes, clusterColumn=args.clusterColumn, plot_dir = 'goi_dynamical/', dpi=args.dpi)
-        
-        print('Calculate differential kinetics and recompute velocity')
-        adata = calc_diff_kinetics(adata=adata, clusterColumn=args.clusterColumn, plot_dir="")
-        adata = calc_velocity(adata=adata, velocityMode=args.velocityMode, ncores=args.ncores, diffKinetics=True, groupby=args.clusterColumn)
-        plot_velocity(adata=adata, clusterColumn=args.clusterColumn, plot_dir="diff_kinetics/", dpi=args.dpi)
+        adata = run_scvelo_dynamical(adata, args)
     
+    if args.cellRank == True:
+        adata = run_cellRank(adata, args)
+
     adata.write(args.output + '_scvelo.h5ad')
     adata.obs.to_csv(args.output + '_metadata.csv')
+    # return(args, adata)
 
 if __name__ == '__main__':
     sys.exit(main())
 
 
-# # Generate test data
-# args = parse_args(args)
-# adata = read_loom(args.input, args.clusterColumn)
+# Generate test data
+# adata = scv.read('../output/NF-downstream_analysis_stacas/scvelo/seurat_intersect_loom/NF-scRNAseq_alignment_out/NF-scRNAseq_alignment_out_seurat_intersect.loom')
 # adata = adata[adata.obs.index[0:1000], adata.var.index[0:5000]]
-# adata.write_loom('test_loom.loom', write_obsm_varm=True)
+# adata.write('./test.h5ad')
 
-# # set args for interactive testing
-# args = ['-i', 'seurat_merged.loom', '-o', 'test.h5ad', '-m', 'dynamical', '-c', 'seurat_clusters', '-s', 'stage', '-b', 'run', '-n', '4', '--genes', 'NET1', 'ZC3HC1', '--differentialKinetics', 'True']
-# main(args)
+# set args for interactive testing
+# args = ['-i', './test.h5ad', '-o', 'out.h5ad', '-m', 'dynamical', '-c',
+#         'seurat_clusters', '-s', 'stage', '-b', 'run', '--ncores', '8', '--coloursColumn', 'cell_colours']
+
+# args, adata = main(args)

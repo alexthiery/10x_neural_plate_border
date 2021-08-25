@@ -9,6 +9,7 @@ option_list <- list(
     make_option(c("-r", "--runtype"), action = "store", type = "character", help = "Specify whether running through through 'nextflow' in order to switch paths"),
     make_option(c("-c", "--cores"), action = "store", type = "integer", help = "Number of CPUs"),
     make_option(c("-m", "--meta_col"), action = "store", type = "character", help = "Name of metadata column containing groups to subset"),
+    make_option(c("-o", "--output"), action = "store", type = "character", help = "Name of output RDS file", default = 'seurat_subset'),
     make_option(c("-g", "--groups"), action = "store", type = "character", help = "Classifications of cells (within meta_col) to subset from dataset. \
     If multiple classifications are used to subest, must be provided as a comma separated list i.e. --groups celltype1,celltype2"),
     make_option(c("", "--verbose"), action = "store_true", type = "logical", help = "Verbose", default = FALSE)
@@ -33,5 +34,5 @@ seurat_data <- readRDS(list.files(data_path, full.names = TRUE))
 seurat_subset <- subset(seurat_data, subset = !!as.symbol(opt$meta_col) %in% groups)
 
 # save RDS object for each stage/run
-saveRDS(seurat_subset, paste0(rds_path, "seurat_subset.RDS"), compress = FALSE)
+saveRDS(seurat_subset, paste0(rds_path, opt$output, "RDS"), compress = FALSE)
 
