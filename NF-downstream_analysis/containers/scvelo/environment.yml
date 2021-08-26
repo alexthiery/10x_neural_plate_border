@@ -4,6 +4,7 @@ channels:
   - bioconda
   - defaults
   - conda-forge
+  - anaconda
 
 dependencies:
   - python=3.8.5
@@ -13,3 +14,9 @@ dependencies:
   - ipywidgets
   - python-igraph
   - cellrank
+  - openmpi
+  - petsc
+  - petsc4py
+  - slepc
+  - slepc4py
+  - mpi4py
