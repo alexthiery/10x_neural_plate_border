@@ -34,5 +34,5 @@ seurat_data <- readRDS(list.files(data_path, full.names = TRUE))
 seurat_subset <- subset(seurat_data, subset = !!as.symbol(opt$meta_col) %in% groups)
 
 # save RDS object for each stage/run
-saveRDS(seurat_subset, paste0(rds_path, opt$output, "RDS"), compress = FALSE)
+saveRDS(seurat_subset, paste0(rds_path, opt$output, ".RDS"), compress = FALSE)
 
