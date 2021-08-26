@@ -65,8 +65,8 @@ include {SEURAT_H5AD} from "$baseDir/modules/local/seurat_h5ad/main"            
 include {SEURAT_SCVELO} from "$baseDir/subworkflows/seurat_scvelo/main"                         addParams(  seurat_intersect_loom_options:          modules['seurat_intersect_loom'],
                                                                                                             scvelo_run_options:                     modules['scvelo_run'])
 
-// include {R as GENE_MODULES_LATENT_TIME} from "$baseDir/modules/local/r/main"                    addParams(  options:                                modules['gene_modules_latent_time'],
-//                                                                                                             script:                                 analysis_scripts.gene_modules_latent_time )
+include {R as GENE_MODULES_LATENT_TIME} from "$baseDir/modules/local/r/main"                    addParams(  options:                                modules['gene_modules_latent_time'],
+                                                                                                            script:                                 analysis_scripts.gene_modules_latent_time )
 
 
 workflow {
@@ -122,5 +122,5 @@ workflow {
     ch_gene_module_latent_time  = ch_cluster_rds.combine(ch_gene_modules_rds, by: 0).combine(SEURAT_SCVELO.out.scvelo_run_out_metadata, by: 0)
     ch_gene_module_latent_time  = ch_gene_module_latent_time.map{[it[0], [it[1], it[2], it[3]]]}
     
-    // GENE_MODULES_LATENT_TIME( ch_gene_module_latent_time )
+    GENE_MODULES_LATENT_TIME( ch_gene_module_latent_time )
 }
