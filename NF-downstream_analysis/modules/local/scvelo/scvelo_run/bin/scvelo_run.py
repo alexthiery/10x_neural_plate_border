@@ -240,7 +240,7 @@ def run_scvelo_dynamical(adata, args):
 
 def write_lineage_probs(adata):
     for lineage in adata.obsm['to_terminal_states'].names:
-        colname = lineage + '_lineage_probs'
+        colname = 'lineage_' + lineage + '_probability'
         if colname in adata.obs.columns:
             warnings.warn(colname + ' is already specified in adata.obs. Overriding original entry.')
             del adata.obs[colname]
