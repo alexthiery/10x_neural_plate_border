@@ -37,54 +37,35 @@ include {MERGE_LOOM} from "$baseDir/modules/local/merge_loom/main"              
 
 include {SEURAT_FILTERED_PROCESS} from "$baseDir/subworkflows/seurat_filtered_process/main"     addParams(  scatterplot3d_options:                  modules['scatterplot3d'],
                                                                                                             gene_module_options:                    modules['gene_modules'],
-                                                                                                            state_classification_options:           modules['state_classification'],seurat_h5ad_options:                    modules['seurat_h5ad'],
-                                                                                                            seurat_intersect_loom_options:          modules['seurat_intersect_loom'],
-                                                                                                            scvelo_run_options:                     modules['scvelo_run'],
-                                                                                                            gene_modules_latent_time_options:       modules['gene_modules_latent_time'])
+                                                                                                            state_classification_options:           modules['state_classification'])
 
 // Subworkflows for subset stage, run and clusters from seurat object and run downstream analysis pipelines
 include {SEURAT_STAGE_PROCESS} from "$baseDir/subworkflows/seurat_stage_process/main"           addParams(  split_options:                          modules['stage_split'],
                                                                                                             cluster_options:                        modules['stage_cluster'],
                                                                                                             gene_modules_options:                   modules['stage_gene_modules'],
-                                                                                                            state_classification_options:           modules['stage_state_classification'],
-                                                                                                            seurat_h5ad_options:                    modules['seurat_h5ad'],
-                                                                                                            seurat_intersect_loom_options:          modules['stage_seurat_intersect_loom'],
-                                                                                                            scvelo_run_options:                     modules['stage_scvelo_run'],
-                                                                                                            gene_modules_latent_time_options:       modules['stage_gene_modules_latent_time'])
+                                                                                                            state_classification_options:           modules['stage_state_classification'])
 
 include {SEURAT_RUN_PROCESS} from "$baseDir/subworkflows/seurat_run_process/main"               addParams(  split_options:                          modules['run_split'],
                                                                                                             cluster_options:                        modules['run_cluster'],
                                                                                                             gene_modules_options:                   modules['run_gene_modules'],
-                                                                                                            state_classification_options:           modules['run_state_classification'],
-                                                                                                            seurat_h5ad_options:                    modules['seurat_h5ad'],
-                                                                                                            seurat_intersect_loom_options:          modules['run_seurat_intersect_loom'],
-                                                                                                            scvelo_run_options:                     modules['run_scvelo_run'],
-                                                                                                            gene_modules_latent_time_options:       modules['run_gene_modules_latent_time'])
+                                                                                                            state_classification_options:           modules['run_state_classification'])
 
 include {SEURAT_CLUSTERS_PROCESS as SEURAT_NPB_PROCESS} from "$baseDir/subworkflows/seurat_clusters_process/main"     addParams(  subset_options:                         modules['npb_subset'],
                                                                                                             cluster_options:                        modules['clusters_cluster'],
                                                                                                             gene_modules_options:                   modules['clusters_gene_modules'],
-                                                                                                            state_classification_options:           modules['clusters_state_classification'],
-                                                                                                            seurat_h5ad_options:                    modules['seurat_h5ad'],
-                                                                                                            seurat_intersect_loom_options:          modules['clusters_seurat_intersect_loom'],
-                                                                                                            scvelo_run_options:                     modules['clusters_scvelo_run'],
-                                                                                                            gene_modules_latent_time_options:       modules['clusters_gene_modules_latent_time'])
+                                                                                                            state_classification_options:           modules['clusters_state_classification'])
 
 include {SEURAT_CLUSTERS_PROCESS as SEURAT_HH4_PROCESS} from "$baseDir/subworkflows/seurat_clusters_process/main"     addParams(  subset_options:                         modules['hh4_subset'],
                                                                                                             cluster_options:                        modules['clusters_cluster'],
                                                                                                             gene_modules_options:                   modules['clusters_gene_modules'],
-                                                                                                            state_classification_options:           modules['clusters_state_classification'],
-                                                                                                            seurat_h5ad_options:                    modules['seurat_h5ad'],
-                                                                                                            seurat_intersect_loom_options:          modules['clusters_seurat_intersect_loom'],
-                                                                                                            scvelo_run_options:                     modules['clusters_scvelo_run'],
-                                                                                                            gene_modules_latent_time_options:       modules['clusters_gene_modules_latent_time'])
+                                                                                                            state_classification_options:           modules['clusters_state_classification'])
 
 include {SEURAT_H5AD} from "$baseDir/modules/local/seurat_h5ad/main"                            addParams(  options:                                modules['seurat_h5ad'] )
 
-include {SEURAT_SCVELO} from "$baseDir/subworkflows/seurat_scvelo/main"                         addParams(  seurat_intersect_loom_options:          modules['clusters_seurat_intersect_loom'],
-                                                                                                            scvelo_run_options:                     modules['clusters_scvelo_run'])
+include {SEURAT_SCVELO} from "$baseDir/subworkflows/seurat_scvelo/main"                         addParams(  seurat_intersect_loom_options:          modules['seurat_intersect_loom'],
+                                                                                                            scvelo_run_options:                     modules['scvelo_run'])
 
-include {R as GENE_MODULES_LATENT_TIME} from "$baseDir/modules/local/r/main"                    addParams(  options:                                modules['clusters_gene_modules_latent_time'],
+include {R as GENE_MODULES_LATENT_TIME} from "$baseDir/modules/local/r/main"                    addParams(  options:                                modules['gene_modules_latent_time'],
                                                                                                             script:                                 analysis_scripts.gene_modules_latent_time )
 
 
@@ -128,8 +109,18 @@ workflow {
     SEURAT_HH4_PROCESS( SEURAT_FILTERED_PROCESS.out.state_classification_out)
 
     // Prepare outputs for scVelo
-    ch_seurat_concat = SEURAT_STAGE_PROCESS.out.cluster_out.concat(SEURAT_RUN_PROCESS.out.cluster_out).concat(SEURAT_HH4_PROCESS.out.cluster_out)
-    ch_gene_modules_concat = SEURAT_STAGE_PROCESS.out.gene_modules_out.concat(SEURAT_RUN_PROCESS.out.gene_modules_out).concat(SEURAT_HH4_PROCESS.out.gene_modules_out)
+    ch_seurat_concat =          SEURAT_FILTERED_PROCESS.out.state_classification_out
+                                    .concat(SEURAT_STAGE_PROCESS.out.cluster_out)
+                                    .concat(SEURAT_RUN_PROCESS.out.cluster_out)
+                                    .concat(SEURAT_HH4_PROCESS.out.cluster_out)
+                                    .concat(SEURAT_NPB_PROCESS.out.cluster_out)
+
+
+    ch_gene_modules_concat =    SEURAT_FILTERED_PROCESS.out.gene_modules_out
+                                    .concat(SEURAT_STAGE_PROCESS.out.gene_modules_out)
+                                    .concat(SEURAT_RUN_PROCESS.out.gene_modules_out)
+                                    .concat(SEURAT_HH4_PROCESS.out.gene_modules_out)
+                                    .concat(SEURAT_NPB_PROCESS.out.gene_modules_out)
 
     // Run scVelo
     SEURAT_H5AD( ch_seurat_concat )
