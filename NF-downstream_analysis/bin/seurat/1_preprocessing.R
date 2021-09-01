@@ -277,8 +277,9 @@ for(run in names(seurat_split)){
 }
 
 # Filter poor quality clusters
-preprocessing_data <- lapply(seurat_split, function(x) {
-  subset(x, cells = rownames(filter(x@meta.data, seurat_clusters %in% poor_clusters)), invert = T)
+preprocessing_data <- lapply(names(seurat_split), function(x) {
+  subset(seurat_split[[x]], cells = rownames(filter(seurat_split[[x]]@meta.data, seurat_clusters %in% poor_clusters[[x]])), invert = T)
 })
+names(preprocessing_data) <- names(seurat_split)
 
 saveRDS(preprocessing_data, paste0(rds_path, "preprocessing_data.RDS"), compress = FALSE)
