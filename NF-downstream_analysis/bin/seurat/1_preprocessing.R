@@ -78,9 +78,9 @@ seurat_all <- DietSeurat(seurat_all, features = names(which(Matrix::rowSums(GetA
 seurat_all <- PercentageFeatureSet(seurat_all, pattern = "^MT-", col.name = "percent.mt")
 
 # make dataframe with different filtering parameters which can be put into a loop for carrying out downstream analysis
-filter_thresholds <- data.frame(gene_min = c(0, 1000, 1500, 2000), gene_max = c(Inf, 7000, 6500, 6000), MT_max = c(Inf, 15, 15, 15), row.names = c("unfilt", "low", "med", "high"))
+filter_thresholds <- data.frame(gene_min = c(0, 500, 1000, 1500), gene_max = c(Inf, 7000, 6500, 6000), MT_max = c(Inf, 15, 15, 15), row.names = c("unfilt", "low", "med", "high"))
 
-# Plot remaining cells following different filter thresholds
+# Calculate remaining cells following different filter thresholds
 filter_qc <- lapply(rownames(filter_thresholds), function(condition){
   seurat_all@meta.data %>%
     filter(nFeature_RNA > filter_thresholds[condition,'gene_min']) %>%
@@ -93,13 +93,17 @@ filter_qc <- lapply(rownames(filter_thresholds), function(condition){
 
 filter_qc <- Reduce(function(x, y) merge(x, y), filter_qc)
 
+# Plot remaining cell counts
+filter_qc <-  filter_qc %>% column_to_rownames('orig.ident')
+filter_qc <- rbind(filter_qc, Total = colSums(filter_qc)) %>% rownames_to_column("orig.ident")
+
 png(paste0(plot_path, 'remaining_cell_table.png'), height = 10, width = 18, units = 'cm', res = 400)
 grid.arrange(top=textGrob("Remaining Cell Count", gp=gpar(fontsize=12, fontface = "bold"), hjust = 0.5, vjust = 3),
              tableGrob(filter_qc, rows=NULL, theme = ttheme_minimal()))
 graphics.off()
 
 png(paste0(plot_path, 'remaining_cell_bar.png'), height = 15, width = 21, units = 'cm', res = 400)
-ggplot(filter_qc %>% reshape2::melt(), aes(x=variable, y=value, fill=orig.ident)) +
+ggplot(filter_qc[filter_qc$orig.ident != "Total",] %>% reshape2::melt(), aes(x=variable, y=value, fill=orig.ident)) +
   geom_bar(stat = "identity", position = position_dodge()) +
   xlab("Filter Condition") +
   ylab("Cell Count") +
@@ -109,7 +113,7 @@ ggplot(filter_qc %>% reshape2::melt(), aes(x=variable, y=value, fill=orig.ident)
 graphics.off()
 
 
-# Plot median gene count per cell following different filter thresholds
+# Calculate median gene count per cell following different filter thresholds
 filter_qc <- lapply(rownames(filter_thresholds), function(condition){
   seurat_all@meta.data %>%
     filter(nFeature_RNA > filter_thresholds[condition,'gene_min']) %>%
@@ -121,6 +125,7 @@ filter_qc <- lapply(rownames(filter_thresholds), function(condition){
     rename(!!condition := median)
 })
 
+# Plot median gene count per cell
 filter_qc <- Reduce(function(x, y) merge(x, y), filter_qc)
 
 png(paste0(plot_path, 'median_gene_count_table.png'), height = 10, width = 18, units = 'cm', res = 400)
@@ -153,7 +158,7 @@ filter_qc <- lapply(seq(from = 0, to = 3000, by = 10), function(cutoff){
 
 filter_qc <- Reduce(function(x, y) merge(x, y), filter_qc) %>% reshape2::melt() %>% mutate(variable = as.integer(variable)*10)
 
-png(paste0(plot_path, 'median_gene_count_bar.png'), height = 15, width = 21, units = 'cm', res = 400)
+png(paste0(plot_path, 'median_gene_count_simulation.png'), height = 15, width = 21, units = 'cm', res = 400)
 ggplot(filter_qc, aes(x=variable, y=value, group=orig.ident)) +
   geom_line(aes(colour = orig.ident)) +
   xlab("Lower Gene Threshold") +
@@ -176,7 +181,7 @@ filter_qc <- lapply(rownames(filter_thresholds), function(condition){
 
 filter_qc <- do.call(rbind, filter_qc) %>%
   mutate(filter_condition = factor(filter_condition, rownames(filter_thresholds))) %>%
-  mutate(nCount_RNA = ifelse(nCount_RNA >= 100000, 100000, nCount_RNA)) %>% # limit max RNA to 100k
+  mutate(nCount_RNA = ifelse(nCount_RNA >= 100000, 100000, nCount_RNA)) %>% # limit max RNA to 100k for plotting
   reshape2::melt()
 
 png(paste0(plot_path, 'violins_filter_thresholds.png'), height = 18, width = 30, units = 'cm', res = 400)
@@ -191,11 +196,12 @@ graphics.off()
 
 ##########################################################################
 ############# Remove data which do not pass filter threshold #############
-
-seurat_all <- subset(seurat_all, subset = c(nFeature_RNA > 1000 & nFeature_RNA < 6000 & percent.mt < 15))
+seurat_split <- subset(seurat_all, subset = c(nFeature_RNA > filter_thresholds['med','gene_min'] &
+                                                nFeature_RNA < filter_thresholds['med','gene_max'] &
+                                                percent.mt < filter_thresholds['med','MT_max']))
 
 # Split object by run and find integration points
-seurat_split <- SplitObject(seurat_all, split.by = "run")
+seurat_split <- SplitObject(seurat_split, split.by = "run")
 
 # Log normalize data, find variable features and scale data
 seurat_split <- lapply(seurat_split, NormalizeData, normalization.method = "LogNormalize", scale.factor = 10000)
@@ -233,7 +239,7 @@ for(run in names(seurat_split)){
   graphics.off()
 }
 
-# Use clustering resolution = 0.5 for filtering
+# Use clustering resolution = 1 for filtering
 seurat_split <- lapply(names(pc_cutoff), function(x) RunUMAP(seurat_split[[x]], dims = 1:pc_cutoff[[x]], verbose = FALSE))
 names(seurat_split) <- names(pc_cutoff)
 
@@ -282,4 +288,39 @@ preprocessing_data <- lapply(names(seurat_split), function(x) {
 })
 names(preprocessing_data) <- names(seurat_split)
 
+
+# Plot table with remaining cell counts after full filtering
+cell_counts <- data.frame(unfilt = summary(seurat_all@meta.data$orig.ident),
+                          filtered = lapply(preprocessing_data, function(x) summary(x@meta.data$orig.ident)) %>% do.call(cbind.data.frame, .) %>% rowSums())
+
+cell_counts <- rbind(cell_counts, Total = colSums(cell_counts)) %>% rownames_to_column("orig.ident")
+
+png(paste0(plot_path, 'final_remaining_cell_table.png'), height = 10, width = 10, units = 'cm', res = 400)
+grid.arrange(top=textGrob("Remaining Cell Count", gp=gpar(fontsize=12, fontface = "bold"), hjust = 0.5, vjust = 3),
+             tableGrob(cell_counts, rows=NULL, theme = ttheme_minimal()))
+graphics.off()
+
+# Save RDS output
 saveRDS(preprocessing_data, paste0(rds_path, "preprocessing_data.RDS"), compress = FALSE)
+
+
+#############
+# Cluster data and plot to check for batch effects before integration
+preprocessing_data <- merge(x = preprocessing_data$`1`, y = preprocessing_data$`2`)
+
+# Re-run findvariablefeatures and scaling
+preprocessing_data <- NormalizeData(preprocessing_data, normalization.method = "LogNormalize", scale.factor = 10000)
+preprocessing_data <- FindVariableFeatures(preprocessing_data, selection.method = "vst", nfeatures = 2000, assay = 'RNA')
+preprocessing_data <- ScaleData(preprocessing_data, features = rownames(preprocessing_data), vars.to.regress = c("percent.mt"))
+
+# PCA
+preprocessing_data <- RunPCA(object = preprocessing_data, verbose = FALSE)
+pc_cutoff <- ElbowCutoff(preprocessing_data)
+
+preprocessing_data <- FindNeighbors(preprocessing_data, dims = 1:pc_cutoff, verbose = FALSE)
+preprocessing_data <- RunUMAP(preprocessing_data, dims = 1:pc_cutoff, verbose = FALSE)
+
+# Plot UMAP to check for batch effect
+png(paste0(plot_path, "CheckBatchEffect.png"), width=60, height=20, units = 'cm', res = 200)
+CheckIntegration(preprocessing_data)
+graphics.off()
