@@ -55,7 +55,7 @@ seurat_split <- lapply(seurat_split, function(x) {
 # Get array of all genes across all datasets in order to integrate using all features
 all_features <- lapply(seurat_split, row.names) %>% Reduce(intersect, .)
 # Find anchors used for integration
-integration_data <- Run.STACAS(seurat_split, dims = 1:20, anchor.features = 500)
+integration_data <- Run.STACAS(seurat_split, dims = 1:20, anchor.features = 2000)
 # Integrate data
 integration_data <- IntegrateData(anchorset = integration_data, dims = 1:20, features.to.integrate = all_features)
 
