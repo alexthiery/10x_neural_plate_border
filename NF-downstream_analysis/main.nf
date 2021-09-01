@@ -123,7 +123,7 @@ workflow {
                                     .concat(SEURAT_RUN_PROCESS.out.cluster_out)
                                     .concat(SEURAT_HH4_PROCESS.out.cluster_out)
                                     .concat(SEURAT_NPB_PROCESS.out.cluster_out)
-                                    .concat(SEURAT_NPB_HH4_PROCESS.out.cluser_out)
+                                    .concat(SEURAT_NPB_HH4_PROCESS.out.cluster_out)
 
 
     ch_gene_modules_concat =    SEURAT_FILTERED_PROCESS.out.gene_modules_out
