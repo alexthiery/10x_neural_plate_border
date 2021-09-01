@@ -53,6 +53,32 @@ opt = getopt(spec)
 
 integration_qc_data <- readRDS(list.files(data_path, full.names = TRUE))
 
+
+# ################################################################################################
+# # Plot batch effect before integration
+
+# # Set RNA assay to check batch effect before integration
+# DefaultAssay(integration_qc_data) <- "RNA"
+
+# # Log normalize data and find variable features
+# integration_qc_data <- NormalizeData(integration_qc_data, normalization.method = "LogNormalize", scale.factor = 10000)
+# integration_qc_data <- FindVariableFeatures(integration_qc_data, selection.method = "vst", nfeatures = 2000)
+
+# # Run PCA analysis
+# integration_qc_data <- RunPCA(object = integration_qc_data, verbose = FALSE)
+# pc_cutoff <- ElbowCutoff(integration_qc_data)
+
+# integration_qc_data <- RunUMAP(integration_qc_data, dims = 1:pc_cutoff, verbose = FALSE)
+# integration_qc_data <- FindNeighbors(integration_qc_data, dims = 1:pc_cutoff, verbose = FALSE)
+
+# # check whether stages that are resequenced are well integrated
+# png(paste0(plot_path, "CheckBatchEffect.png"), width=60, height=20, units = 'cm', res = 200)
+# CheckIntegration(integration_qc_data)
+# graphics.off()
+
+# ################################################################################################
+
+
 # Set integrated assay as default for clustering
 DefaultAssay(integration_qc_data) <- "integrated"
 

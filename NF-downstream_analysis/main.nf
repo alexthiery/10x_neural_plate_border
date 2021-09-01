@@ -55,7 +55,14 @@ include {SEURAT_CLUSTERS_PROCESS as SEURAT_NPB_PROCESS} from "$baseDir/subworkfl
                                                                                                             gene_modules_options:                   modules['clusters_gene_modules'],
                                                                                                             state_classification_options:           modules['clusters_state_classification'])
 
+
+
 include {SEURAT_CLUSTERS_PROCESS as SEURAT_HH4_PROCESS} from "$baseDir/subworkflows/seurat_clusters_process/main"     addParams(  subset_options:                         modules['hh4_subset'],
+                                                                                                            cluster_options:                        modules['clusters_cluster'],
+                                                                                                            gene_modules_options:                   modules['clusters_gene_modules'],
+                                                                                                            state_classification_options:           modules['clusters_state_classification'])
+
+include {SEURAT_CLUSTERS_PROCESS as SEURAT_NPB_HH4_PROCESS} from "$baseDir/subworkflows/seurat_clusters_process/main"     addParams(  subset_options:                         modules['npb_subset'],
                                                                                                             cluster_options:                        modules['clusters_cluster'],
                                                                                                             gene_modules_options:                   modules['clusters_gene_modules'],
                                                                                                             state_classification_options:           modules['clusters_state_classification'])
@@ -105,22 +112,27 @@ workflow {
     --------------------------------------------------------------------------------------*/ 
     SEURAT_STAGE_PROCESS( SEURAT_FILTERING.out.contamination_filt_out)  
     SEURAT_RUN_PROCESS( SEURAT_FILTERING.out.contamination_filt_out)
-    SEURAT_NPB_PROCESS( SEURAT_FILTERED_PROCESS.out.state_classification_out)
+    // SEURAT_NPB_PROCESS( SEURAT_FILTERED_PROCESS.out.state_classification_out)
     SEURAT_HH4_PROCESS( SEURAT_FILTERED_PROCESS.out.state_classification_out)
+
+    // SEURAT_NPB_HH4_PROCESS( SEURAT_NPB_PROCESS.out.state_classification_out )
 
     // Prepare outputs for scVelo
     ch_seurat_concat =          SEURAT_FILTERED_PROCESS.out.state_classification_out
                                     .concat(SEURAT_STAGE_PROCESS.out.cluster_out)
                                     .concat(SEURAT_RUN_PROCESS.out.cluster_out)
                                     .concat(SEURAT_HH4_PROCESS.out.cluster_out)
-                                    .concat(SEURAT_NPB_PROCESS.out.cluster_out)
+                                    // .concat(SEURAT_NPB_PROCESS.out.cluster_out)
+                                    // .concat(SEURAT_NPB_HH4_PROCESS.out.cluster_out)
 
 
     ch_gene_modules_concat =    SEURAT_FILTERED_PROCESS.out.gene_modules_out
                                     .concat(SEURAT_STAGE_PROCESS.out.gene_modules_out)
                                     .concat(SEURAT_RUN_PROCESS.out.gene_modules_out)
                                     .concat(SEURAT_HH4_PROCESS.out.gene_modules_out)
-                                    .concat(SEURAT_NPB_PROCESS.out.gene_modules_out)
+                                    // .concat(SEURAT_NPB_PROCESS.out.gene_modules_out)
+                                    // .concat(SEURAT_NPB_HH4_PROCESS.out.gene_modules_out)
+
 
     // Run scVelo
     SEURAT_H5AD( ch_seurat_concat )
