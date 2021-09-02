@@ -138,11 +138,11 @@ contamination_filt_data <- RunUMAP(contamination_filt_data, dims = 1:pc_cutoff, 
 
 # Find optimal cluster resolution
 png(paste0(plot_path, "clustree.png"), width=70, height=35, units = 'cm', res = 200)
-ClustRes(seurat_object = contamination_filt_data, by = 0.2, prefix = "integrated_snn_res.")
+ClustRes(seurat_object = contamination_filt_data, starting_res = 1, by = 0.2, prefix = "integrated_snn_res.")
 graphics.off()
 
-# Use clustering resolution = 1 in order to identify any remaining poor quality cells
-contamination_filt_data <- FindClusters(contamination_filt_data, resolution = 1.2)
+# Use high clustering resolution to ensure we capture most cell states
+contamination_filt_data <- FindClusters(contamination_filt_data, resolution = 2)
 
 # Plot UMAP for clusters and developmental stage
 png(paste0(plot_path, "UMAP.png"), width=40, height=20, units = 'cm', res = 200)
