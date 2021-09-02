@@ -24,9 +24,9 @@ opt = getopt(spec)
   if(length(commandArgs(trailingOnly = TRUE)) == 0){
     cat('No command line arguments provided, paths are set for running interactively in Rstudio server\n')
 
-    plot_path = "./output/NF-downstream_analysis/seurat/4_sex_filt/plots/"
-    rds_path = "./output/NF-downstream_analysis/seurat/4_sex_filt/rds_files/"
-    data_path = "./output/NF-downstream_analysis/seurat/3_integration_qc/rds_files/"
+    plot_path = "./output/NF-downstream_analysis_stacas/seurat_filtering/4_sex_filt/plots/"
+    rds_path = "./output/NF-downstream_analysis_stacas/seurat_filtering/4_sex_filt/rds_files/"
+    data_path = "./output/NF-downstream_analysis_stacas/seurat_filtering/3_integration_qc/rds_files/"
     
     ncores = 8
 
@@ -66,14 +66,27 @@ pre_sex_filt_data <- FindVariableFeatures(pre_sex_filt_data, selection.method = 
 pre_sex_filt_data <- ScaleData(pre_sex_filt_data, features = rownames(pre_sex_filt_data), vars.to.regress = "percent.mt")
 
 
-# There is a strong sex effect - this plot shows DE genes between clusters 1 and 6 which are predominantly hh4 clusters. Clustering is driven by sex genes
-png(paste0(plot_path, 'HM.top15.DE.pre-sex_filt.png'), height = 40, width = 70, units = 'cm', res = 500)
-TenxPheatmap(data = pre_sex_filt_data[,rownames(filter(pre_sex_filt_data@meta.data, seurat_clusters %in% c(1, 6)))],
-              metadata = c("seurat_clusters", "orig.ident"), selected_genes = rownames(FindMarkers(pre_sex_filt_data, ident.1 = 1, ident.2 = 6)),
-              hclust_rows = T, gaps_col = "seurat_clusters")
+# There is a strong sex effect - this plot shows DE genes between top hh4 clusters. Clustering is driven by sex genes
+
+# Select two largest hh4 clusters to look at sex effect
+sex_clusters <- pre_sex_filt_data@meta.data %>% filter(grepl("hh4", orig.ident)) %>% count(seurat_clusters) %>%
+  top_n(n, n = 2) %>% pull(seurat_clusters) %>% as.character()
+
+# Find differentially expressed genes and plot heatmap of top DE genes for each cluster
+markers <- FindMarkers(pre_sex_filt_data, ident.1 = sex_clusters[1], ident.2 = sex_clusters[2])
+
+top30 <- markers %>% rownames_to_column("gene") %>% mutate(pos = avg_log2FC>0) %>% group_by(pos) %>% top_n(n = 30, wt = avg_log2FC)
+
+png(paste0(plot_path, 'HM.top30.DE.pre-sex_filt.png'), height = 40, width = 70, units = 'cm', res = 500)
+TenxPheatmap(data = pre_sex_filt_data[,rownames(filter(pre_sex_filt_data@meta.data, seurat_clusters %in% sex_clusters))],
+              metadata = c("seurat_clusters", "orig.ident"), selected_genes = unique(top15$gene), hclust_rows = T, gaps_col = "seurat_clusters", assay = "RNA")
 graphics.off()
 
 # plot dimplot for main W gene
+png(paste0(plot_path, 'Sex_genes_multifeature_pre-sex_filt.png'), height = 40, width = 80, units = 'cm', res = 200)
+MultiFeaturePlot(pre_sex_filt_data, plot_stage = TRUE, gene_list = c("W-Wpkci-7", "W-HNRNPKL", "W-NIPBLL", "Z-MRPS30", "Z-FXN", "Z-RCL1"), n_col = 4)
+graphics.off()
+
 #####################################################################################################
 #     Heatmap clearly shows clusters segregate by sex - check this and regress out the sex effect   #
 #####################################################################################################

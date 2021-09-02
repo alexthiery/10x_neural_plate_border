@@ -31,7 +31,7 @@ dir.create(antler_path, recursive = T)
 # rds_path = "./output/NF-downstream_analysis_stacas/antler/stage_split/hh6_split_stage_data/stage_gene_modules/rds_files/"
 # # gm_path = "./output/NF-downstream_analysis_stacas/gene_modules/gene_module_lists/"
 # antler_path = "./output/NF-downstream_analysis_stacas/antler/stage_split/hh6_split_stage_data/stage_gene_modules/antler_data/"
-# data_path = "./output/NF-downstream_analysis_stacas/seurat/stage_split/hh6_split_stage_data/stage_cluster/rds_files/"
+# data_path = "./output/NF-downstream_analysis_stacas/stage_split/hh6_splitstage_data/seurat/stage_cluster/rds_files/"
 
 
 # Multi-core when running from command line
@@ -82,14 +82,15 @@ antler_data$gene_modules$identify(
   mod_consistency_thres = 0.4,  # ratio of expressed genes among "positive" cells
   process_plots         = TRUE)
 
-# detect if stage contains more than 1 seq batch
+# detect if stage contains more than 1 seq batch or more than 1 stage
 if(length(unique(seurat_data$run)) > 1){metadata <- c("seurat_clusters", "run")} else {metadata <- "seurat_clusters"}
+if(length(unique(seurat_data$stage)) > 1){metadata <- c(metadata, "stage")}
 
 # plot all gene modules
 ncell = ncol(seurat_data)
 ngene = length(unlist(antler_data$gene_modules$lists$unbiasedGMs$content))
 
-png(paste0(plot_path, 'unbiasedGMs.png'), height = min(c(150, round(ngene/15)), width = min(c(75, round(ncell/50)), units = 'cm', res = 400)
+png(paste0(plot_path, 'unbiasedGMs.png'), height = min(c(150, round(ngene/15))), width = min(c(75, round(ncell/50))), units = 'cm', res = 400)
 GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs$content,
                    show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = "seurat_clusters")
 graphics.off()

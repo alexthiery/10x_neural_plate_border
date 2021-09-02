@@ -112,8 +112,9 @@ workflow {
     --------------------------------------------------------------------------------------*/ 
     SEURAT_STAGE_PROCESS( SEURAT_FILTERING.out.contamination_filt_out)  
     SEURAT_RUN_PROCESS( SEURAT_FILTERING.out.contamination_filt_out)
+    SEURAT_HH4_PROCESS( SEURAT_FILTERING.out.contamination_filt_out)
     // SEURAT_NPB_PROCESS( SEURAT_FILTERED_PROCESS.out.state_classification_out)
-    SEURAT_HH4_PROCESS( SEURAT_FILTERED_PROCESS.out.state_classification_out)
+
 
     // SEURAT_NPB_HH4_PROCESS( SEURAT_NPB_PROCESS.out.state_classification_out )
 
