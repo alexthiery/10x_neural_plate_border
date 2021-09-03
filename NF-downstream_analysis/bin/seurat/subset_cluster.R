@@ -66,8 +66,8 @@ png(paste0(plot_path, "ElbowCutoff.png"), width=30, height=20, units = 'cm', res
 ElbowCutoff(seurat_data, return = 'plot')
 graphics.off()
 
-# automatically determine elbow
-pc_cutoff <- ElbowCutoff(seurat_data)
+# automatically determine elbow (min 10)
+pc_cutoff <- ifelse(ElbowCutoff(seurat_data) < 10, 10, ElbowCutoff(seurat_data))
 
 png(paste0(plot_path, "UMAP_PCA_comparison.png"), width=40, height=30, units = 'cm', res = 200)
 PCALevelComparison(seurat_data, PCA_levels = c(pc_cutoff-5, pc_cutoff, pc_cutoff+5, pc_cutoff+10), cluster_res = opt$clustres)
