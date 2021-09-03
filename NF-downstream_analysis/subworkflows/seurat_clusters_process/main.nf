@@ -11,11 +11,13 @@ analysis_scripts.subset                             = file("$baseDir/bin/seurat/
 analysis_scripts.cluster                            = file("$baseDir/bin/seurat/subset_cluster.R", checkIfExists: true)
 analysis_scripts.gene_modules                       = file("$baseDir/bin/other/subset_gene_modules.R", checkIfExists: true)
 analysis_scripts.state_classification               = file("$baseDir/bin/seurat/state_classification.R", checkIfExists: true)
+analysis_scripts.phate                              = file("$baseDir/bin/other/phateR.R", checkIfExists: true)
 
 params.subset_options                               = [:]
 params.cluster_options                              = [:]
 params.gene_modules_options                         = [:]
 params.state_classification_options                 = [:]
+params.phate_options                                = [:]
 
 // Include Seurat R processes
 include {R as SUBSET} from "$baseDir/modules/local/r/main"                          addParams(  options:                        params.subset_options,
@@ -29,6 +31,9 @@ include {R as GENE_MODULES} from "$baseDir/modules/local/r/main"                
 
 include {R as STATE_CLASSIFICATION} from "$baseDir/modules/local/r/main"            addParams(  options:                        params.state_classification_options,
                                                                                                 script:                         analysis_scripts.state_classification )
+
+include {R as PHATE} from "$baseDir/modules/local/r/main"                           addParams(  options:                        params.phate_options,
+                                                                                                script:                         analysis_scripts.phate )
 
 /*-----------------------------------------------------------------------------------------------------------------------------
 Log
@@ -58,6 +63,7 @@ workflow SEURAT_CLUSTERS_PROCESS {
     CLUSTER( ch_split_run )
     GENE_MODULES( CLUSTER.out )
     STATE_CLASSIFICATION( CLUSTER.out )
+    PHATE( CLUSTER.out )
 
     emit:
     cluster_out                     = CLUSTER.out                               //Channel: [[meta], [output]]
