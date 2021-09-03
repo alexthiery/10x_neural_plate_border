@@ -116,7 +116,7 @@ workflow {
     SEURAT_STAGE_PROCESS( SEURAT_FILTERING.out.contamination_filt_out)  
     SEURAT_RUN_PROCESS( SEURAT_FILTERING.out.contamination_filt_out)
     SEURAT_HH4_PROCESS( SEURAT_FILTERING.out.contamination_filt_out)
-    // SEURAT_NPB_PROCESS( SEURAT_FILTERED_PROCESS.out.state_classification_out)
+    SEURAT_NPB_PROCESS( SEURAT_FILTERED_PROCESS.out.state_classification_out)
     // SEURAT_NPB_HH4_PROCESS( SEURAT_NPB_PROCESS.out.state_classification_out )
 
     // Prepare outputs for scVelo
@@ -124,7 +124,7 @@ workflow {
                                     .concat(SEURAT_STAGE_PROCESS.out.cluster_out)
                                     .concat(SEURAT_RUN_PROCESS.out.cluster_out)
                                     .concat(SEURAT_HH4_PROCESS.out.cluster_out)
-                                    // .concat(SEURAT_NPB_PROCESS.out.cluster_out)
+                                    .concat(SEURAT_NPB_PROCESS.out.cluster_out)
                                     // .concat(SEURAT_NPB_HH4_PROCESS.out.cluster_out)
 
 
@@ -132,7 +132,7 @@ workflow {
                                     .concat(SEURAT_STAGE_PROCESS.out.gene_modules_out)
                                     .concat(SEURAT_RUN_PROCESS.out.gene_modules_out)
                                     .concat(SEURAT_HH4_PROCESS.out.gene_modules_out)
-                                    // .concat(SEURAT_NPB_PROCESS.out.gene_modules_out)
+                                    .concat(SEURAT_NPB_PROCESS.out.gene_modules_out)
                                     // .concat(SEURAT_NPB_HH4_PROCESS.out.gene_modules_out)
 
 

@@ -127,14 +127,14 @@ cell_type_markers <- list(
 seurat_data <- ClusterClassification(seurat_obj = seurat_data, cell_type_markers = cell_type_markers, quantile = 0.8, force_assign = TRUE, plot_path = paste0(plot_path, "scHelper_log/"))
 
 # Plot UMAP for clusters and developmental stage
-png(paste0(plot_path, "scHelper_celltype_force_umap.png"), width=50, height=20, units = 'cm', res = 200)
+png(paste0(plot_path, "scHelper_celltype_force_umap.png"), width=40, height=20, units = 'cm', res = 200)
 ClustStagePlot(seurat_data, stage_col = "stage", cluster_col = "scHelper_cell_type", label_clusters = TRUE)
 graphics.off()
 
 seurat_data <- ClusterClassification(seurat_obj = seurat_data, cell_type_markers = cell_type_markers, quantile = 0.8, plot_path = paste0(plot_path, "scHelper_log/"))
 
 # Plot UMAP for clusters and developmental stage
-png(paste0(plot_path, "scHelper_celltype_umap.png"), width=50, height=20, units = 'cm', res = 200)
+png(paste0(plot_path, "scHelper_celltype_umap.png"), width=40, height=20, units = 'cm', res = 200)
 ClustStagePlot(seurat_data, stage_col = "stage", cluster_col = "scHelper_cell_type", label_clusters = TRUE)
 graphics.off()
 
