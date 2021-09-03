@@ -2,6 +2,7 @@
 
 # Define arguments for Rscript
 library(getopt)
+library(future)
 library(Seurat)
 library(tidyverse)
 library(RColorBrewer)
