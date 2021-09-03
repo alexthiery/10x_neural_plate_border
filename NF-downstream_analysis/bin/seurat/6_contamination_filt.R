@@ -171,9 +171,9 @@ TenxPheatmap(data = contamination_filt_data, metadata = c("seurat_clusters", "st
              custom_order = cluster_order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters", assay = 'RNA')
 graphics.off()
 
-# Plot gene variance grouped by stage
-png(paste0(plot_path, 'gene_variance.png'), height = 10, width = 15, units = 'cm', res = 200)
-PlotGeneVariance(seurat_obj = contamination_filt_data, group_by = "stage")
-graphics.off()
+# # Plot gene variance grouped by stage
+# png(paste0(plot_path, 'gene_variance.png'), height = 10, width = 15, units = 'cm', res = 200)
+# PlotGeneVariance(seurat_obj = contamination_filt_data, group_by = "stage")
+# graphics.off()
 
 saveRDS(contamination_filt_data, paste0(rds_path, "contamination_filt_data.RDS"), compress = FALSE)
