@@ -37,7 +37,8 @@ include {MERGE_LOOM} from "$baseDir/modules/local/merge_loom/main"              
 
 include {SEURAT_FILTERED_PROCESS} from "$baseDir/subworkflows/seurat_filtered_process/main"     addParams(  scatterplot3d_options:                  modules['scatterplot3d'],
                                                                                                             gene_module_options:                    modules['gene_modules'],
-                                                                                                            state_classification_options:           modules['state_classification'])
+                                                                                                            state_classification_options:           modules['state_classification'],
+                                                                                                            phate_options:                          modules['phate'])
 
 // Subworkflows for subset stage, run and clusters from seurat object and run downstream analysis pipelines
 include {SEURAT_STAGE_PROCESS} from "$baseDir/subworkflows/seurat_stage_process/main"           addParams(  split_options:                          modules['stage_split'],
@@ -58,14 +59,16 @@ include {SEURAT_CLUSTERS_PROCESS as SEURAT_NPB_PROCESS} from "$baseDir/subworkfl
 
 
 include {SEURAT_CLUSTERS_PROCESS as SEURAT_HH4_PROCESS} from "$baseDir/subworkflows/seurat_clusters_process/main"     addParams(  subset_options:                         modules['hh4_subset'],
-                                                                                                            cluster_options:                        modules['clusters_cluster'],
+                                                                                                            cluster_options:                        modules['hh4_cluster'],
                                                                                                             gene_modules_options:                   modules['clusters_gene_modules'],
-                                                                                                            state_classification_options:           modules['clusters_state_classification'])
+                                                                                                            state_classification_options:           modules['clusters_state_classification'],
+                                                                                                            phate_options:                          modules['phate'])
 
 include {SEURAT_CLUSTERS_PROCESS as SEURAT_NPB_HH4_PROCESS} from "$baseDir/subworkflows/seurat_clusters_process/main"     addParams(  subset_options:                         modules['npb_subset'],
                                                                                                             cluster_options:                        modules['clusters_cluster'],
                                                                                                             gene_modules_options:                   modules['clusters_gene_modules'],
-                                                                                                            state_classification_options:           modules['clusters_state_classification'])
+                                                                                                            state_classification_options:           modules['clusters_state_classification'],
+                                                                                                            phate_options:                          modules['phate'])
 
 include {SEURAT_H5AD} from "$baseDir/modules/local/seurat_h5ad/main"                            addParams(  options:                                modules['seurat_h5ad'] )
 
@@ -114,8 +117,6 @@ workflow {
     SEURAT_RUN_PROCESS( SEURAT_FILTERING.out.contamination_filt_out)
     SEURAT_HH4_PROCESS( SEURAT_FILTERING.out.contamination_filt_out)
     // SEURAT_NPB_PROCESS( SEURAT_FILTERED_PROCESS.out.state_classification_out)
-
-
     // SEURAT_NPB_HH4_PROCESS( SEURAT_NPB_PROCESS.out.state_classification_out )
 
     // Prepare outputs for scVelo

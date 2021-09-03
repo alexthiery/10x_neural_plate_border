@@ -321,6 +321,6 @@ preprocessing_data <- FindNeighbors(preprocessing_data, dims = 1:pc_cutoff, verb
 preprocessing_data <- RunUMAP(preprocessing_data, dims = 1:pc_cutoff, verbose = FALSE)
 
 # Plot UMAP to check for batch effect
-png(paste0(plot_path, "CheckBatchEffect.png"), width=60, height=20, units = 'cm', res = 200)
+png(paste0(plot_path, "CheckBatchEffect.png"), width=45, height=15, units = 'cm', res = 200)
 CheckIntegration(preprocessing_data)
 graphics.off()

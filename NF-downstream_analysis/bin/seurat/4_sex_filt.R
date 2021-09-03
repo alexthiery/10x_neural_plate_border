@@ -79,7 +79,7 @@ top30 <- markers %>% rownames_to_column("gene") %>% mutate(pos = avg_log2FC>0) %
 
 png(paste0(plot_path, 'HM.top30.DE.pre-sex_filt.png'), height = 40, width = 70, units = 'cm', res = 500)
 TenxPheatmap(data = pre_sex_filt_data[,rownames(filter(pre_sex_filt_data@meta.data, seurat_clusters %in% sex_clusters))],
-              metadata = c("seurat_clusters", "orig.ident"), selected_genes = unique(top15$gene), hclust_rows = T, gaps_col = "seurat_clusters", assay = "RNA")
+              metadata = c("seurat_clusters", "orig.ident"), selected_genes = unique(top30$gene), hclust_rows = T, gaps_col = "seurat_clusters", assay = "RNA")
 graphics.off()
 
 # plot dimplot for main W gene

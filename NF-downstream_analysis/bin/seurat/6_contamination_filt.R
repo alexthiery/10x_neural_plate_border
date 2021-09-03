@@ -150,7 +150,7 @@ ClustStagePlot(contamination_filt_data, stage_col = "stage")
 graphics.off()
 
 # Check integration on final filtered data
-png(paste0(plot_path, "CheckIntegration.png"), width = 25, height = 10, res = 200, units = "cm")
+png(paste0(plot_path, "CheckIntegration.png"), width = 45, height = 15, res = 200, units = "cm")
 CheckIntegration(contamination_filt_data, xlim = c(-10, 10), ylim = c(-10, 10))
 graphics.off()
 
@@ -170,5 +170,10 @@ png(paste0(plot_path, 'HM.top15.DE.contamination_filt_data.png'), height = 75, w
 TenxPheatmap(data = contamination_filt_data, metadata = c("seurat_clusters", "stage"), custom_order_column = "seurat_clusters",
              custom_order = cluster_order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters", assay = 'RNA')
 graphics.off()
+
+# # Plot gene variance grouped by stage
+# png(paste0(plot_path, 'gene_variance.png'), height = 10, width = 15, units = 'cm', res = 200)
+# PlotGeneVariance(seurat_obj = contamination_filt_data, group_by = "stage")
+# graphics.off()
 
 saveRDS(contamination_filt_data, paste0(rds_path, "contamination_filt_data.RDS"), compress = FALSE)
