@@ -66,11 +66,13 @@ png(paste0(plot_path, "ElbowCutoff.png"), width=30, height=20, units = 'cm', res
 ElbowCutoff(seurat_data, return = 'plot')
 graphics.off()
 
-# automatically determine elbow (min 10)
-pc_cutoff <- ifelse(ElbowCutoff(seurat_data) < 10, 10, ElbowCutoff(seurat_data))
+# automatically determine elbow
+pc_cutoff <- ElbowCutoff(seurat_data)
 
+# if pc_cutoff is smaller than 7 then don't run with pc_cutoff-5 as too small to run UMAP
+cutoffs = ifelse(pc_cutoff < 7, c(pc_cutoff, pc_cutoff+5, pc_cutoff+10, pc_cutoff+15), c(pc_cutoff-5, pc_cutoff, pc_cutoff+5, pc_cutoff+10))
 png(paste0(plot_path, "UMAP_PCA_comparison.png"), width=40, height=30, units = 'cm', res = 200)
-PCALevelComparison(seurat_data, PCA_levels = c(pc_cutoff-5, pc_cutoff, pc_cutoff+5, pc_cutoff+10), cluster_res = opt$clustres)
+PCALevelComparison(seurat_data, PCA_levels = cutoffs, cluster_res = opt$clustres)
 graphics.off()
 
 seurat_data <- FindNeighbors(seurat_data, dims = 1:pc_cutoff, verbose = FALSE)
