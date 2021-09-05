@@ -50,12 +50,12 @@ workflow SEURAT_FILTERED_PROCESS {
     main:
     // Run processes on full filtered dataset
     SCATTERPLOT3D(seurat_out)
-    GENE_MODULES( seurat_out )
+    // GENE_MODULES( seurat_out )
     STATE_CLASSIFICATION( seurat_out )
     PHATE( seurat_out )
 
     emit:
-    gene_modules_out                = GENE_MODULES.out                          //Channel: [[meta], [output]]
+    // gene_modules_out                = GENE_MODULES.out                          //Channel: [[meta], [output]]
     state_classification_out        = STATE_CLASSIFICATION.out                  //Channel: [[meta], [output]]   
 }
 
