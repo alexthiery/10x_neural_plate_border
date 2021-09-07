@@ -116,7 +116,7 @@ workflow {
     SEURAT_STAGE_PROCESS( SEURAT_FILTERING.out.contamination_filt_out)  
     SEURAT_RUN_PROCESS( SEURAT_FILTERING.out.contamination_filt_out)
     SEURAT_HH4_PROCESS( SEURAT_FILTERING.out.contamination_filt_out)
-    // SEURAT_NPB_PROCESS( SEURAT_FILTERED_PROCESS.out.state_classification_out)
+    SEURAT_NPB_PROCESS( SEURAT_FILTERED_PROCESS.out.state_classification_out)
     // SEURAT_NPB_HH4_PROCESS( SEURAT_NPB_PROCESS.out.state_classification_out )
 
     // Prepare outputs for scVelo
@@ -124,16 +124,16 @@ workflow {
                                     .concat(SEURAT_STAGE_PROCESS.out.cluster_out)
                                     .concat(SEURAT_RUN_PROCESS.out.cluster_out)
                                     .concat(SEURAT_HH4_PROCESS.out.cluster_out)
-                                    // .concat(SEURAT_NPB_PROCESS.out.cluster_out)
+                                    .concat(SEURAT_NPB_PROCESS.out.cluster_out)
                                     // .concat(SEURAT_NPB_HH4_PROCESS.out.cluster_out)
 
 
-    ch_gene_modules_concat =    SEURAT_FILTERED_PROCESS.out.gene_modules_out
-                                    .concat(SEURAT_STAGE_PROCESS.out.gene_modules_out)
-                                    .concat(SEURAT_RUN_PROCESS.out.gene_modules_out)
-                                    .concat(SEURAT_HH4_PROCESS.out.gene_modules_out)
-                                    // .concat(SEURAT_NPB_PROCESS.out.gene_modules_out)
-                                    // .concat(SEURAT_NPB_HH4_PROCESS.out.gene_modules_out)
+    // ch_gene_modules_concat =    SEURAT_FILTERED_PROCESS.out.gene_modules_out
+    //                                 .concat(SEURAT_STAGE_PROCESS.out.gene_modules_out)
+    //                                 .concat(SEURAT_RUN_PROCESS.out.gene_modules_out)
+    //                                 .concat(SEURAT_HH4_PROCESS.out.gene_modules_out)
+    //                                 .concat(SEURAT_NPB_PROCESS.out.gene_modules_out)
+    //                                 // .concat(SEURAT_NPB_HH4_PROCESS.out.gene_modules_out)
 
 
     // Run scVelo
@@ -142,9 +142,9 @@ workflow {
     
     // Run gene module analysis across latent time
     ch_cluster_rds              = ch_seurat_concat.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
-    ch_gene_modules_rds         = ch_gene_modules_concat.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
-    ch_gene_module_latent_time  = ch_cluster_rds.combine(ch_gene_modules_rds, by: 0).combine(SEURAT_SCVELO.out.scvelo_run_out_metadata, by: 0)
-    ch_gene_module_latent_time  = ch_gene_module_latent_time.map{[it[0], [it[1], it[2], it[3]]]}
+    // ch_gene_modules_rds         = ch_gene_modules_concat.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
+    // ch_gene_module_latent_time  = ch_cluster_rds.combine(ch_gene_modules_rds, by: 0).combine(SEURAT_SCVELO.out.scvelo_run_out_metadata, by: 0)
+    // ch_gene_module_latent_time  = ch_gene_module_latent_time.map{[it[0], [it[1], it[2], it[3]]]}
     
-    GENE_MODULES_LATENT_TIME( ch_gene_module_latent_time )
+    // GENE_MODULES_LATENT_TIME( ch_gene_module_latent_time )
 }
