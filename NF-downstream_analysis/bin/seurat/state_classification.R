@@ -52,90 +52,90 @@ opt = getopt(spec)
 }
 
 seurat_data <- readRDS(list.files(data_path, full.names = TRUE))
-# seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/filtered_seurat/seurat/state_classification/rds_files/cell_state_classification.RDS')
-
-# Set RNA to default assay for plotting expression data
-DefaultAssay(seurat_data) <- "RNA"
+seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/hh5_splitstage_data/seurat/stage_cluster/rds_files/seurat_data.RDS')
 
 ########################################################################################################
 #                                      Cell state classification                                    #
 ########################################################################################################
 
+hh4_cell_type_markers = list(  node = c('EOMES', 'ADMP', 'CHRD', 'TBX6'),
+                               early_neural = c("SOX2", "SOX3", 'OTX2', 'EPCAM', 'MAFA', 'FRZB', "YEATS4", 'SOX11'), # many from trevers 2021 / katherine thesis
+                               early_border = c("SOX2", "SOX3", 'OTX2', 'EPCAM', 'MAFA', 'FRZB', "YEATS4", 'SOX11', "DLX5", "DLX6", "GATA2", "GATA3"),
+                               early_non_neural = c("DLX5", "DLX6", "GATA2", "GATA3"),
+                               extra_embryonic = c('VGLL1', 'GRHL3', 'GATA2', 'GATA3'))
+
+hh5_cell_type_markers = list(early_caudal_neural = c('GBX2', 'SP5', 'HOXB1', 'CDX2', 'SOX2', 'SOX21', 'SOX3'),
+                             early_neural_plate = c('OTX2', 'SOX2', 'SOX21', 'SOX3'),
+                             early_pNPB = c("PAX7", "MSX1", "GBX2", 'SP5', "DLX5", "DLX6", "TFAP2A", "TFAP2C", "PRDM1", "SOX2", 'SOX3', "SOX21"),
+                             early_aNPB = c("SIX3", "OTX2", "DLX5", "DLX6", "TFAP2A", "TFAP2C", "PRDM1", "SOX2", 'SOX3', "SOX21"),
+                             early_NPB = c("DLX5", "DLX6", "TFAP2A", "TFAP2C", "PRDM1", "SOX2", 'SOX3', "SOX21"),
+                             early_NNE = c('ASTL', "DLX5", "DLX6", 'TFAP2A', "TFAP2C", "GATA2", "GATA3", "EPAS1"))
+
+hh6_cell_type_markers = list(  non_neural = c("EPAS1", "MSX2", "GATA2", "GATA3", "GRHL3", "EPAS1", "MSX2"),#krt19 keith mclaren 2003
+                               NPB = c("SIX1", "EYA2", "DLX5", "DLX6", "TFAP2B", "TFAP2A", "TFAP2C", "PRDM1", "SOX2", "SOX3", 'SOX21', "MSX2"),
+                               pNPB = c("PAX7", "MSX1", "GBX2", "SIX1", "EYA2", "DLX5", "DLX6", "TFAP2B", "TFAP2A", "TFAP2C", "PRDM1", "SOX2", "SOX3",'SOX21', "MSX2"), # check ZIC1 expression
+                               aNPB = c("SIX3", "PAX6", "OTX2", "SIX1", "EYA2", "DLX5", "DLX6", "TFAP2B", "TFAP2A", "TFAP2C", "PRDM1", "SOX2", "SOX3",'SOX21', "MSX2"),
+                               early_aPPR = c("SIX1", "EYA2", "DLX3", "DLX5", "DLX6", "PRDM1", "SIX3", "PAX6", "HESX1", "OTX2", "TFAP2A"), # PNOC, SSTR5
+                               early_pPPR = c("SIX1", "EYA2", "DLX3", "DLX5", "DLX6", "PRDM1", "GBX2", "TFAP2A"), # FOXI3
+                               early_PPR = c("SIX1", "EYA2", "DLX3", "DLX5", "DLX6", "PRDM1", "TFAP2A"), # TFAPs
+                               neural_progenitors = c("SOX2", "SOX21", "LMO1", "ZEB2", "SOX1", "SOX3", "FRZB"),
+                               a_neural_progenitors = c("OTX2", "SIX3", "HESX1", "SOX2", "SOX21", "LMO1", "ZEB2", "SOX3", "FRZB"),
+                               p_neural_progenitors = c("GBX2", "SOX2", "SOX21", "LMO1", "ZEB2", "SOX3", "FRZB"),
+                               early_hindbrain = c("GBX2", "HOXA2", "HOXA3", "HOXB2", "KROX20", "SOX2", "SOX21", "LMO1", "ZEB2", "SOX1", "SOX3", "FRZB"),
+                               early_midbrain = c("WNT4", "PAX2", "FGF8", "WNT1", "OTX2", "SOX2", "SOX21", "LMO1", "ZEB2", "SOX1", "SOX3", "FRZB"),
+                               early_forebrain = c("PAX6" , "SIX3", "OTX2", "SOX2", "SOX21", "LMO1", "ZEB2", "SOX1", "SOX3", "FRZB")) #TLX1)
 
 
-# cell_type_markers <- list(delaminating_nc = c("ETS1", "LMO4", "SOX10", "SOX8", "FOXD3"),
-#                           nc = c("ETS1", "ENSGALG00000030902", "FOXD3", "TFAP2B", "TFAP2A"),
-#                           p_npb = c("PAX7", "MSX1", "GBX2", "SIX1", "DLX5", "DLX6", "TFAP2B", "TFAP2A", "TFAP2C"), # check ZIC1 expression
-#                           a_npb = c("SIX3", "PAX6", "OTX2", "SIX1", "DLX5", "DLX6", "TFAP2B", "TFAP2A", "TFAP2C"),
-#                           npb = c("PAX7", "SIX1", "DLX5", "DLX6", "TFAP2B", "TFAP2A", "TFAP2C"),
-#                           placodes = c("SIX1", "EYA1", "EYA2", "DLX3", "DLX5", "DLX6", "GATA2", "GATA3"),
-#                           placodal_progenitors = c("DLX5", "DLX6", "GATA2", "GATA3"),
-#                           # PPR = c("SIX1", "EYA2", "DLX5", "DLX6"),
-#                           # aPPR = c("SIX1", "EYA2", "DLX5", "DLX6", "SIX3", "OTX2"),
-#                           # pPPR = c("SIX1", "EYA2", "DLX5", "DLX6", "GBX2"),
-#                           non_neural = c("EPAS1", "MSX2", "GATA2", "GATA3", "VGLL1", "GRHL3"),
-#                           hindbrain = c("GBX2", "HOXA2", "HOXA3", "HOXB2", "KROX20", "SOX2", "SOX21"),
-#                           midbrain = c("WNT4", "PAX2", "FGF8", "WNT1", "OTX2", "SOX2", "SOX21"),
-#                           forebrain = c("PAX6" , "SIX3", "OTX2", "SOX2", "SOX21"),
-#                           early_hindbrain = c("GBX2", "SOX2", "SOX3", "FRZB"),
-#                           early_midbrain = c("WNT4", "OTX2", "SOX2", "SOX3", "FRZB"),
-#                           early_forebrain = c("PAX6" , "SIX3", "OTX2", "SOX2", "SOX3", "FRZB"),
-#                           neural_progrenitors = c("SOX3", "SOX2", "FRZB", "LMO1"))
+hh7_cell_type_markers = hh6_cell_type_markers
 
-# ventral_floor = c("SHH", "NKX2-2", "FOXA2"),
+ss4_cell_type_markers = c(hh7_cell_type_markers,
+                          list(NC = c("ETS1", "ENSGALG00000030902", "FOXD3", "TFAP2B", "TFAP2A"),
+                               aPPR = c("SIX1", "EYA2", "DLX3", "DLX5", "DLX6", "SIX3", "PAX6", "HESX1", "OTX2"), #TFAP2?
+                               pPPR = c("SIX1", "EYA2", "DLX3", "DLX5", "DLX6", "GBX2", "PAX2", "SOX8"), #FOXI3
+                               iPPR = c("SIX1", "EYA2", "DLX3", "DLX5", "DLX6", "Pax3"),
+                               hindbrain = c("GBX2", "HOXA2", "HOXA3", "HOXB2", "KROX20", "SOX2", "SOX21", "LMO1", "ZEB2", "GLI2", "ZNF423"), #ZNF423/GLI2 (Trevers 2021) #ZEB2
+                               midbrain = c("WNT4", "PAX2", "FGF8", "WNT1", "OTX2", "SOX2", "SOX21", "LMO1", "ZEB2", "GLI2", "ZNF423"),
+                               forebrain = c("PAX6" , "SIX3", "OTX2", "SOX2", "SOX21", "LMO1", "ZEB2", "GLI2", "ZNF423")))
+
+ss8_cell_type_markers = c(ss4_cell_type_markers,
+                          list(delaminating_NC = c("ETS1", "LMO4", "SOX10", "SOX8", "FOXD3")))
 
 
-# ENSGALG00000030902 == SNAIL2
-# HIF2A == EPAS1
-# SIP1 == ZEB2
-# FOXI3 not present
 
-cell_type_markers <- list(
-  # hh5/6
-  early_neural = c("SOX2", "SOX3"),
-  early_border = c("SOX2", "SOX3", "DLX5", "DLX6", "GATA2", "GATA3"),
-  early_non_neural = c("DLX5", "DLX6", "GATA2", "GATA3"),
-  
-  # hh6/7
-  non_neural = c("EPAS1", "MSX2", "GATA2", "GATA3", "GRHL3", "EPAS1", "MSX2"),#krt19 keith mclaren 2003
-  NPB = c("SIX1", "EYA2", "DLX5", "DLX6", "TFAP2B", "TFAP2A", "TFAP2C", "PRDM1", "SOX2", "SOX3", "MSX2"),
-  pNPB = c("PAX7", "MSX1", "GBX2", "SIX1", "EYA2", "DLX5", "DLX6", "TFAP2B", "TFAP2A", "TFAP2C", "PRDM1", "SOX2", "SOX3", "MSX2"), # check ZIC1 expression
-  aNPB = c("SIX3", "PAX6", "OTX2", "SIX1", "EYA2", "DLX5", "DLX6", "TFAP2B", "TFAP2A", "TFAP2C", "PRDM1", "SOX2", "SOX3", "MSX2"),
-  early_aPPR = c("SIX1", "EYA2", "DLX3", "DLX5", "DLX6", "PRDM1", "SIX3", "PAX6", "HESX1", "OTX2", "TFAP2A"), # PNOC, SSTR5
-  early_pPPR = c("SIX1", "EYA2", "DLX3", "DLX5", "DLX6", "PRDM1", "GBX2", "TFAP2A"), # FOXI3
-  early_PPR = c("SIX1", "EYA2", "DLX3", "DLX5", "DLX6", "PRDM1", "TFAP2A"), # TFAPs
-  neural_progenitors = c("SOX2", "SOX21", "LMO1", "ZEB2", "SOX1", "SOX3", "FRZB"),
-  a_neural_progenitors = c("OTX2", "SIX3", "HESX1", "SOX2", "SOX21", "LMO1", "ZEB2", "SOX3", "FRZB"),
-  p_neural_progenitors = c("GBX2", "SOX2", "SOX21", "LMO1", "ZEB2", "SOX3", "FRZB"),
-  early_hindbrain = c("GBX2", "HOXA2", "HOXA3", "HOXB2", "KROX20", "SOX2", "SOX21", "LMO1", "ZEB2", "SOX1", "SOX3", "FRZB"),
-  early_midbrain = c("WNT4", "PAX2", "FGF8", "WNT1", "OTX2", "SOX2", "SOX21", "LMO1", "ZEB2", "SOX1", "SOX3", "FRZB"),
-  early_forebrain = c("PAX6" , "SIX3", "OTX2", "SOX2", "SOX21", "LMO1", "ZEB2", "SOX1", "SOX3", "FRZB"), #TLX1
-  
-  # ss4
-  NC = c("ETS1", "ENSGALG00000030902", "FOXD3", "TFAP2B", "TFAP2A"),
-  aPPR = c("SIX1", "EYA2", "DLX3", "DLX5", "DLX6", "SIX3", "PAX6", "HESX1", "OTX2"), #TFAP2?
-  pPPR = c("SIX1", "EYA2", "DLX3", "DLX5", "DLX6", "GBX2", "PAX2", "SOX8"), #FOXI3
-  iPPR = c("SIX1", "EYA2", "DLX3", "DLX5", "DLX6", "Pax3"),
-  hindbrain = c("GBX2", "HOXA2", "HOXA3", "HOXB2", "KROX20", "SOX2", "SOX21", "LMO1", "ZEB2", "GLI2", "ZNF423"), #ZNF423/GLI2 (Trevers 2021) #ZEB2
-  midbrain = c("WNT4", "PAX2", "FGF8", "WNT1", "OTX2", "SOX2", "SOX21", "LMO1", "ZEB2", "GLI2", "ZNF423"),
-  forebrain = c("PAX6" , "SIX3", "OTX2", "SOX2", "SOX21", "LMO1", "ZEB2", "GLI2", "ZNF423"), #TLX1
-  
-  # ss8
-  delaminating_NC = c("ETS1", "LMO4", "SOX10", "SOX8", "FOXD3")
-)
+cell_type_markers = list(hh4 = hh4_cell_type_markers,
+                         hh5 = hh5_cell_type_markers,
+                         hh6 = hh6_cell_type_markers,
+                         hh7 = hh7_cell_type_markers,
+                         ss4 = ss4_cell_type_markers,
+                         ss8 = ss8_cell_type_markers)
 
-seurat_data <- ClusterClassification(seurat_obj = seurat_data, cell_type_markers = cell_type_markers, quantile = 0.8, force_assign = TRUE, plot_path = paste0(plot_path, "scHelper_log/"))
+# Run classification using different resolutions for different stages
+stage = unique(seurat_data@meta.data$stage)
 
-# Plot UMAP for clusters and developmental stage
-png(paste0(plot_path, "scHelper_celltype_force_umap.png"), width=40, height=20, units = 'cm', res = 200)
-ClustStagePlot(seurat_data, stage_col = "stage", cluster_col = "scHelper_cell_type", label_clusters = TRUE)
-graphics.off()
+if(length(stage) == 1){
+  cell_type_markers = cell_type_markers[[stage]]
+  cluster_res = list(hh4 = 0.3, hh5 = 0.6, hh6 = 1, hh7 = 1.1, ss4 = 1.4)[[stage]]
+} else {
+  cell_type_markers = cell_type_markers[!duplicated(cell_type_markers)]
+  cluster_res = 3
+}
 
-seurat_data <- ClusterClassification(seurat_obj = seurat_data, cell_type_markers = cell_type_markers, quantile = 0.8, plot_path = paste0(plot_path, "scHelper_log/"))
+DefaultAssay(seurat_data) <- "integrated"
+
+seurat_data <- FindClusters(seurat_data, resolution = cluster_res)
+
+# Set RNA to default assay for plotting expression data
+DefaultAssay(seurat_data) <- "RNA"
+
+seurat_data <- ClusterClassification(seurat_obj = seurat_data, cell_type_markers = cell_type_markers, force_assign = FALSE, quantile = 0.5, plot_path = paste0(plot_path, "scHelper_log/"))
 
 # Plot UMAP for clusters and developmental stage
 png(paste0(plot_path, "scHelper_celltype_umap.png"), width=40, height=20, units = 'cm', res = 200)
 ClustStagePlot(seurat_data, stage_col = "stage", cluster_col = "scHelper_cell_type", label_clusters = TRUE)
+graphics.off()
+
+png(paste0(plot_path, "scHelper_celltype_umap2.png"), width=20, height=20, units = 'cm', res = 200)
+DimPlot(seurat_data, group.by = 'scHelper_cell_type', label = TRUE, label.size = 3, label.box = TRUE) + ggplot2::theme(legend.position = "none")
 graphics.off()
 
 saveRDS(seurat_data, paste0(rds_path, "cell_state_classification.RDS"), compress = FALSE)
