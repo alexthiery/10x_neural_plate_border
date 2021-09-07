@@ -256,7 +256,7 @@ for(run in names(seurat_split)){
 ############################## Identify poor quality clusters #######################################
 
 # Use higher cluster resolution for filtering poor clusters
-seurat_split <- lapply(seurat_split, FindClusters, resolution = 1, verbose = FALSE)
+seurat_split <- lapply(seurat_split, FindClusters, resolution = 2, verbose = FALSE)
 
 # Plot UMAP for clusters and developmental stage
 for(run in names(seurat_split)){
