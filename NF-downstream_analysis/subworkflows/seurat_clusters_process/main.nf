@@ -61,9 +61,9 @@ workflow SEURAT_CLUSTERS_PROCESS {
         .set { ch_split_run }                                                           //Channel: [[meta], rds_file]
 
     CLUSTER( ch_split_run )
-    GENE_MODULES( CLUSTER.out )
     STATE_CLASSIFICATION( CLUSTER.out )
-    PHATE( CLUSTER.out )
+    GENE_MODULES( STATE_CLASSIFICATION.out )
+    PHATE( STATE_CLASSIFICATION.out )
 
     emit:
     cluster_out                     = CLUSTER.out                               //Channel: [[meta], [output]]

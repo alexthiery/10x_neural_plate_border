@@ -120,10 +120,10 @@ workflow {
 
     // Prepare outputs for scVelo
     ch_seurat_concat =          SEURAT_FILTERED_PROCESS.out.state_classification_out
-                                    .concat(SEURAT_STAGE_PROCESS.out.cluster_out)
-                                    .concat(SEURAT_RUN_PROCESS.out.cluster_out)
-                                    .concat(SEURAT_HH4_PROCESS.out.cluster_out)
-                                    .concat(SEURAT_NPB_PROCESS.out.cluster_out)
+                                    .concat(SEURAT_STAGE_PROCESS.out.state_classification_out)
+                                    .concat(SEURAT_RUN_PROCESS.out.state_classification_out)
+                                    .concat(SEURAT_HH4_PROCESS.out.state_classification_out)
+                                    .concat(SEURAT_NPB_PROCESS.out.state_classification_out)
 
 
     // ch_gene_modules_concat =    SEURAT_FILTERED_PROCESS.out.gene_modules_out
