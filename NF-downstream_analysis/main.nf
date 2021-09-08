@@ -72,12 +72,6 @@ include {SEURAT_CLUSTERS_PROCESS as SEURAT_HH4_PROCESS} from "$baseDir/subworkfl
                                                                                                             state_classification_options:           modules['clusters_state_classification'],
                                                                                                             phate_options:                          modules['phate'])
 
-include {SEURAT_CLUSTERS_PROCESS as SEURAT_NPB_HH4_PROCESS} from "$baseDir/subworkflows/seurat_clusters_process/main"     addParams(  subset_options:                         modules['npb_subset'],
-                                                                                                            cluster_options:                        modules['clusters_cluster'],
-                                                                                                            gene_modules_options:                   modules['clusters_gene_modules'],
-                                                                                                            state_classification_options:           modules['clusters_state_classification'],
-                                                                                                            phate_options:                          modules['phate'])
-
 include {SEURAT_H5AD} from "$baseDir/modules/local/seurat_h5ad/main"                            addParams(  options:                                modules['seurat_h5ad'] )
 
 include {SEURAT_SCVELO} from "$baseDir/subworkflows/seurat_scvelo/main"                         addParams(  seurat_intersect_loom_options:          modules['seurat_intersect_loom'],
