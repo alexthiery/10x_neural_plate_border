@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 
 # Define arguments for Rscript
-library(getopt)
+library(optparse)
 library(future)
 library(Seurat)
 library(pheatmap)
@@ -10,24 +10,32 @@ library(Antler)
 library(RColorBrewer)
 library(scHelper)
 
-spec = matrix(c(
-  'runtype', 'l', 2, "character",
-  'cores'   , 'c', 2, "integer"
-), byrow=TRUE, ncol=4)
-opt = getopt(spec)
+
+# Read in command line opts
+option_list <- list(
+  make_option(c("-r", "--runtype"), action = "store", type = "character", help = "Specify whether running through through 'nextflow' in order to switch paths"),
+  make_option(c("-c", "--cores"), action = "store", type = "integer", help = "Number of CPUs"),
+  make_option(c("-m", "--meta_col"), action = "store", type = "character", help = "Name of metadata column containing grouping information", default = 'scHelper_cell_type'),
+  make_option(c("", "--verbose"), action = "store_true", type = "logical", help = "Verbose", default = FALSE)
+)
+
+opt_parser = OptionParser(option_list = option_list)
+opt <- parse_args(opt_parser)
+if(opt$verbose) print(opt)
 
 # Set paths and load data
 {
   if(length(commandArgs(trailingOnly = TRUE)) == 0){
     cat('No command line arguments provided, paths are set for running interactively in Rstudio server\n')
     
-    plot_path = "./output/NF-downstream_analysis_stacas/antler/gene_modules/plots/"
-    rds_path = "./output/NF-downstream_analysis_stacas/antler/gene_modules/rds_files/"
-    gm_path = "./output/NF-downstream_analysis_stacas/antler/gene_modules/gene_module_lists/"
-    antler_path = "./output/NF-downstream_analysis_stacas/antler/gene_modules/antler_data/"
-    data_path = "./output/NF-downstream_analysis_stacas/seurat/6_contamination_filt/rds_files/"
+    plot_path = "./output/NF-downstream_analysis_stacas/stage_split/ss8_splitstage_data/antler/stage_gene_modules/plots/"
+    rds_path = "./output/NF-downstream_analysis_stacas/stage_split/ss8_splitstage_data/antler/stage_gene_modules/rds_files/"
+    gm_path = "./output/NF-downstream_analysis_stacas/stage_split/ss8_splitstage_data/antler/stage_gene_modules/gene_module_lists/"
+    antler_path = "./output/NF-downstream_analysis_stacas/stage_split/ss8_splitstage_data/antler/stage_gene_modules/antler_data/"
+    data_path = "./output/NF-downstream_analysis_stacas/stage_split/ss8_splitstage_data/seurat/stage_state_classification/rds_files/"
     
     ncores = 8
+    meta_col = 'scHelper_cell_type'
     
   } else if (opt$runtype == "nextflow"){
     cat('pipeline running through Nextflow\n')
@@ -38,6 +46,7 @@ opt = getopt(spec)
     antler_path = "./antler_data/"
     data_path = "./input/rds_files/"
     ncores = opt$cores
+    meta_col = opt$meta_col
     
     # Multi-core when running from command line
     plan("multiprocess", workers = ncores)
@@ -101,36 +110,50 @@ antler_data$gene_modules$identify(
   mod_consistency_thres = 0.4,  # ratio of expressed genes among "positive" cells
   process_plots         = TRUE)
 
+
+# Set metadata
+metadata <- ifelse(length(unique(seurat_data@meta.data$stage)) == 1, meta_col, c("stage", meta_col))
+metadata <- ifelse(length(unique(seurat_data@meta.data$run)) == 1, metadata, c(metadata, 'run'))
+
+
+if(meta_col == 'scHelper_cell_type'){
+  # Specify order of cell states to appear in gene modules
+  class_order = c('extra_embryonic', 'early_non_neural', 'non_neural', 'early_NNE', 'early_PPR', 'early_aPPR', 'aPPR', 'iPPR',
+                  'early_pPPR', 'pPPR', 'early_border', 'early_NPB', 'NPB', 'early_pNPB', 'pNPB', 'early_aNPB', 'aNPB', 'early_neural',
+                  'early_neural_plate', 'early_caudal_neural', 'neural_progenitors', 'a_neural_progenitors', 'early_forebrain', 'forebrain',
+                  'early_midbrain', 'midbrain', 'p_neural_progenitors', 'early_hindbrain', 'hindbrain', 'NC', 'delaminating_NC', 'node')
+  
+  # subset cell states present in data subset
+  class_order <- class_order[class_order %in% seurat_data@meta.data[[meta_col]]]
+  
+  seurat_data@meta.data$scHelper_cell_type <- factor(seurat_data@meta.data$scHelper_cell_type, levels = class_order)
+}
+
+
+
 # plot all gene modules
-ncell = ncol(seurat_data)
-ngene = length(unlist(antler_data$gene_modules$lists$unbiasedGMs$content))
-
-metadata = c("stage", "seurat_clusters", "run")
-
 png(paste0(plot_path, 'unbiasedGMs.png'), height = 150, width = 75, units = 'cm', res = 400)
 GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs$content,
-                   show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15)
+                   show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15)
 graphics.off()
 
 
 ########## DE GMs ##############
 # Plot gene modules with at least 50% of genes DE > 0.25 logFC & FDR < 0.001
-gms <- DEGeneModules(seurat_data, antler_data$gene_modules$get("unbiasedGMs"), logfc = 0.5, pval = 0.001, selected_gene_proportion = 0.5)
+gms <- DEGeneModules(seurat_data, antler_data$gene_modules$get("unbiasedGMs"), logfc = 0.5, pval = 0.001, selected_gene_proportion = 0.5, active_ident = meta_col)
 
 # save unbiasedGMs_DE in antler object
 antler_data$gene_modules$set(name= "unbiasedGMs_DE", content = gms)
 
-ncell = ncol(seurat_data)
-ngene = length(unlist(antler_data$gene_modules$lists$unbiasedGMs_DE$content))
-
 png(paste0(plot_path, 'unbiasedGMs_DE_rownames.png'), height = min(c(150, round(ngene/3))), width = 75, units = 'cm', res = 200)
 GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE$content,
-                   show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15, fontsize_row = 10)
+                   show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col),
+                   fontsize = 15, fontsize_row = 10)
 graphics.off()
 
 png(paste0(plot_path, 'unbiasedGMs_DE.png'), height = min(c(150, round(ngene/8))), width = 75, units = 'cm', res = 600)
 GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE$content,
-                   show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15, fontsize_row = 10)
+                   show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
 graphics.off()
 
 ########## DE batch filter GMs ##############
@@ -147,12 +170,12 @@ if(length(unique(seurat_data$run)) > 1){
   
   png(paste0(plot_path, 'unbiasedGMs_DE_batchfilt_rownames.png'), height = min(c(150, round(ngene/3))), width = 75, units = 'cm', res = 400)
   GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content,
-                     show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15, fontsize_row = 10)
+                     show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
   graphics.off()
   
   png(paste0(plot_path, 'unbiasedGMs_DE_batchfilt.png'), height = min(c(150, round(ngene/8))), width = 60, units = 'cm', res = 400)
   GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content,
-                     show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15, fontsize_row = 10)
+                     show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
   graphics.off()
 }
 
@@ -171,7 +194,7 @@ ngene = length(unlist(antler_data$gene_modules$lists$unbiasedGMs_bait$content))
 
 png(paste0(plot_path, 'unbiasedGMs_bait.png'), height = min(c(150, round(ngene/2))), width = 75, units = 'cm', res = 400)
 GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_bait$content,
-                   show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15, fontsize_row = 10)
+                   show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
 graphics.off()
 
 
@@ -187,14 +210,9 @@ antler_data$gene_modules$identify(
   process_plots         = TRUE)
 
 # plot all gene modules
-ncell = ncol(seurat_data)
-ngene = length(unlist(antler_data$gene_modules$lists$GMs200$content))
-
-metadata = c("stage", "seurat_clusters", "run")
-
 png(paste0(plot_path, 'GMs200.png'), height = 150, width = 75, units = 'cm', res = 400)
 GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, gene_modules = antler_data$gene_modules$lists$GMs200$content,
-                   show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 13)
+                   show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 13)
 graphics.off()
 
 
@@ -210,12 +228,12 @@ ngene = length(unlist(antler_data$gene_modules$lists$GMs200_DE$content))
 
 png(paste0(plot_path, 'GMs200_DE_rownames.png'), height = min(c(150, round(ngene/3))), width = 75, units = 'cm', res = 200)
 GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$GMs200_DE$content,
-                   show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15, fontsize_row = 10)
+                   show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
 graphics.off()
 
 png(paste0(plot_path, 'GMs200_DE.png'), height = min(c(150, round(ngene/8))), width = 75, units = 'cm', res = 400)
 GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$GMs200_DE$content,
-                   show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15, fontsize_row = 10)
+                   show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
 graphics.off()
 
 ########## DE batch filter GMs ##############
@@ -227,17 +245,14 @@ if(length(unique(seurat_data$run)) > 1){
   # save GMs200_DE in antler object
   antler_data$gene_modules$set(name= "GMs200_DE_batchfilt", content = gms)
   
-  ncell = ncol(seurat_data)
-  ngene = length(unlist(antler_data$gene_modules$lists$GMs200_DE_batchfilt$content))
-  
   png(paste0(plot_path, 'GMs200_DE_batchfilt_rownames.png'), height = min(c(150, round(ngene/2))), width = 75, units = 'cm', res = 400)
   GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$GMs200_DE_batchfilt$content,
-                     show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15, fontsize_row = 10)
+                     show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
   graphics.off()
   
   png(paste0(plot_path, 'GMs200_DE_batchfilt.png'), height = min(c(150, round(ngene/2))), width = 75, units = 'cm', res = 400)
   GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$GMs200_DE_batchfilt$content,
-                     show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15, fontsize_row = 10)
+                     show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
   graphics.off()
 }
 
@@ -256,7 +271,7 @@ ngene = length(unlist(antler_data$gene_modules$lists$GMs200_bait$content))
 
 png(paste0(plot_path, 'GMs200_bait.png'), height = min(c(150, round(ngene/2))), width = 75, units = 'cm', res = 400)
 GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, gene_modules = antler_data$gene_modules$lists$GMs200_bait$content,
-                   show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = "stage", fontsize = 15, fontsize_row = 10)
+                   show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
 graphics.off()
 
 
