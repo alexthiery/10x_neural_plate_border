@@ -52,7 +52,7 @@ opt = getopt(spec)
 }
 
 seurat_data <- readRDS(list.files(data_path, full.names = TRUE))
-# seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/run_split/1_splitrun_data/seurat/run_cluster/rds_files/seurat_data.RDS')
+# seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/hh4_splitstage_data/seurat/stage_cluster/rds_files/seurat_data.RDS')
 
 ########################################################################################################
 #                                      Cell state classification                                    #
@@ -71,7 +71,7 @@ hh5_cell_type_markers = list(early_caudal_neural = c('GBX2', 'SP5', 'HOXB1', 'CD
                              early_NPB = c("DLX5", "DLX6", "TFAP2A", "TFAP2C", "PRDM1", "SOX2", 'SOX3', "SOX21"),
                              early_NNE = c('ASTL', "DLX5", "DLX6", 'TFAP2A', "TFAP2C", "GATA2", "GATA3", "EPAS1"))
 
-hh6_cell_type_markers = list(  non_neural = c("EPAS1", "MSX2", "GATA2", "GATA3", "GRHL3", "EPAS1", "MSX2"),#krt19 keith mclaren 2003
+hh6_cell_type_markers = list(  non_neural = c("MSX2", "EPAS1", "GATA2", "GATA3", "GRHL3"),#krt19 keith mclaren 2003 MSX2?
                                NPB = c("SIX1", "EYA2", "DLX5", "DLX6", "TFAP2B", "TFAP2A", "TFAP2C", "PRDM1", "SOX2", "SOX3", 'SOX21', "MSX2"),
                                pNPB = c("PAX7", "MSX1", "GBX2", "SIX1", "EYA2", "DLX5", "DLX6", "TFAP2B", "TFAP2A", "TFAP2C", "PRDM1", "SOX2", "SOX3",'SOX21', "MSX2"), # check ZIC1 expression
                                aNPB = c("SIX3", "PAX6", "OTX2", "SIX1", "EYA2", "DLX5", "DLX6", "TFAP2B", "TFAP2A", "TFAP2C", "PRDM1", "SOX2", "SOX3",'SOX21', "MSX2"),
@@ -89,7 +89,7 @@ hh6_cell_type_markers = list(  non_neural = c("EPAS1", "MSX2", "GATA2", "GATA3",
 hh7_cell_type_markers = hh6_cell_type_markers
 
 ss4_cell_type_markers = c(hh7_cell_type_markers,
-                          list(NC = c("ETS1", "ENSGALG00000030902", "FOXD3", "TFAP2B", "TFAP2A"),
+                          list(NC = c("PAX7", "MSX1", "MSX2", "ETS1", "ENSGALG00000030902", "FOXD3", "TFAP2B", "TFAP2A"), # MSX2?
                                aPPR = c("SIX1", "EYA2", "DLX3", "DLX5", "DLX6", "SIX3", "PAX6", "HESX1", "OTX2"), #TFAP2?
                                pPPR = c("SIX1", "EYA2", "DLX3", "DLX5", "DLX6", "GBX2", "PAX2", "SOX8"), #FOXI3
                                iPPR = c("SIX1", "EYA2", "DLX3", "DLX5", "DLX6", "Pax3"),
@@ -114,7 +114,7 @@ stage = unique(seurat_data@meta.data$stage)
 
 if(length(stage) == 1){
   cell_type_markers = cell_type_markers[[stage]]
-  cluster_res = list(hh4 = 0.3, hh5 = 0.6, hh6 = 1, hh7 = 1.1, ss4 = 1.4)[[stage]]
+  cluster_res = list(hh4 = 1, hh5 = 1, hh6 = 1.2, hh7 = 1.2, ss4 = 1.2, ss8 = 1.2)[[stage]]
 } else {
   cell_type_markers = flatten(cell_type_markers)
   cell_type_markers = cell_type_markers[!duplicated(cell_type_markers)]
