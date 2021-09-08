@@ -52,7 +52,7 @@ opt = getopt(spec)
 }
 
 seurat_data <- readRDS(list.files(data_path, full.names = TRUE))
-seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/run_split/1_splitrun_data/seurat/run_cluster/rds_files/seurat_data.RDS')
+# seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/run_split/1_splitrun_data/seurat/run_cluster/rds_files/seurat_data.RDS')
 
 ########################################################################################################
 #                                      Cell state classification                                    #
