@@ -3,6 +3,10 @@
 # Load packages
 library(Seurat)
 library(optparse)
+library(ggplot2)
+library(scHelper)
+library(grid)
+library(gridExtra)
 
 # Read in command line opts
 option_list <- list(
@@ -31,6 +35,34 @@ dir.create(plot_path, recursive = T)
 dir.create(rds_path, recursive = T)
 
 seurat_data <- readRDS(list.files(data_path, full.names = TRUE))
+
+# Plot DimPlot of subset
+seurat_data@meta.data[[opt$meta_col]] <- as.factor(seurat_data@meta.data[[opt$meta_col]])
+colours = ggPlotColours(length(levels(seurat_data@meta.data[[opt$meta_col]])))
+
+max_x = round(max(seurat_data@reductions$umap@cell.embeddings[,1]))
+min_x = round(min(seurat_data@reductions$umap@cell.embeddings[,1]))
+max_y = round(max(seurat_data@reductions$umap@cell.embeddings[,2]))
+min_y = round(min(seurat_data@reductions$umap@cell.embeddings[,2]))
+
+full_plot = DimPlot(seurat_data, group.by = opt$meta_col, pt.size = 0.3, cols = colours, label = TRUE, label.size = 3, label.box = TRUE) +
+                ylim(min_y, max_y) +
+                xlim(min_x, max_x) +
+                theme(legend.position = "none") +
+                ggtitle("")
+
+subset_plot = DimPlot(seurat_data, group.by = opt$meta_col, pt.size = 0.3, cols = colours[levels(seurat_data@meta.data[[opt$meta_col]]) %in% opt$groups],
+        cells = rownames(seurat_data@meta.data)[seurat_data@meta.data[[opt$meta_col]] %in% opt$groups]) +
+                ylim(min_y, max_y) +
+                xlim(min_x, max_x) +
+                theme(legend.position = "none") +
+                ggtitle("")
+
+png(paste0(plot_path, 'cell_subset_umap.png'), width = 40, height = 20, units = 'cm', res = 200)
+grid.arrange(full_plot, subset_plot, nrow = 1)
+graphics.off()
+
+# Subset cells
 seurat_subset <- subset(seurat_data, subset = !!as.symbol(opt$meta_col) %in% groups)
 
 # save RDS object for each stage/run
