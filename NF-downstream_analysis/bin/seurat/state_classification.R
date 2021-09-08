@@ -52,7 +52,7 @@ opt = getopt(spec)
 }
 
 seurat_data <- readRDS(list.files(data_path, full.names = TRUE))
-# seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/hh5_splitstage_data/seurat/stage_cluster/rds_files/seurat_data.RDS')
+seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/run_split/1_splitrun_data/seurat/run_cluster/rds_files/seurat_data.RDS')
 
 ########################################################################################################
 #                                      Cell state classification                                    #
@@ -116,8 +116,11 @@ if(length(stage) == 1){
   cell_type_markers = cell_type_markers[[stage]]
   cluster_res = list(hh4 = 0.3, hh5 = 0.6, hh6 = 1, hh7 = 1.1, ss4 = 1.4)[[stage]]
 } else {
+  cell_type_markers = flatten(cell_type_markers)
   cell_type_markers = cell_type_markers[!duplicated(cell_type_markers)]
-  cluster_res = 3
+  
+  # Set cluster res to 2 for run split subsets - 3 for integrated data
+  cluster_res = ifelse(length(unique(seurat_data$run)) == 1, 2, 3)
 }
 
 DefaultAssay(seurat_data) <- "integrated"
