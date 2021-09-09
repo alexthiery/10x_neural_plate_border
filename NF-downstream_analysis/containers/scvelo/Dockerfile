@@ -16,6 +16,4 @@ COPY environment.yml .
 RUN conda update -n base -c defaults conda && \
     conda env create -f environment.yml && \
     echo "conda activate scvelo" >> ~/.bashrc
-
-RUN pip install git+https://github.com/theislab/cellrank@dev
     
