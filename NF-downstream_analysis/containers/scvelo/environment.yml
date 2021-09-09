@@ -8,12 +8,11 @@ channels:
 
 dependencies:
   - python=3.8.5
-  - scvelo
+  - scvelo=0.2.4
   - numba=0.52.0
   - notebook
   - ipywidgets
   - python-igraph
-  - cellrank
   - openmpi
   - petsc
   - petsc4py
