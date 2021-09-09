@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 
 # Define arguments for Rscript
-library(getopt)
+library(optparse)
 library(future)
 library(Seurat)
 library(pheatmap)
@@ -10,11 +10,20 @@ library(Antler)
 library(RColorBrewer)
 library(scHelper)
 
-spec = matrix(c(
-  'runtype', 'l', 2, "character",
-  'cores', 'c', 2, "integer"
-), byrow=TRUE, ncol=4)
-opt = getopt(spec)
+
+# Read in command line opts
+option_list <- list(
+  make_option(c("-r", "--runtype"), action = "store", type = "character", help = "Specify whether running through through 'nextflow' in order to switch paths"),
+  make_option(c("-c", "--cores"), action = "store", type = "integer", help = "Number of CPUs"),
+  make_option(c("-m", "--meta_col"), action = "store", type = "character", help = "Name of metadata column containing grouping information", default = 'scHelper_cell_type'),
+  make_option(c("", "--verbose"), action = "store_true", type = "logical", help = "Verbose", default = FALSE)
+)
+
+opt_parser = OptionParser(option_list = option_list)
+opt <- parse_args(opt_parser)
+if(opt$verbose) print(opt)
+
+meta_col = opt$meta_col
 
 # Set paths and load data
 data_path = "./input/rds_files/"
@@ -26,12 +35,6 @@ dir.create(plot_path, recursive = T)
 dir.create(rds_path, recursive = T)
 dir.create(gm_path, recursive = T)
 dir.create(antler_path, recursive = T)
-
-# plot_path = "./output/NF-downstream_analysis_stacas/antler/stage_split/hh6_split_stage_data/stage_gene_modules/plots/"
-# rds_path = "./output/NF-downstream_analysis_stacas/antler/stage_split/hh6_split_stage_data/stage_gene_modules/rds_files/"
-# # gm_path = "./output/NF-downstream_analysis_stacas/gene_modules/gene_module_lists/"
-# antler_path = "./output/NF-downstream_analysis_stacas/antler/stage_split/hh6_split_stage_data/stage_gene_modules/antler_data/"
-# data_path = "./output/NF-downstream_analysis_stacas/stage_split/hh6_splitstage_data/seurat/stage_cluster/rds_files/"
 
 
 # Multi-core when running from command line
@@ -82,9 +85,22 @@ antler_data$gene_modules$identify(
   mod_consistency_thres = 0.4,  # ratio of expressed genes among "positive" cells
   process_plots         = TRUE)
 
-# detect if stage contains more than 1 seq batch or more than 1 stage
-if(length(unique(seurat_data$run)) > 1){metadata <- c("seurat_clusters", "run")} else {metadata <- "seurat_clusters"}
-if(length(unique(seurat_data$stage)) > 1){metadata <- c(metadata, "stage")}
+# Set metadata
+metadata <- ifelse(length(unique(seurat_data@meta.data$stage)) == 1, meta_col, c("stage", meta_col))
+metadata <- ifelse(length(unique(seurat_data@meta.data$run)) == 1, metadata, c(metadata, 'run'))
+
+if(meta_col == 'scHelper_cell_type'){
+  # Specify order of cell states to appear in gene modules
+  class_order = c('extra_embryonic', 'early_non_neural', 'non_neural', 'early_NNE', 'early_PPR', 'early_aPPR', 'aPPR', 'iPPR',
+                  'early_pPPR', 'pPPR', 'early_border', 'early_NPB', 'NPB', 'early_pNPB', 'pNPB', 'early_aNPB', 'aNPB', 'early_neural',
+                  'early_neural_plate', 'early_caudal_neural', 'neural_progenitors', 'a_neural_progenitors', 'early_forebrain', 'forebrain',
+                  'early_midbrain', 'midbrain', 'p_neural_progenitors', 'early_hindbrain', 'hindbrain', 'NC', 'delaminating_NC', 'node')
+  
+  # subset cell states present in data subset
+  class_order <- class_order[class_order %in% seurat_data@meta.data[[meta_col]]]
+  
+  seurat_data@meta.data$scHelper_cell_type <- factor(seurat_data@meta.data$scHelper_cell_type, levels = class_order)
+}
 
 # plot all gene modules
 ncell = ncol(seurat_data)
@@ -92,7 +108,7 @@ ngene = length(unlist(antler_data$gene_modules$lists$unbiasedGMs$content))
 
 png(paste0(plot_path, 'unbiasedGMs.png'), height = min(c(150, round(ngene/15))), width = min(c(75, round(ncell/50))), units = 'cm', res = 400)
 GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs$content,
-                   show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = "seurat_clusters")
+                   show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col))
 graphics.off()
 
 
@@ -109,12 +125,12 @@ ngene = length(unlist(antler_data$gene_modules$lists$unbiasedGMs_DE$content))
 
 png(paste0(plot_path, 'unbiasedGMs_DE_rownames.png'), height = min(c(150, round(ngene/2))), width = min(c(75, round(ncell/40))), units = 'cm', res = 200)
 GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, col_order = metadata, col_ann_order = metadata,
-                   gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE$content, gaps_col = "seurat_clusters", fontsize_row = 10)
+                   gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE$content, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize_row = 10)
 graphics.off()
 
 png(paste0(plot_path, 'unbiasedGMs_DE.png'), height = min(c(150, round(ngene/2))), width = min(c(75, round(ncell/50))), units = 'cm', res = 400)
 GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, col_order = metadata, col_ann_order = metadata,
-                   gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE$content, gaps_col = "seurat_clusters", show_rownames = FALSE)
+                   gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE$content, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), show_rownames = FALSE)
 graphics.off()
 
 
@@ -133,12 +149,12 @@ if(length(unique(seurat_data$run)) > 1){
   
   png(paste0(plot_path, 'unbiasedGMs_DE_batchfilt_rownames.png'), height = min(c(150, round(ngene/2))), width = min(c(75, round(ncell/40))), units = 'cm', res = 400)
   GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, col_order = metadata, col_ann_order = metadata,
-                     gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content, gaps_col = "seurat_clusters", fontsize_row = 10)
+                     gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize_row = 10)
   graphics.off()
   
   png(paste0(plot_path, 'unbiasedGMs_DE_batchfilt.png'), height = min(c(150, round(ngene/2))), width = min(c(75, round(ncell/50))), units = 'cm', res = 400)
   GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, col_order = metadata, col_ann_order = metadata, 
-                     gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content, gaps_col = "seurat_clusters", show_rownames = FALSE)
+                     gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), show_rownames = FALSE)
   graphics.off()
 }
 
@@ -155,7 +171,7 @@ ncell = ncol(seurat_data)
 ngene = length(unlist(antler_data$gene_modules$lists$unbiasedGMs_bait$content))
 
 png(paste0(plot_path, 'unbiasedGMs_bait.png'), height = min(c(150, round(ngene/2))), width = min(c(75, round(ncell/50))), units = 'cm', res = 400)
-GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_bait$content, gaps_col = "seurat_clusters",
+GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_bait$content, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col),
                    show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, fontsize_row = 10)
 graphics.off()
 

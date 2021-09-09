@@ -29,8 +29,8 @@ include {R as CLUSTER} from "$baseDir/modules/local/r/main"                     
 include {R as GENE_MODULES} from "$baseDir/modules/local/r/main"                    addParams(  options:                        params.gene_modules_options,
                                                                                                 script:                         analysis_scripts.gene_modules )
 
-include {R as STATE_CLASSIFICATION} from "$baseDir/modules/local/r/main"            addParams(  options:                        params.state_classification_options,
-                                                                                                script:                         analysis_scripts.state_classification )
+// include {R as STATE_CLASSIFICATION} from "$baseDir/modules/local/r/main"            addParams(  options:                        params.state_classification_options,
+//                                                                                                 script:                         analysis_scripts.state_classification )
 
 include {R as PHATE} from "$baseDir/modules/local/r/main"                           addParams(  options:                        params.phate_options,
                                                                                                 script:                         analysis_scripts.phate )
@@ -61,13 +61,13 @@ workflow SEURAT_CLUSTERS_PROCESS {
         .set { ch_split_run }                                                           //Channel: [[meta], rds_file]
 
     CLUSTER( ch_split_run )
+    // STATE_CLASSIFICATION( CLUSTER.out )
     GENE_MODULES( CLUSTER.out )
-    STATE_CLASSIFICATION( CLUSTER.out )
     PHATE( CLUSTER.out )
 
     emit:
     cluster_out                     = CLUSTER.out                               //Channel: [[meta], [output]]
     gene_modules_out                = GENE_MODULES.out                          //Channel: [[meta], [output]]
-    state_classification_out        = STATE_CLASSIFICATION.out                  //Channel: [[meta], [output]]   
+    // state_classification_out        = STATE_CLASSIFICATION.out                  //Channel: [[meta], [output]]   
 }
 
