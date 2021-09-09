@@ -23,6 +23,8 @@ opt_parser = OptionParser(option_list = option_list)
 opt <- parse_args(opt_parser)
 if(opt$verbose) print(opt)
 
+meta_col = opt$meta_col
+
 # Set paths and load data
 data_path = "./input/rds_files/"
 plot_path = "./plots/"
