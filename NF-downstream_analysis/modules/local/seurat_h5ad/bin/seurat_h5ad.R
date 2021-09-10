@@ -37,11 +37,20 @@ seurat_object <- DietSeurat(seurat_object, counts = TRUE, assays = opt$assay, di
 # remove anything from misc slot as depending on the contents this can cause recursion errors
 seurat_object@misc <- list()
 
+# over-ride group_by to seurat clusters if cell classification has not been ran
+if(opt$group_by == 'scHelper_cell_type' && !'scHelper_cell_type' %in% colnames(seurat_object@meta.data)){
+  opt$group_by <- 'seurat_clusters'
+}
+
 # if --group_by is specified, generate cell colours gor group_by column
 if(!is.null(opt[['group_by']]) && opt[['group_by']] %in% colnames(seurat_object@meta.data)){
   # Get ggcolours for cell states
   colours = ggPlotColours(length(unique(seurat_object@meta.data[[opt$group_by]])))
-  cell_state = as.factor(seurat_object@meta.data[[opt$group_by]])
+  if(class(seurat_object@meta.data[[opt$group_by]]) == 'factor'){
+    cell_state <- droplevels(seurat_object@meta.data[[opt$group_by]])
+  } else {
+    cell_state <- as.factor(seurat_object@meta.data[[opt$group_by]])
+  }
   names(colours) <- levels(cell_state)
   
   # Add colours to new metadata colummn
