@@ -8,7 +8,7 @@ library(optparse)
 
 # Read in command line opts
 option_list <- list(
-  make_option(c("-a", "--assay"), action = "store", type = "character", help = "Assay to export from seurat object ('Integrated' or 'RNA')", default = 'Integrated'),
+  make_option(c("-a", "--assay"), action = "store", type = "character", help = "Assay to export from seurat object ('integrated' or 'RNA')", default = 'integrated'),
   make_option(c("-o", "--outfile"), action = "store", type = "character", help = "Name of outfile"),
   make_option(c("-g", "--group_by"), action = "store", type = "character", help = "Name of metadata column containing groups to colour by"),
   make_option(c("", "--verbose"), action = "store_true", type = "logical", help = "Verbose", default = FALSE)
@@ -39,14 +39,13 @@ seurat_object@misc <- list()
 
 # if --group_by is specified, generate cell colours gor group_by column
 if(!is.null(opt[['group_by']]) && opt[['group_by']] %in% colnames(seurat_object@meta.data)){
-  # Set group_by coloumn as factor in order to re-order metadata accordingly
-  seurat_object@meta.data[[opt$group_by]] <- as.factor(seurat_object@meta.data[[opt$group_by]])
-  # Set default seurat identities to group_by variable
-  Idents(seurat_object) <- opt$group_by
-  # Get default ggplot colours
-  ggcolours <- ggPlotColours(length(levels(seurat_object@active.ident)))
-  # Vectorise colours based on seurat identities
-  seurat_object@meta.data[['cell_colours']] <- ggcolours[Idents(seurat_object)]
+  # Get ggcolours for cell states
+  colours = ggPlotColours(length(unique(seurat_object@meta.data[[opt$group_by]])))
+  cell_state = as.factor(seurat_object@meta.data[[opt$group_by]])
+  names(colours) <- levels(cell_state)
+  
+  # Add colours to new metadata colummn
+  seurat_object@meta.data[['cell_colours']] <- unname(colours[cell_state])
   # If any na values are present in seurat identities, set colour to grey
   seurat_object@meta.data[['cell_colours']][is.na(seurat_object@meta.data[['cell_colours']])] <- '#AAAAAA'
   
