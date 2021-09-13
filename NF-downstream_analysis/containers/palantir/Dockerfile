@@ -14,3 +14,4 @@ RUN   pip install cmake==3.18.4 && \
       pip install PhenoGraph && \
       pip install palantir && \
       pip install jupyterlab
+      
