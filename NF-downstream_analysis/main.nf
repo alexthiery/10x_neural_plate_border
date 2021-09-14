@@ -113,7 +113,7 @@ workflow {
     /*------------------------------------------------------------------------------------*/
     /* Run analysis on full filtered seurat object
     --------------------------------------------------------------------------------------*/
-    // SEURAT_FILTERED_PROCESS( SEURAT_FILTERING.out.contamination_filt_out)
+    SEURAT_FILTERED_PROCESS( SEURAT_FILTERING.out.contamination_filt_out)
 
     /*------------------------------------------------------------------------------------*/
     /* Split data and cluster batches and stages separately (+GMs)
