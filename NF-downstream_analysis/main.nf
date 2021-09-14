@@ -130,11 +130,11 @@ workflow {
     /* Split data and cluster batches and stages separately (+GMs)
     --------------------------------------------------------------------------------------*/ 
     SEURAT_STAGE_PROCESS( SEURAT_FILTERING.out.contamination_filt_out)  
-    // SEURAT_RUN_PROCESS( SEURAT_FILTERING.out.contamination_filt_out)
-    // SEURAT_HH4_PROCESS( SEURAT_FILTERING.out.contamination_filt_out)
-    // SEURAT_NPB_PROCESS( SEURAT_FILTERED_PROCESS.out.state_classification_out)
-    // SEURAT_PLACODAL1_PROCESS( SEURAT_FILTERED_PROCESS.out.state_classification_out )
-    // SEURAT_PLACODAL2_PROCESS( SEURAT_FILTERED_PROCESS.out.state_classification_out )
+    SEURAT_RUN_PROCESS( SEURAT_FILTERING.out.contamination_filt_out)
+    SEURAT_HH4_PROCESS( SEURAT_FILTERING.out.contamination_filt_out)
+    SEURAT_NPB_PROCESS( SEURAT_FILTERED_PROCESS.out.state_classification_out)
+    SEURAT_PLACODAL1_PROCESS( SEURAT_FILTERED_PROCESS.out.state_classification_out )
+    SEURAT_PLACODAL2_PROCESS( SEURAT_FILTERED_PROCESS.out.state_classification_out )
 
     // Collect rds files from all stages
     ch_combined = SEURAT_STAGE_PROCESS.out.state_classification_out
@@ -153,14 +153,16 @@ workflow {
 
 
 
-    // // Prepare outputs for scVelo
-    // ch_seurat_concat =          SEURAT_FILTERED_PROCESS.out.state_classification_out
-    //                                 .concat(SEURAT_STAGE_PROCESS.out.state_classification_out)
-    //                                 .concat(SEURAT_RUN_PROCESS.out.state_classification_out)
-    //                                 // .concat(SEURAT_HH4_PROCESS.out.state_classification_out)
-    //                                 .concat(SEURAT_NPB_PROCESS.out.cluster_out)
-    //                                 .concat(SEURAT_PLACODAL1_PROCESS.out.cluster_out)
-    //                                 .concat(SEURAT_PLACODAL2_PROCESS.out.cluster_out)
+    // Prepare outputs for scVelo
+    ch_seurat_concat =          SEURAT_FILTERED_PROCESS.out.state_classification_out
+                                    .concat(SEURAT_STAGE_PROCESS.out.state_classification_out)
+                                    .concat(SEURAT_RUN_PROCESS.out.state_classification_out)
+                                    // .concat(SEURAT_HH4_PROCESS.out.state_classification_out)
+                                    .concat(SEURAT_NPB_PROCESS.out.cluster_out)
+                                    .concat(SEURAT_PLACODAL1_PROCESS.out.cluster_out)
+                                    .concat(SEURAT_PLACODAL2_PROCESS.out.cluster_out)
+                                    .concat(SEURAT_TRANSFER_NPB_PROCESS.out.cluster_out)
+                                    .concat(SEURAT_TRANSFER_FILTER_PROCESS.out.cluster_out)
 
 
     // // ch_gene_modules_concat =    SEURAT_FILTERED_PROCESS.out.gene_modules_out
@@ -172,8 +174,8 @@ workflow {
 
 
     // // Run scVelo
-    // SEURAT_H5AD( ch_seurat_concat )
-    // SEURAT_SCVELO( SEURAT_H5AD.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} ) // Channel: [[meta], seurat.h5ad], Channel: merged.loom, Channel: seurat_annotations.csv
+    SEURAT_H5AD( ch_seurat_concat )
+    SEURAT_SCVELO( SEURAT_H5AD.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} ) // Channel: [[meta], seurat.h5ad], Channel: merged.loom, Channel: seurat_annotations.csv
     
     // // Run gene module analysis across latent time
     // ch_cluster_rds              = ch_seurat_concat.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
