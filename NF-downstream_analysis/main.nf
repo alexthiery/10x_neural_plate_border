@@ -84,6 +84,17 @@ include {R as GENE_MODULES_LATENT_TIME} from "$baseDir/modules/local/r/main"    
 include {R as TRANSFER_LABELS} from "$baseDir/modules/local/r/main"                             addParams( script:                                 analysis_scripts.transfer_labels )
 
 
+include {SEURAT_TRANSFER_PROCESS as SEURAT_TRANSFER_NPB_PROCESS} from "$baseDir/subworkflows/seurat_transfer_process/main"     addParams(  subset_options:                         modules['transfer_npb_subset'],
+                                                                                                            cluster_options:                        modules['clusters_cluster'],
+                                                                                                            gene_modules_options:                   modules['clusters_gene_modules'])
+
+include {SEURAT_TRANSFER_PROCESS as SEURAT_TRANSFER_FILTER_PROCESS} from "$baseDir/subworkflows/seurat_transfer_process/main"     addParams(  subset_options:                         modules['transfer_filter_subset'],
+                                                                                                            cluster_options:                        modules['clusters_cluster'],
+                                                                                                            gene_modules_options:                   modules['clusters_gene_modules'])
+
+
+
+
 workflow {
     METADATA( params.input )
 
@@ -128,14 +139,19 @@ workflow {
     // Collect rds files from all stages
     ch_combined = SEURAT_STAGE_PROCESS.out.state_classification_out
         .concat(SEURAT_FILTERING.out.contamination_filt_out)
-        .map{row -> row[1].findAll { it =~ ".*rds_files" }}
+        .map{row -> it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]}}
+        .view()
         .collect()
-        .map { row -> [[sample_id:'all_stages_filtered'], row] }
-
+        .map { row -> [[sample_id:'all_stages_filtered'], row] } // [[meta], [rds1, rds2, rds3, ...]]
+        .view()
 
     // Transfer labels from stage subsets to full data
     TRANSFER_LABELS( ch_combined )
 
+    SEURAT_TRANSFER_NPB_PROCESS( TRANSFER_LABELS.out )
+
+    SEURAT_TRANSFER_FILTER_PROCESS( TRANSFER_LABELS.out )
+    
 
 
 
