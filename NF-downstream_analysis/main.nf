@@ -139,7 +139,7 @@ workflow {
     // Collect rds files from all stages
     ch_combined = SEURAT_STAGE_PROCESS.out.state_classification_out
         .concat(SEURAT_FILTERING.out.contamination_filt_out)
-        .map{row -> it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]}}
+        .map{row -> it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]}
         .collect()
         .map { row -> [[sample_id:'all_stages_filtered'], row] } // [[meta], [rds1, rds2, rds3, ...]]
 
