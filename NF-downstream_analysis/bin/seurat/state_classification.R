@@ -51,6 +51,9 @@ opt = getopt(spec)
   dir.create(rds_path, recursive = T)
 }
 
+# Retrieve seurat object label
+label <- sub('_.*', '', list.files(data_path))
+
 seurat_data <- readRDS(list.files(data_path, full.names = TRUE))
 # seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/hh4_splitstage_data/seurat/stage_cluster/rds_files/seurat_data.RDS')
 
@@ -141,7 +144,7 @@ png(paste0(plot_path, "scHelper_celltype_umap2.png"), width=20, height=20, units
 DimPlot(seurat_data, group.by = 'scHelper_cell_type', label = TRUE, label.size = 3, label.box = TRUE) + ggplot2::theme(legend.position = "none")
 graphics.off()
 
-saveRDS(seurat_data, paste0(rds_path, "cell_state_classification.RDS"), compress = FALSE)
+saveRDS(seurat_data, paste0(rds_path, label, "_cell_state_classification.RDS"), compress = FALSE)
 
 # Plot stacked violins for each of the cell type classes to check genes used are good markers
 curr_plot_path = paste0(plot_path, "cell_type_violins/")
