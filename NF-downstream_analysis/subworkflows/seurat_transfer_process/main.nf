@@ -39,7 +39,7 @@ if(params.debug) {log.info Headers.build_debug_scripts_summary(analysis_scripts,
 Workflow
 --------------------------------------------------------------------------------------*/
 
-workflow SEURAT_CLUSTERS_PROCESS {
+workflow SEURAT_TRANSFER_PROCESS {
     take:
     seurat_out      //Channel: [[meta], [plot_dir, rds_dir]]
 
