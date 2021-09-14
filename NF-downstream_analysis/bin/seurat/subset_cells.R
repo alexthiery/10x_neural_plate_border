@@ -12,10 +12,10 @@ library(gridExtra)
 option_list <- list(
     make_option(c("-r", "--runtype"), action = "store", type = "character", help = "Specify whether running through through 'nextflow' in order to switch paths"),
     make_option(c("-c", "--cores"), action = "store", type = "integer", help = "Number of CPUs"),
-    make_option(c("-m", "--meta_col"), action = "store", type = "character", help = "Name of metadata column containing groups to subset", default = NA),
+    make_option(c("-m", "--meta_col"), action = "store", type = "character", help = "Name of metadata column containing groups to subset", default = NULL),
     make_option(c("-o", "--output"), action = "store", type = "character", help = "Name of output RDS file", default = 'seurat_subset'),
     make_option(c("-g", "--groups"), action = "store", type = "character", help = "Classifications of cells (within meta_col) to subset from dataset. \
-    If multiple classifications are used to subest, must be provided as a comma separated list i.e. --groups celltype1,celltype2", default = NA),
+    If multiple classifications are used to subest, must be provided as a comma separated list i.e. --groups celltype1,celltype2", default = NULL),
     make_option(c("-i", "--invert"), action = "store", type = "logical", help = "Boolean for whether to invert group selection", default = FALSE),
     make_option(c("", "--verbose"), action = "store_true", type = "logical", help = "Verbose", default = FALSE))
 
@@ -23,11 +23,14 @@ opt_parser = OptionParser(option_list = option_list)
 opt <- parse_args(opt_parser)
 if(opt$verbose) print(opt)
 
+# opt$groups = c('early_non_neural','early_aPPR','early_pPPR','aNPB','pPPR','non_neural')
+# opt$meta_col = 'scHelper_cell_type'
+
 if(is.na(opt$meta_col)){
     stop("meta_col parameter must be provided. See script usage (--help)")
 }
 
-if(is.na(opt$groups)){
+if(is.null(opt$groups)){
     stop("groups parameter must be provided. See script usage (--help)")
 }
 
