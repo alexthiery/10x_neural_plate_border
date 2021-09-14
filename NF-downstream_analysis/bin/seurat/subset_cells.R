@@ -23,8 +23,10 @@ opt_parser = OptionParser(option_list = option_list)
 opt <- parse_args(opt_parser)
 if(opt$verbose) print(opt)
 
-# opt$groups = c('early_non_neural','early_aPPR','early_pPPR','aNPB','pPPR','non_neural')
+# opt$groups = 'early_non_neural,early_aPPR,early_pPPR,aNPB,pPPR,non_neural'
 # opt$meta_col = 'scHelper_cell_type'
+
+opt$groups = strsplit(opt$groups, ',')[[1]]
 
 if(is.na(opt$meta_col)){
     stop("meta_col parameter must be provided. See script usage (--help)")
@@ -80,4 +82,3 @@ seurat_subset <- subset(seurat_data, subset = !!as.symbol(opt$meta_col) %in% opt
 
 # save RDS object for each stage/run
 saveRDS(seurat_subset, paste0(rds_path, opt$output, ".RDS"), compress = FALSE)
-
