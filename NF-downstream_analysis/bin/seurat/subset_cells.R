@@ -17,8 +17,7 @@ option_list <- list(
     make_option(c("-g", "--groups"), action = "store", type = "character", help = "Classifications of cells (within meta_col) to subset from dataset. \
     If multiple classifications are used to subest, must be provided as a comma separated list i.e. --groups celltype1,celltype2", default = NA),
     make_option(c("-i", "--invert"), action = "store", type = "logical", help = "Boolean for whether to invert group selection", default = FALSE),
-    make_option(c("", "--verbose"), action = "store_true", type = "logical", help = "Verbose", default = FALSE)
-    )
+    make_option(c("", "--verbose"), action = "store_true", type = "logical", help = "Verbose", default = FALSE))
 
 opt_parser = OptionParser(option_list = option_list)
 opt <- parse_args(opt_parser)
@@ -31,9 +30,6 @@ if(is.na(opt$meta_col)){
 if(is.na(opt$groups)){
     stop("groups parameter must be provided. See script usage (--help)")
 }
-
-# Split group opt by 
-groups <- strsplit(opt$groups, ",")[[1]]
 
 # Set paths and load data
 plot_path = "./plots/"
@@ -77,7 +73,7 @@ grid.arrange(full_plot, subset_plot, nrow = 1)
 graphics.off()
 
 # Subset cells
-seurat_subset <- subset(seurat_data, subset = !!as.symbol(opt$meta_col) %in% groups)
+seurat_subset <- subset(seurat_data, subset = !!as.symbol(opt$meta_col) %in% opt$groups)
 
 # save RDS object for each stage/run
 saveRDS(seurat_subset, paste0(rds_path, opt$output, ".RDS"), compress = FALSE)
