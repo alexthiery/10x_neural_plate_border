@@ -12,19 +12,29 @@ library(gridExtra)
 option_list <- list(
     make_option(c("-r", "--runtype"), action = "store", type = "character", help = "Specify whether running through through 'nextflow' in order to switch paths"),
     make_option(c("-c", "--cores"), action = "store", type = "integer", help = "Number of CPUs"),
-    make_option(c("-m", "--meta_col"), action = "store", type = "character", help = "Name of metadata column containing groups to subset"),
+    make_option(c("-m", "--meta_col"), action = "store", type = "character", help = "Name of metadata column containing groups to subset", default = NULL),
     make_option(c("-o", "--output"), action = "store", type = "character", help = "Name of output RDS file", default = 'seurat_subset'),
     make_option(c("-g", "--groups"), action = "store", type = "character", help = "Classifications of cells (within meta_col) to subset from dataset. \
-    If multiple classifications are used to subest, must be provided as a comma separated list i.e. --groups celltype1,celltype2"),
-    make_option(c("", "--verbose"), action = "store_true", type = "logical", help = "Verbose", default = FALSE)
-    )
+    If multiple classifications are used to subest, must be provided as a comma separated list i.e. --groups celltype1,celltype2", default = NULL),
+    make_option(c("-i", "--invert"), action = "store", type = "logical", help = "Boolean for whether to invert group selection", default = FALSE),
+    make_option(c("", "--verbose"), action = "store_true", type = "logical", help = "Verbose", default = FALSE))
 
 opt_parser = OptionParser(option_list = option_list)
 opt <- parse_args(opt_parser)
 if(opt$verbose) print(opt)
 
-# Split group opt by 
-groups <- strsplit(opt$groups, ",")[[1]]
+# opt$groups = 'early_non_neural,early_aPPR,early_pPPR,aNPB,pPPR,non_neural'
+# opt$meta_col = 'scHelper_cell_type'
+
+opt$groups = strsplit(opt$groups, ',')[[1]]
+
+if(is.na(opt$meta_col)){
+    stop("meta_col parameter must be provided. See script usage (--help)")
+}
+
+if(is.null(opt$groups)){
+    stop("groups parameter must be provided. See script usage (--help)")
+}
 
 # Set paths and load data
 plot_path = "./plots/"
@@ -35,6 +45,11 @@ dir.create(plot_path, recursive = T)
 dir.create(rds_path, recursive = T)
 
 seurat_data <- readRDS(list.files(data_path, full.names = TRUE))
+
+# If invert is true, then subset the inverted groups from the seurat object
+if(opt$invert == TRUE){
+    opt$groups <- as.character(unique(seurat_data@meta.data[[opt$meta_col]])[!unique(seurat_data@meta.data[[opt$meta_col]]) %in% opt$groups])
+}
 
 # Plot DimPlot of subset
 seurat_data@meta.data[[opt$meta_col]] <- as.factor(seurat_data@meta.data[[opt$meta_col]])
@@ -63,8 +78,7 @@ grid.arrange(full_plot, subset_plot, nrow = 1)
 graphics.off()
 
 # Subset cells
-seurat_subset <- subset(seurat_data, subset = !!as.symbol(opt$meta_col) %in% groups)
+seurat_subset <- subset(seurat_data, subset = !!as.symbol(opt$meta_col) %in% opt$groups)
 
 # save RDS object for each stage/run
 saveRDS(seurat_subset, paste0(rds_path, opt$output, ".RDS"), compress = FALSE)
-

@@ -39,6 +39,10 @@ data_path = "./input/"
 dir.create(plot_path, recursive = T)
 dir.create(rds_path, recursive = T)
 
+# Retrieve seurat object label
+label <- sub('_.*', '', list.files(data_path))
+
+# Load seurat data
 seurat_data <- readRDS(list.files(data_path, full.names = TRUE))
 
 # Set RNA to default assay
@@ -127,6 +131,6 @@ TenxPheatmap(data = seurat_data, metadata = c("seurat_clusters", "stage"), custo
              custom_order = cluster_order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters", assay = 'RNA')
 graphics.off()
 
-saveRDS(seurat_data, paste0(rds_path, "seurat_data.RDS"), compress = FALSE)
+saveRDS(seurat_data, paste0(rds_path, label, "_clustered_data.RDS"), compress = FALSE)
 
 

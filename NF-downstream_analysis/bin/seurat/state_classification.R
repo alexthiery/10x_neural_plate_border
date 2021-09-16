@@ -51,6 +51,9 @@ opt = getopt(spec)
   dir.create(rds_path, recursive = T)
 }
 
+# Retrieve seurat object label
+label <- sub('_.*', '', list.files(data_path))
+
 seurat_data <- readRDS(list.files(data_path, full.names = TRUE))
 # seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/hh4_splitstage_data/seurat/stage_cluster/rds_files/seurat_data.RDS')
 
@@ -86,9 +89,7 @@ hh6_cell_type_markers = list(  non_neural = c("MSX2", "EPAS1", "GATA2", "GATA3",
                                early_forebrain = c("PAX6" , "SIX3", "OTX2", "SOX2", "SOX21", "LMO1", "ZEB2", "SOX1", "SOX3", "FRZB")) #TLX1)
 
 
-hh7_cell_type_markers = hh6_cell_type_markers
-
-ss4_cell_type_markers = c(hh7_cell_type_markers,
+hh7_cell_type_markers = c(hh6_cell_type_markers,
                           list(NC = c("PAX7", "MSX1", "MSX2", "ETS1", "ENSGALG00000030902", "FOXD3", "TFAP2B", "TFAP2A"), # MSX2?
                                aPPR = c("SIX1", "EYA2", "DLX3", "DLX5", "DLX6", "SIX3", "PAX6", "HESX1", "OTX2"), #TFAP2?
                                pPPR = c("SIX1", "EYA2", "DLX3", "DLX5", "DLX6", "GBX2", "PAX2", "SOX8"), #FOXI3
@@ -96,6 +97,8 @@ ss4_cell_type_markers = c(hh7_cell_type_markers,
                                hindbrain = c("GBX2", "HOXA2", "HOXA3", "HOXB2", "KROX20", "SOX2", "SOX21", "LMO1", "ZEB2", "GLI2", "ZNF423"), #ZNF423/GLI2 (Trevers 2021) #ZEB2
                                midbrain = c("WNT4", "PAX2", "FGF8", "WNT1", "OTX2", "SOX2", "SOX21", "LMO1", "ZEB2", "GLI2", "ZNF423"),
                                forebrain = c("PAX6" , "SIX3", "OTX2", "SOX2", "SOX21", "LMO1", "ZEB2", "GLI2", "ZNF423")))
+
+ss4_cell_type_markers = c(hh7_cell_type_markers)
 
 ss8_cell_type_markers = c(ss4_cell_type_markers,
                           list(delaminating_NC = c("ETS1", "LMO4", "SOX10", "SOX8", "FOXD3")))
@@ -141,7 +144,7 @@ png(paste0(plot_path, "scHelper_celltype_umap2.png"), width=20, height=20, units
 DimPlot(seurat_data, group.by = 'scHelper_cell_type', label = TRUE, label.size = 3, label.box = TRUE) + ggplot2::theme(legend.position = "none")
 graphics.off()
 
-saveRDS(seurat_data, paste0(rds_path, "cell_state_classification.RDS"), compress = FALSE)
+saveRDS(seurat_data, paste0(rds_path, label, "_cell_state_classification.RDS"), compress = FALSE)
 
 # Plot stacked violins for each of the cell type classes to check genes used are good markers
 curr_plot_path = paste0(plot_path, "cell_type_violins/")
