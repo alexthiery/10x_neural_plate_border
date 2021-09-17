@@ -65,14 +65,14 @@ if(opt$verbose) print(opt)
 
 seurat_data <- readRDS(list.files(data_path, full.names = TRUE))
 
+########################################################################################################################################################
+##################################################   Calculating gene modules using Antler:   ##########################################################
+
 # switch to RNA assay for viewing expression data
 DefaultAssay(seurat_data) <- "RNA"
 
 seurat_data <- DietSeurat(seurat_data, counts = TRUE, data = TRUE, scale.data = TRUE, assays = 'RNA')
-
-
 # seurat_data <- subset(seurat_data, cells = colnames(seurat_data)[1:2500])
-
 
 # strip end of cell names as this is incorrectly reformated in Antler
 seurat_data <- RenameCells(seurat_data, new.names = gsub('-', '_', colnames(seurat_data)))
@@ -100,7 +100,7 @@ antler_data$exclude_unexpressed_genes(min_cells=10, min_level=1, verbose=T, data
 
 antler_data$normalize(method = 'MR')
 
-########################################################################################################################################################
+###########################
 # Calculate GMs unbiasedly
 antler_data$gene_modules$identify(
   name                  = "unbiasedGMs",
@@ -110,53 +110,12 @@ antler_data$gene_modules$identify(
   mod_consistency_thres = 0.4,  # ratio of expressed genes among "positive" cells
   process_plots         = TRUE)
 
-
-# Set metadata
-metadata <- ifelse(length(unique(seurat_data@meta.data$stage)) == 1, meta_col, c("stage", meta_col))
-metadata <- ifelse(length(unique(seurat_data@meta.data$run)) == 1, metadata, c(metadata, 'run'))
-
-
-if(meta_col == 'scHelper_cell_type'){
-  # Specify order of cell states to appear in gene modules
-  class_order = c('extra_embryonic', 'early_non_neural', 'non_neural', 'early_NNE', 'early_PPR', 'early_aPPR', 'aPPR', 'iPPR',
-                  'early_pPPR', 'pPPR', 'early_border', 'early_NPB', 'NPB', 'early_pNPB', 'pNPB', 'early_aNPB', 'aNPB', 'early_neural',
-                  'early_neural_plate', 'early_caudal_neural', 'neural_progenitors', 'a_neural_progenitors', 'early_forebrain', 'forebrain',
-                  'early_midbrain', 'midbrain', 'p_neural_progenitors', 'early_hindbrain', 'hindbrain', 'NC', 'delaminating_NC', 'node')
-  
-  # subset cell states present in data subset
-  class_order <- class_order[class_order %in% seurat_data@meta.data[[meta_col]]]
-  
-  seurat_data@meta.data$scHelper_cell_type <- factor(seurat_data@meta.data$scHelper_cell_type, levels = class_order)
-}
-
-
-
-# plot all gene modules
-png(paste0(plot_path, 'unbiasedGMs.png'), height = 150, width = 75, units = 'cm', res = 400)
-GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs$content,
-                   show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15)
-graphics.off()
-
-
 ########## DE GMs ##############
 # Plot gene modules with at least 50% of genes DE > 0.25 logFC & FDR < 0.001
 gms <- DEGeneModules(seurat_data, antler_data$gene_modules$get("unbiasedGMs"), logfc = 0.5, pval = 0.001, selected_gene_proportion = 0.5, active_ident = meta_col)
 
 # save unbiasedGMs_DE in antler object
 antler_data$gene_modules$set(name= "unbiasedGMs_DE", content = gms)
-
-ngene = length(unlist(antler_data$gene_modules$lists$unbiasedGMs_DE$content))
-
-png(paste0(plot_path, 'unbiasedGMs_DE_rownames.png'), height = min(c(150, round(ngene/3))), width = 75, units = 'cm', res = 200)
-GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE$content,
-                   show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col),
-                   fontsize = 15, fontsize_row = 10)
-graphics.off()
-
-png(paste0(plot_path, 'unbiasedGMs_DE.png'), height = min(c(150, round(ngene/8))), width = 75, units = 'cm', res = 600)
-GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE$content,
-                   show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
-graphics.off()
 
 ########## DE batch filter GMs ##############
 # Filter gene modules which are deferentially expressed across batches
@@ -166,20 +125,7 @@ if(length(unique(seurat_data$run)) > 1){
   
   # save unbiasedGMs_DE in antler object
   antler_data$gene_modules$set(name= "unbiasedGMs_DE_batchfilt", content = gms)
-  
-  ngene = length(unlist(antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content))
-  
-  png(paste0(plot_path, 'unbiasedGMs_DE_batchfilt_rownames.png'), height = min(c(150, round(ngene/3))), width = 75, units = 'cm', res = 400)
-  GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content,
-                     show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
-  graphics.off()
-  
-  png(paste0(plot_path, 'unbiasedGMs_DE_batchfilt.png'), height = min(c(150, round(ngene/8))), width = 60, units = 'cm', res = 400)
-  GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content,
-                     show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
-  graphics.off()
 }
-
 
 ########## Bait GMs ##############
 # use bait genes to filter mods
@@ -190,15 +136,7 @@ gms <- gms[!sapply(gms, is.null)]
 # save unbiasedGMs_DE in antler object
 antler_data$gene_modules$set(name= "unbiasedGMs_bait", content = gms)
 
-ngene = length(unlist(antler_data$gene_modules$lists$unbiasedGMs_bait$content))
-
-png(paste0(plot_path, 'unbiasedGMs_bait.png'), height = min(c(150, round(ngene/2))), width = 75, units = 'cm', res = 400)
-GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_bait$content,
-                   show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
-graphics.off()
-
-
-########################################################################################################################################################
+####################################################################################
 # Calculate 200 GMs
 antler_data$gene_modules$identify(
   name                  = "GMs200",
@@ -209,12 +147,6 @@ antler_data$gene_modules$identify(
   num_initial_gms       = 200,
   process_plots         = TRUE)
 
-# plot all gene modules
-png(paste0(plot_path, 'GMs200.png'), height = 150, width = 75, units = 'cm', res = 400)
-GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, gene_modules = antler_data$gene_modules$lists$GMs200$content,
-                   show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 13)
-graphics.off()
-
 
 ########## DE GMs ##############
 # Plot gene modules with at least 50% of genes DE > 0.25 logFC & FDR < 0.001
@@ -222,18 +154,6 @@ gms <- DEGeneModules(seurat_data, antler_data$gene_modules$get("GMs200"), logfc 
 
 # save GMs200_DE in antler object
 antler_data$gene_modules$set(name= "GMs200_DE", content = gms)
-
-ngene = length(unlist(antler_data$gene_modules$lists$GMs200_DE$content))
-
-png(paste0(plot_path, 'GMs200_DE_rownames.png'), height = min(c(150, round(ngene/3))), width = 75, units = 'cm', res = 200)
-GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$GMs200_DE$content,
-                   show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
-graphics.off()
-
-png(paste0(plot_path, 'GMs200_DE.png'), height = min(c(150, round(ngene/8))), width = 75, units = 'cm', res = 400)
-GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$GMs200_DE$content,
-                   show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
-graphics.off()
 
 ########## DE batch filter GMs ##############
 # Filter gene modules which are deferentially expressed across batches
@@ -243,20 +163,7 @@ if(length(unique(seurat_data$run)) > 1){
   
   # save GMs200_DE in antler object
   antler_data$gene_modules$set(name= "GMs200_DE_batchfilt", content = gms)
-
-  ngene = length(unlist(antler_data$gene_modules$lists$GMs200_DE_batchfilt$content))
-  
-  png(paste0(plot_path, 'GMs200_DE_batchfilt_rownames.png'), height = min(c(150, round(ngene/2))), width = 75, units = 'cm', res = 400)
-  GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$GMs200_DE_batchfilt$content,
-                     show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
-  graphics.off()
-  
-  png(paste0(plot_path, 'GMs200_DE_batchfilt.png'), height = min(c(150, round(ngene/2))), width = 75, units = 'cm', res = 400)
-  GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$GMs200_DE_batchfilt$content,
-                     show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
-  graphics.off()
 }
-
 
 ########## Bait GMs ##############
 # use bait genes to filter mods
@@ -266,14 +173,6 @@ gms <- gms[!sapply(gms, is.null)]
 
 # save GMs200_DE in antler object
 antler_data$gene_modules$set(name= "GMs200_bait", content = gms)
-
-ngene = length(unlist(antler_data$gene_modules$lists$GMs200_bait$content))
-
-png(paste0(plot_path, 'GMs200_bait.png'), height = min(c(150, round(ngene/2))), width = 75, units = 'cm', res = 400)
-GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, gene_modules = antler_data$gene_modules$lists$GMs200_bait$content,
-                   show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
-graphics.off()
-
 
 ########## Write GMs ##############
 export_antler_modules <- function(antler_object, publish_dir, names_list){
@@ -294,3 +193,146 @@ export_antler_modules(antler_data, publish_dir = gm_path, names_list = c('unbias
 
 ########## Save Antler object ##############
 saveRDS(antler_data, paste0(rds_path, 'antler_out.RDS'))
+
+########################################################################################################################################################
+##################################################   Setting metadata and ordering cells for heatmaps:   ################################################
+
+# Set metadata and order cells in heatmap
+metadata <- if(length(unique(seurat_data@meta.data$stage)) == 1){meta_col
+}else{c("stage", meta_col)}
+metadata <- if(length(unique(seurat_data@meta.data$run)) == 1){metadata
+}else{c(metadata, "run")}
+
+if(meta_col == 'scHelper_cell_type'){
+  # Specify order of cell states to appear in gene modules
+  class_order = c('extra_embryonic', 'early_non_neural', 'non_neural', 'early_NNE', 'early_PPR', 'early_aPPR', 'aPPR', 'iPPR',
+                  'early_pPPR', 'pPPR', 'early_border', 'early_NPB', 'NPB', 'early_pNPB', 'pNPB', 'early_aNPB', 'aNPB', 'early_neural',
+                  'early_neural_plate', 'early_caudal_neural', 'neural_progenitors', 'a_neural_progenitors', 'early_forebrain', 'forebrain',
+                  'early_midbrain', 'midbrain', 'p_neural_progenitors', 'early_hindbrain', 'hindbrain', 'NC', 'delaminating_NC', 'node')
+  
+  # subset cell states present in data subset
+  class_order_cells <- class_order[class_order %in% seurat_data@meta.data[[meta_col]]]
+  
+  seurat_data@meta.data$scHelper_cell_type <- factor(seurat_data@meta.data$scHelper_cell_type, levels = class_order_cells)
+}
+
+gm_order <- c('extra_embryonic', 'early_non_neural', 'non_neural', 'early_NNE', 'early_PPR', 'early_aPPR', 'aPPR', 'iPPR',
+              'early_pPPR', 'pPPR', 'early_border', 'early_NPB', 'NPB', 'early_pNPB', 'pNPB', 'early_aNPB', 'aNPB', 'early_neural',
+              'early_neural_plate', 'early_caudal_neural', 'neural_progenitors', 'a_neural_progenitors', 'early_forebrain', 'forebrain',
+              'early_midbrain', 'midbrain', 'p_neural_progenitors', 'early_hindbrain', 'hindbrain', 'NC', 'delaminating_NC', 'node')
+
+########################################################################################################################################################
+##################################################   Plotting heatmaps without ordering GMs:   #########################################################
+
+# plot all gene modules (unbiasedGMs)
+png(paste0(plot_path, 'unbiasedGMs.png'), height = 150, width = 75, units = 'cm', res = 400)
+GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs$content,
+                   show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15)
+graphics.off()
+
+# plot all 200 gene modules (GMs200)
+png(paste0(plot_path, 'GMs200.png'), height = 150, width = 75, units = 'cm', res = 400)
+GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, gene_modules = antler_data$gene_modules$lists$GMs200$content,
+                   show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 13)
+graphics.off()
+
+# plot gms filtered by bait genes (unbiasedGMs_bait)
+ngene = length(unlist(antler_data$gene_modules$lists$unbiasedGMs_bait$content))
+
+png(paste0(plot_path, 'unbiasedGMs_bait.png'), height = min(c(150, round(ngene/2))), width = 75, units = 'cm', res = 400)
+GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_bait$content,
+                   show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
+graphics.off()
+
+# plot gms filtered by bait genes (200GMs_bait)
+ngene = length(unlist(antler_data$gene_modules$lists$GMs200_bait$content))
+
+png(paste0(plot_path, 'GMs200_bait.png'), height = min(c(150, round(ngene/2))), width = 75, units = 'cm', res = 400)
+GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, gene_modules = antler_data$gene_modules$lists$GMs200_bait$content,
+                   show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
+graphics.off()
+
+########################################################################################################################################################
+##################################################   Plotting heatmaps with ordered GMs:   #############################################################
+
+# plot gene modules with at least 50% of genes DE > 0.25 logFC & FDR < 0.001 (unbiasedGMs_DE)
+ngene = length(unlist(antler_data$gene_modules$lists$unbiasedGMs_DE$content))
+
+# Order gms
+ordered_gms <- GMOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE$content,
+                       metadata_2 = "scHelper_cell_type", order_2 = gm_order,
+                       plot_path = "scHelper_log/GM_classification/unbiasedGMs_DE/")
+
+# Plot heatmaps
+png(paste0(plot_path, 'unbiasedGMs_DE_rownames.png'), height = min(c(150, round(ngene/3))), width = 75, units = 'cm', res = 200)
+GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = ordered_gms,
+                   show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col),
+                   fontsize = 15, fontsize_row = 10)
+graphics.off()
+
+png(paste0(plot_path, 'unbiasedGMs_DE.png'), height = min(c(150, round(ngene/8))), width = 75, units = 'cm', res = 600)
+GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = ordered_gms,
+                   show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
+graphics.off()
+
+# plot gene modules with at least 50% of genes DE > 0.25 logFC & FDR < 0.001 (GMs200_DE)
+ngene = length(unlist(antler_data$gene_modules$lists$GMs200_DE$content))
+
+# Order gms
+ordered_gms <- GMOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$GMs200_DE$content,
+                       metadata_2 = "scHelper_cell_type", order_2 = gm_order,
+                       plot_path = "scHelper_log/GM_classification/GMs200_DE/")
+
+# Plot heatmaps
+png(paste0(plot_path, 'GMs200_DE_rownames.png'), height = min(c(150, round(ngene/3))), width = 75, units = 'cm', res = 200)
+GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = ordered_gms,
+                   show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
+graphics.off()
+
+png(paste0(plot_path, 'GMs200_DE.png'), height = min(c(150, round(ngene/8))), width = 75, units = 'cm', res = 400)
+GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = ordered_gms,
+                   show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
+graphics.off()
+
+# plot gene modules which have been filtered to remove those deferentially expressed across batches
+
+if(length(unique(seurat_data$run)) > 1){
+  
+  # unbiasedGMs_DE_batchfilt
+  ngene = length(unlist(antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content))
+  
+  # Order gms
+  ordered_gms <- GMOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content,
+                         metadata_2 = "scHelper_cell_type", order_2 = gm_order,
+                         plot_path = "scHelper_log/GM_classification/unbiasedGMs_DE_batchfilt/")
+  
+  # Plot heatmaps
+  png(paste0(plot_path, 'unbiasedGMs_DE_batchfilt_rownames.png'), height = min(c(150, round(ngene/3))), width = 75, units = 'cm', res = 400)
+  GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = ordered_gms,
+                     show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
+  graphics.off()
+  
+  png(paste0(plot_path, 'unbiasedGMs_DE_batchfilt.png'), height = min(c(150, round(ngene/8))), width = 60, units = 'cm', res = 400)
+  GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = ordered_gms,
+                     show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
+  graphics.off()
+  
+  # GMs200_DE_batchfilt
+  ngene = length(unlist(antler_data$gene_modules$lists$GMs200_DE_batchfilt$content))
+  
+  # Order gms
+  ordered_gms <- GMOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$GMs200_DE_batchfilt$content,
+                         metadata_2 = "scHelper_cell_type", order_2 = gm_order,
+                         plot_path = "scHelper_log/GM_classification/GMs200_DE_batchfilt/")
+  
+  # Plot heatmaps
+  png(paste0(plot_path, 'GMs200_DE_batchfilt_rownames.png'), height = min(c(150, round(ngene/2))), width = 75, units = 'cm', res = 400)
+  GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = ordered_gms,
+                     show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
+  graphics.off()
+  
+  png(paste0(plot_path, 'GMs200_DE_batchfilt.png'), height = min(c(150, round(ngene/2))), width = 75, units = 'cm', res = 400)
+  GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = ordered_gms,
+                     show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
+  graphics.off()
+}
