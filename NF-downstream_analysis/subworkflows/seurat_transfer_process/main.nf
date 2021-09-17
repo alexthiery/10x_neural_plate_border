@@ -65,7 +65,7 @@ workflow SEURAT_TRANSFER_PROCESS {
     GENE_MODULES( CLUSTER.out )
 
     // Run scVelo
-    SEURAT_H5AD( STATE_CLASSIFICATION.out )
+    SEURAT_H5AD( CLUSTER.out )
     SEURAT_SCVELO( SEURAT_H5AD.out, loom, annotations ) // Channel: [[meta], seurat.h5ad], Channel: merged.loom, Channel: seurat_annotations.csv
 
     // // Run gene module analysis across latent time
@@ -78,7 +78,6 @@ workflow SEURAT_TRANSFER_PROCESS {
 
     emit:
     cluster_out                     = CLUSTER.out                               //Channel: [[meta], [output]]
-    state_classification_out        = STATE_CLASSIFICATION.out                  //Channel: [[meta], [output]]
     gene_modules_out                = GENE_MODULES.out                          //Channel: [[meta], [output]]
 
     // scvelo_run_out_metadata         = SEURAT_SCVELO.out.scvelo_run_out_metadata     //Channel: [[meta], csv]

@@ -54,7 +54,7 @@ if(params.debug) {log.info Headers.build_debug_scripts_summary(analysis_scripts,
 Workflow
 --------------------------------------------------------------------------------------*/
 
-workflow SEURAT_CLUSTERS_PROCESS {
+workflow SEURAT_SUBSET_PROCESS {
     take:
     seurat_out      //Channel: [[meta], [plot_dir, rds_dir]]
     loom            //Channel: merged.loom
@@ -76,7 +76,7 @@ workflow SEURAT_CLUSTERS_PROCESS {
     PHATE( CLUSTER.out )
 
     // Run scVelo
-    SEURAT_H5AD( STATE_CLASSIFICATION.out )
+    SEURAT_H5AD( CLUSTER.out )
     SEURAT_SCVELO( SEURAT_H5AD.out, loom, annotations ) // Channel: [[meta], seurat.h5ad], Channel: merged.loom, Channel: seurat_annotations.csv
 
     // // Run gene module analysis across latent time
@@ -89,7 +89,6 @@ workflow SEURAT_CLUSTERS_PROCESS {
 
     emit:
     cluster_out                     = CLUSTER.out                               //Channel: [[meta], [output]]
-    state_classification_out        = STATE_CLASSIFICATION.out                  //Channel: [[meta], [output]]
     gene_modules_out                = GENE_MODULES.out                          //Channel: [[meta], [output]]
 
     // scvelo_run_out_metadata         = SEURAT_SCVELO.out.scvelo_run_out_metadata     //Channel: [[meta], csv]
