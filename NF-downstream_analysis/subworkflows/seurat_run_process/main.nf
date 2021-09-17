@@ -9,7 +9,7 @@
 def analysis_scripts                                = [:]
 analysis_scripts.split                              = file("$baseDir/bin/seurat/split_seurat.R", checkIfExists: true)
 analysis_scripts.cluster                            = file("$baseDir/bin/seurat/subset_cluster.R", checkIfExists: true)
-analysis_scripts.gene_modules                       = file("$baseDir/bin/other/subset_gene_modules.R", checkIfExists: true)
+analysis_scripts.gene_modules                       = file("$baseDir/bin/other/gene_modules.R", checkIfExists: true)
 analysis_scripts.state_classification               = file("$baseDir/bin/seurat/state_classification.R", checkIfExists: true)
 
 params.split_options                                = [:]
