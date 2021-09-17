@@ -147,7 +147,7 @@ def paga(adata, clusterColumn, time_prior, dpi=240):
 
 def latent_time(adata, args):
     if args.root is not None:
-        adata.obs['root_val'] = adata.obs[args.rootCol] == args.root
+        adata.obs['root_val'] = pd.Categorical(np.where(adata.obs[args.rootCol] == args.root, '0', None))
         scv.tl.latent_time(adata, root_key='root_val', weight_diffusion = args.weightDiffusion)
     else:
         scv.tl.latent_time(adata, weight_diffusion = args.weightDiffusion)
@@ -264,7 +264,7 @@ def main(args=None):
         adata, paga_df = paga(adata, clusterColumn=args.clusterColumn, time_prior='latent_time', dpi=args.dpi)
 
     adata.write(args.output + '_scvelo.h5ad')
-#     return(args, adata)
+    # return(args, adata)
 
 if __name__ == '__main__':
     sys.exit(main())

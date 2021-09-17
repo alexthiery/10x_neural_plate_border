@@ -6,6 +6,7 @@
 .rstudio
 .conda
 output
+output_old
 html_files
 .nextflow*
 work
