@@ -21,7 +21,7 @@ process SCVELO_RUN {
 
     output:
         tuple val(meta), path("*_scvelo.h5ad"), emit: h5ad
-        tuple val(meta), path("*_metadata.csv"), emit: csv
+        // tuple val(meta), path("*_metadata.csv"), emit: csv
         path "figures", emit: plots
 
     script:
