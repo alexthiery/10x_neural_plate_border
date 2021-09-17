@@ -1,5 +1,5 @@
 /*
- * Merge loom and run scVelo
+ * Subset clusters from filtered Seurat object and run downstream analysis
  */
 
 /*------------------------------------------------------------------------------------*/
@@ -7,22 +7,24 @@
 --------------------------------------------------------------------------------------*/
 
 def analysis_scripts                                = [:]
-analysis_scripts.split                              = file("$baseDir/bin/seurat/split_seurat.R", checkIfExists: true)
+analysis_scripts.subset                             = file("$baseDir/bin/seurat/subset_cells.R", checkIfExists: true)
 analysis_scripts.cluster                            = file("$baseDir/bin/seurat/subset_cluster.R", checkIfExists: true)
 analysis_scripts.gene_modules                       = file("$baseDir/bin/other/gene_modules.R", checkIfExists: true)
 analysis_scripts.state_classification               = file("$baseDir/bin/seurat/state_classification.R", checkIfExists: true)
+analysis_scripts.phate                              = file("$baseDir/bin/other/phateR.R", checkIfExists: true)
 
-params.split_options                                = [:]
+params.subset_options                               = [:]
 params.cluster_options                              = [:]
 params.gene_modules_options                         = [:]
 params.state_classification_options                 = [:]
+params.phate_options                                = [:]
 params.seurat_h5ad_options                          = [:]
 params.seurat_intersect_loom_options                = [:]
 params.scvelo_run_options                           = [:]
 
 // Include Seurat R processes
-include {R as SPLIT} from "$baseDir/modules/local/r/main"                           addParams(  options:                        params.split_options,
-                                                                                                script:                         analysis_scripts.split )
+include {R as SUBSET} from "$baseDir/modules/local/r/main"                          addParams(  options:                        params.subset_options,
+                                                                                                script:                         analysis_scripts.subset )
 
 include {R as CLUSTER} from "$baseDir/modules/local/r/main"                         addParams(  options:                        params.cluster_options,
                                                                                                 script:                         analysis_scripts.cluster )
@@ -30,11 +32,13 @@ include {R as CLUSTER} from "$baseDir/modules/local/r/main"                     
 include {R as GENE_MODULES} from "$baseDir/modules/local/r/main"                    addParams(  options:                        params.gene_modules_options,
                                                                                                 script:                         analysis_scripts.gene_modules )
 
-include {R as STATE_CLASSIFICATION} from "$baseDir/modules/local/r/main"            addParams(  options:                        params.state_classification_options,
-                                                                                                script:                         analysis_scripts.state_classification )
+// include {R as STATE_CLASSIFICATION} from "$baseDir/modules/local/r/main"            addParams(  options:                        params.state_classification_options,
+//                                                                                                 script:                         analysis_scripts.state_classification )
+
+include {R as PHATE} from "$baseDir/modules/local/r/main"                           addParams(  options:                        params.phate_options,
+                                                                                                script:                         analysis_scripts.phate )
 
 include {SEURAT_H5AD} from "$baseDir/modules/local/seurat_h5ad/main"                addParams(  options:                        params.seurat_h5ad_options)
-
 
 include {SEURAT_SCVELO} from "$baseDir/subworkflows/seurat_scvelo/main"             addParams(  seurat_intersect_loom_options:  params.seurat_intersect_loom_options,
                                                                                                 scvelo_run_options:             params.scvelo_run_options )
@@ -50,7 +54,7 @@ if(params.debug) {log.info Headers.build_debug_scripts_summary(analysis_scripts,
 Workflow
 --------------------------------------------------------------------------------------*/
 
-workflow SEURAT_STAGE_PROCESS {
+workflow SEURAT_CLUSTERS_PROCESS {
     take:
     seurat_out      //Channel: [[meta], [plot_dir, rds_dir]]
     loom            //Channel: merged.loom
@@ -58,19 +62,20 @@ workflow SEURAT_STAGE_PROCESS {
 
     main:
     // Run Seurat pipeline
-    SPLIT( seurat_out )
+    SUBSET( seurat_out )
 
-    SPLIT.out
+    SUBSET.out
         .map {row -> [row[0], row[1].findAll { it =~ ".*rds_files" }]}
         .flatMap {it[1][0].listFiles()}
         .map { row -> [[sample_id:row.name.replaceFirst(~/\.[^\.]+$/, '')], row] }
         .set { ch_split_run }                                                           //Channel: [[meta], rds_file]
 
     CLUSTER( ch_split_run )
-    STATE_CLASSIFICATION( CLUSTER.out )
-    GENE_MODULES( STATE_CLASSIFICATION.out )
+    // STATE_CLASSIFICATION( CLUSTER.out )
+    GENE_MODULES( CLUSTER.out )
+    PHATE( CLUSTER.out )
 
-    // // Run scVelo
+    // Run scVelo
     SEURAT_H5AD( STATE_CLASSIFICATION.out )
     SEURAT_SCVELO( SEURAT_H5AD.out, loom, annotations ) // Channel: [[meta], seurat.h5ad], Channel: merged.loom, Channel: seurat_annotations.csv
 
@@ -88,6 +93,6 @@ workflow SEURAT_STAGE_PROCESS {
     gene_modules_out                = GENE_MODULES.out                          //Channel: [[meta], [output]]
 
     // scvelo_run_out_metadata         = SEURAT_SCVELO.out.scvelo_run_out_metadata     //Channel: [[meta], csv]
-    // scvelo_run_out_5had             = SEURAT_SCVELO.out .scvelo_run_out_h5ad        //Channel: [[meta], h5ad]
+    // scvelo_run_out_5had             = SEURAT_SCVELO.out .scvelo_run_out_h5ad        //Channel: [[meta], h5ad] 
 }
 
