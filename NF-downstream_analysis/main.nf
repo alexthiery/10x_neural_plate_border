@@ -45,7 +45,10 @@ include {SEURAT_FILTERED_PROCESS} from "$baseDir/subworkflows/seurat_filtered_pr
 include {SEURAT_STAGE_PROCESS} from "$baseDir/subworkflows/seurat_stage_process/main"           addParams(  split_options:                          modules['stage_split'],
                                                                                                             cluster_options:                        modules['stage_cluster'],
                                                                                                             gene_modules_options:                   modules['stage_gene_modules'],
-                                                                                                            state_classification_options:           modules['stage_state_classification'])
+                                                                                                            state_classification_options:           modules['stage_state_classification'],
+                                                                                                            seurat_h5ad_options:                    modules['seurat_h5ad'],
+                                                                                                            seurat_intersect_loom_options:          modules['seurat_intersect_loom'],
+                                                                                                            scvelo_run_options:                     modules['scvelo_run'])
 
 include {SEURAT_RUN_PROCESS} from "$baseDir/subworkflows/seurat_run_process/main"               addParams(  split_options:                          modules['run_split'],
                                                                                                             cluster_options:                        modules['run_cluster'],
@@ -129,7 +132,11 @@ workflow {
     /*------------------------------------------------------------------------------------*/
     /* Split data and cluster batches and stages separately (+GMs)
     --------------------------------------------------------------------------------------*/ 
-    SEURAT_STAGE_PROCESS( SEURAT_FILTERING.out.contamination_filt_out)  
+    SEURAT_STAGE_PROCESS( SEURAT_FILTERING.out.contamination_filt_out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
+
+
+
+
     SEURAT_RUN_PROCESS( SEURAT_FILTERING.out.contamination_filt_out)
     // SEURAT_HH4_PROCESS( SEURAT_FILTERING.out.contamination_filt_out)
     SEURAT_NPB_PROCESS( SEURAT_FILTERED_PROCESS.out.state_classification_out)
