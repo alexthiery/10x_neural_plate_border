@@ -29,6 +29,7 @@ process SCVELO_RUN {
         def prefix   = options.prefix ? "${options.prefix}" : "${meta.sample_id}"
 
         """
+        export HDF5_USE_FILE_LOCKING=FALSE
         $moduleDir/bin/scvelo_run.py --input ${loom} --output ${prefix} --ncores ${task.cpus} ${options.args} 
         """
 }
