@@ -8,6 +8,7 @@ import cellrank as cr
 import numpy as np
 import warnings
 import scanpy as sc
+import pandas as pd
 
 def parse_args(args=None):
     Description = "Reformat nf-core/viralrecon samplesheet file and check its contents."
