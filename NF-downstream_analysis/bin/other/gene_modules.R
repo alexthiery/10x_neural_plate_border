@@ -262,25 +262,29 @@ seurat_clusters_order <- c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "1
 
 # Extract ordering of gms from metadata
 metadata_1 <- metadata[1]
-if (metadata_1 == "stage"){
-  order_1 <- stage_order
-} else if (metadata_1 == "scHelper_cell_type"){
+if (!is.na(metadata_1)){
+  if (metadata_1 == "stage"){
+    order_1 <- stage_order
+  } else if (metadata_1 == "scHelper_cell_type"){
     order_1 <- scHelper_celltype_order
-} else if (metadata_1 == "seurat_clusters"){
-  order_1 <- seurat_clusters_order
-} else {
-  print("GMs will not be ordered")
+  } else if (metadata_1 == "seurat_clusters"){
+    order_1 <- seurat_clusters_order
+  } else {
+    print("GMs will not be ordered")
+  }
 }
 
 metadata_2 <- metadata[2]
-if (metadata_2 == "stage"){
-  order_2 <- stage_order
-} else if (metadata_2 == "scHelper_cell_type"){
-  order_2 <- scHelper_celltype_order
-} else if (metadata_2 == "seurat_clusters"){
-  order_2 <- seurat_clusters_order
-} else {
-  print("GMs will be ordered by just metadata_1")
+if (!is.na(metadata_2)){
+  if (metadata_2 == "stage"){
+    order_2 <- stage_order
+  } else if (metadata_2 == "scHelper_cell_type"){
+    order_2 <- scHelper_celltype_order
+  } else if (metadata_2 == "seurat_clusters"){
+    order_2 <- seurat_clusters_order
+  } else {
+    print("GMs will only be ordered by one group")
+  }
 }
 
 # plot gene modules with at least 50% of genes DE > 0.25 logFC & FDR < 0.001 (unbiasedGMs_DE)
