@@ -216,11 +216,6 @@ if(meta_col == 'scHelper_cell_type'){
   seurat_data@meta.data$scHelper_cell_type <- factor(seurat_data@meta.data$scHelper_cell_type, levels = class_order_cells)
 }
 
-gm_order <- c('extra_embryonic', 'early_non_neural', 'non_neural', 'early_NNE', 'early_PPR', 'early_aPPR', 'aPPR', 'iPPR',
-                  'early_pPPR', 'pPPR', 'early_border', 'early_NPB', 'NPB', 'early_aNPB', 'aNPB', 'early_pNPB', 'pNPB', 'NC',
-                  'delaminating_NC', 'early_neural', 'early_neural_plate', 'early_caudal_neural', 'neural_progenitors', 'p_neural_progenitors',
-                  'early_hindbrain', 'hindbrain', 'early_midbrain', 'midbrain', 'a_neural_progenitors', 'early_forebrain', 'forebrain', 'node')
-
 ########################################################################################################################################################
 ##################################################   Plotting heatmaps without ordering GMs:   #########################################################
 
@@ -255,12 +250,46 @@ graphics.off()
 ########################################################################################################################################################
 ##################################################   Plotting heatmaps with ordered GMs:   #############################################################
 
+## Hard-coded orders for stage, clusters and cell types
+stage_order <- c("hh4", "hh5", "hh6", "hh7", "ss4", "ss8")
+scHelper_celltype_order <- c('extra_embryonic', 'early_non_neural', 'non_neural', 'early_NNE', 'early_PPR', 'early_aPPR', 'aPPR', 'iPPR',
+                             'early_pPPR', 'pPPR', 'early_border', 'early_NPB', 'NPB', 'early_pNPB', 'pNPB', 'early_aNPB', 'aNPB', 'early_neural',
+                             'early_neural_plate', 'early_caudal_neural', 'neural_progenitors', 'a_neural_progenitors', 'early_forebrain', 'forebrain',
+                             'early_midbrain', 'midbrain', 'p_neural_progenitors', 'early_hindbrain', 'hindbrain', 'NC', 'delaminating_NC', 'node')
+seurat_clusters_order <- c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20",
+                           "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38", "39", "40")
+
+
+# Extract ordering of gms from metadata
+metadata_1 <- metadata[1]
+if (metadata_1 == "stage"){
+  order_1 <- stage_order
+} else if (metadata_1 == "scHelper_cell_type"){
+    order_1 <- scHelper_celltype_order
+} else if (metadata_1 == "seurat_clusters"){
+  order_1 <- seurat_clusters_order
+} else {
+  stop("Metadata_1 must be stage, seurat_clusters or scHelper_celltype")
+}
+
+metadata_2 <- metadata[2]
+if (metadata_2 == "stage"){
+  order_2 <- stage_order
+} else if (metadata_2 == "scHelper_cell_type"){
+  order_2 <- scHelper_celltype_order
+} else if (metadata_2 == "seurat_clusters"){
+  order_2 <- seurat_clusters_order
+} else {
+  stop("Metadata_2 must be stage, seurat_clusters or scHelper_celltype")
+}
+
 # plot gene modules with at least 50% of genes DE > 0.25 logFC & FDR < 0.001 (unbiasedGMs_DE)
 ngene = length(unlist(antler_data$gene_modules$lists$unbiasedGMs_DE$content))
 
 # Order gms
 ordered_gms <- GMOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE$content,
-                       metadata_2 = "scHelper_cell_type", order_2 = gm_order,
+                       metadata_1 = metadata_1, order_1 = order_1,
+                       metadata_2 = metadata_2, order_2 = order_2,
                        plot_path = "scHelper_log/GM_classification/unbiasedGMs_DE/")
 
 # Plot heatmaps
@@ -280,7 +309,8 @@ ngene = length(unlist(antler_data$gene_modules$lists$GMs200_DE$content))
 
 # Order gms
 ordered_gms <- GMOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$GMs200_DE$content,
-                       metadata_2 = "scHelper_cell_type", order_2 = gm_order,
+                       metadata_1 = metadata_1, order_1 = order_1,
+                       metadata_2 = metadata_2, order_2 = order_2,
                        plot_path = "scHelper_log/GM_classification/GMs200_DE/")
 
 # Plot heatmaps
@@ -303,7 +333,8 @@ if(length(unique(seurat_data$run)) > 1){
   
   # Order gms
   ordered_gms <- GMOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content,
-                         metadata_2 = "scHelper_cell_type", order_2 = gm_order,
+                         metadata_1 = metadata_1, order_1 = order_1,
+                         metadata_2 = metadata_2, order_2 = order_2,
                          plot_path = "scHelper_log/GM_classification/unbiasedGMs_DE_batchfilt/")
   
   # Plot heatmaps
@@ -322,7 +353,8 @@ if(length(unique(seurat_data$run)) > 1){
   
   # Order gms
   ordered_gms <- GMOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$GMs200_DE_batchfilt$content,
-                         metadata_2 = "scHelper_cell_type", order_2 = gm_order,
+                         metadata_1 = metadata_1, order_1 = order_1,
+                         metadata_2 = metadata_2, order_2 = order_2,
                          plot_path = "scHelper_log/GM_classification/GMs200_DE_batchfilt/")
   
   # Plot heatmaps
