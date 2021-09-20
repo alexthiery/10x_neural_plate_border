@@ -269,7 +269,7 @@ if (metadata_1 == "stage"){
 } else if (metadata_1 == "seurat_clusters"){
   order_1 <- seurat_clusters_order
 } else {
-  stop("Metadata_1 must be stage, seurat_clusters or scHelper_celltype")
+  print("GMs will not be ordered")
 }
 
 metadata_2 <- metadata[2]
@@ -280,17 +280,21 @@ if (metadata_2 == "stage"){
 } else if (metadata_2 == "seurat_clusters"){
   order_2 <- seurat_clusters_order
 } else {
-  stop("Metadata_2 must be stage, seurat_clusters or scHelper_celltype")
+  print("GMs will be ordered by just metadata_1")
 }
 
 # plot gene modules with at least 50% of genes DE > 0.25 logFC & FDR < 0.001 (unbiasedGMs_DE)
 ngene = length(unlist(antler_data$gene_modules$lists$unbiasedGMs_DE$content))
 
 # Order gms
-ordered_gms <- GMOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE$content,
+if (metadata_1 %in% c("stage", "scHelper_cell_type", "seurat_clusters")){
+  ordered_gms <- GMOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE$content,
                        metadata_1 = metadata_1, order_1 = order_1,
                        metadata_2 = metadata_2, order_2 = order_2,
                        plot_path = "scHelper_log/GM_classification/unbiasedGMs_DE/")
+  }else{
+    ordered_gms <- antler_data$gene_modules$lists$unbiasedGMs_DE$content
+  }
 
 # Plot heatmaps
 png(paste0(plot_path, 'unbiasedGMs_DE_rownames.png'), height = min(c(150, round(ngene/3))), width = 75, units = 'cm', res = 200)
@@ -308,10 +312,14 @@ graphics.off()
 ngene = length(unlist(antler_data$gene_modules$lists$GMs200_DE$content))
 
 # Order gms
-ordered_gms <- GMOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$GMs200_DE$content,
+if (metadata_1 %in% c("stage", "scHelper_cell_type", "seurat_clusters")){
+  ordered_gms <- GMOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$GMs200_DE$content,
                        metadata_1 = metadata_1, order_1 = order_1,
                        metadata_2 = metadata_2, order_2 = order_2,
                        plot_path = "scHelper_log/GM_classification/GMs200_DE/")
+  }else{
+    ordered_gms <- antler_data$gene_modules$lists$GMs200_DE$content
+  }
 
 # Plot heatmaps
 png(paste0(plot_path, 'GMs200_DE_rownames.png'), height = min(c(150, round(ngene/3))), width = 75, units = 'cm', res = 200)
@@ -332,10 +340,14 @@ if(length(unique(seurat_data$run)) > 1){
   ngene = length(unlist(antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content))
   
   # Order gms
+  if (metadata_1 %in% c("stage", "scHelper_cell_type", "seurat_clusters")){
   ordered_gms <- GMOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content,
-                         metadata_1 = metadata_1, order_1 = order_1,
-                         metadata_2 = metadata_2, order_2 = order_2,
-                         plot_path = "scHelper_log/GM_classification/unbiasedGMs_DE_batchfilt/")
+                       metadata_1 = metadata_1, order_1 = order_1,
+                       metadata_2 = metadata_2, order_2 = order_2,
+                       plot_path = "scHelper_log/GM_classification/unbiasedGMs_DE_batchfilt/")
+  }else{
+    ordered_gms <- antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content
+  }
   
   # Plot heatmaps
   png(paste0(plot_path, 'unbiasedGMs_DE_batchfilt_rownames.png'), height = min(c(150, round(ngene/3))), width = 75, units = 'cm', res = 400)
@@ -352,10 +364,14 @@ if(length(unique(seurat_data$run)) > 1){
   ngene = length(unlist(antler_data$gene_modules$lists$GMs200_DE_batchfilt$content))
   
   # Order gms
+  if (metadata_1 %in% c("stage", "scHelper_cell_type", "seurat_clusters")){
   ordered_gms <- GMOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$GMs200_DE_batchfilt$content,
-                         metadata_1 = metadata_1, order_1 = order_1,
-                         metadata_2 = metadata_2, order_2 = order_2,
-                         plot_path = "scHelper_log/GM_classification/GMs200_DE_batchfilt/")
+                       metadata_1 = metadata_1, order_1 = order_1,
+                       metadata_2 = metadata_2, order_2 = order_2,
+                       plot_path = "scHelper_log/GM_classification/GMs200_DE_batchfilt/")
+  }else{
+    ordered_gms <- antler_data$gene_modules$lists$GMs200_DE_batchfilt$content
+  }
   
   # Plot heatmaps
   png(paste0(plot_path, 'GMs200_DE_batchfilt_rownames.png'), height = min(c(150, round(ngene/2))), width = 75, units = 'cm', res = 400)
