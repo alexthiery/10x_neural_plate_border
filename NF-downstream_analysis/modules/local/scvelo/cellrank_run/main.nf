@@ -7,7 +7,7 @@ include { initOptions; saveFiles; getSoftwareName } from './functions'
 params.options = [:]
 def options    = initOptions(params.options)
 
-process SCVELO_RUN {
+process CELLRANK_RUN {
     tag "$meta.sample_id"
     label 'process_high'
     publishDir "${params.outdir}",
@@ -17,11 +17,11 @@ process SCVELO_RUN {
     container "alexthiery/10x-npb-scvelo:base-2.0.0"
 
     input:
-        tuple val(meta), path(loom)
+        tuple val(meta), path(h5ad)
 
     output:
-        tuple val(meta), path("*_scvelo.h5ad"), emit: h5ad
-        // tuple val(meta), path("*_metadata.csv"), emit: csv
+        tuple val(meta), path("*_cellrank.h5ad"), emit: h5ad
+        tuple val(meta), path("*_metadata.csv"), emit: csv
         path "figures", emit: plots
 
     script:
@@ -30,6 +30,6 @@ process SCVELO_RUN {
 
         """
         export HDF5_USE_FILE_LOCKING=FALSE
-        $moduleDir/bin/scvelo_run.py --input ${loom} --output ${prefix} --ncores ${task.cpus} ${options.args} 
+        $moduleDir/bin/cellrank_run.py --input ${loom} --output ${prefix} --ncores ${task.cpus} ${options.args} 
         """
 }

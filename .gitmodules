@@ -1,4 +1,0 @@
-[submodule "modules"]
-	path = modules
-	url = https://github.com/Streit-lab/streitlab-nf-modules.git
-	branch = master
