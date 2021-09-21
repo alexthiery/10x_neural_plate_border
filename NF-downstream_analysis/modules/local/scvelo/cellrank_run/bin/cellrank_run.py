@@ -29,7 +29,8 @@ def parse_args(args=None):
     parser.add_argument('-n', '--ncores', type=int, help="Number of cores used for parallelisation.", metavar='', default=1)
     parser.add_argument('-d', '--dpi', type=int, help='Set DPI for plots.', default='240')
     parser.add_argument('-ck', '--combineKernel', type=bool, help='Combine velocity and connectivity transition matrices', default=True)
-    parser.add_argument('-kp', '--kernelProportion', type=float, help='The proportional weighting of the velocity kernel in the combined transition matrix', default=0.8)
+    parser.add_argument('-kp', '--kernelProportion', type=float, help='The proportional weighting of the connectivity kernel in the combined transition matrix', default=0.2)
+    parser.add_argument('-sm', '--scaleMax', type=float, help='Softscale max value for when calculating transition matrix', default=None)
     parser.add_argument('-dt', '--dataType', type=str, help='Which data subset the analysis is carried out on', default='full')
     return parser.parse_args(args)
 
@@ -52,16 +53,10 @@ def write_lineage_probs(adata):
     adata.obs = adata.obs.reindex(copy=False)
     return(adata)
 
-def combineKernel(adata, kernelProportion):
-    vk = cr.tl.kernels.VelocityKernel(adata).compute_transition_matrix()
-    ck = cr.tl.kernels.ConnectivityKernel(adata).compute_transition_matrix()
-    combined_kernel = kernelProportion * vk + round(1- kernelProportion, 3) * ck
-    return(combined_kernel)
-
 def allDataTerminalStates(adata, estimator):
-    estimator.set_terminal_states({"neural": adata[adata.obs["scHelper_cell_type"].isin(['hindbrain', 'midbrain', "forebrain"])].obs_names,
-                  "delaminating_NC": adata[adata.obs["scHelper_cell_type"].isin(["delaminating_NC"])].obs_names,
-                  "placodal": adata[adata.obs["scHelper_cell_type"].isin(['pPPR'])].obs_names})
+    estimator.set_terminal_states({"neural": adata[adata.obs["scHelper_cell_type"].isin(['hindbrain', 'midbrain', "forebrain"])  & adata.obs["stage"].isin(['ss8'])].obs_names,
+                  "delaminating_NC": adata[adata.obs["scHelper_cell_type"].isin(["delaminating_NC"]) & adata.obs["stage"].isin(['ss8'])].obs_names,
+                  "placodal": adata[adata.obs["scHelper_cell_type"].isin(['pPPR']) & adata.obs["stage"].isin(['ss8'])].obs_names})
     cr.pl.terminal_states(adata, save='terminal_states.pdf')
     return(estimator)
 
@@ -86,7 +81,6 @@ def write_lineage_probs(adata):
     return(adata)
 
 
-
 def main(args=None):
     args = parse_args(args)
     # check_args(args)
@@ -100,9 +94,8 @@ def main(args=None):
     adata = read_h5ad(h5ad_path=args.input)
 
     if args.combineKernel == True:
-        combined_kernel = combineKernel(adata, args.kernelProportion)
-    
-    g = cr.tl.estimators.GPCCA(combined_kernel)
+        combined_kernel = cr.tl.transition_matrix(adata, weight_connectivities=args.kernelProportion, softmax_scale=args.scaleMax, show_progress_bar=False)
+        g = cr.tl.estimators.GPCCA(combined_kernel)
 
     if args.dataType == 'full':
         g = allDataTerminalStates(adata, g)
@@ -110,16 +103,10 @@ def main(args=None):
         g = transferLabelTerminalStates(adata, g)
         
     g.compute_absorption_probabilities()
-    g.plot_absorption_probabilities()
-
-    if args.dataType == 'full':
-        g = allDataTerminalStates(adata, g)
-
-    g.compute_absorption_probabilities()
-    g.plot_absorption_probabilities()
-
-    cr.pl.lineages(adata, same_plot=False)
-
+    cr.pl.lineages(adata, same_plot=False, save='absorption_probabilities.pdf')
+    
+    if all(value is None for value in adata.obs['terminal_states_probs']):
+        adata.obs = adata.obs.drop(['terminal_states_probs'], axis=1)
 
     adata = write_lineage_probs(adata)
     adata.write(args.output + '_cellrank.h5ad')
