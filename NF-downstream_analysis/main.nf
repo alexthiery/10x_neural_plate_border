@@ -33,7 +33,7 @@ include {SEURAT_FILTERING} from "$baseDir/subworkflows/seurat_filtering/main"   
                                                                                                                                             contamination_filt_options:             modules['contamination_filt'])
 
 // Modules and subworkflows for running scVelo/cellrank                                             
-include {MERGE_LOOM} from "$baseDir/modules/local/merge_loom/main"                                                              addParams(  options:                                modules['merge_loom'] )
+include {MERGE_LOOM} from "$baseDir/modules/local/merge_loom/main"
 
 include {SEURAT_FILTERED_PROCESS} from "$baseDir/subworkflows/seurat_filtered_process/main"                                     addParams(  scatterplot3d_options:                  modules['scatterplot3d'],
                                                                                                                                             gene_module_options:                    modules['gene_modules'],
@@ -169,11 +169,11 @@ workflow {
     // Transfer labels from stage subsets to full data
     TRANSFER_LABELS( ch_combined )
 
-    SEURAT_TRANSFER_FULL_PROCESS( TRANSFER_LABELS.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
-
     SEURAT_TRANSFER_NPB_PROCESS( TRANSFER_LABELS.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
 
     SEURAT_TRANSFER_FILTER_PROCESS( TRANSFER_LABELS.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
+
+    SEURAT_TRANSFER_FULL_PROCESS( TRANSFER_LABELS.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
     
 
     // // Run gene module analysis across latent time

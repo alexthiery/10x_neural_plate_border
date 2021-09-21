@@ -14,6 +14,7 @@ params.gene_modules_options                         = [:]
 params.seurat_h5ad_options                          = [:]
 params.seurat_intersect_loom_options                = [:]
 params.scvelo_run_options                           = [:]
+params.cellrank_run_options                         = [:]
 
 // Include Seurat R processes
 include {R as GENE_MODULES} from "$baseDir/modules/local/r/main"                    addParams(  options:                        params.gene_modules_options,
@@ -24,7 +25,7 @@ include {SEURAT_H5AD} from "$baseDir/modules/local/seurat_h5ad/main"            
 include {SEURAT_SCVELO} from "$baseDir/subworkflows/seurat_scvelo/main"             addParams(  seurat_intersect_loom_options:  params.seurat_intersect_loom_options,
                                                                                                 scvelo_run_options:             params.scvelo_run_options )
 
-include {SEURAT_CELLRANK} from "$baseDir/modules/cellrank_run/main"                 addParams(  cellrank_run_options:           params.cellrank_run_options)
+include {CELLRANK_RUN} from "$baseDir/modules/local/scvelo/cellrank_run/main"                 addParams(  options:                        params.cellrank_run_options)
 
 /*-----------------------------------------------------------------------------------------------------------------------------
 Log
@@ -37,7 +38,7 @@ if(params.debug) {log.info Headers.build_debug_scripts_summary(analysis_scripts,
 Workflow
 --------------------------------------------------------------------------------------*/
 
-workflow SEURAT_TRANSFER_LABELS_PROCESS {
+workflow SEURAT_TRANSFER_FULL_PROCESS {
     take:
     seurat_out      //Channel: [[meta], [plot_dir, rds_dir]]
     loom            //Channel: merged.loom
@@ -50,7 +51,7 @@ workflow SEURAT_TRANSFER_LABELS_PROCESS {
     // Run scVelo
     SEURAT_H5AD( seurat_out )
     SEURAT_SCVELO( SEURAT_H5AD.out, loom, annotations ) // Channel: [[meta], seurat.h5ad], Channel: merged.loom, Channel: seurat_annotations.csv
-    SEURAT_CELLRANK( SEURAT_SCVELO.out.h5ad )
+    CELLRANK_RUN( SEURAT_SCVELO.out.h5ad )
 
     // // Run gene module analysis across latent time
     // ch_cluster_rds              = CLUSTER.out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
