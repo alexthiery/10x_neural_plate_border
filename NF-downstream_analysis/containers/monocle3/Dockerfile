@@ -9,3 +9,4 @@ RUN   conda install -c anaconda pip && \
                        'SummarizedExperiment', 'batchelor', 'Matrix.utils'))" && \
       R -e "devtools::install_github('cole-trapnell-lab/leidenbase')" && \
       R -e "devtools::install_github('cole-trapnell-lab/monocle3')"
+      
