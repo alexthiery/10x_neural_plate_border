@@ -51,7 +51,7 @@ workflow SEURAT_TRANSFER_FULL_PROCESS {
     // Run scVelo
     SEURAT_H5AD( seurat_out )
     SEURAT_SCVELO( SEURAT_H5AD.out, loom, annotations ) // Channel: [[meta], seurat.h5ad], Channel: merged.loom, Channel: seurat_annotations.csv
-    CELLRANK_RUN( SEURAT_SCVELO.out.h5ad )
+    CELLRANK_RUN( SEURAT_SCVELO.out.scvelo_run_out_h5ad )
 
     // // Run gene module analysis across latent time
     // ch_cluster_rds              = CLUSTER.out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
