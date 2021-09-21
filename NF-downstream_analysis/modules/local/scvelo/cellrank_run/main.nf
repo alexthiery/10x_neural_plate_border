@@ -30,6 +30,6 @@ process CELLRANK_RUN {
 
         """
         export HDF5_USE_FILE_LOCKING=FALSE
-        $moduleDir/bin/cellrank_run.py --input ${loom} --output ${prefix} --ncores ${task.cpus} ${options.args} 
+        $moduleDir/bin/cellrank_run.py --input ${h5ad} --output ${prefix} --ncores ${task.cpus} ${options.args} 
         """
 }

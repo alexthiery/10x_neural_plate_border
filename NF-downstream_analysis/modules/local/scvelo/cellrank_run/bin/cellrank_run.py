@@ -55,7 +55,7 @@ def write_lineage_probs(adata):
 def combineKernel(adata, kernelProportion):
     vk = cr.tl.kernels.VelocityKernel(adata).compute_transition_matrix()
     ck = cr.tl.kernels.ConnectivityKernel(adata).compute_transition_matrix()
-    combined_kernel = args.kernelProportion * vk + round(1- args.kernelProportion, 3) * ck
+    combined_kernel = kernelProportion * vk + round(1- kernelProportion, 3) * ck
     return(combined_kernel)
 
 def allDataTerminalStates(adata, estimator):
