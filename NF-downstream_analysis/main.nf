@@ -41,7 +41,8 @@ include {SEURAT_FILTERED_PROCESS} from "$baseDir/subworkflows/seurat_filtered_pr
                                                                                                                                             phate_options:                          modules['phate'],
                                                                                                                                             seurat_h5ad_options:                    modules['seurat_h5ad'],
                                                                                                                                             seurat_intersect_loom_options:          modules['seurat_intersect_loom'],
-                                                                                                                                            scvelo_run_options:                     modules['scvelo_run'])
+                                                                                                                                            scvelo_run_options:                     modules['scvelo_run'],
+                                                                                                                                            cellrank_run_options:                   modules['cellrank_run'])
 
 // Subworkflows for subset stage, run and clusters from seurat object and run downstream analysis pipelines
 include {SEURAT_SPLIT_PROCESS as SEURAT_STAGE_PROCESS} from "$baseDir/subworkflows/seurat_split_process/main"                   addParams(  split_options:                          modules['stage_split'],
@@ -104,6 +105,11 @@ include {SEURAT_TRANSFER_PROCESS as SEURAT_TRANSFER_FILTER_PROCESS} from "$baseD
                                                                                                                                             seurat_intersect_loom_options:          modules['clusters_seurat_intersect_loom'],
                                                                                                                                             scvelo_run_options:                     modules['clusters_scvelo_run'])
 
+include {SEURAT_TRANSFER_FULL_PROCESS} from "$baseDir/subworkflows/seurat_transfer_full_process/main"   addParams(                          gene_modules_options:                   modules['clusters_gene_modules'],
+                                                                                                                                            seurat_h5ad_options:                    modules['seurat_h5ad'],
+                                                                                                                                            seurat_intersect_loom_options:          modules['clusters_seurat_intersect_loom'],
+                                                                                                                                            scvelo_run_options:                     modules['clusters_scvelo_run'],
+                                                                                                                                            cellrank_run_options:                   modules['transfer_full_cellrank_run'])
 
 // include {R as GENE_MODULES_LATENT_TIME} from "$baseDir/modules/local/r/main"                    addParams(  options:                                modules['gene_modules_latent_time'],
 //                                                                                                             script:                                 analysis_scripts.gene_modules_latent_time )
@@ -163,37 +169,13 @@ workflow {
     // Transfer labels from stage subsets to full data
     TRANSFER_LABELS( ch_combined )
 
+    SEURAT_TRANSFER_FULL_PROCESS( TRANSFER_LABELS.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
+
     SEURAT_TRANSFER_NPB_PROCESS( TRANSFER_LABELS.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
 
     SEURAT_TRANSFER_FILTER_PROCESS( TRANSFER_LABELS.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
     
 
-
-
-    // // Prepare outputs for scVelo
-    // ch_seurat_concat =          SEURAT_FILTERED_PROCESS.out.state_classification_out
-    //                                 .concat(SEURAT_STAGE_PROCESS.out.state_classification_out)
-    //                                 .concat(SEURAT_RUN_PROCESS.out.state_classification_out)
-    //                                 // .concat(SEURAT_HH4_PROCESS.out.state_classification_out)
-    //                                 .concat(SEURAT_NPB_PROCESS.out.cluster_out)
-    //                                 .concat(SEURAT_PLACODAL1_PROCESS.out.cluster_out)
-    //                                 .concat(SEURAT_PLACODAL2_PROCESS.out.cluster_out)
-    //                                 .concat(SEURAT_TRANSFER_NPB_PROCESS.out.cluster_out)
-    //                                 .concat(SEURAT_TRANSFER_FILTER_PROCESS.out.cluster_out)
-
-
-    // // ch_gene_modules_concat =    SEURAT_FILTERED_PROCESS.out.gene_modules_out
-    // //                                 .concat(SEURAT_STAGE_PROCESS.out.gene_modules_out)
-    // //                                 .concat(SEURAT_RUN_PROCESS.out.gene_modules_out)
-    // //                                 .concat(SEURAT_HH4_PROCESS.out.gene_modules_out)
-    // //                                 .concat(SEURAT_NPB_PROCESS.out.gene_modules_out)
-    // //                                 // .concat(SEURAT_NPB_HH4_PROCESS.out.gene_modules_out)
-
-
-    // // // Run scVelo
-    // SEURAT_H5AD( ch_seurat_concat )
-    // SEURAT_SCVELO( SEURAT_H5AD.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} ) // Channel: [[meta], seurat.h5ad], Channel: merged.loom, Channel: seurat_annotations.csv
-    
     // // Run gene module analysis across latent time
     // ch_cluster_rds              = ch_seurat_concat.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
     // ch_gene_modules_rds         = ch_gene_modules_concat.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
