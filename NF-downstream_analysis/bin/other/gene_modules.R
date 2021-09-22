@@ -28,11 +28,11 @@ if(opt$verbose) print(opt)
   if(length(commandArgs(trailingOnly = TRUE)) == 0){
     cat('No command line arguments provided, paths are set for running interactively in Rstudio server\n')
     
-    plot_path = "./output/NF-downstream_analysis_stacas/stage_split/ss8_splitstage_data/antler/stage_gene_modules/plots/"
-    rds_path = "./output/NF-downstream_analysis_stacas/stage_split/ss8_splitstage_data/antler/stage_gene_modules/rds_files/"
-    gm_path = "./output/NF-downstream_analysis_stacas/stage_split/ss8_splitstage_data/antler/stage_gene_modules/gene_module_lists/"
-    antler_path = "./output/NF-downstream_analysis_stacas/stage_split/ss8_splitstage_data/antler/stage_gene_modules/antler_data/"
-    data_path = "./output/NF-downstream_analysis_stacas/stage_split/ss8_splitstage_data/seurat/stage_state_classification/rds_files/"
+    plot_path = "./output/NF-downstream_analysis_stacas/stage_split/hh6_splitstage_data/antler/stage_gene_modules/plots/"
+    rds_path = "./output/NF-downstream_analysis_stacas/stage_split/hh6_splitstage_data/antler/stage_gene_modules/rds_files/"
+    gm_path = "./output/NF-downstream_analysis_stacas/stage_split/hh6_splitstage_data/antler/stage_gene_modules/gene_module_lists/"
+    antler_path = "./output/NF-downstream_analysis_stacas/stage_split/hh6_splitstage_data/antler/stage_gene_modules/antler_data/"
+    data_path = "./output/NF-downstream_analysis_stacas/stage_split/hh6_splitstage_data/seurat/stage_state_classification/rds_files/"
     
     ncores = 8
     meta_col = 'scHelper_cell_type'
@@ -150,7 +150,7 @@ antler_data$gene_modules$identify(
 
 ########## DE GMs ##############
 # Plot gene modules with at least 50% of genes DE > 0.25 logFC & FDR < 0.001
-gms <- DEGeneModules(seurat_data, antler_data$gene_modules$get("GMs200"), logfc = 0.5, pval = 0.001, selected_gene_proportion = 0.5)
+gms <- DEGeneModules(seurat_data, antler_data$gene_modules$get("GMs200"), logfc = 0.5, pval = 0.001, selected_gene_proportion = 0.5, active_ident = meta_col)
 
 # save GMs200_DE in antler object
 antler_data$gene_modules$set(name= "GMs200_DE", content = gms)
@@ -252,53 +252,41 @@ graphics.off()
 
 ## Hard-coded orders for stage, clusters and cell types
 stage_order <- c("hh4", "hh5", "hh6", "hh7", "ss4", "ss8")
-scHelper_celltype_order <- c('extra_embryonic', 'early_non_neural', 'non_neural', 'early_NNE', 'early_PPR', 'early_aPPR', 'aPPR', 'iPPR',
+scHelper_cell_type_order <- c('extra_embryonic', 'early_non_neural', 'non_neural', 'early_NNE', 'early_PPR', 'early_aPPR', 'aPPR', 'iPPR',
                              'early_pPPR', 'pPPR', 'early_border', 'early_NPB', 'NPB', 'early_pNPB', 'pNPB', 'early_aNPB', 'aNPB', 'early_neural',
                              'early_neural_plate', 'early_caudal_neural', 'neural_progenitors', 'a_neural_progenitors', 'early_forebrain', 'forebrain',
                              'early_midbrain', 'midbrain', 'p_neural_progenitors', 'early_hindbrain', 'hindbrain', 'NC', 'delaminating_NC', 'node')
-seurat_clusters_order <- c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20",
-                           "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38", "39", "40")
+seurat_clusters_order <- as.character(1:40)
+
+
 
 
 # Extract ordering of gms from metadata
-metadata_1 <- metadata[1]
-if (!is.na(metadata_1)){
-  if (metadata_1 == "stage"){
-    order_1 <- stage_order
-  } else if (metadata_1 == "scHelper_cell_type"){
-    order_1 <- scHelper_celltype_order
-  } else if (metadata_1 == "seurat_clusters"){
-    order_1 <- seurat_clusters_order
-  } else {
-    print("GMs will not be ordered")
-  }
-}
+labels <- c("stage", "scHelper_cell_type", "seurat_clusters")
 
-metadata_2 <- metadata[2]
-if (!is.na(metadata_2)){
-  if (metadata_2 == "stage"){
-    order_2 <- stage_order
-  } else if (metadata_2 == "scHelper_cell_type"){
-    order_2 <- scHelper_celltype_order
-  } else if (metadata_2 == "seurat_clusters"){
-    order_2 <- seurat_clusters_order
+if(sum(labels %in% metadata) !=0){
+  if(sum(labels %in% metadata) < 3){
+    order_1 <- get(paste0(labels[labels %in% metadata][1], '_order'))
+    ordered_gms <- GMOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE$content,
+                           metadata_1 = metadata[1], order_1 = order_1, plot_path = "scHelper_log/GM_classification/unbiasedGMs_DE/")
+    
+    if(sum(labels %in% metadata) == 2){
+      order_2 <- get(paste0(labels[labels %in% metadata][2], '_order'))
+      ordered_gms <- GMOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE$content,
+                             metadata_1 = metadata[1], order_1 = order_1, metadata_2 = metadata[2], order_2 = order_2,
+                             plot_path = "scHelper_log/GM_classification/unbiasedGMs_DE/")
+    }
   } else {
-    print("GMs will only be ordered by one group")
+    print(paste(c('Genes can only be ordered based on two out of', labels, '. GMs will not be ordered.'), collapse = ' '))
+    ordered_gms <- antler_data$gene_modules$lists$unbiasedGMs_DE$content
   }
+} else {
+  print(paste(c(labels, 'not found in metadata. GMs will not be ordered'), collapse = ' '))
+  ordered_gms <- antler_data$gene_modules$lists$unbiasedGMs_DE$content
 }
 
 # plot gene modules with at least 50% of genes DE > 0.25 logFC & FDR < 0.001 (unbiasedGMs_DE)
 ngene = length(unlist(antler_data$gene_modules$lists$unbiasedGMs_DE$content))
-
-# Order gms
-if (metadata_1 %in% c("stage", "scHelper_cell_type", "seurat_clusters")){
-  ordered_gms <- GMOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE$content,
-                       metadata_1 = metadata_1, order_1 = order_1,
-                       metadata_2 = metadata_2, order_2 = order_2,
-                       plot_path = "scHelper_log/GM_classification/unbiasedGMs_DE/")
-  }else{
-    ordered_gms <- antler_data$gene_modules$lists$unbiasedGMs_DE$content
-  }
 
 # Plot heatmaps
 png(paste0(plot_path, 'unbiasedGMs_DE_rownames.png'), height = min(c(150, round(ngene/3))), width = 75, units = 'cm', res = 200)
