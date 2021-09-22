@@ -33,7 +33,7 @@ include {SEURAT_FILTERING} from "$baseDir/subworkflows/seurat_filtering/main"   
                                                                                                                                             contamination_filt_options:             modules['contamination_filt'])
 
 // Modules and subworkflows for running scVelo/cellrank                                             
-include {MERGE_LOOM} from "$baseDir/modules/local/merge_loom/main"
+include {MERGE_LOOM} from "$baseDir/modules/local/merge_loom/main"                                                              addParams(  options:                                modules['merge_loom'])
 
 include {SEURAT_FILTERED_PROCESS} from "$baseDir/subworkflows/seurat_filtered_process/main"                                     addParams(  scatterplot3d_options:                  modules['scatterplot3d'],
                                                                                                                                             gene_module_options:                    modules['gene_modules'],
@@ -89,27 +89,28 @@ include {SEURAT_SUBSET_PROCESS as SEURAT_PLACODAL2_PROCESS} from "$baseDir/subwo
                                                                                                                                             scvelo_run_options:                     modules['clusters_scvelo_run'])
 
 
-include {R as TRANSFER_LABELS} from "$baseDir/modules/local/r/main"                                                             addParams(  script:                                 analysis_scripts.transfer_labels )
+include {R as TRANSFER_LABELS} from "$baseDir/modules/local/r/main"                                                             addParams(  options:                                modules['transfer_labels'],
+                                                                                                                                            script:                                 analysis_scripts.transfer_labels )
 
-include {SEURAT_TRANSFER_PROCESS as SEURAT_TRANSFER_NPB_PROCESS} from "$baseDir/subworkflows/seurat_transfer_process/main"      addParams(  subset_options:                         modules['transfer_npb_subset'],
-                                                                                                                                            cluster_options:                        modules['clusters_cluster'],
-                                                                                                                                            gene_modules_options:                   modules['clusters_gene_modules'],
+include {SEURAT_TRANSFER_PROCESS as SEURAT_TRANSFER_NPB_PROCESS} from "$baseDir/subworkflows/seurat_transfer_process/main"      addParams(  subset_options:                         modules['transfer_subset_npb'],
+                                                                                                                                            cluster_options:                        modules['transfer_subset_cluster'],
+                                                                                                                                            gene_modules_options:                   modules['transfer_subset_gene_modules'],
                                                                                                                                             seurat_h5ad_options:                    modules['seurat_h5ad'],
-                                                                                                                                            seurat_intersect_loom_options:          modules['clusters_seurat_intersect_loom'],
-                                                                                                                                            scvelo_run_options:                     modules['clusters_scvelo_run'])
+                                                                                                                                            seurat_intersect_loom_options:          modules['transfer_subset_seurat_intersect_loom'],
+                                                                                                                                            scvelo_run_options:                     modules['transfer_subset_scvelo_run'])
 
-include {SEURAT_TRANSFER_PROCESS as SEURAT_TRANSFER_FILTER_PROCESS} from "$baseDir/subworkflows/seurat_transfer_process/main"   addParams(  subset_options:                         modules['transfer_filter_subset'],
-                                                                                                                                            cluster_options:                        modules['clusters_cluster'],
-                                                                                                                                            gene_modules_options:                   modules['clusters_gene_modules'],
+include {SEURAT_TRANSFER_PROCESS as SEURAT_TRANSFER_FILTER_PROCESS} from "$baseDir/subworkflows/seurat_transfer_process/main"   addParams(  subset_options:                         modules['transfer_subset_filter'],
+                                                                                                                                            cluster_options:                        modules['transfer_subset_cluster'],
+                                                                                                                                            gene_modules_options:                   modules['transfer_subset_gene_modules'],
                                                                                                                                             seurat_h5ad_options:                    modules['seurat_h5ad'],
-                                                                                                                                            seurat_intersect_loom_options:          modules['clusters_seurat_intersect_loom'],
-                                                                                                                                            scvelo_run_options:                     modules['clusters_scvelo_run'])
+                                                                                                                                            seurat_intersect_loom_options:          modules['transfer_subset_seurat_intersect_loom'],
+                                                                                                                                            scvelo_run_options:                     modules['transfer_subset_scvelo_run'])
 
-include {SEURAT_TRANSFER_FULL_PROCESS} from "$baseDir/subworkflows/seurat_transfer_full_process/main"   addParams(                          gene_modules_options:                   modules['clusters_gene_modules'],
+include {SEURAT_TRANSFER_FULL_PROCESS} from "$baseDir/subworkflows/seurat_transfer_full_process/main"   addParams(                          gene_modules_options:                   modules['transfer_labels_gene_modules'],
                                                                                                                                             seurat_h5ad_options:                    modules['seurat_h5ad'],
-                                                                                                                                            seurat_intersect_loom_options:          modules['clusters_seurat_intersect_loom'],
-                                                                                                                                            scvelo_run_options:                     modules['clusters_scvelo_run'],
-                                                                                                                                            cellrank_run_options:                   modules['transfer_full_cellrank_run'])
+                                                                                                                                            seurat_intersect_loom_options:          modules['transfer_labels_seurat_intersect_loom'],
+                                                                                                                                            scvelo_run_options:                     modules['transfer_labels_scvelo_run'],
+                                                                                                                                            cellrank_run_options:                   modules['transfer_labels_cellrank_run'])
 
 // include {R as GENE_MODULES_LATENT_TIME} from "$baseDir/modules/local/r/main"                    addParams(  options:                                modules['gene_modules_latent_time'],
 //                                                                                                             script:                                 analysis_scripts.gene_modules_latent_time )

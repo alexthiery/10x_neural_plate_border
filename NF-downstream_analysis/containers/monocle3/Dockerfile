@@ -3,7 +3,11 @@ FROM  alexthiery/10x-npb-schelper:latest
 LABEL authors="alex.thiery@crick.ac.uk" \
       description="Docker image containing all requirements to run 10x downstream analysis in Seurat"
 
-RUN   apt-get install -y --no-install-recommends \
+RUN   apt-get update \
+      && apt-get install -y --no-install-recommends \
+      libboost1.71-dev \
+      libboost-dev \
+	libkml-dev \
       libudunits2-dev \
       libgdal-dev \
       libgeos-dev \
