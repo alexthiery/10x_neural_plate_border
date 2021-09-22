@@ -259,34 +259,40 @@ scHelper_cell_type_order <- c('extra_embryonic', 'early_non_neural', 'non_neural
 seurat_clusters_order <- as.character(1:40)
 
 
-
-
 # Extract ordering of gms from metadata
 labels <- c("stage", "scHelper_cell_type", "seurat_clusters")
 
+metadata_1 <- NULL
+order_1 <- NULL
+metadata_2 <- NULL
+order_2 <- NULL
+
 if(sum(labels %in% metadata) !=0){
-  if(sum(labels %in% metadata) < 3){
-    order_1 <- get(paste0(labels[labels %in% metadata][1], '_order'))
-    ordered_gms <- GMOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE$content,
-                           metadata_1 = metadata[1], order_1 = order_1, plot_path = "scHelper_log/GM_classification/unbiasedGMs_DE/")
-    
-    if(sum(labels %in% metadata) == 2){
-      order_2 <- get(paste0(labels[labels %in% metadata][2], '_order'))
-      ordered_gms <- GMOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE$content,
-                             metadata_1 = metadata[1], order_1 = order_1, metadata_2 = metadata[2], order_2 = order_2,
-                             plot_path = "scHelper_log/GM_classification/unbiasedGMs_DE/")
-    }
-  } else {
-    print(paste(c('Genes can only be ordered based on two out of', labels, '. GMs will not be ordered.'), collapse = ' '))
-    ordered_gms <- antler_data$gene_modules$lists$unbiasedGMs_DE$content
+  metadata_1 <- labels[labels %in% metadata][1]
+  order_1 <- get(paste0(metadata_1, '_order'))
+  
+  if(sum(labels %in% metadata) == 2){
+    metadata_2 <- labels[labels %in% metadata][2]
+    order_2 <- get(paste0(metadata_2, '_order'))
   }
 } else {
   print(paste(c(labels, 'not found in metadata. GMs will not be ordered'), collapse = ' '))
-  ordered_gms <- antler_data$gene_modules$lists$unbiasedGMs_DE$content
 }
 
 # plot gene modules with at least 50% of genes DE > 0.25 logFC & FDR < 0.001 (unbiasedGMs_DE)
 ngene = length(unlist(antler_data$gene_modules$lists$unbiasedGMs_DE$content))
+
+# Order gms
+if (!is.null(metadata_1)){
+  ordered_gms <- GMOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE$content,
+                         metadata_1 = metadata_1, order_1 = order_1,
+                         metadata_2 = metadata_2, order_2 = order_2,
+                         plot_path = "scHelper_log/GM_classification/unbiasedGMs_DE/")
+}else{
+  ordered_gms <- antler_data$gene_modules$lists$unbiasedGMs_DE$content
+}
+
+
 
 # Plot heatmaps
 png(paste0(plot_path, 'unbiasedGMs_DE_rownames.png'), height = min(c(150, round(ngene/3))), width = 75, units = 'cm', res = 200)
@@ -300,18 +306,14 @@ GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules 
                    show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
 graphics.off()
 
+
+
+
+
+
+
 # plot gene modules with at least 50% of genes DE > 0.25 logFC & FDR < 0.001 (GMs200_DE)
 ngene = length(unlist(antler_data$gene_modules$lists$GMs200_DE$content))
-
-# Order gms
-if (metadata_1 %in% c("stage", "scHelper_cell_type", "seurat_clusters")){
-  ordered_gms <- GMOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$GMs200_DE$content,
-                       metadata_1 = metadata_1, order_1 = order_1,
-                       metadata_2 = metadata_2, order_2 = order_2,
-                       plot_path = "scHelper_log/GM_classification/GMs200_DE/")
-  }else{
-    ordered_gms <- antler_data$gene_modules$lists$GMs200_DE$content
-  }
 
 # Plot heatmaps
 png(paste0(plot_path, 'GMs200_DE_rownames.png'), height = min(c(150, round(ngene/3))), width = 75, units = 'cm', res = 200)
