@@ -89,7 +89,8 @@ include {SEURAT_SUBSET_PROCESS as SEURAT_PLACODAL2_PROCESS} from "$baseDir/subwo
                                                                                                                                             scvelo_run_options:                     modules['clusters_scvelo_run'])
 
 
-include {R as TRANSFER_LABELS} from "$baseDir/modules/local/r/main"                                                             addParams(  script:                                 analysis_scripts.transfer_labels )
+include {R as TRANSFER_LABELS} from "$baseDir/modules/local/r/main"                                                             addParams(  options:                                modules['transfer_labels'],
+                                                                                                                                            script:                                 analysis_scripts.transfer_labels )
 
 include {SEURAT_TRANSFER_PROCESS as SEURAT_TRANSFER_NPB_PROCESS} from "$baseDir/subworkflows/seurat_transfer_process/main"      addParams(  subset_options:                         modules['transfer_subset_npb'],
                                                                                                                                             cluster_options:                        modules['transfer_subset_cluster'],
