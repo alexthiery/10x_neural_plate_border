@@ -95,7 +95,7 @@ include {SEURAT_SUBSET_CELLRANK_PROCESS as SEURAT_FILTER_CONTAM_PROCESS} from "$
                                                                                                                                             state_classification_options:           modules['clusters_state_classification'],
                                                                                                                                             seurat_h5ad_options:                    modules['seurat_h5ad'],
                                                                                                                                             seurat_intersect_loom_options:          modules['clusters_seurat_intersect_loom'],
-                                                                                                                                            scvelo_run_options:                     modules['filter_contam_scvelo_run']
+                                                                                                                                            scvelo_run_options:                     modules['filter_contam_scvelo_run'],
                                                                                                                                             cellrank_run_options:                   modules['clusters_cellrank_run'])
 
 
