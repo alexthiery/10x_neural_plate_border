@@ -41,7 +41,7 @@ seurat_data@meta.data[[opt$group_by]] <- cell_states[match(rownames(seurat_data@
 
 # Plot QC for each cluster
 png(paste0(plot_path, "UMAP.png"), width=15, height=15, units = 'cm', res = 200)
-DimPlot(seurat_data, group_by = opt$group_by)
+DimPlot(seurat_data, group.by = opt$group_by)
 graphics.off()
 
 saveRDS(seurat_data, paste0(rds_path, 'seurat_label_transfer.RDS'))
