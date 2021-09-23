@@ -21,6 +21,7 @@ params.phate_options                                = [:]
 params.seurat_h5ad_options                          = [:]
 params.seurat_intersect_loom_options                = [:]
 params.scvelo_run_options                           = [:]
+params.cellrank_run_options                         = [:]
 
 // Include Seurat R processes
 include {R as SUBSET} from "$baseDir/modules/local/r/main"                          addParams(  options:                        params.subset_options,
@@ -32,9 +33,6 @@ include {R as CLUSTER} from "$baseDir/modules/local/r/main"                     
 include {R as GENE_MODULES} from "$baseDir/modules/local/r/main"                    addParams(  options:                        params.gene_modules_options,
                                                                                                 script:                         analysis_scripts.gene_modules )
 
-// include {R as STATE_CLASSIFICATION} from "$baseDir/modules/local/r/main"            addParams(  options:                        params.state_classification_options,
-//                                                                                                 script:                         analysis_scripts.state_classification )
-
 include {R as PHATE} from "$baseDir/modules/local/r/main"                           addParams(  options:                        params.phate_options,
                                                                                                 script:                         analysis_scripts.phate )
 
@@ -42,6 +40,9 @@ include {SEURAT_H5AD} from "$baseDir/modules/local/seurat_h5ad/main"            
 
 include {SEURAT_SCVELO} from "$baseDir/subworkflows/seurat_scvelo/main"             addParams(  seurat_intersect_loom_options:  params.seurat_intersect_loom_options,
                                                                                                 scvelo_run_options:             params.scvelo_run_options )
+
+include {CELLRANK_RUN} from "$baseDir/modules/local/scvelo/cellrank_run/main"       addParams(  options:                        params.cellrank_run_options)
+
 
 /*-----------------------------------------------------------------------------------------------------------------------------
 Log
@@ -71,13 +72,14 @@ workflow SEURAT_SUBSET_PROCESS {
         .set { ch_split_run }                                                           //Channel: [[meta], rds_file]
 
     CLUSTER( ch_split_run )
-    // STATE_CLASSIFICATION( CLUSTER.out )
     GENE_MODULES( CLUSTER.out )
     PHATE( CLUSTER.out )
 
     // Run scVelo
     SEURAT_H5AD( CLUSTER.out )
     SEURAT_SCVELO( SEURAT_H5AD.out, loom, annotations ) // Channel: [[meta], seurat.h5ad], Channel: merged.loom, Channel: seurat_annotations.csv
+    CELLRANK_RUN( SEURAT_SCVELO.out.scvelo_run_out_h5ad )
+
 
     // // Run gene module analysis across latent time
     // ch_cluster_rds              = CLUSTER.out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
