@@ -40,7 +40,7 @@ seurat_data <- readRDS(full_data)
 seurat_data@meta.data[[opt$group_by]] <- cell_states[match(rownames(seurat_data@meta.data), rownames(cell_states)), ]
 
 # Plot QC for each cluster
-png(paste0(plot_path, "UMAP.png"), width=15, height=15, units = 'cm', res = 200)
+png(paste0(plot_path, "UMAP.png"), width=30, height=25, units = 'cm', res = 200)
 DimPlot(seurat_data, group.by = opt$group_by)
 graphics.off()
 
