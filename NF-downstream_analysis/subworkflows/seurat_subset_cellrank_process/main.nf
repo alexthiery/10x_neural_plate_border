@@ -21,6 +21,7 @@ params.phate_options                                = [:]
 params.seurat_h5ad_options                          = [:]
 params.seurat_intersect_loom_options                = [:]
 params.scvelo_run_options                           = [:]
+params.cellrank_run_options                         = [:]
 
 // Include Seurat R processes
 include {R as SUBSET} from "$baseDir/modules/local/r/main"                          addParams(  options:                        params.subset_options,
@@ -40,6 +41,9 @@ include {SEURAT_H5AD} from "$baseDir/modules/local/seurat_h5ad/main"            
 include {SEURAT_SCVELO} from "$baseDir/subworkflows/seurat_scvelo/main"             addParams(  seurat_intersect_loom_options:  params.seurat_intersect_loom_options,
                                                                                                 scvelo_run_options:             params.scvelo_run_options )
 
+include {CELLRANK_RUN} from "$baseDir/modules/local/scvelo/cellrank_run/main"       addParams(  options:                        params.cellrank_run_options)
+
+
 /*-----------------------------------------------------------------------------------------------------------------------------
 Log
 -------------------------------------------------------------------------------------------------------------------------------*/
@@ -51,7 +55,7 @@ if(params.debug) {log.info Headers.build_debug_scripts_summary(analysis_scripts,
 Workflow
 --------------------------------------------------------------------------------------*/
 
-workflow SEURAT_SUBSET_PROCESS {
+workflow SEURAT_SUBSET_CELLRANK_PROCESS {
     take:
     seurat_out      //Channel: [[meta], [plot_dir, rds_dir]]
     loom            //Channel: merged.loom
@@ -74,6 +78,8 @@ workflow SEURAT_SUBSET_PROCESS {
     // Run scVelo
     SEURAT_H5AD( CLUSTER.out )
     SEURAT_SCVELO( SEURAT_H5AD.out, loom, annotations ) // Channel: [[meta], seurat.h5ad], Channel: merged.loom, Channel: seurat_annotations.csv
+    CELLRANK_RUN( SEURAT_SCVELO.out.scvelo_run_out_h5ad )
+
 
     // // Run gene module analysis across latent time
     // ch_cluster_rds              = CLUSTER.out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]

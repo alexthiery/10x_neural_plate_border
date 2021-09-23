@@ -88,14 +88,15 @@ include {SEURAT_SUBSET_PROCESS as SEURAT_PLACODAL2_PROCESS} from "$baseDir/subwo
                                                                                                                                             seurat_intersect_loom_options:          modules['clusters_seurat_intersect_loom'],
                                                                                                                                             scvelo_run_options:                     modules['clusters_scvelo_run'])
 
-include {SEURAT_SUBSET_PROCESS as SEURAT_FILTER_CONTAM_PROCESS} from "$baseDir/subworkflows/seurat_subset_process/main"         addParams(  subset_options:                         modules['filter_contam_subset'],
+include {SEURAT_SUBSET_CELLRANK_PROCESS as SEURAT_FILTER_CONTAM_PROCESS} from "$baseDir/subworkflows/seurat_subset_cellrank_process/main"         addParams(  subset_options:                         modules['filter_contam_subset'],
                                                                                                                                             cluster_options:                        modules['clusters_cluster'],
                                                                                                                                             gene_modules_options:                   modules['clusters_gene_modules'],
                                                                                                                                             phate_options:                          modules['clusters_phate'],
                                                                                                                                             state_classification_options:           modules['clusters_state_classification'],
                                                                                                                                             seurat_h5ad_options:                    modules['seurat_h5ad'],
                                                                                                                                             seurat_intersect_loom_options:          modules['clusters_seurat_intersect_loom'],
-                                                                                                                                            scvelo_run_options:                     modules['filter_contam_scvelo_run'])
+                                                                                                                                            scvelo_run_options:                     modules['filter_contam_scvelo_run']
+                                                                                                                                            cellrank_run_options:                   modules['clusters_cellrank_run'])
 
 
 include {R as TRANSFER_LABELS} from "$baseDir/modules/local/r/main"                                                             addParams(  options:                                modules['transfer_labels'],
