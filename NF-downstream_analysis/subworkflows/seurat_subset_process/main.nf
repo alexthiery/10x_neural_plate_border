@@ -32,9 +32,6 @@ include {R as CLUSTER} from "$baseDir/modules/local/r/main"                     
 include {R as GENE_MODULES} from "$baseDir/modules/local/r/main"                    addParams(  options:                        params.gene_modules_options,
                                                                                                 script:                         analysis_scripts.gene_modules )
 
-// include {R as STATE_CLASSIFICATION} from "$baseDir/modules/local/r/main"            addParams(  options:                        params.state_classification_options,
-//                                                                                                 script:                         analysis_scripts.state_classification )
-
 include {R as PHATE} from "$baseDir/modules/local/r/main"                           addParams(  options:                        params.phate_options,
                                                                                                 script:                         analysis_scripts.phate )
 
@@ -71,7 +68,6 @@ workflow SEURAT_SUBSET_PROCESS {
         .set { ch_split_run }                                                           //Channel: [[meta], rds_file]
 
     CLUSTER( ch_split_run )
-    // STATE_CLASSIFICATION( CLUSTER.out )
     GENE_MODULES( CLUSTER.out )
     PHATE( CLUSTER.out )
 
