@@ -203,17 +203,18 @@ metadata <- if(length(unique(seurat_data@meta.data$stage)) == 1){meta_col
 metadata <- if(length(unique(seurat_data@meta.data$run)) == 1){metadata
 }else{c(metadata, "run")}
 
+## Hard-coded orders for stage, clusters and cell types
+stage_order <- c("hh4", "hh5", "hh6", "hh7", "ss4", "ss8")
+seurat_clusters_order <- as.character(1:40)
+
 if(meta_col == 'scHelper_cell_type'){
-  # Specify order of cell states to appear in gene modules
-  class_order = c('extra_embryonic', 'early_non_neural', 'non_neural', 'early_NNE', 'early_PPR', 'early_aPPR', 'aPPR', 'iPPR',
-                  'early_pPPR', 'pPPR', 'early_border', 'early_NPB', 'NPB', 'early_aNPB', 'aNPB', 'early_pNPB', 'pNPB', 'NC',
-                  'delaminating_NC', 'early_neural', 'early_neural_plate', 'early_caudal_neural', 'neural_progenitors', 'p_neural_progenitors',
-                  'early_hindbrain', 'hindbrain', 'early_midbrain', 'midbrain', 'a_neural_progenitors', 'early_forebrain', 'forebrain', 'node')
+  scHelper_cell_type_order <- c('extra_embryonic', 'early_NNE', 'NNE', 'prospective_epidermis', 'PPR', 'aPPR',
+                                'pPPR', 'early_border', 'early_NPB', 'NPB', 'early_pNPB', 'pNPB', 'early_aNPB', 'aNPB', 'early_neural',
+                                'early_neural_plate', 'early_caudal_neural', 'neural_progenitors', 'a_neural_progenitors', 'early_forebrain', 'forebrain',
+                                'early_midbrain', 'midbrain', 'p_neural_progenitors', 'early_hindbrain', 'hindbrain', 'NC', 'delaminating_NC', 'a_ventral_floorplate', 'streak', 'node')
   
-  # subset cell states present in data subset
-  class_order_cells <- class_order[class_order %in% seurat_data@meta.data[[meta_col]]]
-  
-  seurat_data@meta.data$scHelper_cell_type <- factor(seurat_data@meta.data$scHelper_cell_type, levels = class_order_cells)
+  scHelper_cell_type_order <- scHelper_cell_type_order[scHelper_cell_type_order %in% unique(seurat_data@meta.data[[meta_col]])]
+  seurat_data@meta.data$scHelper_cell_type <- factor(seurat_data@meta.data$scHelper_cell_type, levels = scHelper_cell_type_order)
 }
 
 ########################################################################################################################################################
@@ -249,15 +250,6 @@ graphics.off()
 
 ########################################################################################################################################################
 ##################################################   Plotting heatmaps with ordered GMs:   #############################################################
-
-## Hard-coded orders for stage, clusters and cell types
-stage_order <- c("hh4", "hh5", "hh6", "hh7", "ss4", "ss8")
-scHelper_cell_type_order <- c('extra_embryonic', 'early_non_neural', 'non_neural', 'early_NNE', 'early_PPR', 'early_aPPR', 'aPPR', 'iPPR',
-                             'early_pPPR', 'pPPR', 'early_border', 'early_NPB', 'NPB', 'early_pNPB', 'pNPB', 'early_aNPB', 'aNPB', 'early_neural',
-                             'early_neural_plate', 'early_caudal_neural', 'neural_progenitors', 'a_neural_progenitors', 'early_forebrain', 'forebrain',
-                             'early_midbrain', 'midbrain', 'p_neural_progenitors', 'early_hindbrain', 'hindbrain', 'NC', 'delaminating_NC', 'node')
-seurat_clusters_order <- as.character(1:40)
-
 
 # Extract ordering of gms from metadata
 labels <- c("stage", "scHelper_cell_type", "seurat_clusters")
@@ -301,15 +293,16 @@ GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules 
                    fontsize = 15, fontsize_row = 10)
 graphics.off()
 
+png(paste0(plot_path, 'test.png'), height = min(c(150, round(ngene/3))), width = 75, units = 'cm', res = 200)
+GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = ordered_gms,
+                   show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = NULL,
+                   fontsize = 15, fontsize_row = 10)
+graphics.off()
+
 png(paste0(plot_path, 'unbiasedGMs_DE.png'), height = min(c(150, round(ngene/8))), width = 75, units = 'cm', res = 600)
 GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = ordered_gms,
                    show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
 graphics.off()
-
-
-
-
-
 
 
 # plot gene modules with at least 50% of genes DE > 0.25 logFC & FDR < 0.001 (GMs200_DE)
@@ -335,10 +328,10 @@ if(length(unique(seurat_data$run)) > 1){
   
   # Order gms
   if (metadata_1 %in% c("stage", "scHelper_cell_type", "seurat_clusters")){
-  ordered_gms <- GMOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content,
-                       metadata_1 = metadata_1, order_1 = order_1,
-                       metadata_2 = metadata_2, order_2 = order_2,
-                       plot_path = "scHelper_log/GM_classification/unbiasedGMs_DE_batchfilt/")
+    ordered_gms <- GMOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content,
+                           metadata_1 = metadata_1, order_1 = order_1,
+                           metadata_2 = metadata_2, order_2 = order_2,
+                           plot_path = "scHelper_log/GM_classification/unbiasedGMs_DE_batchfilt/")
   }else{
     ordered_gms <- antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content
   }
@@ -359,10 +352,10 @@ if(length(unique(seurat_data$run)) > 1){
   
   # Order gms
   if (metadata_1 %in% c("stage", "scHelper_cell_type", "seurat_clusters")){
-  ordered_gms <- GMOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$GMs200_DE_batchfilt$content,
-                       metadata_1 = metadata_1, order_1 = order_1,
-                       metadata_2 = metadata_2, order_2 = order_2,
-                       plot_path = "scHelper_log/GM_classification/GMs200_DE_batchfilt/")
+    ordered_gms <- GMOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$GMs200_DE_batchfilt$content,
+                           metadata_1 = metadata_1, order_1 = order_1,
+                           metadata_2 = metadata_2, order_2 = order_2,
+                           plot_path = "scHelper_log/GM_classification/GMs200_DE_batchfilt/")
   }else{
     ordered_gms <- antler_data$gene_modules$lists$GMs200_DE_batchfilt$content
   }
