@@ -40,8 +40,8 @@ seurat_data <- readRDS(full_data)
 seurat_data@meta.data[[opt$group_by]] <- cell_states[match(rownames(seurat_data@meta.data), rownames(cell_states)), ]
 
 # Plot QC for each cluster
-png(paste0(plot_path, "UMAP.png"), width=30, height=25, units = 'cm', res = 200)
-DimPlot(seurat_data, group.by = opt$group_by)
+png(paste0(plot_path, "scHelper_celltype_umap2.png"), width=20, height=20, units = 'cm', res = 200)
+DimPlot(seurat_data, group.by = opt$group_by, label = TRUE, label.size = 3, label.box = TRUE) + ggplot2::theme(legend.position = "none")
 graphics.off()
 
 saveRDS(seurat_data, paste0(rds_path, 'seurat_label_transfer.RDS'))
