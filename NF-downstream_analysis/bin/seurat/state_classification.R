@@ -132,10 +132,6 @@ DefaultAssay(seurat_data) <- "RNA"
 
 seurat_data <- ClusterClassification(seurat_obj = seurat_data, cell_type_markers = cell_type_markers, force_assign = FALSE, quantile = 0.5, plot_path = paste0(plot_path, "scHelper_log/"))
 
-DimPlot(seurat_data, group.by = 'scHelper_cell_type', label = TRUE, label.size = 3, label.box = TRUE) + ggplot2::theme(legend.position = "none")
-
-
-
 # Plot UMAP for clusters and developmental stage
 png(paste0(plot_path, "scHelper_celltype_umap.png"), width=40, height=20, units = 'cm', res = 200)
 ClustStagePlot(seurat_data, stage_col = "stage", cluster_col = "scHelper_cell_type", label_clusters = TRUE)
@@ -148,12 +144,12 @@ graphics.off()
 saveRDS(seurat_data, paste0(rds_path, label, "_cell_state_classification.RDS"), compress = FALSE)
 
 # Plot stacked violins for each of the cell type classes to check genes used are good markers
-curr_plot_path = paste0(plot_path, "cell_type_violins/")
+curr_plot_path = paste0(plot_path, "cell_type_dotplots/")
 dir.create(curr_plot_path)
 
 for(i in names(cell_type_markers)){
   png(paste0(curr_plot_path, i, ".png"), width = (length(cell_type_markers[[i]])+2)*3, height = 15, units = 'cm', res = 200)
-  print(VlnPlot(seurat_data, cell_type_markers[[i]], group.by = "scHelper_cell_type", stack = TRUE))
+  print(DotPlot(seurat_data, features = cell_type_markers[[i]], group.by = "scHelper_cell_type"))
   graphics.off()
 }
 
