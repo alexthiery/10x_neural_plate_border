@@ -63,14 +63,14 @@ def write_lineage_probs(adata):
 def allDataTerminalStates(adata, estimator):
     estimator.set_terminal_states({"neural": adata[adata.obs["scHelper_cell_type"].isin(['hindbrain', 'midbrain', "forebrain"])].obs_names,
                   "NC": adata[adata.obs["scHelper_cell_type"].isin(['NC', "delaminating_NC"])].obs_names,
-                  "placodal": adata[adata.obs["scHelper_cell_type"].isin(['pPPR'])].obs_names})
+                  "placodal": adata[adata.obs["scHelper_cell_type"].isin(['aPPR', 'pPPR'])].obs_names})
     cr.pl.terminal_states(adata, save='terminal_states.pdf')
     return(estimator)
 
 def transferLabelTerminalStates(adata, estimator):
-    estimator.set_terminal_states({"neural": adata[adata.obs["scHelper_cell_type"].isin(['hindbrain', 'midbrain', "forebrain"]) & adata.obs["stage"].isin(['ss8'])].obs_names,
-                  "NC": adata[adata.obs["scHelper_cell_type"].isin(['NC', "delaminating_NC"]) & adata.obs["stage"].isin(['ss8'])].obs_names,
-                  "placodal": adata[adata.obs["scHelper_cell_type"].isin(['early_pPPR', 'aPPR', 'early_aPPR']) & adata.obs["stage"].isin(['ss8'])].obs_names})
+    estimator.set_terminal_states({"neural": adata[adata.obs["scHelper_cell_type"].isin(['hindbrain', 'midbrain', "forebrain"]) & adata.obs["stage"].isin(['ss4', 'ss8'])].obs_names,
+                  "NC": adata[adata.obs["scHelper_cell_type"].isin(["delaminating_NC"]) & adata.obs["stage"].isin(['ss4', 'ss8'])].obs_names,
+                  "placodal": adata[adata.obs["scHelper_cell_type"].isin(['aPPR', 'pPPR']) & adata.obs["stage"].isin(['ss4', 'ss8'])].obs_names})
     cr.pl.terminal_states(adata, save='terminal_states.pdf')
     return(estimator)
 
