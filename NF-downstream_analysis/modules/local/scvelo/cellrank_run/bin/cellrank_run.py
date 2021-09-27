@@ -61,9 +61,9 @@ def write_lineage_probs(adata):
 #     return(estimator)
 
 def allDataTerminalStates(adata, estimator):
-    estimator.set_terminal_states({"neural": adata[adata.obs["scHelper_cell_type"].isin(['hindbrain', 'midbrain', "forebrain"])].obs_names,
-                  "NC": adata[adata.obs["scHelper_cell_type"].isin(['NC', "delaminating_NC"])].obs_names,
-                  "placodal": adata[adata.obs["scHelper_cell_type"].isin(['aPPR', 'pPPR'])].obs_names})
+    estimator.set_terminal_states({"neural": adata[adata.obs["scHelper_cell_type"].isin(['hindbrain', 'midbrain', "forebrain"]) & adata.obs["stage"].isin(['ss4', 'ss8'])].obs_names,
+                  "NC": adata[adata.obs["scHelper_cell_type"].isin(['NC']) & adata.obs["stage"].isin(['ss4', 'ss8'])].obs_names,
+                  "placodal": adata[adata.obs["scHelper_cell_type"].isin(['aPPR', 'pPPR']) & adata.obs["stage"].isin(['ss4', 'ss8'])].obs_names})
     cr.pl.terminal_states(adata, save='terminal_states.pdf')
     return(estimator)
 
