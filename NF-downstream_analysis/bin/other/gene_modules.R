@@ -209,9 +209,9 @@ seurat_clusters_order <- as.character(1:40)
 
 if(meta_col == 'scHelper_cell_type'){
   scHelper_cell_type_order <- c('extra_embryonic', 'early_NNE', 'NNE', 'prospective_epidermis', 'PPR', 'aPPR',
-                                'pPPR', 'early_border', 'early_NPB', 'NPB', 'early_pNPB', 'pNPB', 'early_aNPB', 'aNPB', 'early_neural',
-                                'early_neural_plate', 'early_caudal_neural', 'neural_progenitors', 'a_neural_progenitors', 'early_forebrain', 'forebrain',
-                                'early_midbrain', 'midbrain', 'p_neural_progenitors', 'early_hindbrain', 'hindbrain', 'NC', 'delaminating_NC', 'a_ventral_floorplate', 'streak', 'node')
+                                'pPPR', 'early_border', 'early_NPB', 'NPB', 'early_aNPB', 'aNPB', 'early_pNPB', 'pNPB', 'NC', 'delaminating_NC', 'early_neural',
+                                'early_neural_plate', 'early_caudal_neural', 'neural_progenitors', 'p_neural_progenitors', 'early_hindbrain', 'hindbrain', 
+                                'early_midbrain', 'midbrain', 'a_neural_progenitors', 'early_forebrain', 'forebrain', 'a_ventral_floorplate', 'streak', 'node')
   
   scHelper_cell_type_order <- scHelper_cell_type_order[scHelper_cell_type_order %in% unique(seurat_data@meta.data[[meta_col]])]
   seurat_data@meta.data$scHelper_cell_type <- factor(seurat_data@meta.data$scHelper_cell_type, levels = scHelper_cell_type_order)
@@ -290,12 +290,6 @@ if (!is.null(metadata_1)){
 png(paste0(plot_path, 'unbiasedGMs_DE_rownames.png'), height = min(c(150, round(ngene/3))), width = 75, units = 'cm', res = 200)
 GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = ordered_gms,
                    show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col),
-                   fontsize = 15, fontsize_row = 10)
-graphics.off()
-
-png(paste0(plot_path, 'test.png'), height = min(c(150, round(ngene/3))), width = 75, units = 'cm', res = 200)
-GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = ordered_gms,
-                   show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = NULL,
                    fontsize = 15, fontsize_row = 10)
 graphics.off()
 
