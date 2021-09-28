@@ -192,9 +192,7 @@ workflow {
     ch_full_gene_modules            = SEURAT_FILTERED_PROCESS.out.gene_modules_out.map{it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]}
     ch_full_cellrank                = SEURAT_FILTERED_PROCESS.out.cellrank_run_out_metadata.map{it[1]}
 
-    ch_full_state_classification.view()
-    ch_full_gene_modules.view()
-    ch_full_cellrank.view()
+    ch_full_state_classification.combine(ch_full_gene_modules).combine(ch_full_cellrank).map{[sample_id:'full_gm_latent_time'], it}.view()
 
 // ch_a.concat(ch_b).concat(ch_c).map{it[1]}.collect().map{[[sample_id:'test'], row]}.view()
 
