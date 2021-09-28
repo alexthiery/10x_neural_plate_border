@@ -71,6 +71,15 @@ include {SEURAT_SUBSET_PROCESS as SEURAT_NPB_PROCESS} from "$baseDir/subworkflow
                                                                                                                                             seurat_intersect_loom_options:          modules['clusters_seurat_intersect_loom'],
                                                                                                                                             scvelo_run_options:                     modules['clusters_scvelo_run'])
 
+include {SEURAT_SUBSET_PROCESS as SEURAT_LATE_STAGE_PROCESS} from "$baseDir/subworkflows/seurat_subset_process/main"            addParams(  subset_options:                         modules['late_stage_subset'],
+                                                                                                                                            cluster_options:                        modules['clusters_cluster'],
+                                                                                                                                            gene_modules_options:                   modules['clusters_gene_modules'],
+                                                                                                                                            state_classification_options:           modules['clusters_state_classification'],
+                                                                                                                                            phate_options:                          modules['clusters_phate'],
+                                                                                                                                            seurat_h5ad_options:                    modules['seurat_h5ad'],
+                                                                                                                                            seurat_intersect_loom_options:          modules['clusters_seurat_intersect_loom'],
+                                                                                                                                            scvelo_run_options:                     modules['clusters_scvelo_run'])
+
 include {SEURAT_SUBSET_PROCESS as SEURAT_PLACODAL1_PROCESS} from "$baseDir/subworkflows/seurat_subset_process/main"             addParams(  subset_options:                         modules['placodal1_subset'],
                                                                                                                                             cluster_options:                        modules['clusters_cluster'],
                                                                                                                                             gene_modules_options:                   modules['clusters_gene_modules'],
@@ -177,6 +186,7 @@ workflow {
     /* Run analysis on cluster subsets
     --------------------------------------------------------------------------------------*/     
     SEURAT_NPB_PROCESS( SEURAT_FILTERED_PROCESS.out.state_classification_out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
+    SEURAT_LATE_STAGE_PROCESS( SEURAT_FILTERED_PROCESS.out.state_classification_out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
     SEURAT_PLACODAL1_PROCESS( SEURAT_FILTERED_PROCESS.out.state_classification_out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
     SEURAT_PLACODAL2_PROCESS( SEURAT_FILTERED_PROCESS.out.state_classification_out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
     // SEURAT_FILTER_CONTAM_PROCESS( SEURAT_FILTERED_PROCESS.out.state_classification_out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
