@@ -201,6 +201,7 @@ workflow {
                                         .map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]}
                                         .combine(ch_full_state_classification)
                                         .combine(ch_full_cellrank)
+                                        .map{[[sample_id:it[0].sample_id], [it[1], it[2], it[3]]]}
 
     ch_stage_latent_time.view()
 
