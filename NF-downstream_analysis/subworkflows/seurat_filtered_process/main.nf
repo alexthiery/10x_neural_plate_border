@@ -84,6 +84,6 @@ workflow SEURAT_FILTERED_PROCESS {
     state_classification_out        = STATE_CLASSIFICATION.out                  //Channel: [[meta], [output]]
     gene_modules_out                = GENE_MODULES.out                          //Channel: [[meta], [output]]
 
-    cellrank_run_out_metadata       = CELLRANK_RUN.out.scvelo_run_out_metadata     //Channel: [[meta], csv]
+    cellrank_run_out_metadata       = CELLRANK_RUN.out.csv     //Channel: [[meta], csv]
 }
 
