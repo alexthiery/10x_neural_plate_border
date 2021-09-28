@@ -7,6 +7,10 @@ library(Antler)
 library(RColorBrewer)
 library(scHelper)
 
+
+install.packages('patchwork')
+library(patchwork)
+
 # Set paths and load data
 plot_path = "./plots/"
 rds_path = "./rds_files/"
@@ -24,7 +28,7 @@ seurat_data <- readRDS(list.files(data_path, pattern = "*.RDS", full.names = TRU
 
 # load antler data
 antler_data <- readRDS(list.files(data_path, pattern = "antler_out.RDS", full.names = TRUE))
-# antler_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/hh5_splitstage_data/antler/stage_gene_modules/rds_files/antler_out.RDS')
+antler_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss8_splitstage_data/antler/stage_gene_modules/rds_files/antler_out.RDS')
 
 
 
@@ -64,23 +68,81 @@ if(is.null(names(gms))){names(gms) = paste0("GM: ", 1:length(gms))}
 # Set RNA to default assay for plotting expression data
 DefaultAssay(seurat_data) <- "RNA"
 
-# Set gene module order
-stage_order <- c("hh4", "hh5", "hh6", "hh7", "ss4", "ss8")
-scHelper_cell_type_order <- c('extra_embryonic', 'early_non_neural', 'non_neural', 'early_NNE', 'early_PPR', 'early_aPPR', 'aPPR', 'iPPR',
-                              'early_pPPR', 'pPPR', 'early_border', 'early_NPB', 'NPB', 'early_pNPB', 'pNPB', 'early_aNPB', 'aNPB', 'early_neural',
-                              'early_neural_plate', 'early_caudal_neural', 'neural_progenitors', 'a_neural_progenitors', 'early_forebrain', 'forebrain',
-                              'early_midbrain', 'midbrain', 'p_neural_progenitors', 'early_hindbrain', 'hindbrain', 'NC', 'delaminating_NC', 'node')
 
 
-### create cell_order object based on ordering from metadata
-class_order = c('extra_embryonic', 'early_non_neural', 'non_neural', 'early_NNE', 'early_PPR', 'early_aPPR', 'aPPR', 'iPPR',
-                'early_pPPR', 'pPPR', 'early_border', 'early_NPB', 'NPB', 'early_aNPB', 'aNPB', 'early_pNPB', 'pNPB', 'NC',
-                'delaminating_NC', 'early_neural', 'early_neural_plate', 'early_caudal_neural', 'neural_progenitors', 'p_neural_progenitors',
-                'early_hindbrain', 'hindbrain', 'early_midbrain', 'midbrain', 'a_neural_progenitors', 'early_forebrain', 'forebrain', 'node')
-seurat_data@meta.data$scHelper_cell_type <- factor(seurat_data@meta.data$scHelper_cell_type, levels = class_order)
-col_ann <- seurat_data@meta.data[,metadata, drop=FALSE] %>% mutate_if(is.character, as.factor)
-col_ann <- col_ann[do.call("order", c(col_ann[metadata], list(decreasing = FALSE))), , drop = FALSE]
-cell_order = rownames(col_ann)
+
+
+
+
+
+seurat_sub <- subset(seurat_data, cells = rownames(seurat_data@meta.data)[seurat_data@meta.data[['stage']] == 'hh7'])
+
+
+
+scHelper_cell_type_order <- c('extra_embryonic', 'early_NNE', 'NNE', 'prospective_epidermis', 'PPR', 'aPPR',
+                              'pPPR', 'early_border', 'early_NPB', 'NPB', 'early_aNPB', 'aNPB', 'early_pNPB', 'pNPB', 'NC', 'delaminating_NC', 'early_neural',
+                              'early_neural_plate', 'early_caudal_neural', 'neural_progenitors', 'p_neural_progenitors', 'early_hindbrain', 'hindbrain', 
+                              'early_midbrain', 'midbrain', 'a_neural_progenitors', 'early_forebrain', 'forebrain', 'a_ventral_floorplate', 'streak', 'node')
+
+scHelper_cell_type_order <- scHelper_cell_type_order[scHelper_cell_type_order %in% unique(seurat_sub@meta.data[['scHelper_cell_type']])]
+seurat_sub@meta.data$scHelper_cell_type <- factor(seurat_sub@meta.data$scHelper_cell_type, levels = scHelper_cell_type_order)
+
+
+x = seurat_sub@meta.data[,'scHelper_cell_type']
+
+gm_1 <- gms[['GM23']]
+gm_1_sum <- t(GetAssayData(object = seurat_sub, assay = 'RNA', slot = 'data'))[,gm_1] %>% rowSums(.)
+
+gm_2 <- gms[['GM8']]
+gm_2_sum <- t(GetAssayData(object = seurat_sub, assay = 'RNA', slot = 'data'))[,gm_2] %>% rowSums(.)
+
+gm_product <- gm_1_sum * gm_2_sum
+plot_data <- data.frame(gm_1_sum = gm_1_sum, gm_2_sum = gm_2_sum, gm_product = gm_product, x = x)
+
+plot_data <- plot_data %>% arrange(x)
+
+if(class(plot_data$x) != 'numeric'){
+  plot_data$x <- 1:nrow(plot_data)
+}
+
+p1 = ggplot(plot_data, aes(x = x, y = gm_1_sum)) +
+  # geom_point() +
+  geom_smooth(method = "gam", se = FALSE)
+
+p2 = ggplot(plot_data, aes(x = x, y = gm_2_sum)) +
+  # geom_point() +
+  geom_smooth(method = "gam", se = FALSE)
+
+p3 = ggplot(plot_data, aes(x = x, y = gm_product)) +
+  # geom_point() +
+  geom_smooth(method = "gam", se = FALSE)
+
+
+p1/p2/p3
+
+
+
+
+
+
+
+# # Set gene module order
+# stage_order <- c("hh4", "hh5", "hh6", "hh7", "ss4", "ss8")
+# scHelper_cell_type_order <- c('extra_embryonic', 'early_non_neural', 'non_neural', 'early_NNE', 'early_PPR', 'early_aPPR', 'aPPR', 'iPPR',
+#                               'early_pPPR', 'pPPR', 'early_border', 'early_NPB', 'NPB', 'early_pNPB', 'pNPB', 'early_aNPB', 'aNPB', 'early_neural',
+#                               'early_neural_plate', 'early_caudal_neural', 'neural_progenitors', 'a_neural_progenitors', 'early_forebrain', 'forebrain',
+#                               'early_midbrain', 'midbrain', 'p_neural_progenitors', 'early_hindbrain', 'hindbrain', 'NC', 'delaminating_NC', 'node')
+# 
+# 
+# ### create cell_order object based on ordering from metadata
+# class_order = c('extra_embryonic', 'early_non_neural', 'non_neural', 'early_NNE', 'early_PPR', 'early_aPPR', 'aPPR', 'iPPR',
+#                 'early_pPPR', 'pPPR', 'early_border', 'early_NPB', 'NPB', 'early_aNPB', 'aNPB', 'early_pNPB', 'pNPB', 'NC',
+#                 'delaminating_NC', 'early_neural', 'early_neural_plate', 'early_caudal_neural', 'neural_progenitors', 'p_neural_progenitors',
+#                 'early_hindbrain', 'hindbrain', 'early_midbrain', 'midbrain', 'a_neural_progenitors', 'early_forebrain', 'forebrain', 'node')
+# seurat_data@meta.data$scHelper_cell_type <- factor(seurat_data@meta.data$scHelper_cell_type, levels = class_order)
+# col_ann <- seurat_data@meta.data[,metadata, drop=FALSE] %>% mutate_if(is.character, as.factor)
+# col_ann <- col_ann[do.call("order", c(col_ann[metadata], list(decreasing = FALSE))), , drop = FALSE]
+# cell_order = rownames(col_ann)
 
 ################################################################################################################################
 # function to extract gm counts, calculate aggregate gene expression and calculate coexpression as a product of those aggregates
