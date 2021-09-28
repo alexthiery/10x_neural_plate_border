@@ -28,14 +28,14 @@ dir.create(plot_path, recursive = T)
 dir.create(rds_path, recursive = T)
 
 metadata <- read.csv(list.files(data_path, pattern = "*.csv", full.names = TRUE))
-# metadata <- read.csv('./output/NF-downstream_analysis_stacas/filtered_seurat/cellrank/NF-scRNAseq_alignment_out_metadata.csv')
+metadata <- read.csv('./output/NF-downstream_analysis_stacas/filtered_seurat/cellrank/NF-scRNAseq_alignment_out_metadata.csv')
 
 seurat_data <- readRDS(list.files(data_path, pattern = "*.RDS", full.names = TRUE)[!list.files(data_path, pattern = "*.RDS") %>% grepl('antler', .)])
-# seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/filtered_seurat/seurat/state_classification/rds_files/contamination_cell_state_classification.RDS')
+seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/filtered_seurat/seurat/state_classification/rds_files/contamination_cell_state_classification.RDS')
 
 # load antler data
 antler_data <- readRDS(list.files(data_path, pattern = "antler_out.RDS", full.names = TRUE))
-# antler_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/hh6_splitstage_data/antler/stage_gene_modules/rds_files/antler_out.RDS')
+antler_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/hh5_splitstage_data/antler/stage_gene_modules/rds_files/antler_out.RDS')
 
 
 
@@ -64,8 +64,14 @@ multi_run <- ifelse(length(unique(seurat_data$run)) > 1, TRUE, FALSE)
 #####################################################################################################
 
 # access DE gene modules (batchfilt if there are multiple batches in the dataset)
-if(multi_run){gms <- antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content}else{gms <- antler_data$gene_modules$lists$unbiasedGMs_DE$content}
+if(is.null(antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt)){
+    gms <- antler_data$gene_modules$lists$unbiasedGMs_DE$content
+  }else{
+    gms <- antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content
+}
+
 if(is.null(names(gms))){names(gms) = paste0("GM: ", 1:length(gms))}
+
 
 # Set RNA to default assay for plotting expression data
 DefaultAssay(seurat_data) <- "RNA"
@@ -117,9 +123,12 @@ for(mod_name in names(gms)){
   seurat_data@meta.data[[mod_name]] <-  colMeans(GetAssayData(seurat_data, assay = 'RNA', slot = 'scale.data')[gms[[mod_name]],])
 }
 
-png(paste0(plot_path, 'gene_module_feature.png'), width = 25, height = 15, units='cm', res=200)
+ncol = ceiling((length(names(gms))+1)/8)+1
+nrow = ceiling((length(names(gms))+1)/ncol)
+
+png(paste0(plot_path, 'gene_module_feature.png'), width = ncol*10, height = nrow*10, units = "cm", res = 200)
 MultiFeaturePlot(seurat_object = seurat_data, gene_list = grep('GM', colnames(seurat_data@meta.data), value = TRUE), plot_stage = TRUE,
-                 stage_col = 'stage', plot_clusters = FALSE)
+                 stage_col = 'stage', plot_clusters = FALSE, n_col = ncol)
 graphics.off()
 
 

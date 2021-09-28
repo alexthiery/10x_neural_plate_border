@@ -166,7 +166,7 @@ if(meta_col == 'scHelper_cell_type'){
   scHelper_cell_type_order <- c('extra_embryonic', 'early_NNE', 'NNE', 'prospective_epidermis', 'PPR', 'aPPR',
                                 'pPPR', 'early_border', 'early_NPB', 'NPB', 'early_aNPB', 'aNPB', 'early_pNPB', 'pNPB', 'NC', 'delaminating_NC', 'early_neural',
                                 'early_neural_plate', 'early_caudal_neural', 'neural_progenitors', 'p_neural_progenitors', 'early_hindbrain', 'hindbrain', 
-                                'early_midbrain', 'midbrain', 'a_neural_progenitors', 'early_forebrain', 'forebrain', 'ventral_floorplate', 'streak', 'node')
+                                'early_midbrain', 'midbrain', 'a_neural_progenitors', 'early_forebrain', 'forebrain', 'a_ventral_floorplate', 'streak', 'node')
   
   scHelper_cell_type_order <- scHelper_cell_type_order[scHelper_cell_type_order %in% unique(seurat_data@meta.data[[meta_col]])]
   seurat_data@meta.data$scHelper_cell_type <- factor(seurat_data@meta.data$scHelper_cell_type, levels = scHelper_cell_type_order)
@@ -231,7 +231,7 @@ GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules 
                    fontsize = 15, fontsize_row = 10)
 graphics.off()
 
-png(paste0(plot_path, 'unbiasedGMs_DE.png'), height = min(c(150, round(ngene/8))), width = 75, units = 'cm', res = 600)
+png(paste0(plot_path, 'unbiasedGMs_DE.png'), height = min(c(150, ifelse(round(ngene/8) < 20, 20, round(ngene/8)))), width = 75, units = 'cm', res = 600)
 GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE$content,
                    show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
 graphics.off()
@@ -258,7 +258,7 @@ if(length(unique(seurat_data$run)) > 1){
                      show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
   graphics.off()
   
-  png(paste0(plot_path, 'unbiasedGMs_DE_batchfilt.png'), height = min(c(150, round(ngene/8))), width = 60, units = 'cm', res = 400)
+  png(paste0(plot_path, 'unbiasedGMs_DE_batchfilt.png'), height = min(c(150, ifelse(round(ngene/8) < 20, 20, round(ngene/8)))), width = 60, units = 'cm', res = 400)
   GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content,
                      show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
   graphics.off()
