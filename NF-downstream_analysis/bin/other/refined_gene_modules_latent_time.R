@@ -72,6 +72,7 @@ if(is.null(antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt)){
 
 if(is.null(names(gms))){names(gms) = paste0("GM: ", 1:length(gms))}
 
+
 # Set RNA to default assay for plotting expression data
 DefaultAssay(seurat_data) <- "RNA"
 
@@ -79,7 +80,7 @@ plot_data <- data.frame()
 for(mod_name in names(gms)){
   temp <- GetAssayData(seurat_data, assay = 'RNA', slot = 'scale.data')[gms[[mod_name]],]
   
-  temp <- merge(t(temp), seurat_data@meta.data[,c('latent_time', 'lineage_NC_probability', 'lineage_neural_probability', 'lineage_placodal_probability'), drop=FALSE], by=0)
+  temp <- merge(t(temp), seurat_data@meta.data[,c('latent_time', 'lineage_NC_probability', 'lineage_forebrain_probability', 'lineage_midbrain_probability', 'lineage_hindbrain_probability', 'lineage_aPPR_probability', 'lineage_pPPR_probability'), drop=FALSE], by=0)
   plot_data <- temp %>%
     column_to_rownames('Row.names') %>%
     pivot_longer(!c(latent_time, lineage_NC_probability, lineage_neural_probability, lineage_placodal_probability)) %>%

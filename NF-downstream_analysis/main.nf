@@ -15,8 +15,9 @@ Log
 if(params.debug) {log.info Headers.build_debug_param_summary(params, params.monochrome_logs)}
 
 def analysis_scripts                                = [:]
-analysis_scripts.gene_modules_latent_time           = file("$baseDir/bin/other/gene_modules_latent_time.R", checkIfExists: true)
 analysis_scripts.transfer_labels                    = file("$baseDir/bin/seurat/transfer_labels.R", checkIfExists: true)
+analysis_scripts.gene_modules_latent_time           = file("$baseDir/bin/other/gene_modules_latent_time.R", checkIfExists: true)
+analysis_scripts.refined_gene_modules_latent_time   = file("$baseDir/bin/other/refined_gene_modules_latent_time.R", checkIfExists: true)
 
 
 /*------------------------------------------------------------------------------------*/
@@ -116,14 +117,23 @@ include {SEURAT_TRANSFER_PROCESS as SEURAT_TRANSFER_FILTER_PROCESS} from "$baseD
                                                                                                                                             seurat_intersect_loom_options:          modules['transfer_subset_seurat_intersect_loom'],
                                                                                                                                             scvelo_run_options:                     modules['transfer_subset_scvelo_run'])
 
-include {SEURAT_TRANSFER_FULL_PROCESS} from "$baseDir/subworkflows/seurat_transfer_full_process/main"   addParams(                          gene_modules_options:                   modules['transfer_labels_gene_modules'],
+include {SEURAT_TRANSFER_FULL_PROCESS} from "$baseDir/subworkflows/seurat_transfer_full_process/main"                           addParams(  gene_modules_options:                   modules['transfer_labels_gene_modules'],
                                                                                                                                             seurat_h5ad_options:                    modules['seurat_h5ad'],
                                                                                                                                             seurat_intersect_loom_options:          modules['transfer_labels_seurat_intersect_loom'],
                                                                                                                                             scvelo_run_options:                     modules['transfer_labels_scvelo_run'],
                                                                                                                                             cellrank_run_options:                   modules['transfer_labels_cellrank_run'])
 
-include {R as GENE_MODULES_LATENT_TIME} from "$baseDir/modules/local/r/main"                            addParams(                          options:                                modules['gene_modules_latent_time'],
+include {SEURAT_TRANSFER_FULL_PROCESS as REFINED_FULL_PROCESS} from "$baseDir/subworkflows/seurat_transfer_full_process/main"   addParams(  gene_modules_options:                   modules['transfer_labels_gene_modules'],
+                                                                                                                                            seurat_h5ad_options:                    modules['seurat_h5ad'],
+                                                                                                                                            seurat_intersect_loom_options:          modules['transfer_labels_seurat_intersect_loom'],
+                                                                                                                                            scvelo_run_options:                     modules['transfer_labels_scvelo_run'],
+                                                                                                                                            cellrank_run_options:                   modules['refined_cellrank_run'])
+
+include {R as GENE_MODULES_LATENT_TIME} from "$baseDir/modules/local/r/main"                                                    addParams( options:                                modules['gene_modules_latent_time'],
                                                                                                                                             script:                                 analysis_scripts.gene_modules_latent_time )
+
+include {R as REFINED_GENE_MODULES_LATENT_TIME} from "$baseDir/modules/local/r/main"                                            addParams(  options:                                modules['refined_gene_modules_latent_time'],
+                                                                                                                                            script:                                 analysis_scripts.refined_gene_modules_latent_time )
 
 
 workflow {
@@ -202,8 +212,23 @@ workflow {
                                         .combine(ch_full_state_classification)
                                         .combine(ch_full_cellrank)
                                         .map{[[sample_id:it[0].sample_id.split("_")[0]+'_gm_latent_time'], [it[1], it[2], it[3]]]}
-
-    
     
     GENE_MODULES_LATENT_TIME( ch_full_latent_time.concat(ch_stage_latent_time) )
+
+
+
+
+    // Run cellrank and gm dynamics with refined terminal states
+    REFINED_FULL_PROCESS( TRANSFER_LABELS.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
+
+    ch_transfer_state_classification    = TRANSFER_LABELS.out.map{it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]}
+    ch_transfer_cellrank                = REFINED_FULL_PROCESS.out.cellrank_run_out_metadata.map{it[1]}
+
+    ch_transfer_latent_time             = REFINED_FULL_PROCESS.out.gene_modules_out
+                                        .map{it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]}
+                                        .combine(ch_transfer_state_classification)
+                                        .combine(ch_transfer_cellrank)
+                                        .map{[[sample_id:'refined_gm_latent_time'], it]}
+
+    REFINED_GENE_MODULES_LATENT_TIME( ch_transfer_latent_time )
 }

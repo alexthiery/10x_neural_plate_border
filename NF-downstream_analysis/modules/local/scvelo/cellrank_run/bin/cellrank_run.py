@@ -74,6 +74,16 @@ def transferLabelTerminalStates(adata, estimator):
     cr.pl.terminal_states(adata, save='terminal_states.pdf')
     return(estimator)
 
+def refinedTerminalStates(adata, estimator):
+    estimator.set_terminal_states({"forebrain": adata[adata.obs["scHelper_cell_type"].isin(["forebrain"]) & adata.obs["stage"].isin(['ss8', 'ss4'])].obs_names,
+                  "midbrain": adata[adata.obs["scHelper_cell_type"].isin(['midbrain']) & adata.obs["stage"].isin(['ss8', 'ss4'])].obs_names,
+                  "hindbrain": adata[adata.obs["scHelper_cell_type"].isin(['hindbrain']) & adata.obs["stage"].isin(['ss8', 'ss4'])].obs_names,
+                  "NC": adata[adata.obs["scHelper_cell_type"].isin(['delaminating_NC']) & adata.obs["stage"].isin(['ss8', 'ss4'])].obs_names,
+                  "aPPR": adata[adata.obs["scHelper_cell_type"].isin(['aPPR']) & adata.obs["stage"].isin(['ss8', 'ss4'])].obs_names,
+                  "pPPR": adata[adata.obs["scHelper_cell_type"].isin(['pPPR']) & adata.obs["stage"].isin(['ss8', 'ss4'])].obs_names})
+    cr.pl.terminal_states(adata, save='terminal_states.pdf')
+    return(estimator)
+
 def write_lineage_probs(adata):
     for lineage in adata.obsm['to_terminal_states'].names:
         colname = 'lineage_' + lineage + '_probability'
@@ -108,6 +118,8 @@ def main(args=None):
         g = allDataTerminalStates(adata, g)
     elif args.dataType == 'labelTransfer':
         g = transferLabelTerminalStates(adata, g)
+    elif args.dataType == 'refined':
+        g = refinedTerminalStates(adata, g)
         
     g.compute_absorption_probabilities()
     cr.pl.lineages(adata, same_plot=False, save='absorption_probabilities.pdf')
