@@ -192,8 +192,8 @@ workflow {
     ch_full_gene_modules            = SEURAT_FILTERED_PROCESS.out.gene_modules_out.map{it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]}
     ch_full_cellrank                = SEURAT_FILTERED_PROCESS.out.cellrank_run_out_metadata.map{it[1]}
 
-    ch_ss8_gene_modules             = SEURAT_STAGE_PROCESS.out.gene_modules_out.ch_test.filter({it[0].sample_id == 'ss8'}).map{it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]}
-    ch_hh7_gene_modules             = SEURAT_STAGE_PROCESS.out.gene_modules_out.ch_test.filter({it[0].sample_id == 'hh7'}).map{it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]}
+    ch_ss8_gene_modules             = SEURAT_STAGE_PROCESS.out.gene_modules_out.filter({it[0].sample_id == 'ss8'}).map{it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]}
+    ch_hh7_gene_modules             = SEURAT_STAGE_PROCESS.out.gene_modules_out.filter({it[0].sample_id == 'hh7'}).map{it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]}
     
     ch_full_latent_time             = ch_full_state_classification.combine(ch_full_gene_modules).combine(ch_full_cellrank).map{[[sample_id:'full_gm_latent_time'], it]}.view()
     ch_ss8_latent_time              = ch_full_state_classification.combine(ch_ss8_gene_modules).combine(ch_full_cellrank).map{[[sample_id:'ss8_gm_latent_time'], it]}.view()
