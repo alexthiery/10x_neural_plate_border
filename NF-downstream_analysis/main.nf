@@ -197,7 +197,10 @@ workflow {
     
     // ch_full_latent_time             = ch_full_state_classification.combine(ch_full_gene_modules).combine(ch_full_cellrank).map{[[sample_id:'full_gm_latent_time'], it]}
 
-    ch_stage_latent_time            = SEURAT_STAGE_PROCESS.out.gene_modules_out.combine(ch_full_state_classification).combine(ch_full_cellrank)
+    ch_stage_latent_time            = SEURAT_STAGE_PROCESS.out.gene_modules_out
+                                        .map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]}
+                                        .combine(ch_full_state_classification)
+                                        .combine(ch_full_cellrank)
 
     ch_stage_latent_time.view()
 
