@@ -169,7 +169,7 @@ workflow {
     SEURAT_NPB_PROCESS( SEURAT_FILTERED_PROCESS.out.state_classification_out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
     SEURAT_PLACODAL1_PROCESS( SEURAT_FILTERED_PROCESS.out.state_classification_out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
     SEURAT_PLACODAL2_PROCESS( SEURAT_FILTERED_PROCESS.out.state_classification_out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
-    SEURAT_FILTER_CONTAM_PROCESS( SEURAT_FILTERED_PROCESS.out.state_classification_out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
+    // SEURAT_FILTER_CONTAM_PROCESS( SEURAT_FILTERED_PROCESS.out.state_classification_out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
 
     // Collect rds files from all stages
     ch_combined = SEURAT_STAGE_PROCESS.out.state_classification_out
@@ -187,6 +187,17 @@ workflow {
 
     SEURAT_TRANSFER_FULL_PROCESS( TRANSFER_LABELS.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
     
+
+    ch_full_state_classification    = SEURAT_FILTERED_PROCESS.out.state_classification_out.map{it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]}
+    ch_full_gene_modules            = SEURAT_FILTERED_PROCESS.out.gene_modules_out.map{it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]}
+    ch_full_cellrank                = SEURAT_FILTERED_PROCESS.out.cellrank_run_out_metadata.map{it[1]}
+
+    ch_full_state_classification.view()
+    ch_full_gene_modules.view()
+    ch_full_cellrank.view()
+
+// ch_a.concat(ch_b).concat(ch_c).map{it[1]}.collect().map{[[sample_id:'test'], row]}.view()
+
 
     // // Run gene module analysis across latent time
     // ch_cluster_rds              = ch_seurat_concat.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
