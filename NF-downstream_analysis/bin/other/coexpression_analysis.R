@@ -7,19 +7,69 @@ library(Antler)
 library(RColorBrewer)
 library(scHelper)
 
+# Set paths and load data
+plot_path = "./plots/"
+rds_path = "./rds_files/"
+data_path = "./input/"
+ncores = opt$cores
 
-## Set paths ( this will need to be generalised )
-plot_path = "./Eva_working/HH6/plots/"
-rds_path = "./Eva_working/HH6/rds_files/"
-antler_path = "./Eva_working/HH6/antler_data/"
+dir.create(plot_path, recursive = T)
+dir.create(rds_path, recursive = T)
 
-## read in seurat object and antler data (will need to set correct names/paths)
-seurat_data <- readRDS(paste0(rds_path, "hh6_cell_state_classification.RDS"))
+metadata <- read.csv(list.files(data_path, pattern = "*.csv", full.names = TRUE))
+# metadata <- read.csv('./output/NF-downstream_analysis_stacas/filtered_seurat/cellrank/NF-scRNAseq_alignment_out_metadata.csv')
+
+seurat_data <- readRDS(list.files(data_path, pattern = "*.RDS", full.names = TRUE)[!list.files(data_path, pattern = "*.RDS") %>% grepl('antler', .)])
+# seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/filtered_seurat/seurat/state_classification/rds_files/contamination_cell_state_classification.RDS')
+
+# load antler data
+antler_data <- readRDS(list.files(data_path, pattern = "antler_out.RDS", full.names = TRUE))
+# antler_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/hh5_splitstage_data/antler/stage_gene_modules/rds_files/antler_out.RDS')
+
+
+
+metadata$CellID <- paste0(metadata$CellID, "-1")
+
+# Rename cellIDs to match seurat data based on string match
+new_names <- unlist(lapply(metadata$CellID, function(x) rownames(seurat_data@meta.data)[grep(x, rownames(seurat_data@meta.data))]))
+
+if(length(new_names) != nrow(metadata) | length(new_names) != nrow(seurat_data@meta.data)){stop('cell IDs differ between scvelo metadata and seurat object')}
+
+rownames(metadata) <- new_names
+metadata$CellID <- NULL
+
+# re-order metadata rows based on seurat metadata order
+metadata <- metadata[ order(match(rownames(metadata), rownames(seurat_data@meta.data))), ]
+
+# replace seurat metadata with scvelo metadata
+seurat_data@meta.data <- metadata
+
+# set boolean for whether dataset contains multiple batches
+multi_run <- ifelse(length(unique(seurat_data$run)) > 1, TRUE, FALSE)
+
+
+#####################################################################################################
+#                           calculate module scores                   #
+#####################################################################################################
+# access DE gene modules (batchfilt if there are multiple batches in the dataset)
+if(is.null(antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt)){
+  gms <- antler_data$gene_modules$lists$unbiasedGMs_DE$content
+}else{
+  gms <- antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content
+}
+
+if(is.null(names(gms))){names(gms) = paste0("GM: ", 1:length(gms))}
+
+
+# Set RNA to default assay for plotting expression data
 DefaultAssay(seurat_data) <- "RNA"
-antler_data <- readRDS(paste0(rds_path, "/antler_out.RDS"))
 
-# set metadata for ordering (make generalisable?)
-metadata <- c("scHelper_cell_type", "run")
+# Set gene module order
+stage_order <- c("hh4", "hh5", "hh6", "hh7", "ss4", "ss8")
+scHelper_cell_type_order <- c('extra_embryonic', 'early_non_neural', 'non_neural', 'early_NNE', 'early_PPR', 'early_aPPR', 'aPPR', 'iPPR',
+                              'early_pPPR', 'pPPR', 'early_border', 'early_NPB', 'NPB', 'early_pNPB', 'pNPB', 'early_aNPB', 'aNPB', 'early_neural',
+                              'early_neural_plate', 'early_caudal_neural', 'neural_progenitors', 'a_neural_progenitors', 'early_forebrain', 'forebrain',
+                              'early_midbrain', 'midbrain', 'p_neural_progenitors', 'early_hindbrain', 'hindbrain', 'NC', 'delaminating_NC', 'node')
 
 
 ### create cell_order object based on ordering from metadata
