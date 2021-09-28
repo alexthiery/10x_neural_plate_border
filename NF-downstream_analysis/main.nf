@@ -122,8 +122,8 @@ include {SEURAT_TRANSFER_FULL_PROCESS} from "$baseDir/subworkflows/seurat_transf
                                                                                                                                             scvelo_run_options:                     modules['transfer_labels_scvelo_run'],
                                                                                                                                             cellrank_run_options:                   modules['transfer_labels_cellrank_run'])
 
-// include {R as GENE_MODULES_LATENT_TIME} from "$baseDir/modules/local/r/main"                    addParams(  options:                                modules['gene_modules_latent_time'],
-//                                                                                                             script:                                 analysis_scripts.gene_modules_latent_time )
+include {R as GENE_MODULES_LATENT_TIME} from "$baseDir/modules/local/r/main"                            addParams(                          options:                                modules['gene_modules_latent_time'],
+                                                                                                                                            script:                                 analysis_scripts.gene_modules_latent_time )
 
 
 workflow {
@@ -203,23 +203,7 @@ workflow {
                                         .combine(ch_full_cellrank)
                                         .map{[[sample_id:it[0].sample_id.split("_")[0]+'_gm_latent_time'], [it[1], it[2], it[3]]]}
 
-    ch_full_latent_time.concat(ch_stage_latent_time).view()
-
-
-    // ch_ss8_latent_time              = ch_full_state_classification.combine(ch_ss8_gene_modules).combine(ch_full_cellrank).map{[[sample_id:'ss8_gm_latent_time'], it]}
-    // ch_hh7_latent_time              = ch_full_state_classification.combine(ch_hh7_gene_modules).combine(ch_full_cellrank).map{[[sample_id:'hh7_gm_latent_time'], it]}
-
-    // ch_full_latent_time.concat(ch_ss8_latent_time).concat(ch_hh7_latent_time).view()
-
-
-// ch_a.concat(ch_b).concat(ch_c).map{it[1]}.collect().map{[[sample_id:'test'], row]}.view()
-
-
-    // // Run gene module analysis across latent time
-    // ch_cluster_rds              = ch_seurat_concat.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
-    // ch_gene_modules_rds         = ch_gene_modules_concat.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
-    // ch_gene_module_latent_time  = ch_cluster_rds.combine(ch_gene_modules_rds, by: 0).combine(SEURAT_SCVELO.out.scvelo_run_out_metadata, by: 0)
-    // ch_gene_module_latent_time  = ch_gene_module_latent_time.map{[it[0], [it[1], it[2], it[3]]]}
     
-    // GENE_MODULES_LATENT_TIME( ch_gene_module_latent_time )
+    
+    GENE_MODULES_LATENT_TIME( ch_full_latent_time.concat(ch_stage_latent_time) )
 }
