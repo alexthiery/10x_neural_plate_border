@@ -132,22 +132,6 @@ if(length(unique(seurat_data$run)) > 1){
   antler_data$gene_modules$set(name= "unbiasedGMs_DE_batchfilt", content = gms)
 }
 
-########## Write GMs ##############
-export_antler_modules <- function(antler_object, publish_dir, names_list){
-  for(gm_list in names_list){
-    mods = antler_data$gene_modules$lists[[gm_list]]$content
-    for (i in seq(length(mods))) {
-      modname = base::names(mods)[i]
-      if (is.null(modname)) {
-        modname = paste0("GM: ", i)
-      }
-      write(paste0(modname, "; ", paste0(mods[[i]], collapse = ", ")), file = paste0(publish_dir, '/', gm_list, '.txt'), append = TRUE)
-    }
-  }
-}
-
-export_antler_modules(antler_data, publish_dir = gm_path, names_list = c('unbiasedGMs', 'unbiasedGMs_DE', 'unbiasedGMs_DE_batchfilt'))
-
 
 ########################################################################################################################################################
 ##################################################   Setting metadata and ordering cells for heatmaps:   ################################################
@@ -200,7 +184,7 @@ if(sum(labels %in% metadata) !=0){
 
 # Order gms
 if (!is.null(metadata_1)){
-  antler_data$gene_modules$lists$unbiasedGMs$contentt <- GMOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$unbiasedGMs$content,
+  antler_data$gene_modules$lists$unbiasedGMs$contentt <- GeneModuleOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$unbiasedGMs$content,
                                                                    metadata_1 = metadata_1, order_1 = order_1,
                                                                    metadata_2 = metadata_2, order_2 = order_2,
                                                                    plot_path = "scHelper_log/GM_classification/unbiasedGMs/")
@@ -216,10 +200,10 @@ graphics.off()
 
 # Order gms
 if (!is.null(metadata_1)){
-  antler_data$gene_modules$lists$unbiasedGMs_DE$content <- GMOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE$content,
+  antler_data$gene_modules$lists$unbiasedGMs_DE$content <- GeneModuleOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE$content,
                          metadata_1 = metadata_1, order_1 = order_1,
                          metadata_2 = metadata_2, order_2 = order_2,
-                         plot_path = "scHelper_log/GM_classification/unbiasedGMs_DE/")
+                         rename_modules = metadata_2, plot_path = "scHelper_log/GM_classification/unbiasedGMs_DE/")
 }
 
 ngene = length(unlist(antler_data$gene_modules$lists$unbiasedGMs_DE$content))
@@ -246,10 +230,10 @@ if(length(unique(seurat_data$run)) > 1){
   
   # Order gms
   if (metadata_1 %in% c("stage", "scHelper_cell_type", "seurat_clusters")){
-    antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content <- GMOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content,
+    antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content <- GeneModuleOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content,
                            metadata_1 = metadata_1, order_1 = order_1,
                            metadata_2 = metadata_2, order_2 = order_2,
-                           plot_path = "scHelper_log/GM_classification/unbiasedGMs_DE_batchfilt/")
+                           rename_modules = metadata_2, plot_path = "scHelper_log/GM_classification/unbiasedGMs_DE_batchfilt/")
   }
   
   # Plot heatmaps
@@ -263,6 +247,23 @@ if(length(unique(seurat_data$run)) > 1){
                      show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
   graphics.off()
 }
+
+
+########## Write GMs ##############
+export_antler_modules <- function(antler_object, publish_dir, names_list){
+  for(gm_list in names_list){
+    mods = antler_data$gene_modules$lists[[gm_list]]$content
+    for (i in seq(length(mods))) {
+      modname = base::names(mods)[i]
+      if (is.null(modname)) {
+        modname = paste0("GM: ", i)
+      }
+      write(paste0(modname, "; ", paste0(mods[[i]], collapse = ", ")), file = paste0(publish_dir, '/', gm_list, '.txt'), append = TRUE)
+    }
+  }
+}
+
+export_antler_modules(antler_data, publish_dir = gm_path, names_list = c('unbiasedGMs', 'unbiasedGMs_DE', 'unbiasedGMs_DE_batchfilt'))
 
 ########## Save Antler object ##############
 saveRDS(antler_data, paste0(rds_path, 'antler_out.RDS'))
