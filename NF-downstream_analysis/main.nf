@@ -15,8 +15,9 @@ Log
 if(params.debug) {log.info Headers.build_debug_param_summary(params, params.monochrome_logs)}
 
 def analysis_scripts                                = [:]
-analysis_scripts.gene_modules_latent_time           = file("$baseDir/bin/other/gene_modules_latent_time.R", checkIfExists: true)
 analysis_scripts.transfer_labels                    = file("$baseDir/bin/seurat/transfer_labels.R", checkIfExists: true)
+analysis_scripts.gene_modules_latent_time           = file("$baseDir/bin/other/gene_modules_latent_time.R", checkIfExists: true)
+analysis_scripts.refined_gene_modules_latent_time   = file("$baseDir/bin/other/refined_gene_modules_latent_time.R", checkIfExists: true)
 
 
 /*------------------------------------------------------------------------------------*/
@@ -62,6 +63,15 @@ include {SEURAT_SPLIT_PROCESS as SEURAT_RUN_PROCESS} from "$baseDir/subworkflows
                                                                                                                                             scvelo_run_options:                     modules['run_scvelo_run'])
 
 include {SEURAT_SUBSET_PROCESS as SEURAT_NPB_PROCESS} from "$baseDir/subworkflows/seurat_subset_process/main"                   addParams(  subset_options:                         modules['npb_subset'],
+                                                                                                                                            cluster_options:                        modules['clusters_cluster'],
+                                                                                                                                            gene_modules_options:                   modules['clusters_gene_modules'],
+                                                                                                                                            state_classification_options:           modules['clusters_state_classification'],
+                                                                                                                                            phate_options:                          modules['clusters_phate'],
+                                                                                                                                            seurat_h5ad_options:                    modules['seurat_h5ad'],
+                                                                                                                                            seurat_intersect_loom_options:          modules['clusters_seurat_intersect_loom'],
+                                                                                                                                            scvelo_run_options:                     modules['clusters_scvelo_run'])
+
+include {SEURAT_SUBSET_PROCESS as SEURAT_LATE_STAGE_PROCESS} from "$baseDir/subworkflows/seurat_subset_process/main"            addParams(  subset_options:                         modules['late_stage_subset'],
                                                                                                                                             cluster_options:                        modules['clusters_cluster'],
                                                                                                                                             gene_modules_options:                   modules['clusters_gene_modules'],
                                                                                                                                             state_classification_options:           modules['clusters_state_classification'],
@@ -116,14 +126,23 @@ include {SEURAT_TRANSFER_PROCESS as SEURAT_TRANSFER_FILTER_PROCESS} from "$baseD
                                                                                                                                             seurat_intersect_loom_options:          modules['transfer_subset_seurat_intersect_loom'],
                                                                                                                                             scvelo_run_options:                     modules['transfer_subset_scvelo_run'])
 
-include {SEURAT_TRANSFER_FULL_PROCESS} from "$baseDir/subworkflows/seurat_transfer_full_process/main"   addParams(                          gene_modules_options:                   modules['transfer_labels_gene_modules'],
+include {SEURAT_TRANSFER_FULL_PROCESS} from "$baseDir/subworkflows/seurat_transfer_full_process/main"                           addParams(  gene_modules_options:                   modules['transfer_labels_gene_modules'],
                                                                                                                                             seurat_h5ad_options:                    modules['seurat_h5ad'],
                                                                                                                                             seurat_intersect_loom_options:          modules['transfer_labels_seurat_intersect_loom'],
                                                                                                                                             scvelo_run_options:                     modules['transfer_labels_scvelo_run'],
                                                                                                                                             cellrank_run_options:                   modules['transfer_labels_cellrank_run'])
 
-// include {R as GENE_MODULES_LATENT_TIME} from "$baseDir/modules/local/r/main"                    addParams(  options:                                modules['gene_modules_latent_time'],
-//                                                                                                             script:                                 analysis_scripts.gene_modules_latent_time )
+include {SEURAT_TRANSFER_FULL_PROCESS as REFINED_FULL_PROCESS} from "$baseDir/subworkflows/seurat_transfer_full_process/main"   addParams(  gene_modules_options:                   modules['transfer_labels_gene_modules'],
+                                                                                                                                            seurat_h5ad_options:                    modules['seurat_h5ad'],
+                                                                                                                                            seurat_intersect_loom_options:          modules['transfer_labels_seurat_intersect_loom'],
+                                                                                                                                            scvelo_run_options:                     modules['transfer_labels_scvelo_run'],
+                                                                                                                                            cellrank_run_options:                   modules['refined_cellrank_run'])
+
+include {R as GENE_MODULES_LATENT_TIME} from "$baseDir/modules/local/r/main"                                                    addParams( options:                                modules['gene_modules_latent_time'],
+                                                                                                                                            script:                                 analysis_scripts.gene_modules_latent_time )
+
+include {R as REFINED_GENE_MODULES_LATENT_TIME} from "$baseDir/modules/local/r/main"                                            addParams(  options:                                modules['refined_gene_modules_latent_time'],
+                                                                                                                                            script:                                 analysis_scripts.refined_gene_modules_latent_time )
 
 
 workflow {
@@ -167,9 +186,10 @@ workflow {
     /* Run analysis on cluster subsets
     --------------------------------------------------------------------------------------*/     
     SEURAT_NPB_PROCESS( SEURAT_FILTERED_PROCESS.out.state_classification_out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
+    SEURAT_LATE_STAGE_PROCESS( SEURAT_FILTERED_PROCESS.out.state_classification_out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
     SEURAT_PLACODAL1_PROCESS( SEURAT_FILTERED_PROCESS.out.state_classification_out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
     SEURAT_PLACODAL2_PROCESS( SEURAT_FILTERED_PROCESS.out.state_classification_out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
-    SEURAT_FILTER_CONTAM_PROCESS( SEURAT_FILTERED_PROCESS.out.state_classification_out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
+    // SEURAT_FILTER_CONTAM_PROCESS( SEURAT_FILTERED_PROCESS.out.state_classification_out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
 
     // Collect rds files from all stages
     ch_combined = SEURAT_STAGE_PROCESS.out.state_classification_out
@@ -188,11 +208,37 @@ workflow {
     SEURAT_TRANSFER_FULL_PROCESS( TRANSFER_LABELS.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
     
 
-    // // Run gene module analysis across latent time
-    // ch_cluster_rds              = ch_seurat_concat.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
-    // ch_gene_modules_rds         = ch_gene_modules_concat.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
-    // ch_gene_module_latent_time  = ch_cluster_rds.combine(ch_gene_modules_rds, by: 0).combine(SEURAT_SCVELO.out.scvelo_run_out_metadata, by: 0)
-    // ch_gene_module_latent_time  = ch_gene_module_latent_time.map{[it[0], [it[1], it[2], it[3]]]}
+    ch_full_state_classification    = SEURAT_FILTERED_PROCESS.out.state_classification_out.map{it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]}
+    ch_full_cellrank                = SEURAT_FILTERED_PROCESS.out.cellrank_run_out_metadata.map{it[1]}
+
+    ch_full_latent_time             = SEURAT_FILTERED_PROCESS.out.gene_modules_out
+                                        .map{it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]}
+                                        .combine(ch_full_state_classification)
+                                        .combine(ch_full_cellrank)
+                                        .map{[[sample_id:'full_gm_latent_time'], it]}
+
+    ch_stage_latent_time            = SEURAT_STAGE_PROCESS.out.gene_modules_out
+                                        .map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]}
+                                        .combine(ch_full_state_classification)
+                                        .combine(ch_full_cellrank)
+                                        .map{[[sample_id:it[0].sample_id.split("_")[0]+'_gm_latent_time'], [it[1], it[2], it[3]]]}
     
-    // GENE_MODULES_LATENT_TIME( ch_gene_module_latent_time )
+    GENE_MODULES_LATENT_TIME( ch_full_latent_time.concat(ch_stage_latent_time) )
+
+
+
+
+    // Run cellrank and gm dynamics with refined terminal states
+    REFINED_FULL_PROCESS( TRANSFER_LABELS.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
+
+    ch_transfer_state_classification    = TRANSFER_LABELS.out.map{it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]}
+    ch_transfer_cellrank                = REFINED_FULL_PROCESS.out.cellrank_run_out_metadata.map{it[1]}
+
+    ch_transfer_latent_time             = REFINED_FULL_PROCESS.out.gene_modules_out
+                                        .map{it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]}
+                                        .combine(ch_transfer_state_classification)
+                                        .combine(ch_transfer_cellrank)
+                                        .map{[[sample_id:'refined_gm_latent_time'], it]}
+
+    REFINED_GENE_MODULES_LATENT_TIME( ch_transfer_latent_time )
 }

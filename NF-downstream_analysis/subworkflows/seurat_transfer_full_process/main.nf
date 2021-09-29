@@ -63,8 +63,6 @@ workflow SEURAT_TRANSFER_FULL_PROCESS {
 
     emit:
     gene_modules_out                = GENE_MODULES.out                          //Channel: [[meta], [output]]
-
-    // scvelo_run_out_metadata         = SEURAT_SCVELO.out.scvelo_run_out_metadata     //Channel: [[meta], csv]
-    // scvelo_run_out_5had             = SEURAT_SCVELO.out .scvelo_run_out_h5ad        //Channel: [[meta], h5ad] 
+    cellrank_run_out_metadata       = CELLRANK_RUN.out.csv                      //Channel: [[meta], csv]
 }
 
