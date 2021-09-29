@@ -83,7 +83,7 @@ for(mod_name in names(gms)){
   temp <- merge(t(temp), seurat_data@meta.data[,c('latent_time', 'lineage_NC_probability', 'lineage_forebrain_probability', 'lineage_midbrain_probability', 'lineage_hindbrain_probability', 'lineage_aPPR_probability', 'lineage_pPPR_probability'), drop=FALSE], by=0)
   plot_data <- temp %>%
     column_to_rownames('Row.names') %>%
-    pivot_longer(!c(latent_time, lineage_NC_probability, lineage_forebrain_probability, lineage_midbrain_probability, lineage_hindbrain_probability, lineage_aPPR_probability)) %>%
+    pivot_longer(!c(latent_time, lineage_NC_probability, lineage_forebrain_probability, lineage_midbrain_probability, lineage_hindbrain_probability, lineage_aPPR_probability, lineage_pPPR_probability)) %>%
     rename(scaled_expression = value) %>%
     rename(gene = name) %>%
     pivot_longer(cols = !c(latent_time, gene, scaled_expression)) %>%
@@ -104,6 +104,17 @@ for(mod_name in names(gms)){
     theme_classic()
   
   png(paste0(plot_path, mod_name, '_lineage_dynamics.png'), width = 25, height = 15, units='cm', res=200)
+  print(plot)
+  graphics.off()
+
+  plot = ggplot(filter(plot_data, module == mod_name), aes(x = latent_time, y = scaled_expression, color = lineage)) +
+    # scale_color_manual(values=colours[[mod_name]]) +
+    geom_smooth(method="gam", se=FALSE, mapping = aes(weight = value, group=lineage)) +
+    xlab("Latent time") + ylab("Scaled expression") +
+    # facet_wrap(~lineage, dir = 'v') +
+    theme_classic()
+  
+  png(paste0(plot_path, mod_name, '_lineage_dynamics_colour.png'), width = 25, height = 15, units='cm', res=200)
   print(plot)
   graphics.off()
   
