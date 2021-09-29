@@ -35,9 +35,7 @@ seurat_data <- readRDS(list.files(data_path, pattern = "*.RDS", full.names = TRU
 
 # load antler data
 antler_data <- readRDS(list.files(data_path, pattern = "antler_out.RDS", full.names = TRUE))
-# antler_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/hh5_splitstage_data/antler/stage_gene_modules/rds_files/antler_out.RDS')
-
-
+# antler_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss4_splitstage_data/antler/stage_gene_modules/rds_files/antler_out.RDS')
 
 metadata$CellID <- paste0(metadata$CellID, "-1")
 
@@ -45,7 +43,7 @@ metadata$CellID <- paste0(metadata$CellID, "-1")
 new_names <- unlist(lapply(metadata$CellID, function(x) rownames(seurat_data@meta.data)[grep(x, rownames(seurat_data@meta.data))]))
 
 if(length(new_names) != nrow(metadata) | length(new_names) != nrow(seurat_data@meta.data)){stop('cell IDs differ between scvelo metadata and seurat object')}
- 
+
 rownames(metadata) <- new_names
 metadata$CellID <- NULL
 
@@ -65,11 +63,12 @@ multi_run <- ifelse(length(unique(seurat_data$run)) > 1, TRUE, FALSE)
 
 # access DE gene modules (batchfilt if there are multiple batches in the dataset)
 if(is.null(antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt)){
-    gms <- antler_data$gene_modules$lists$unbiasedGMs_DE$content
-  }else{
-    gms <- antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content
+  gms <- antler_data$gene_modules$lists$unbiasedGMs_DE$content
+}else{
+  gms <- antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content
 }
 
+# names(gms) <- c(paste(rep('neural', 4), 1:4, sep = '-'), paste(rep('placodal', 6), 1:6, sep = '-'), paste(rep('NC', 3), 1:3, sep = '-'))
 if(is.null(names(gms))){names(gms) = paste0("GM: ", 1:length(gms))}
 
 # Set RNA to default assay for plotting expression data
@@ -94,6 +93,52 @@ for(mod_name in names(gms)){
 # set colours
 colours <- setNames(colorRampPalette(brewer.pal(9, "Paired"))(length(gms)), names(gms))
 
+# If gms have been renamed based on classification, split gm list based on classification and plot joint dynamics
+if(any(grepl('-', plot_data$module))){
+  
+  # Get module classification from module name
+  plot_data <- plot_data %>% mutate(mod_class = sub('*-.', '', module))
+  
+  # Iterate through module classifications and plot GM dynamics
+  for(class in unique(plot_data$mod_class)){
+    plot = ggplot(test %>% filter(mod_class == class), aes(x = latent_time, y = scaled_expression, group = module, colour = module)) +
+      scale_color_manual(values=colours[grep(class, names(gms))]) +
+      geom_smooth(method="gam", se=FALSE, mapping = aes(weight = value, group = module)) +
+      xlab("Latent time") + ylab("Scaled expression") +
+      facet_wrap(~lineage, dir = 'v') +
+      theme_classic()
+    
+    png(paste0(plot_path, class, '_multi_module_dynamics.png'), width = 15, height = 25, units='cm', res=200)
+    print(plot)
+    graphics.off()
+  }
+}
+
+
+
+parent_tissue = list('NC' = c('NC', 'temp'),
+                     'test2' = c('f', 'g'))
+
+
+scHelper_cell_type_order <- c('extra_embryonic', 'early_NNE', 'NNE', 'prospective_epidermis', 'PPR', 'aPPR',
+                              'pPPR', 'early_border', 'early_NPB', 'NPB', 'early_aNPB', 'aNPB', 'early_pNPB', 'pNPB', 'NC', 'delaminating_NC', 'early_neural',
+                              'early_neural_plate', 'early_caudal_neural', 'neural_progenitors', 'p_neural_progenitors', 'early_hindbrain', 'hindbrain', 
+                              'early_midbrain', 'midbrain', 'a_neural_progenitors', 'early_forebrain', 'forebrain', 'a_ventral_floorplate', 'streak', 'node')
+
+
+
+tissues = as.character(stack(parent_tissue)[,2])
+names(tissues) = as.character(stack(parent_tissue)[,1])
+
+plot_data = plot_data %>%
+  mutate(mod_class = sub('*-.', '', module)) %>%
+  group_by(mod_class) %>%
+  mutate(test = ifelse(mod_class %in% names(tissues), tissues[mod_class], mod_class))
+
+
+
+
+# Plot dynamics for each module individually
 for(mod_name in names(gms)){
   plot = ggplot(filter(plot_data, module == mod_name), aes(x = latent_time, y = scaled_expression, color = module)) +
     scale_color_manual(values=colours[[mod_name]]) +
