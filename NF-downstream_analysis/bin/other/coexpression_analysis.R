@@ -24,11 +24,11 @@ metadata <- read.csv(list.files(data_path, pattern = "*.csv", full.names = TRUE)
 # metadata <- read.csv('./output/NF-downstream_analysis_stacas/filtered_seurat/cellrank/NF-scRNAseq_alignment_out_metadata.csv')
 
 seurat_data <- readRDS(list.files(data_path, pattern = "*.RDS", full.names = TRUE)[!list.files(data_path, pattern = "*.RDS") %>% grepl('antler', .)])
-# seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/filtered_seurat/seurat/state_classification/rds_files/contamination_cell_state_classification.RDS')
+seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/clusters_subset/late_stage_subset/seurat/clusters_cluster/rds_files/late_clustered_data.RDS')
 
 # load antler data
 antler_data <- readRDS(list.files(data_path, pattern = "antler_out.RDS", full.names = TRUE))
-antler_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss8_splitstage_data/antler/stage_gene_modules/rds_files/antler_out.RDS')
+antler_data <- readRDS('./output/NF-downstream_analysis_stacas/clusters_subset/late_stage_subset/antler/clusters_gene_modules/rds_files/antler_out.RDS')
 
 
 
@@ -69,60 +69,95 @@ if(is.null(names(gms))){names(gms) = paste0("GM: ", 1:length(gms))}
 DefaultAssay(seurat_data) <- "RNA"
 
 
+coexpression = function(seurat_object, gm_1, gm_2){
 
+  x = seurat_object@meta.data[,'scHelper_cell_type']
+  
+  gm_1_sum <- t(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'data'))[,gm_1] %>% rowSums(.)
+  
+  # gm_1_sum = gm_1_sum/max(gm_1_sum)
+  
+  gm_2_sum <- t(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'data'))[,gm_2] %>% rowSums(.)
+  
+  # gm_2_sum = gm_2_sum/max(gm_2_sum)
+  
 
-
-
-
-
-seurat_sub <- subset(seurat_data, cells = rownames(seurat_data@meta.data)[seurat_data@meta.data[['stage']] == 'hh7'])
-
-
+  # gm_1 <- unlist(gms[gm_1])
+  # gm_1_sum <- t(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'data'))[,gm_1] %>% rowSums(.)
+  # 
+  # gm_2 <- unlist(gms[gm_2])
+  # gm_2_sum <- t(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'data'))[,gm_2] %>% rowSums(.)
+  
+  # gm_1_sum[gm_1_sum < 0] <- 0
+  # gm_2_sum[gm_2_sum < 0] <- 0
+  
+  gm_product <- gm_1_sum * gm_2_sum
+  plot_data <- data.frame(gm_1_sum = gm_1_sum, gm_2_sum = gm_2_sum, gm_product = gm_product, x = x)
+  
+  plot_data <- plot_data %>% mutate(ratio = gm_1_sum/(gm_1_sum + gm_2_sum)) %>% arrange(ratio)
+  
+  
+  # plot_data <- plot_data %>% arrange(x)
+  
+  if(class(plot_data$x) != 'numeric'){
+    plot_data$x <- 1:nrow(plot_data)
+  }
+  
+  p1 = ggplot(plot_data, aes(x = x, y = gm_1_sum)) +
+    # geom_point() +
+    geom_smooth(method = "gam", se = FALSE)
+  
+  p2 = ggplot(plot_data, aes(x = x, y = gm_2_sum)) +
+    # geom_point() +
+    geom_smooth(method = "gam", se = FALSE)
+  
+  p3 = ggplot(plot_data, aes(x = x, y = gm_product)) +
+    # geom_point() +
+    geom_smooth(method = "gam", se = FALSE)
+  
+  return(p1/p2/p3)
+}
 
 scHelper_cell_type_order <- c('extra_embryonic', 'early_NNE', 'NNE', 'prospective_epidermis', 'PPR', 'aPPR',
                               'pPPR', 'early_border', 'early_NPB', 'NPB', 'early_aNPB', 'aNPB', 'early_pNPB', 'pNPB', 'NC', 'delaminating_NC', 'early_neural',
-                              'early_neural_plate', 'early_caudal_neural', 'neural_progenitors', 'p_neural_progenitors', 'early_hindbrain', 'hindbrain', 
+                              'early_neural_plate', 'early_caudal_neural', 'neural_progenitors', 'p_neural_progenitors', 'early_hindbrain', 'hindbrain',
                               'early_midbrain', 'midbrain', 'a_neural_progenitors', 'early_forebrain', 'forebrain', 'a_ventral_floorplate', 'streak', 'node')
 
-scHelper_cell_type_order <- scHelper_cell_type_order[scHelper_cell_type_order %in% unique(seurat_sub@meta.data[['scHelper_cell_type']])]
-seurat_sub@meta.data$scHelper_cell_type <- factor(seurat_sub@meta.data$scHelper_cell_type, levels = scHelper_cell_type_order)
+
+# seurat_data <- subset(seurat_data, cells = rownames(seurat_data@meta.data)[seurat_data@meta.data[['scHelper_cell_type']] %in% c('aPPR', 'pPPR', 'aNPB', 'pNPB', 'NC')])
+
+seurat_data@meta.data$scHelper_cell_type <- factor(seurat_data@meta.data$scHelper_cell_type, levels = scHelper_cell_type_order)
+
+coexpression(seurat_data, gm_1 = unlist(gms['GM8']), gm_2 = unlist(gms['GM40']))
 
 
-x = seurat_sub@meta.data[,'scHelper_cell_type']
-
-gm_1 <- gms[['GM23']]
-gm_1_sum <- t(GetAssayData(object = seurat_sub, assay = 'RNA', slot = 'data'))[,gm_1] %>% rowSums(.)
-
-gm_2 <- gms[['GM8']]
-gm_2_sum <- t(GetAssayData(object = seurat_sub, assay = 'RNA', slot = 'data'))[,gm_2] %>% rowSums(.)
-
-gm_product <- gm_1_sum * gm_2_sum
-plot_data <- data.frame(gm_1_sum = gm_1_sum, gm_2_sum = gm_2_sum, gm_product = gm_product, x = x)
-
-plot_data <- plot_data %>% arrange(x)
-
-if(class(plot_data$x) != 'numeric'){
-  plot_data$x <- 1:nrow(plot_data)
-}
-
-p1 = ggplot(plot_data, aes(x = x, y = gm_1_sum)) +
-  # geom_point() +
-  geom_smooth(method = "gam", se = FALSE)
-
-p2 = ggplot(plot_data, aes(x = x, y = gm_2_sum)) +
-  # geom_point() +
-  geom_smooth(method = "gam", se = FALSE)
-
-p3 = ggplot(plot_data, aes(x = x, y = gm_product)) +
-  # geom_point() +
-  geom_smooth(method = "gam", se = FALSE)
+PPR = c("SIX1", "EYA2", "DLX3", "DLX5", "DLX6", "PRDM1")
+NC = c("PAX7", "MSX1", "MSX2", "ETS1", "ENSGALG00000030902", "FOXD3", "TFAP2B")
 
 
-p1/p2/p3
+MultiFeaturePlot(seurat_data, NC)
 
 
+coexpression(ss4_npb, gm_1 = PPR, gm_2 = NC)
+coexpression(ss8_npb, gm_1 = PPR, gm_2 = NC)
+
+test <- merge(ss4_npb, ss8_npb)
 
 
+coexpression(test, gm_1 = PPR, gm_2 = NC)
+
+
+ss4_npb <- subset(seurat_data, cells = rownames(seurat_data@meta.data)[seurat_data@meta.data[['stage']] == 'ss4'])
+ss4_npb <- subset(ss4_npb, cells = rownames(seurat_data@meta.data)[seurat_data@meta.data[['scHelper_cell_type']] %in% c('aPPR', 'pPPR', 'NC', 'delaminating_NC')])
+ss4_npb@meta.data$scHelper_cell_type <- factor(ss4_npb@meta.data$scHelper_cell_type, levels = scHelper_cell_type_order)
+
+coexpression(ss4_npb, gm_1 = unlist(gms['GM10']), gm_2 = unlist(gms['GM40']))
+
+ss8_npb <- subset(seurat_data, cells = rownames(seurat_data@meta.data)[seurat_data@meta.data[['stage']] == 'ss8'])
+ss8_npb <- subset(ss8_npb, cells = rownames(seurat_data@meta.data)[seurat_data@meta.data[['scHelper_cell_type']] %in% c('PPR', 'pPPR', 'NC', 'delaminating_NC')])
+ss8_npb@meta.data$scHelper_cell_type <- factor(ss8_npb@meta.data$scHelper_cell_type, levels = scHelper_cell_type_order)
+
+coexpression(ss8_npb, gm_1 = unlist(gms['GM8']), gm_2 = unlist(gms['GM1']))
 
 
 
