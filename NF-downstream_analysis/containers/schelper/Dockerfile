@@ -4,4 +4,4 @@ LABEL authors="alex.thiery@crick.ac.uk" \
       description="Docker image containing all requirements to run 10x downstream analysis in Seurat and scHelper"
 
 # Install scHelper
-RUN   R -e "devtools::install_github('alexthiery/scHelper@v0.1.8', dependencies = TRUE)"
+RUN   R -e "devtools::install_github('alexthiery/scHelper@v0.1.9', dependencies = TRUE)"
