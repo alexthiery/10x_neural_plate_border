@@ -61,40 +61,40 @@ seurat_data <- readRDS(list.files(data_path, full.names = TRUE))
 #                                      Cell state classification                                    #
 #######################################################################################
 
+cell_states = list(
+  extra_embryonic = c()
 
-extra_embryonic = c()
+  early_NNE = c()
+  NNE = c()
+  prospective_epidermis = c()
 
-early_NNE = c()
-NNE = c()
-prospective_epidermis = c()
+  PPR = c()
+  aPPR = c()
+  pPPR = c()
 
-PPR = c()
-aPPR = c()
-pPPR = c()
+  early_NPB = c()
+  NPB = c()
+  aNPB = c()
+  pNPB = c()
 
-early_NPB = c()
-NPB = c()
-aNPB = c()
-pNPB = c()
+  NC = c()
+  delaminating_NC = c()
 
-NC = c()
-delaminating_NC = c()
+  early_neural = c()
+  early_caudal_neural = c()
 
-early_neural = c()
-early_caudal_neural = c()
+  NP = c()
+  pNP = c()
+  iNP = c()
+  pNP = c()
+  hindbrain = c()
+  midbrain = c()
+  forebrain = c()
+  ventral_floorplate = c()
 
-neural_plate = c()
-posterior_neural_plate = c()
-intermediate_neural_plate = c()
-posterior_neural_plate = c()
-hindbrain = c()
-midbrain = c()
-forebrain = c()
-ventral_floorplate = c()
-
-node = c()
-streak = c()
-
+  node = c()
+  streak = c()
+)
 
 hh4_cell_type_markers = list(  node = c('EOMES', 'ADMP', 'CHRD', 'SHH', 'GNOT2', 'CNOT1', 'FOXA2'),#OTX2
                                streak = c('EOMES', 'TBX6', 'TBXT', 'GSC'),
