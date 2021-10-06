@@ -1,5 +1,5 @@
 ﻿,extra_embryonic,NNE,prospective_epidermis,PPR,aPPR,pPPR,early_NPB,NPB,aNPB,pNPB,NC,delaminating_NC,early_neural,early_caudal_neural,NP,pNP,iNP,aNP,hindbrain,midbrain,forebrain,ventral_floorplate,node,streak,evidence
-EOMES,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,Pernaute et al. 2010 - Dev Dyn
+EOMES,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,1,Pernaute et al. 2010 - Dev Dyn
 ADMP,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,Joubin and Stern. 1999
 CHRD,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,Chapman et al. 2002; Streit and Stern. 1999
 SHH,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,Pearse et al. 2001; Aglyamova and Agarwala 2007
@@ -42,7 +42,7 @@ MSX2,1,1,1,0,0,0,1,1,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,Trevers et al. 2021; Basch 
 ZIC1,0,0,0,0,0,0,1,1,1,1,1,0,1,0,1,0,0,1,0,0,1,0,0,0,Khudyakov and Bronner-Fraser 2009
 SIX1,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,Litsiou et al. 2005
 EYA2,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,Litsiou et al. 2005
-PAX6,0,0,0,1,1,0,0,1,1,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,﻿Bhattacharyya and Bronner-Fraser 2008
+PAX6,0,0,0,1,1,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,﻿Bhattacharyya and Bronner-Fraser 2008
 SOX9,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,McKeown et al. 2005
 PAX2,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,Streit 2002; Groves and Bronner-Fraser 2000
 SOX8,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,Betancur et al. 2011; McKeown et al. 2005
@@ -65,3 +65,4 @@ LMO4,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,Ferronha et al. 2013
 SOX10,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,McKeown et al. 2005
 NKX2-2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,Garcia-Campmany and Marti 2007
 SP5,0,0,0,0,0,1,1,1,0,1,1,0,0,1,1,1,1,0,1,1,0,0,0,0,Trevers thesis
+DLL1,0,0,0,0,1,0,0,0,1,0,0,0,0,1,0,0,0,0,0,1,0,0,0,1,Bailey et al. 2006; Tossell et al. 2011; Rodrigues et al. 2006; Hardy et al. 2011
