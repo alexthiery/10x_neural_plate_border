@@ -63,12 +63,11 @@ workflow SEURAT_FILTERED_PROCESS {
 
     main:
     // Run processes on full filtered dataset
-
-    ch_seurat_out = seurat_out
-                        .map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]}
-                        .combine(binary_knowledge_matrix) // Combine with binary knowledge matrix
-                        .map{ row -> [row[0], [row[1], row[2]]]}
-                        .set { ch_split_run }
+    seurat_out
+        .map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]}
+        .combine(binary_knowledge_matrix) // Combine with binary knowledge matrix
+        .map{ row -> [row[0], [row[1], row[2]]]}
+        .set { ch_seurat_out }
 
     SCATTERPLOT3D(ch_seurat_out)
     STATE_CLASSIFICATION( ch_seurat_out )
