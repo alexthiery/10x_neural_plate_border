@@ -59,8 +59,9 @@ workflow SEURAT_SPLIT_PROCESS {
     main:
     // Run Seurat pipeline
     SPLIT( seurat_out )
+    CLUSTER( SPLIT.out )
 
-    SPLIT.out
+    CLUSTER.out
         .map {row -> [row[0], row[1].findAll { it =~ ".*rds_files" }]}
         .flatMap {it[1][0].listFiles()}
         .map { row -> [[sample_id:row.name.replaceFirst(~/\.[^\.]+$/, '')], row] }
@@ -68,7 +69,6 @@ workflow SEURAT_SPLIT_PROCESS {
         .map{ row -> [row[0], [row[1], row[2]]]}
         .set { ch_split_run }                                                           //Channel: [[meta], rds_file]
 
-    CLUSTER( ch_split_run )
     STATE_CLASSIFICATION( CLUSTER.out )
     GENE_MODULES( STATE_CLASSIFICATION.out )
 
