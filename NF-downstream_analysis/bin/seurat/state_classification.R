@@ -54,7 +54,7 @@ opt = getopt(spec)
 # Retrieve seurat object label
 label <- sub('_.*', '', list.files(data_path))
 
-seurat_data <- readRDS(list.files(data_path, full.names = TRUE, pattern = '.csv'))
+seurat_data <- readRDS(list.files(data_path, full.names = TRUE, pattern = '*.RDS'))
 # seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/hh4_splitstage_data/seurat/stage_cluster/rds_files/hh4_clustered_data.RDS')
 # seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/hh5_splitstage_data/seurat/stage_cluster/rds_files/hh5_clustered_data.RDS')
 # seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/hh6_splitstage_data/seurat/stage_cluster/rds_files/hh6_clustered_data.RDS')
@@ -67,7 +67,7 @@ seurat_data <- readRDS(list.files(data_path, full.names = TRUE, pattern = '.csv'
 #######################################################################################
 # Convert knowledge matrix to gene list
 # cell_state_markers <- read.csv('./knowlege_matrices/temp_km.csv', row.names = 1) %>% select(!c(evidence, PPR, NP, NPB, iNP))
-cell_state_markers <- read.csv(list.files(data_path, full.names = TRUE, pattern = '.csv'), row.names = 1) %>% select(!c(evidence))
+cell_state_markers <- read.csv(list.files(data_path, full.names = TRUE, pattern = '*.csv'), row.names = 1) %>% select(!c(evidence))
 
 cell_state_markers <- apply(cell_state_markers, 2, function(x) rownames(cell_state_markers)[x > 0])
 
