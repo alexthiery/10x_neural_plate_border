@@ -145,6 +145,11 @@ include {R as REFINED_GENE_MODULES_LATENT_TIME} from "$baseDir/modules/local/r/m
                                                                                                                                             script:                                 analysis_scripts.refined_gene_modules_latent_time )
 
 
+// Set channel for binary knowledge matrix for cell state classification
+Channel
+    .fromPath("$baseDir/binary_knowledge_matrix.csv")
+    .set{ch_binary_knowledge_matrix}
+
 workflow {
     METADATA( params.input )
 
@@ -174,7 +179,8 @@ workflow {
     /*------------------------------------------------------------------------------------*/
     /* Run analysis on full filtered seurat object
     --------------------------------------------------------------------------------------*/
-    SEURAT_FILTERED_PROCESS( SEURAT_FILTERING.out.contamination_filt_out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
+
+    SEURAT_FILTERED_PROCESS( SEURAT_FILTERING.out.contamination_filt_out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]}, ch_binary_knowledge_matrix)
 
     /*------------------------------------------------------------------------------------*/
     /* Run analysis on stage and run split

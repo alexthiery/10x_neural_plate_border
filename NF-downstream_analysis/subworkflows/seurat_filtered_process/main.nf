@@ -56,14 +56,20 @@ Workflow
 
 workflow SEURAT_FILTERED_PROCESS {
     take:
-    seurat_out      //Channel: [[meta], [plot_dir, rds_dir]]
-    loom            //Channel: merged.loom
-    annotations     //Channel: seurat_annotations.csv
+    seurat_out              //Channel: [[meta], [plot_dir, rds_dir]]
+    loom                    //Channel: merged.loom
+    annotations             //Channel: seurat_annotations.csv
+    binary_knowledge_matrix //Channel: binary_knowledge_matrix.csv
 
     main:
     // Run processes on full filtered dataset
-    SCATTERPLOT3D(seurat_out)
-    STATE_CLASSIFICATION( seurat_out )
+    ch_seurat_out = seurat_out
+                        .map{it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]}
+                        .combine(binary_knowledge_matrix)
+                        .map{[[sample_id:'filtered_seurat'], it]}
+
+    SCATTERPLOT3D(ch_seurat_out)
+    STATE_CLASSIFICATION( ch_seurat_out )
     GENE_MODULES( STATE_CLASSIFICATION.out )
     PHATE( STATE_CLASSIFICATION.out )
 
