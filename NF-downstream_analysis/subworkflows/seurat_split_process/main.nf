@@ -69,10 +69,10 @@ workflow SEURAT_SPLIT_PROCESS {
     CLUSTER( ch_split_run )
 
     CLUSTER.out
-        .combine(binary_knowledge_matrix)
-        .map {[it[0], [it[1], it[2]]]}
-        .view()
-        .set { ch_state_classification }                                                           //Channel: [[meta], rds_file]
+        .map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]}
+        .combine(binary_knowledge_matrix) // Combine with binary knowledge matrix
+        .map{ row -> [row[0], [row[1], row[2]]]}
+        .set { ch_state_classification }    //Channel: [[meta], [rds_file, csv]]
 
     STATE_CLASSIFICATION( ch_state_classification )
     GENE_MODULES( STATE_CLASSIFICATION.out )
