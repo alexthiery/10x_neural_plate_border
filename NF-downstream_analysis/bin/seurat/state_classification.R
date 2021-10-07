@@ -35,7 +35,7 @@ opt = getopt(spec)
     
     plot_path = "./plots/"
     rds_path = "./rds_files/"
-    data_path = "./input/rds_files/"
+    data_path = "./input/"
     ncores = opt$cores
     
     # Multi-core when running from command line
@@ -54,7 +54,7 @@ opt = getopt(spec)
 # Retrieve seurat object label
 label <- sub('_.*', '', list.files(data_path))
 
-seurat_data <- readRDS(list.files(data_path, full.names = TRUE))
+seurat_data <- readRDS(list.files(data_path, full.names = TRUE, pattern = '.csv'))
 # seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/hh4_splitstage_data/seurat/stage_cluster/rds_files/hh4_clustered_data.RDS')
 # seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/hh5_splitstage_data/seurat/stage_cluster/rds_files/hh5_clustered_data.RDS')
 # seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/hh6_splitstage_data/seurat/stage_cluster/rds_files/hh6_clustered_data.RDS')
