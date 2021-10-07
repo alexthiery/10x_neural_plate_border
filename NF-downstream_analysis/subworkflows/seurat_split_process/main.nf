@@ -71,6 +71,7 @@ workflow SEURAT_SPLIT_PROCESS {
     CLUSTER.out
         .combine(binary_knowledge_matrix)
         .map {[it[0], [it[1], it[2]]]}
+        .view()
         .set { ch_state_classification }                                                           //Channel: [[meta], rds_file]
 
     STATE_CLASSIFICATION( ch_state_classification )
