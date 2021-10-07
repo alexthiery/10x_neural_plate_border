@@ -1,4 +1,4 @@
-﻿,extra_embryonic,NNE,prospective_epidermis,PPR,aPPR,pPPR,early_NPB,NPB,aNPB,pNPB,NC,delaminating_NC,early_neural,early_caudal_neural,NP,pNP,iNP,aNP,hindbrain,midbrain,forebrain,ventral_floorplate,node,streak,evidence
+﻿,extra_embryonic,NNE,prospective_epidermis,PPR,aPPR,pPPR,early_NPB,NPB,aNPB,pNPB,NC,delaminating_NC,early_neural,early_caudal_neural,NP,pNP,iNP,aNP,hindbrain,midbrain,forebrain,ventral_forebrain,node,streak,evidence
 EOMES,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,1,Pernaute et al. 2010 - Dev Dyn
 ADMP,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,Joubin and Stern. 1999
 CHRD,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,Chapman et al. 2002; Streit and Stern. 1999
@@ -8,7 +8,7 @@ NOG,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,Streit et al. 1999; Chapman 
 FGF8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,Streit et al. 1999
 TBX6,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,Hardy et al. 2011
 TBXT,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,Hardy et al. 2011; Albazerchi and Stern. 2007
-GSC,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,Chapman et al. 2002 - Dev Biol
+GSC,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,Chapman et al. 2002 - Dev Biol; Bell et al. 2004
 HOXB1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,1,1,Bothe et al. 2011; Paxton et al. 2010
 BMP4,0,1,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,Ezin et al. 2009; Chapman et al. 2002
 BMP7,0,1,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,Streit et al. 1998
@@ -74,3 +74,4 @@ BAMBI,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,Bell et al. 2004
 KRT7,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,Bell et al. 2004
 Z-RAX,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,﻿Ohuchi et al. 1999
 PITX2,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,Trevers thesis
+NKX2-1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,Bell et al. 2004
