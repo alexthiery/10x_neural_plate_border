@@ -51,9 +51,10 @@ Workflow
 
 workflow SEURAT_SPLIT_PROCESS {
     take:
-    seurat_out      //Channel: [[meta], [plot_dir, rds_dir]]
-    loom            //Channel: merged.loom
-    annotations     //Channel: seurat_annotations.csv
+    seurat_out              //Channel: [[meta], [plot_dir, rds_dir]]
+    loom                    //Channel: merged.loom
+    annotations             //Channel: seurat_annotations.csv
+    binary_knowledge_matrix //Channel: binary_knowledge_matrix.csv
 
     main:
     // Run Seurat pipeline
@@ -62,6 +63,7 @@ workflow SEURAT_SPLIT_PROCESS {
     SPLIT.out
         .map {row -> [row[0], row[1].findAll { it =~ ".*rds_files" }]}
         .flatMap {it[1][0].listFiles()}
+        .combine(binary_knowledge_matrix) // Combine with binary knowledge matrix
         .map { row -> [[sample_id:row.name.replaceFirst(~/\.[^\.]+$/, '')], row] }
         .set { ch_split_run }                                                           //Channel: [[meta], rds_file]
 

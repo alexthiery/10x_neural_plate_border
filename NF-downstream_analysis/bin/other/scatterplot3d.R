@@ -25,7 +25,7 @@ opt = getopt(spec)
     cat('pipeline running through Nextflow\n')
     
     plot_path = "./plots/"
-    data_path = "./input/rds_files/"
+    data_path = "./input/"
     
   } else {
     stop("--runtype must be set to 'nextflow'")
