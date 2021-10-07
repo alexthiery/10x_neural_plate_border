@@ -51,9 +51,10 @@ Workflow
 
 workflow SEURAT_SPLIT_PROCESS {
     take:
-    seurat_out      //Channel: [[meta], [plot_dir, rds_dir]]
-    loom            //Channel: merged.loom
-    annotations     //Channel: seurat_annotations.csv
+    seurat_out              //Channel: [[meta], [plot_dir, rds_dir]]
+    loom                    //Channel: merged.loom
+    annotations             //Channel: seurat_annotations.csv
+    binary_knowledge_matrix //Channel: binary_knowledge_matrix.csv
 
     main:
     // Run Seurat pipeline
@@ -66,7 +67,14 @@ workflow SEURAT_SPLIT_PROCESS {
         .set { ch_split_run }                                                           //Channel: [[meta], rds_file]
 
     CLUSTER( ch_split_run )
-    STATE_CLASSIFICATION( CLUSTER.out )
+
+    CLUSTER.out
+        .map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]}
+        .combine(binary_knowledge_matrix) // Combine with binary knowledge matrix
+        .map{ row -> [row[0], [row[1], row[2]]]}
+        .set { ch_state_classification }    //Channel: [[meta], [rds_file, csv]]
+
+    STATE_CLASSIFICATION( ch_state_classification )
     GENE_MODULES( STATE_CLASSIFICATION.out )
 
     // // Run scVelo
