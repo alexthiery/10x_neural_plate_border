@@ -59,17 +59,21 @@ workflow SEURAT_SPLIT_PROCESS {
     main:
     // Run Seurat pipeline
     SPLIT( seurat_out )
-    CLUSTER( SPLIT.out )
 
-    CLUSTER.out
+    SPLIT.out
         .map {row -> [row[0], row[1].findAll { it =~ ".*rds_files" }]}
         .flatMap {it[1][0].listFiles()}
         .map { row -> [[sample_id:row.name.replaceFirst(~/\.[^\.]+$/, '')], row] }
-        .combine(binary_knowledge_matrix) // Combine with binary knowledge matrix
-        .map{ row -> [row[0], [row[1], row[2]]]}
         .set { ch_split_run }                                                           //Channel: [[meta], rds_file]
 
-    STATE_CLASSIFICATION( CLUSTER.out )
+    CLUSTER( ch_split_run )
+
+    CLUSTER.out
+        .combine(binary_knowledge_matrix)
+        .map {[it[0], [it[1], it[2]]]}
+        .set { ch_state_classification }                                                           //Channel: [[meta], rds_file]
+
+    STATE_CLASSIFICATION( ch_state_classification )
     GENE_MODULES( STATE_CLASSIFICATION.out )
 
     // // Run scVelo
