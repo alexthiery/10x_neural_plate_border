@@ -147,7 +147,7 @@ include {R as REFINED_GENE_MODULES_LATENT_TIME} from "$baseDir/modules/local/r/m
 
 // Set channel for binary knowledge matrix for cell state classification
 Channel
-    .fromPath("$baseDir/binary_knowledge_matrix.csv")
+    .value("$baseDir/binary_knowledge_matrix.csv")
     .set{ch_binary_knowledge_matrix}
 
 workflow {
