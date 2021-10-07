@@ -63,8 +63,10 @@ workflow SEURAT_SPLIT_PROCESS {
     SPLIT.out
         .map {row -> [row[0], row[1].findAll { it =~ ".*rds_files" }]}
         .flatMap {it[1][0].listFiles()}
-        .combine(binary_knowledge_matrix) // Combine with binary knowledge matrix
         .map { row -> [[sample_id:row.name.replaceFirst(~/\.[^\.]+$/, '')], row] }
+        .combine(binary_knowledge_matrix) // Combine with binary knowledge matrix
+        .map{ row -> [row[0], [row[1], row[2]]]}
+        .view()
         .set { ch_split_run }                                                           //Channel: [[meta], rds_file]
 
     CLUSTER( ch_split_run )
