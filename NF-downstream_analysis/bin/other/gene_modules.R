@@ -16,6 +16,7 @@ option_list <- list(
   make_option(c("-r", "--runtype"), action = "store", type = "character", help = "Specify whether running through through 'nextflow' in order to switch paths"),
   make_option(c("-c", "--cores"), action = "store", type = "integer", help = "Number of CPUs"),
   make_option(c("-m", "--meta_col"), action = "store", type = "character", help = "Name of metadata column containing grouping information", default = 'scHelper_cell_type'),
+  make_option(c("-f", "--force_order"), action = "store", type = "character", help = "Comma separated values specifying metadata columns used for GeneModuleOrdering", default = 'sc,bd,xm'),
   make_option(c("", "--verbose"), action = "store_true", type = "logical", help = "Verbose", default = FALSE)
 )
 
@@ -28,11 +29,11 @@ if(opt$verbose) print(opt)
   if(length(commandArgs(trailingOnly = TRUE)) == 0){
     cat('No command line arguments provided, paths are set for running interactively in Rstudio server\n')
     
-    plot_path = "./output/NF-downstream_analysis_stacas/stage_split/hh6_splitstage_data/antler/stage_gene_modules/plots/"
-    rds_path = "./output/NF-downstream_analysis_stacas/stage_split/hh6_splitstage_data/antler/stage_gene_modules/rds_files/"
-    gm_path = "./output/NF-downstream_analysis_stacas/stage_split/hh6_splitstage_data/antler/stage_gene_modules/gene_module_lists/"
-    antler_path = "./output/NF-downstream_analysis_stacas/stage_split/hh6_splitstage_data/antler/stage_gene_modules/antler_data/"
-    data_path = "./output/NF-downstream_analysis_stacas/stage_split/hh6_splitstage_data/seurat/stage_state_classification/rds_files/"
+    plot_path = "./output/NF-downstream_analysis_stacas/clusters_subset/placodal1_subset/antler/gene_modules//plots/"
+    rds_path = "./output/NF-downstream_analysis_stacas/clusters_subset/placodal1_subset/antler/gene_modules/rds_files/"
+    gm_path = "./output/NF-downstream_analysis_stacas/clusters_subset/placodal1_subset/antler/gene_modules/gene_module_lists/"
+    antler_path = "./output/NF-downstream_analysis_stacas/clusters_subset/placodal1_subset/antler/gene_modules/antler_data/"
+    data_path = "./output/NF-downstream_analysis_stacas/clusters_subset/placodal1_subset/seurat/clusters_cluster/rds_files/"
     
     ncores = 8
     meta_col = 'scHelper_cell_type'
@@ -62,7 +63,6 @@ if(opt$verbose) print(opt)
   dir.create(gm_path, recursive = T)
   dir.create(antler_path, recursive = T)
 }
-
 seurat_data <- readRDS(list.files(data_path, full.names = TRUE))
 
 ########################################################################################################################################################
@@ -142,6 +142,9 @@ metadata <- if(length(unique(seurat_data@meta.data$stage)) == 1){meta_col
 metadata <- if(length(unique(seurat_data@meta.data$run)) == 1){metadata
 }else{c(metadata, "run")}
 
+# Allow manual setting of metadata using --force_order command line arg
+if(!is.null(opt$force_order)){metadata <- unlist(str_split(opt$force_order, pattern = ','))}
+
 ## Hard-coded orders for stage, clusters and cell types
 stage_order <- c("hh4", "hh5", "hh6", "hh7", "ss4", "ss8")
 seurat_clusters_order <- as.character(1:40)
@@ -181,6 +184,7 @@ if(sum(labels %in% metadata) !=0){
 
 ##########################################################################################
 # plot all gene modules (unbiasedGMs)
+
 
 # Order gms
 if (!is.null(metadata_1)){
