@@ -304,7 +304,7 @@ if(sum(labels %in% metadata) !=0){
 
 # Order gms
 if (!is.null(metadata_1)){
-  antler_data$gene_modules$lists$unbiasedGMs$content <- test(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$unbiasedGMs$content,
+  antler_data$gene_modules$lists$unbiasedGMs$content <- GeneModuleOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$unbiasedGMs$content,
                                                                    metadata_1 = metadata_1, order_1 = order_1,
                                                                    metadata_2 = metadata_2, order_2 = order_2,
                                                                    plot_path = "scHelper_log/GM_classification/unbiasedGMs/")
@@ -320,7 +320,7 @@ graphics.off()
 
 # Order gms
 if (!is.null(metadata_1)){
-  antler_data$gene_modules$lists$unbiasedGMs_DE$content <- test(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE$content,
+  antler_data$gene_modules$lists$unbiasedGMs_DE$content <- GeneModuleOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE$content,
                          metadata_1 = metadata_1, order_1 = order_1,
                          metadata_2 = metadata_2, order_2 = order_2,
                          rename_modules = metadata_2, plot_path = "scHelper_log/GM_classification/unbiasedGMs_DE/")
