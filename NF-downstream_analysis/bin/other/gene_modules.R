@@ -29,11 +29,11 @@ if(opt$verbose) print(opt)
   if(length(commandArgs(trailingOnly = TRUE)) == 0){
     cat('No command line arguments provided, paths are set for running interactively in Rstudio server\n')
     
-    plot_path = "./output/NF-downstream_analysis_stacas/clusters_subset/placodal1_subset/antler/gene_modules//plots/"
-    rds_path = "./output/NF-downstream_analysis_stacas/clusters_subset/placodal1_subset/antler/gene_modules/rds_files/"
-    gm_path = "./output/NF-downstream_analysis_stacas/clusters_subset/placodal1_subset/antler/gene_modules/gene_module_lists/"
-    antler_path = "./output/NF-downstream_analysis_stacas/clusters_subset/placodal1_subset/antler/gene_modules/antler_data/"
-    data_path = "./output/NF-downstream_analysis_stacas/clusters_subset/placodal1_subset/seurat/clusters_cluster/rds_files/"
+    plot_path = "./output/NF-downstream_analysis_stacas/run_split/1_splitrun_data/antler/plots/"
+    rds_path = "./output/NF-downstream_analysis_stacas/run_split/1_splitrun_data/antler/rds_files/"
+    gm_path = "./output/NF-downstream_analysis_stacas/run_split/1_splitrun_data/antler/gene_module_lists/"
+    antler_path = "./output/NF-downstream_analysis_stacas/run_split/1_splitrun_data/antler/antler_data/"
+    data_path = "./output/NF-downstream_analysis_stacas/run_split/1_splitrun_data/seurat/run_state_classification/rds_files/"
     
     ncores = 8
     meta_col = 'scHelper_cell_type'
@@ -64,6 +64,119 @@ if(opt$verbose) print(opt)
   dir.create(antler_path, recursive = T)
 }
 seurat_data <- readRDS(list.files(data_path, full.names = TRUE))
+
+
+########################################################################################################################################################
+# Temp function
+########################################################################################################################################################
+########################################################################################################################################################
+
+GeneModuleOrder <- function (seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE$content, 
+                             metadata_1 = NULL, order_1 = NULL, metadata_2 = NULL, order_2 = NULL, 
+                             rename_modules = NULL, plot_path = "scHelper_log/GM_classification/") 
+{
+  
+  # Set RNA to default assay for plotting expression data
+  DefaultAssay(seurat_obj) <- "RNA"
+  
+  # Classify and plot gms
+  classified_gms_1 <- lapply(gene_modules, function(x) t(GetAssayData(object = seurat_obj, assay = 'RNA', slot = 'scale.data'))[,x] %>% rowSums(.)) %>%
+    do.call('cbind', .) %>%
+    merge(., seurat_obj@meta.data[,metadata_1, drop=FALSE], by=0, all=TRUE)
+  
+  classified_gms_1 <- classified_gms_1 %>% column_to_rownames('Row.names') %>%
+    pivot_longer(cols = !(!!metadata_1)) %>%
+    group_by(name, !!sym(metadata_1))
+  
+  # Select top classification and order
+  classified_gms_1 <- classified_gms_1 %>%
+    summarise(value = mean(value), .groups = 'keep') %>%
+    group_by(name) %>%
+    filter(value == max(value)) %>%
+    ungroup() %>%
+    arrange(match(!!sym(metadata_1), order_1))
+  
+  # Rename the modules based on their classification
+  classified_gms_1 <- classified_gms_1 %>%
+    group_by(!!sym(metadata_1)) %>%
+    mutate(pos = 1:n()) %>%
+    mutate(new_name = paste(!!sym(metadata_1), pos, sep = "-")) %>%
+    dplyr::select(name, !!sym(metadata_1), new_name)
+  
+  if (is.null(metadata_2) || is.na(metadata_2) || is.nan(metadata_2)) {
+    print(paste0("Gene modules ordered only on ", metadata_1))
+    
+    ordered_gms <- gene_modules[order(match(names(gene_modules), classified_gms_1$name))]
+  }
+  else {
+    print(paste0("Gene modules ordered on ", metadata_1, 
+                 " AND ", metadata_2))
+    temp_seurat <- SplitObject(seurat_obj, split.by = metadata_1)
+    classified_gms_2 <- data.frame()
+    plots <- list()
+    for (i in order_1) {
+      print(i)
+      subset_gms <- gene_modules[classified_gms_1 %>% filter(!!sym(metadata_1) == i) %>% dplyr::pull(name)]
+      
+      if (length(subset_gms) != 0) {
+        
+        # Classify and plot gms
+        temp <- lapply(subset_gms, function(x) t(GetAssayData(object = seurat_obj, assay = 'RNA', slot = 'scale.data'))[,x] %>% rowSums(.)) %>%
+          do.call('cbind', .) %>%
+          merge(., seurat_obj@meta.data[,metadata_2, drop=FALSE], by=0, all=TRUE)
+        
+        temp <- temp %>% column_to_rownames('Row.names') %>%
+          pivot_longer(cols = !(!!metadata_2)) %>%
+          group_by(name, !!sym(metadata_2))
+        
+        # Select top classification and order
+        temp <- temp %>%
+          summarise(value = mean(value), .groups = 'keep') %>%
+          group_by(name) %>%
+          filter(value == max(value)) %>%
+          ungroup() %>%
+          arrange(match(!!sym(metadata_2), order_2))
+        
+        classified_gms_2 <- rbind(classified_gms_2, temp)
+      }
+      
+      # Rename the modules based on their classification
+      classified_gms_2 <- classified_gms_2 %>%
+        group_by(!!sym(metadata_2)) %>%
+        mutate(pos = 1:n()) %>%
+        mutate(new_name = paste(!!sym(metadata_2), pos, sep = "-")) %>%
+        dplyr::select(name, !!sym(metadata_2), new_name)
+      
+      ordered_gms <- gene_modules[order(match(names(gene_modules), classified_gms_2$name))]
+    }
+
+    if (!is.null(rename_modules)) {
+      if (rename_modules != metadata_1 && rename_modules != 
+          metadata_2) {
+        stop("rename_modules must be set as the value of metadata_1 or metadata_2")
+      }
+      else if (rename_modules == metadata_1) {
+        cat(paste("\nRenaming modules based on", metadata_1, 
+                  "classification\n\n"))
+        classified_gms <- classified_gms_1
+      }
+      else {
+        cat(paste("\nRenaming modules based on", metadata_2, 
+                  "classification\n\n"))
+        classified_gms <- classified_gms_2
+      }
+      
+      names(ordered_gms) <- classified_gms$new_name
+    }
+    return(ordered_gms)
+  }
+}
+
+########################################################################################################################################################
+########################################################################################################################################################
+########################################################################################################################################################
+
+
 
 ########################################################################################################################################################
 ##################################################   Calculating gene modules using Antler:   ##########################################################
@@ -150,12 +263,16 @@ stage_order <- c("hh4", "hh5", "hh6", "hh7", "ss4", "ss8")
 seurat_clusters_order <- as.character(1:40)
 
 if(meta_col == 'scHelper_cell_type'){
-  scHelper_cell_type_order <- c('extra_embryonic', 'early_NNE', 'NNE', 'prospective_epidermis', 'PPR', 'aPPR',
-                                'pPPR', 'early_border', 'early_NPB', 'NPB', 'early_aNPB', 'aNPB', 'early_pNPB', 'pNPB', 'NC', 'delaminating_NC', 'early_neural',
-                                'early_neural_plate', 'early_caudal_neural', 'neural_progenitors', 'p_neural_progenitors', 'early_hindbrain', 'hindbrain', 
-                                'early_midbrain', 'midbrain', 'a_neural_progenitors', 'early_forebrain', 'forebrain', 'a_ventral_floorplate', 'streak', 'node')
+  scHelper_cell_type_order <- c('extra_embryonic', 'NNE', 'prospective_epidermis', 'PPR', 'aPPR', 'pPPR', 'early_NPB', 'NPB',
+                                'aNPB', 'pNPB', 'NC', 'delaminating_NC', 'early_neural', 'early_caudal_neural', 'NP', 'pNP',
+                                'hindbrain', 'iNP', 'midbrain', 'aNP', 'forebrain', 'ventral_forebrain', 'node', 'streak')
   
   scHelper_cell_type_order <- scHelper_cell_type_order[scHelper_cell_type_order %in% unique(seurat_data@meta.data[[meta_col]])]
+  
+  if(!all(seurat_data@meta.data$scHelper_cell_type %in% scHelper_cell_type_order)){
+    stop('Check scHelper_cell_type_order. Cell types found within "seurat_data@meta.data$scHelper_cell_type" are missing from custom order vector')
+  }
+  
   seurat_data@meta.data$scHelper_cell_type <- factor(seurat_data@meta.data$scHelper_cell_type, levels = scHelper_cell_type_order)
 }
 
@@ -185,10 +302,9 @@ if(sum(labels %in% metadata) !=0){
 ##########################################################################################
 # plot all gene modules (unbiasedGMs)
 
-
 # Order gms
 if (!is.null(metadata_1)){
-  antler_data$gene_modules$lists$unbiasedGMs$contentt <- GeneModuleOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$unbiasedGMs$content,
+  antler_data$gene_modules$lists$unbiasedGMs$content <- test(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$unbiasedGMs$content,
                                                                    metadata_1 = metadata_1, order_1 = order_1,
                                                                    metadata_2 = metadata_2, order_2 = order_2,
                                                                    plot_path = "scHelper_log/GM_classification/unbiasedGMs/")
@@ -204,7 +320,7 @@ graphics.off()
 
 # Order gms
 if (!is.null(metadata_1)){
-  antler_data$gene_modules$lists$unbiasedGMs_DE$content <- GeneModuleOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE$content,
+  antler_data$gene_modules$lists$unbiasedGMs_DE$content <- test(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE$content,
                          metadata_1 = metadata_1, order_1 = order_1,
                          metadata_2 = metadata_2, order_2 = order_2,
                          rename_modules = metadata_2, plot_path = "scHelper_log/GM_classification/unbiasedGMs_DE/")
