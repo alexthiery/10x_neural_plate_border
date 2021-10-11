@@ -29,11 +29,11 @@ if(opt$verbose) print(opt)
   if(length(commandArgs(trailingOnly = TRUE)) == 0){
     cat('No command line arguments provided, paths are set for running interactively in Rstudio server\n')
     
-    plot_path = "./output/NF-downstream_analysis_stacas/run_split/1_splitrun_data/antler/plots/"
-    rds_path = "./output/NF-downstream_analysis_stacas/run_split/1_splitrun_data/antler/rds_files/"
-    gm_path = "./output/NF-downstream_analysis_stacas/run_split/1_splitrun_data/antler/gene_module_lists/"
-    antler_path = "./output/NF-downstream_analysis_stacas/run_split/1_splitrun_data/antler/antler_data/"
-    data_path = "./output/NF-downstream_analysis_stacas/run_split/1_splitrun_data/seurat/run_state_classification/rds_files/"
+    plot_path = "./output/NF-downstream_analysis_stacas/run_split/2_splitrun_data/antler/plots/"
+    rds_path = "./output/NF-downstream_analysis_stacas/run_split/2_splitrun_data/antler/rds_files/"
+    gm_path = "./output/NF-downstream_analysis_stacas/run_split/2_splitrun_data/antler/gene_module_lists/"
+    antler_path = "./output/NF-downstream_analysis_stacas/run_split/2_splitrun_data/antler/antler_data/"
+    data_path = "./output/NF-downstream_analysis_stacas/run_split/2_splitrun_data/seurat/run_state_classification/rds_files/"
     
     ncores = 8
     meta_col = 'scHelper_cell_type'
@@ -139,6 +139,8 @@ GeneModuleOrder <- function (seurat_obj = seurat_data, gene_modules = antler_dat
         
         classified_gms_2 <- rbind(classified_gms_2, temp)
       }
+      
+      if(nrow(classified_gms_2) == 0) next
       
       # Rename the modules based on their classification
       classified_gms_2 <- classified_gms_2 %>%
