@@ -36,7 +36,7 @@ def parse_args(args=None):
     parser.add_argument('-w', '--weightDiffusion', type=float, help='Weight applied to couple latent time with diffusion-based velocity pseudotime', default=None)
     return parser.parse_args(args)
 
-def check_args(args=None):
+def check_args(args=None, adata):
     if not os.path.isfile(args.input):
         raise Exception(f"'--input': '{args.input}' is not a valid path")
         
@@ -254,7 +254,7 @@ def main(args=None):
     
     adata = read_loom(loom_path=args.input, clusterColumn=args.clusterColumn, stageColumn=args.stageColumn, batchColumn=args.batchColumn)
     
-    check_args(args)
+    check_args(args, adata)
     
     # Set plotting colours if available
     if args.coloursColumn is not None:
