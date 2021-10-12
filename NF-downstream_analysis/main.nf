@@ -156,6 +156,11 @@ include {SEURAT_TRANSFER_FULL_PROCESS} from "$baseDir/subworkflows/seurat_transf
                                                                                                                                             seurat_intersect_loom_options:          modules['transfer_labels_seurat_intersect_loom'],
                                                                                                                                             scvelo_run_options:                     modules['transfer_labels_scvelo_run'],
                                                                                                                                             cellrank_run_options:                   modules['transfer_labels_cellrank_run'])
+include {SEURAT_TRANSFER_FULL_PROCESS as REFINED_FULL_PROCESS2} from "$baseDir/subworkflows/seurat_transfer_full_process/main"                           addParams(  gene_modules_options:                   modules['transfer_labels_gene_modules'],
+                                                                                                                                            seurat_h5ad_options:                    modules['seurat_h5ad'],
+                                                                                                                                            seurat_intersect_loom_options:          modules['transfer_labels_seurat_intersect_loom'],
+                                                                                                                                            scvelo_run_options:                     modules['transfer_labels_scvelo_run'],
+                                                                                                                                            cellrank_run_options:                   modules['transfer_labels_cellrank_run2'])
 
 include {SEURAT_TRANSFER_FULL_PROCESS as REFINED_TRANSFER_FULL_PROCESS} from "$baseDir/subworkflows/seurat_transfer_full_process/main"   addParams(  gene_modules_options:                   modules['transfer_labels_gene_modules'],
                                                                                                                                             seurat_h5ad_options:                    modules['seurat_h5ad'],
@@ -237,6 +242,8 @@ workflow {
     TRANSFER_LABELS( ch_combined )
 
     SEURAT_TRANSFER_FULL_PROCESS( TRANSFER_LABELS.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
+    SEURAT_TRANSFER_FULL_PROCESS2( TRANSFER_LABELS.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
+
 
     /*------------------------------------------------------------------------------------*/
     /* Run analysis on cluster subsets after transfer labels
