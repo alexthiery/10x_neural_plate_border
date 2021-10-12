@@ -62,6 +62,10 @@ if(!is.null(opt[['group_by']]) && opt[['group_by']] %in% colnames(seurat_object@
   stop('--group_by missing from seurat@meta.data')
 }
 
+# Convert factor columns to character before converting to h5ad
+i <- sapply(seurat_object@meta.data, is.factor)
+seurat_object@meta.data[i] <- lapply(seurat_object@meta.data[i], as.character)
+
 # SaveH5Seurat sometimes encounters a recursion error. File is already written by this point so error can be ignored with try().
 # try(SaveH5Seurat(seurat_object, filename = paste0(opt$outfile, '.h5Seurat')), silent = TRUE)
 SaveH5Seurat(seurat_object, filename = paste0(opt$outfile, '.h5Seurat'))
