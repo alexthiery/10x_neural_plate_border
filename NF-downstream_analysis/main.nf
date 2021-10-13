@@ -144,7 +144,7 @@ include {SEURAT_TRANSFER_PROCESS as SEURAT_TRANSFER_FB_MBHB_PROCESS} from "$base
                                                                                                                                             seurat_intersect_loom_options:          modules['transfer_subset_seurat_intersect_loom'],
                                                                                                                                             scvelo_run_options:                     modules['transfer_subset_scvelo_run'])
 
-include {SEURAT_TRANSFER_PROCESS as SEURAT_TRANSFER_NC_MB_PROCESS} from "$baseDir/subworkflows/seurat_transfer_process/main"      addParams(  subset_options:                         modules['transfer_nc_mb_subset'],
+include {SEURAT_TRANSFER_PROCESS as SEURAT_TRANSFER_NC_MBHB_PROCESS} from "$baseDir/subworkflows/seurat_transfer_process/main"      addParams(  subset_options:                         modules['transfer_nc_mb_subset'],
                                                                                                                                             cluster_options:                        modules['transfer_subset_cluster'],
                                                                                                                                             gene_modules_options:                   modules['transfer_subset_gene_modules'],
                                                                                                                                             seurat_h5ad_options:                    modules['seurat_h5ad'],
