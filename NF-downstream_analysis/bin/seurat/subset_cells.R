@@ -17,7 +17,7 @@ option_list <- list(
     make_option(c("-o", "--output"), action = "store", type = "character", help = "Name of output RDS file", default = 'seurat_subset'),
     make_option(c("-g", "--groups1"), action = "store", type = "character", help = "Classifications of cells (within meta_col1) to subset from dataset. \
     If multiple classifications are used to subest, must be provided as a comma separated list i.e. --groups celltype1,celltype2", default = NULL),
-    make_option(c("-g", "--groups2"), action = "store", type = "character", help = "Classifications of cells (within meta_col2) to subset from dataset.", default = NULL),
+    make_option(c("", "--groups2"), action = "store", type = "character", help = "Classifications of cells (within meta_col2) to subset from dataset.", default = NULL),
     make_option(c("-i", "--invert1"), action = "store", type = "logical", help = "Boolean for whether to invert groups1 selection", default = FALSE),
     make_option(c("", "--invert2"), action = "store", type = "logical", help = "Boolean for whether to invert groups2 selection", default = FALSE),
     make_option(c("", "--verbose"), action = "store_true", type = "logical", help = "Verbose", default = FALSE))
