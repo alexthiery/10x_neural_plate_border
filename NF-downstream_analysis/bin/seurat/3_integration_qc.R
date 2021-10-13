@@ -147,7 +147,7 @@ graphics.off()
 # Find differentially expressed genes and plot heatmap of top DE genes for each cluster
 markers <- FindAllMarkers(integration_qc_data, only.pos = T, logfc.threshold = 0.25, assay = "RNA")
 # get automated cluster order based on percentage of cells in adjacent stages
-cluster_order <- OrderCellClusters(seurat_object = integration_qc_data, col_to_sort = seurat_clusters, sort_by = stage)
+cluster_order <- OrderCellClusters(seurat_object = integration_qc_data, col_to_sort = 'seurat_clusters', sort_by = 'stage')
 # Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
 top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_log2FC) %>% arrange(factor(cluster, levels = cluster_order))
 
