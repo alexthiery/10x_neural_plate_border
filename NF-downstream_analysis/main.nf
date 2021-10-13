@@ -123,7 +123,28 @@ include {SEURAT_SUBSET_PROCESS as SEURAT_TRANSFER_LATE_STAGE_PROCESS} from "$bas
                                                                                                                                             seurat_intersect_loom_options:          modules['clusters_seurat_intersect_loom'],
                                                                                                                                             scvelo_run_options:                     modules['clusters_scvelo_run'])
 
-include {SEURAT_TRANSFER_PROCESS as SEURAT_TRANSFER_NPB_PROCESS} from "$baseDir/subworkflows/seurat_transfer_process/main"      addParams(  subset_options:                         modules['transfer_npb_subset'],
+include {SEURAT_TRANSFER_PROCESS as SEURAT_TRANSFER_PPR_NC_PROCESS} from "$baseDir/subworkflows/seurat_transfer_process/main"      addParams(  subset_options:                         modules['transfer_ppr_nc_subset'],
+                                                                                                                                            cluster_options:                        modules['transfer_subset_cluster'],
+                                                                                                                                            gene_modules_options:                   modules['transfer_subset_gene_modules'],
+                                                                                                                                            seurat_h5ad_options:                    modules['seurat_h5ad'],
+                                                                                                                                            seurat_intersect_loom_options:          modules['transfer_subset_seurat_intersect_loom'],
+                                                                                                                                            scvelo_run_options:                     modules['transfer_subset_scvelo_run'])
+
+include {SEURAT_TRANSFER_PROCESS as SEURAT_TRANSFER_PPR_FB_PROCESS} from "$baseDir/subworkflows/seurat_transfer_process/main"      addParams(  subset_options:                         modules['transfer_ppr_fb_subset'],
+                                                                                                                                            cluster_options:                        modules['transfer_subset_cluster'],
+                                                                                                                                            gene_modules_options:                   modules['transfer_subset_gene_modules'],
+                                                                                                                                            seurat_h5ad_options:                    modules['seurat_h5ad'],
+                                                                                                                                            seurat_intersect_loom_options:          modules['transfer_subset_seurat_intersect_loom'],
+                                                                                                                                            scvelo_run_options:                     modules['transfer_subset_scvelo_run'])
+
+include {SEURAT_TRANSFER_PROCESS as SEURAT_TRANSFER_FB_MBHB_PROCESS} from "$baseDir/subworkflows/seurat_transfer_process/main"      addParams(  subset_options:                         modules['transfer_fb_mbhb_subset'],
+                                                                                                                                            cluster_options:                        modules['transfer_subset_cluster'],
+                                                                                                                                            gene_modules_options:                   modules['transfer_subset_gene_modules'],
+                                                                                                                                            seurat_h5ad_options:                    modules['seurat_h5ad'],
+                                                                                                                                            seurat_intersect_loom_options:          modules['transfer_subset_seurat_intersect_loom'],
+                                                                                                                                            scvelo_run_options:                     modules['transfer_subset_scvelo_run'])
+
+include {SEURAT_TRANSFER_PROCESS as SEURAT_TRANSFER_NC_MB_PROCESS} from "$baseDir/subworkflows/seurat_transfer_process/main"      addParams(  subset_options:                         modules['transfer_nc_mb_subset'],
                                                                                                                                             cluster_options:                        modules['transfer_subset_cluster'],
                                                                                                                                             gene_modules_options:                   modules['transfer_subset_gene_modules'],
                                                                                                                                             seurat_h5ad_options:                    modules['seurat_h5ad'],
@@ -249,7 +270,10 @@ workflow {
     /* Run analysis on cluster subsets after transfer labels
     --------------------------------------------------------------------------------------*/
     SEURAT_TRANSFER_LATE_STAGE_PROCESS( TRANSFER_LABELS.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
-    SEURAT_TRANSFER_NPB_PROCESS( TRANSFER_LABELS.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
+    SEURAT_TRANSFER_PPR_NC_PROCESS( TRANSFER_LABELS.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
+    SEURAT_TRANSFER_PPR_FB_PROCESS( TRANSFER_LABELS.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
+    SEURAT_TRANSFER_FB_MBHB_PROCESS( TRANSFER_LABELS.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
+    SEURAT_TRANSFER_NC_MBHB_PROCESS( TRANSFER_LABELS.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
     SEURAT_TRANSFER_PLACODAL1_PROCESS( TRANSFER_LABELS.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
     SEURAT_TRANSFER_PLACODAL2_PROCESS( TRANSFER_LABELS.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
     // SEURAT_TRANSFER_FILTER_CONTAM_PROCESS( TRANSFER_LABELS.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
