@@ -31,17 +31,31 @@ def parse_args(args=None):
     parser.add_argument('-np', '--npcs', type=int, help='Number of PCs to use for calculating moments', default=30)
     parser.add_argument('-nn', '--nneighbours', type=int, help='Number of neighbours to use for calculating moments', default=30)
     parser.add_argument('-r', '--root', type=str, help='Name of root', default=None)
+    parser.add_argument('-re', '--rootEarliest', type=str, help='Space separated array specifying temporal arrangement of stages (i.e. hh4,hh5,hh6)', nargs='+', default=None)
     parser.add_argument('-rc', '--rootCol', type=str, help='Name of root metadata column', default=None)
     parser.add_argument('-w', '--weightDiffusion', type=float, help='Weight applied to couple latent time with diffusion-based velocity pseudotime', default=None)
     return parser.parse_args(args)
 
-# def check_args(args=None):
-#     if os.path.isdir(args.input):
-#         if args.loomOutput is None:
-#             raise Exception("'--loomOutput' must be specified when '--input' is a directory containing loom files to concatenate.")
-#     elif not os.path.isfile(args.input):
-#         raise Exception(f"'--input': '{args.input}' is not a valid path.")
-
+def check_args(args, adata):
+    if not os.path.isfile(args.input):
+        raise Exception(f"'--input': '{args.input}' is not a valid path")
+        
+    if args.velocityMode not in ['dynamical', 'deterministic', 'stochastic']:
+        raise Exception(f"'--velocityMode' must be set to either: 'dynamical', 'deterministic', or 'stochastic'")
+    
+    for arg in [args.clusterColumn, args.stageColumn, args.batchColumn, args.coloursColumn, args.rootCol]:
+        if arg is not None:
+            if arg not in adata.obs.columns:
+                raise Exception(f"'{args.input}' is not a column in adata.obs")
+    
+    if args.rootEarliest is not None and args.rootCol is None:
+        raise Exception(f"'--rootCol' must be set when '--rootEarliest' is specified")
+    else:     
+        args.root = [stage for stage in args.rootEarliest if stage in adata.obs.stage.unique()][0]
+                
+    if args.root is not None and args.rootCol is None:
+        raise Exception(f"'--rootCol' must be set when '--root' is specified")
+        
 # Read in loom data
 def read_loom(loom_path, clusterColumn, stageColumn, batchColumn):
     adata = scv.read(loom_path)
@@ -232,7 +246,6 @@ def run_scvelo_dynamical(adata, args):
 def main(args=None):
     
     args = parse_args(args)
-    # check_args(args)
     
     # Set global settings
     scv.logging.print_version()
@@ -240,6 +253,8 @@ def main(args=None):
     scv.settings.n_jobs = args.ncores  # set max width size for presenter view
     
     adata = read_loom(loom_path=args.input, clusterColumn=args.clusterColumn, stageColumn=args.stageColumn, batchColumn=args.batchColumn)
+    
+    check_args(args, adata)
     
     # Set plotting colours if available
     if args.coloursColumn is not None:

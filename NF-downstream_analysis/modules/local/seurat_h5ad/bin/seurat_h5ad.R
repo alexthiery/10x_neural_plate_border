@@ -10,7 +10,7 @@ library(optparse)
 option_list <- list(
   make_option(c("-a", "--assay"), action = "store", type = "character", help = "Assay to export from seurat object ('integrated' or 'RNA')", default = 'integrated'),
   make_option(c("-o", "--outfile"), action = "store", type = "character", help = "Name of outfile"),
-  make_option(c("-g", "--group_by"), action = "store", type = "character", help = "Name of metadata column containing groups to colour by"),
+  make_option(c("-g", "--group_by"), action = "store", type = "character", help = "Name of metadata column containing groups to colour by", default = 'seurat_clusters'),
   make_option(c("", "--verbose"), action = "store_true", type = "logical", help = "Verbose", default = FALSE)
 )
 
@@ -37,13 +37,8 @@ seurat_object <- DietSeurat(seurat_object, counts = TRUE, assays = opt$assay, di
 # remove anything from misc slot as depending on the contents this can cause recursion errors
 seurat_object@misc <- list()
 
-# over-ride group_by to seurat clusters if cell classification has not been ran
-if(opt$group_by == 'scHelper_cell_type' && !'scHelper_cell_type' %in% colnames(seurat_object@meta.data)){
-  opt$group_by <- 'seurat_clusters'
-}
-
 # if --group_by is specified, generate cell colours gor group_by column
-if(!is.null(opt[['group_by']]) && opt[['group_by']] %in% colnames(seurat_object@meta.data)){
+if(opt[['group_by']] %in% colnames(seurat_object@meta.data)){
   # Get ggcolours for cell states
   colours = ggPlotColours(length(unique(seurat_object@meta.data[[opt$group_by]])))
   if(class(seurat_object@meta.data[[opt$group_by]]) == 'factor'){
@@ -58,9 +53,13 @@ if(!is.null(opt[['group_by']]) && opt[['group_by']] %in% colnames(seurat_object@
   # If any na values are present in seurat identities, set colour to grey
   seurat_object@meta.data[['cell_colours']][is.na(seurat_object@meta.data[['cell_colours']])] <- '#AAAAAA'
   
-}else if(!is.null(opt[['group_by']])){
+}else{
   stop('--group_by missing from seurat@meta.data')
 }
+
+# Convert factor columns to character before converting to h5ad
+i <- sapply(seurat_object@meta.data, is.factor)
+seurat_object@meta.data[i] <- lapply(seurat_object@meta.data[i], as.character)
 
 # SaveH5Seurat sometimes encounters a recursion error. File is already written by this point so error can be ignored with try().
 # try(SaveH5Seurat(seurat_object, filename = paste0(opt$outfile, '.h5Seurat')), silent = TRUE)

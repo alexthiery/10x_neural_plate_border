@@ -215,7 +215,7 @@ saveRDS(sex_filt_data, paste0(rds_path, "sex_filt_data.RDS"), compress = FALSE)
 # Find differentially expressed genes and plot heatmap of top DE genes for each cluster
 markers <- FindAllMarkers(sex_filt_data, only.pos = T, logfc.threshold = 0.25, assay = "RNA")
 # get automated cluster order based on percentage of cells in adjacent stages
-cluster_order <- OrderCellClusters(seurat_object = sex_filt_data, col_to_sort = seurat_clusters, sort_by = orig.ident)
+cluster_order <- OrderCellClusters(seurat_object = sex_filt_data, col_to_sort = 'seurat_clusters', sort_by = 'orig.ident')
 # Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
 top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_log2FC) %>% arrange(factor(cluster, levels = cluster_order))
 

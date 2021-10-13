@@ -18,7 +18,8 @@ option_list <- list(
     make_option(c("-r", "--runtype"), action = "store", type = "character", help = "Specify whether running through through 'nextflow' in order to switch paths"),
     make_option(c("-c", "--cores"), action = "store", type = "integer", help = "Number of CPUs"),
     make_option(c("", "--clustres"), action = "store", type = "double", help = "Clustering resolution. Default is 0.5", default = 0.5),
-    make_option(c("", "--verbose"), action = "store_true", type = "logical", help = "Verbose", default = FALSE)
+    make_option(c("", "--verbose"), action = "store_true", type = "logical", help = "Verbose", default = FALSE),
+    make_option(c("-m", "--meta_col"), action = "store", type = "character", help = "Column name specifying cell type column", default = NULL)
     )
 
 opt_parser = OptionParser(option_list = option_list)
@@ -103,7 +104,7 @@ if(length(unique(seurat_data$stage)) > 1){
     plots$stage_plot <- DimPlot(seurat_data, group.by = "stage") + ggtitle(paste("Developmental stage")) + theme(plot.title = element_text(hjust = 0.5))
 }
 
-plots$cluster_plot <- DimPlot(seurat_data, group.by = "seurat_clusters") + ggtitle(paste("Clusters")) + theme(plot.title = element_text(hjust = 0.5))
+plots$cluster_plot <- DimPlot(seurat_data, group.by = opt$meta_col) + ggtitle(paste(opt$meta_col)) + theme(plot.title = element_text(hjust = 0.5))
 
 if(length(unique(seurat_data$run)) > 1){
     plots$integration_plot <- DimPlot(seurat_data, group.by = "run") + ggtitle(paste("Batches")) + theme(plot.title = element_text(hjust = 0.5))
@@ -122,13 +123,13 @@ graphics.off()
 # Find differentially expressed genes and plot heatmap of top DE genes for each cluster
 markers <- FindAllMarkers(seurat_data, only.pos = T, logfc.threshold = 0.25, assay = "RNA")
 # get automated cluster order based on percentage of cells in adjacent stages
-cluster_order = OrderCellClusters(seurat_object = seurat_data, col_to_sort = seurat_clusters, sort_by = stage)
+cluster_order = OrderCellClusters(seurat_object = seurat_data, col_to_sort = opt$meta_col, sort_by = 'stage')
 # Re-order genes in top15 based on desired cluster order in subsequent plot - this orders them in the heatmap in the correct order
 top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_log2FC) %>% arrange(factor(cluster, levels = cluster_order))
 
 png(paste0(plot_path, 'HM.top15.DE.seurat_data.png'), height = 75, width = 100, units = 'cm', res = 500)
-TenxPheatmap(data = seurat_data, metadata = c("seurat_clusters", "stage"), custom_order_column = "seurat_clusters",
-             custom_order = cluster_order, selected_genes = unique(top15$gene), gaps_col = "seurat_clusters", assay = 'RNA')
+TenxPheatmap(data = seurat_data, metadata = c(meta_col, "stage"), custom_order_column = meta_col,
+             custom_order = cluster_order, selected_genes = unique(top15$gene), gaps_col = meta_col, assay = 'RNA')
 graphics.off()
 
 saveRDS(seurat_data, paste0(rds_path, label, "_clustered_data.RDS"), compress = FALSE)

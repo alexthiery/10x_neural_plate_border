@@ -28,14 +28,14 @@ dir.create(plot_path, recursive = T)
 dir.create(rds_path, recursive = T)
 
 metadata <- read.csv(list.files(data_path, pattern = "*.csv", full.names = TRUE))
-# metadata <- read.csv('./output/NF-downstream_analysis_stacas/filtered_seurat/cellrank/NF-scRNAseq_alignment_out_metadata.csv')
+# metadata <- read.csv('./output/NF-downstream_analysis_stacas/refined_labels/cellrank/all_stages_filtered_metadata.csv')
 
 seurat_data <- readRDS(list.files(data_path, pattern = "*.RDS", full.names = TRUE)[!list.files(data_path, pattern = "*.RDS") %>% grepl('antler', .)])
 # seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/filtered_seurat/seurat/state_classification/rds_files/contamination_cell_state_classification.RDS')
 
 # load antler data
 antler_data <- readRDS(list.files(data_path, pattern = "antler_out.RDS", full.names = TRUE))
-# antler_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/hh5_splitstage_data/antler/stage_gene_modules/rds_files/antler_out.RDS')
+# antler_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss8_splitstage_data/antler/stage_gene_modules/rds_files/antler_out.RDS')
 
 
 
