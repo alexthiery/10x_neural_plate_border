@@ -47,14 +47,16 @@ def check_args(args, adata):
         if arg is not None:
             if arg not in adata.obs.columns:
                 raise Exception(f"'{args.input}' is not a column in adata.obs")
-    
-    if args.rootEarliest is not None and args.rootCol is None:
-        raise Exception(f"'--rootCol' must be set when '--rootEarliest' is specified")
-    else:     
-        args.root = [stage for stage in args.rootEarliest if stage in adata.obs.stage.unique()][0]
                 
     if args.root is not None and args.rootCol is None:
         raise Exception(f"'--rootCol' must be set when '--root' is specified")
+    
+    if args.rootEarliest is not None:
+        if args.rootCol is None:
+            raise Exception(f"'--rootCol' must be set when '--rootEarliest' is specified")
+        if args.root is not None:
+            warnings.warn("both '--root' and '--rootEarliest' have been set. '--rootEarliest' is prioritised.")
+        args.root = [stage for stage in args.rootEarliest if stage in adata.obs.stage.unique()][0]
         
 # Read in loom data
 def read_loom(loom_path, clusterColumn, stageColumn, batchColumn):
