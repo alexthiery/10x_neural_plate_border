@@ -128,8 +128,8 @@ cluster_order = OrderCellClusters(seurat_object = seurat_data, col_to_sort = opt
 top15 <- markers %>% group_by(cluster) %>% top_n(n = 15, wt = avg_log2FC) %>% arrange(factor(cluster, levels = cluster_order))
 
 png(paste0(plot_path, 'HM.top15.DE.seurat_data.png'), height = 75, width = 100, units = 'cm', res = 500)
-TenxPheatmap(data = seurat_data, metadata = c(meta_col, "stage"), custom_order_column = meta_col,
-             custom_order = cluster_order, selected_genes = unique(top15$gene), gaps_col = meta_col, assay = 'RNA')
+TenxPheatmap(data = seurat_data, metadata = c(opt$meta_col, "stage"), custom_order_column = opt$meta_col,
+             custom_order = cluster_order, selected_genes = unique(top15$gene), gaps_col = opt$meta_col, assay = 'RNA')
 graphics.off()
 
 saveRDS(seurat_data, paste0(rds_path, label, "_clustered_data.RDS"), compress = FALSE)
