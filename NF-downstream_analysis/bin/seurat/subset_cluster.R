@@ -19,7 +19,7 @@ option_list <- list(
     make_option(c("-c", "--cores"), action = "store", type = "integer", help = "Number of CPUs"),
     make_option(c("", "--clustres"), action = "store", type = "double", help = "Clustering resolution. Default is 0.5", default = 0.5),
     make_option(c("", "--verbose"), action = "store_true", type = "logical", help = "Verbose", default = FALSE),
-    make_option(c("-m", "--meta_col"), action = "store", type = "character", help = "Column name specifying cell type column", default = NULL)
+    make_option(c("-m", "--meta_col"), action = "store", type = "character", help = "Column name specifying cell type column", default = 'seurat_clusters')
     )
 
 opt_parser = OptionParser(option_list = option_list)
