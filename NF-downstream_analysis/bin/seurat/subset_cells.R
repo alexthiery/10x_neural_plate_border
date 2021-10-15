@@ -26,12 +26,6 @@ opt_parser = OptionParser(option_list = option_list)
 opt <- parse_args(opt_parser)
 if(opt$verbose) print(opt)
 
-opt$groups1 = 'PPR,aPPR,pPPR,NPB,pNPB,aNPB,NC,delaminating_NC'
-opt$meta_col1 = 'scHelper_cell_type'
-
-opt$groups2 = 'hh6,hh7,ss4,ss8'
-opt$meta_col2 = 'stage'
-
 opt$groups1 = strsplit(opt$groups1, ',')[[1]]
 opt$groups2 = strsplit(opt$groups2, ',')[[1]]
 
