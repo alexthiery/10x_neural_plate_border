@@ -88,8 +88,13 @@ grid.arrange(full_plot, subset_plot, nrow = 1)
 graphics.off()
 
 # Subset cells
-seurat_subset <- subset(seurat_data, subset = !!as.symbol(opt$meta_col1) %in% opt$groups1 & !!as.symbol(opt$meta_col2) %in% opt$groups2)
-seurat_subset@meta.data[c(opt$meta_col1, opt$meta_col2)] <- lapply(seurat_subset@meta.data[c(opt$meta_col1, opt$meta_col2)], droplevels)
+if(!is.null(opt$meta_col2)){
+    seurat_subset <- subset(seurat_data, subset = !!as.symbol(opt$meta_col1) %in% opt$groups1 & !!as.symbol(opt$meta_col2) %in% opt$groups2)
+    seurat_subset@meta.data[c(opt$meta_col1, opt$meta_col2)] <- lapply(seurat_subset@meta.data[c(opt$meta_col1, opt$meta_col2)], droplevels)
+}else{
+    seurat_subset <- subset(seurat_data, subset = !!as.symbol(opt$meta_col1) %in% opt$groups1)
+    seurat_subset@meta.data[opt$meta_col1] <- lapply(seurat_subset@meta.data[opt$meta_col1], droplevels)
+}
 
 # save RDS object for each stage/run
 saveRDS(seurat_subset, paste0(rds_path, opt$output, ".RDS"), compress = FALSE)
