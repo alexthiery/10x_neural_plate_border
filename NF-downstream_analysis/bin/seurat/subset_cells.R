@@ -26,8 +26,12 @@ opt_parser = OptionParser(option_list = option_list)
 opt <- parse_args(opt_parser)
 if(opt$verbose) print(opt)
 
-opt$groups1 = strsplit(opt$groups1, ',')[[1]]
+if(!is.null(opt$groups1)){
+    opt$groups1 = strsplit(opt$groups1, ',')[[1]]
+}
+if(!is.null(opt$groups2)){
 opt$groups2 = strsplit(opt$groups2, ',')[[1]]
+}
 
 if(is.na(opt$meta_col1)){
     stop("meta_col1 parameter must be provided. See script usage (--help)")
