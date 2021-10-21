@@ -152,6 +152,43 @@ extract_bin <- function(seurat_object, gm_1, gm_2, meta_data='scHelper_cell_type
 }
 
 
+plot_umap_gm_coexpression <- function(seurat_object, gm_1, gm_2){
+  start = 0
+  end = 100
+  width = end - start
+  gm_1_means <- t(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'scale.data'))[,gm_1] %>% rowMeans(.)
+  gm_1_scaled <- (gm_1_means - min(gm_1_means))/(max(gm_1_means) - min(gm_1_means)) * width + start
+  gm_2_means <- t(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'scale.data'))[,gm_2] %>% rowMeans(.)
+  gm_2_scaled <- (gm_2_means - min(gm_2_means))/(max(gm_2_means) - min(gm_2_means)) * width + start
+  dat <- data.frame(gm_1_scaled, gm_2_scaled, row.names = names(gm_1_scaled))
+  dat <-  round(dat, 0)
+  col.mat <- expand.grid(a=seq(0,100,by=1), b=seq(0,100,by=1))
+  col.mat <- within(col.mat, mix <- rgb(green = a, red = b, blue = b, maxColorValue = 100))
+  cell.cols <- unlist(apply(dat, 1, function(x){filter(col.mat, a == x[[1]] & b == x[[2]])[[3]]}))
+  col.mat[,1:2] <- col.mat[,1:2]/100
+  key.plot <- ggplot(col.mat, aes(x = col.mat[,1], y = col.mat[,2])) +
+    xlab("Gene module 1") +
+    ylab("Gene module 2") +
+    geom_tile(aes(fill = mix)) +
+    scale_fill_identity() +
+    theme(legend.position = "none", panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank())
+  plot <- as.data.frame(seurat_object[["umap"]]@cell.embeddings)
+  umap.plot <- ggplot(plot, aes(x = plot[,1], y = plot[,2], color = rownames(plot))) +
+    geom_point() +
+    xlab("UMAP 1")+
+    ylab("UMAP 2")+
+    scale_color_manual(values=cell.cols)+
+    scale_fill_manual(values=cell.cols)+
+    theme(legend.position = "none", panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"))
+  gridExtra::grid.arrange(umap.plot, key.plot, layout_matrix = rbind(c(1,1,2),
+                                                                     c(1,1,NA)))
+}
+
+
+
+
 library(optparse)
 library(future)
 library(Seurat)
@@ -184,85 +221,6 @@ hh6 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/hh6_splitstag
 hh7 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/hh7_splitstage_data/seurat/stage_state_classification/rds_files/hh7_cell_state_classification.RDS')
 ss8 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss8_splitstage_data/seurat/stage_state_classification/rds_files/ss8_cell_state_classification.RDS')
 ss4 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss4_splitstage_data/seurat/stage_state_classification/rds_files/ss4_cell_state_classification.RDS')
-
-# load antler data
-# antler_data <- readRDS(list.files(data_path, pattern = "antler_out.RDS", full.names = TRUE))
-
-
-
-# Rename cell states based on group var
-# new_cell_states = c('aPPR' = 'PPR', 'PPR' = 'PPR', 'pPPR' = 'PPR', 'aNPB' = 'NPB', 'pNPB' = 'NPB', 'NC' = 'NC', 'delaminating_NC' = 'NC')
-# seurat_data$scHelper_cell_type = new_cell_states[as.character(seurat_data$scHelper_cell_type)]
-
-# # Set RNA to default assay for plotting expression data
-# DefaultAssay(seurat_data) <- "integrated"
-# # 
-# # Subset cell states and stages from full dataset
-# subset <- subset_seurat(seurat_data, population = c('hh7', 'ss4', 'ss8'), split_by = 'stage', rerun_UMAP = FALSE)
-# DimPlot(subset, group.by = 'scHelper_cell_type')
-# subset <- subset_seurat(subset, population = c('pPPR', 'aPPR', 'NC', 'delaminating_NC', 'PPR', 'aNPB', 'pNPB'), split_by = 'scHelper_cell_type', rerun_UMAP = TRUE)
-# DimPlot(subset, group.by = 'scHelper_cell_type')
-# 
-# 
-# subset <- seurat_data
-# DimPlot(subset, group.by = 'seurat_clusters')
-# 
-# # Set RNA to default assay for plotting expression data
-# DefaultAssay(seurat_data) <- "RNA"
-
-####################################################################################################
-# # Run coexpression using PPR and NC gene modules from ss4
-# antler_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss4_splitstage_data/antler/stage_gene_modules/rds_files/antler_out.RDS')
-# 
-# ppr_gm <- antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content$GM23
-# nc_gm <- antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content$GM29
-# 
-# coexpression(subset, gm_1 = ppr_gm, gm_2 = nc_gm, meta_data = c('scHelper_cell_type'), show_bins = TRUE, bin_number = 10)
-# coexpression_highlight_cells(subset, gm_1 = ppr_gm, gm_2 = nc_gm, bin_number = 10)
-# 
-# bin <- extract_bin(subset, gm_1 = ppr_gm, gm_2 = nc_gm, meta_data = c('scHelper_cell_type'), bin_number = 20, bin_extract = 6)
-# DimPlot(ss4, cells.highlight = bin) + NoLegend()
-# DimPlot(ss8, cells.highlight = bin) + NoLegend()
-# DimPlot(hh7, cells.highlight = bin) + NoLegend()
-# 
-# ppr_gm <- filter_genes(subset, gene_list = ppr_gm, ident_1 = c('pPPR', 'aPPR', 'PPR'), group_by = 'scHelper_cell_type', logfc = 0.5)
-# nc_gm <- filter_genes(subset, gene_list = nc_gm, ident_1 = c('NC', 'delaminating_NC'), group_by = 'scHelper_cell_type', logfc = 0.5)
-# 
-# coexpression_highlight_cells(subset, gm_1 = ppr_gm, gm_2 = nc_gm, bin_number = 20)
-# coexpression(subset, gm_1 = ppr_gm, gm_2 = nc_gm, meta_data = c('scHelper_cell_type'), show_bins = TRUE, bin_number = 20)
-# 
-# bin <- extract_bin(subset, gm_1 = ppr_gm, gm_2 = nc_gm, meta_data = c('scHelper_cell_type'), bin_number = 20, bin_extract = 6)
-# DimPlot(hh7, cells.highlight = bin) + NoLegend()
-# DimPlot(ss4, cells.highlight = bin) + NoLegend()
-# DimPlot(ss8, cells.highlight = bin) + NoLegend()
-# 
-# # Binarise expression before running coexpression as above
-# coexpression_highlight_cells(subset, gm_1 = ppr_gm, gm_2 = nc_gm, bin_number = 20)
-# coexpression(subset, gm_1 = ppr_gm, gm_2 = nc_gm, meta_data = c('scHelper_cell_type'), show_bins = TRUE, bin_number = 20)
-# bin <- extract_bin(subset, gm_1 = ppr_gm, gm_2 = nc_gm, meta_data = c('scHelper_cell_type'), bin_number = 20, bin_extract = 7)
-# DimPlot(ss4, cells.highlight = bin) + NoLegend()
-# DimPlot(ss8, cells.highlight = bin) + NoLegend()
-# DimPlot(hh7, cells.highlight = bin) + NoLegend()
-# 
-# ppr_gm <- filter_genes(subset, gene_list = ppr_gm, ident_1 = c('pPPR', 'aPPR', 'PPR'), group_by = 'scHelper_cell_type', logfc = 0.5)
-# nc_gm <- filter_genes(subset, gene_list = nc_gm, ident_1 = c('NC', 'delaminating_NC'), group_by = 'scHelper_cell_type', logfc = 0.5)
-# 
-# coexpression_highlight_cells(subset, gm_1 = ppr_gm, gm_2 = nc_gm, bin_number = 20)
-# coexpression(subset, gm_1 = ppr_gm, gm_2 = nc_gm, meta_data = c('scHelper_cell_type'), show_bins = TRUE, bin_number = 20)
-# 
-# bin <- extract_bin(subset, gm_1 = ppr_gm, gm_2 = nc_gm, meta_data = c('scHelper_cell_type'), bin_number = 10, bin_extract = 4)
-# DimPlot(hh7, cells.highlight = bin) + NoLegend()
-# DimPlot(ss4, cells.highlight = bin) + NoLegend()
-# DimPlot(ss8, cells.highlight = bin) + NoLegend()
-# 
-# 
-# 
-# 
-
-
-
-
-
 
 
 ####################################################################################################
@@ -353,11 +311,45 @@ graphics.off()
 
 
 
+plot_umap_gm_coexpression <- function(seurat_object, gm_1, gm_2, col.threshold = 0.25, two.colors = c('#FF0000', '#00ff00'), negative.color = 'gray80', limit = 0){
+  start = 0
+  end = 100
+  width = end - start
+  gm_1_means <- t(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'scale.data'))[,gm_1] %>% rowMeans(.)
+  gm_1_scaled <- (gm_1_means - min(gm_1_means))/(max(gm_1_means) - min(gm_1_means)) * width + start
+  gm_2_means <- t(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'scale.data'))[,gm_2] %>% rowMeans(.)
+  gm_2_scaled <- (gm_2_means - min(gm_2_means))/(max(gm_2_means) - min(gm_2_means)) * width + start
+  dat <- data.frame(gm_1_scaled, gm_2_scaled, row.names = names(gm_1_scaled))
+  dat <-  round(dat, 0)
+  # col.mat <- expand.grid(a=seq(0,100,by=1), b=seq(0,100,by=1))
+  # col.mat <- within(col.mat, mix <- rgb(green = a, red = a, blue = 0, maxColorValue = 100))
+  col.mat = Seurat:::BlendMatrix(n = 100, col.threshold = 0, two.colors =  c('blue', 'red'), negative.color = 'gray90')
+  col.mat <- as.data.frame.table(col.mat, responseName = "value") %>% mutate_if(is.factor, as.integer)
+  col.mat[!(col.mat$Var1 > limit & col.mat$Var2 > limit), 'value'] <- '#E5E5E5FF'
+  colnames(col.mat) <- c('a', 'b', 'mix')
+  
+  cell.cols <- unlist(apply(dat, 1, function(x){filter(col.mat, a == x[[1]] & b == x[[2]])[[3]]}))
+  col.mat[,1:2] <- col.mat[,1:2]/100
+  key.plot <- ggplot(col.mat, aes(x = col.mat[,1], y = col.mat[,2])) +
+    xlab("Gene module 1") +
+    ylab("Gene module 2") +
+    geom_tile(aes(fill = mix)) +
+    scale_fill_identity() +
+    theme(legend.position = "none", panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank())
+  plot <- as.data.frame(seurat_object[["umap"]]@cell.embeddings)
+  umap.plot <- ggplot(plot, aes(x = plot[,1], y = plot[,2], color = rownames(plot))) +
+    geom_point() +
+    xlab("UMAP 1")+
+    ylab("UMAP 2")+
+    scale_color_manual(values=cell.cols)+
+    scale_fill_manual(values=cell.cols)+
+    theme(legend.position = "none", panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"))
+  gridExtra::grid.arrange(umap.plot, key.plot, layout_matrix = rbind(c(1,1,2),
+                                                                     c(1,1,NA)))
+}
 
-  
-  
-  
-  
-  
-  
-  
+
+plot_umap_gm_coexpression(ss4, gm_1 = ppr_gm, gm_2 = nc_gm, col.threshold = 0, two.colors = c('blue', 'red'), negative.color = 'gray90', limit = 25)
+
