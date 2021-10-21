@@ -310,7 +310,6 @@ graphics.off()
 
 
 
-
 plot_umap_gm_coexpression <- function(seurat_object, gm_1, gm_2, col.threshold = 0.25, two.colors = c('#FF0000', '#00ff00'), negative.color = 'gray80', limit = 0){
   start = 0
   end = 100
@@ -323,9 +322,9 @@ plot_umap_gm_coexpression <- function(seurat_object, gm_1, gm_2, col.threshold =
   dat <-  round(dat, 0)
   # col.mat <- expand.grid(a=seq(0,100,by=1), b=seq(0,100,by=1))
   # col.mat <- within(col.mat, mix <- rgb(green = a, red = a, blue = 0, maxColorValue = 100))
-  col.mat = Seurat:::BlendMatrix(n = 100, col.threshold = 0, two.colors =  c('blue', 'red'), negative.color = 'gray90')
+  col.mat = Seurat:::BlendMatrix(n = 100, col.threshold = 0, two.colors =  two.colors, negative.color = 'gray90')
   col.mat <- as.data.frame.table(col.mat, responseName = "value") %>% mutate_if(is.factor, as.integer)
-  col.mat[!(col.mat$Var1 > limit & col.mat$Var2 > limit), 'value'] <- '#E5E5E5FF'
+  col.mat[!(col.mat$Var1 > limit & col.mat$Var2 > limit), 'value'] <- 'gray90'
   colnames(col.mat) <- c('a', 'b', 'mix')
   
   cell.cols <- unlist(apply(dat, 1, function(x){filter(col.mat, a == x[[1]] & b == x[[2]])[[3]]}))
@@ -351,5 +350,6 @@ plot_umap_gm_coexpression <- function(seurat_object, gm_1, gm_2, col.threshold =
 }
 
 
-plot_umap_gm_coexpression(ss4, gm_1 = ppr_gm, gm_2 = nc_gm, col.threshold = 0, two.colors = c('blue', 'red'), negative.color = 'gray90', limit = 25)
+plot_umap_gm_coexpression(ss4, gm_1 = ppr_gm, gm_2 = nc_gm, col.threshold = 0, two.colors = c("green", 
+                                                                                              "red"), negative.color = 'gray90', limit = 25)
 
