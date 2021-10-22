@@ -159,11 +159,11 @@ seurat_data@meta.data[['scHelper_cell_type']] <- unlist(apply(seurat_data@meta.d
 # seurat_data <- ClusterClassification(seurat_obj = seurat_data, cell_state_markers = cell_state_markers, force_assign = FALSE, quantile = 0.5, plot_path = paste0(plot_path, "scHelper_log/"))
 
 # Plot UMAP for clusters and developmental stage
-png(paste0(plot_path, "scHelper_celltype_umap.png"), width=40, height=20, units = 'cm', res = 200)
+png(paste0(plot_path, "scHelper_celltype_umap.png"), width=24, height=12, units = 'cm', res = 200)
 ClustStagePlot(seurat_data, stage_col = "stage", cluster_col = "scHelper_cell_type", label_clusters = TRUE)
 graphics.off()
 
-png(paste0(plot_path, "scHelper_celltype_umap2.png"), width=20, height=20, units = 'cm', res = 200)
+png(paste0(plot_path, "scHelper_celltype_umap2.png"), width=12, height=12, units = 'cm', res = 200)
 DimPlot(seurat_data, group.by = 'scHelper_cell_type', label = TRUE, label.size = 3, label.box = TRUE, repel = TRUE) + ggplot2::theme(legend.position = "none")
 graphics.off()
 
