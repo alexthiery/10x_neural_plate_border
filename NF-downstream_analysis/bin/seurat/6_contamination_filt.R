@@ -176,4 +176,16 @@ graphics.off()
 # PlotGeneVariance(seurat_obj = contamination_filt_data, group_by = "stage")
 # graphics.off()
 
+
+# Plot remaining cell counts
+filt_counts <- contamination_filt_data@meta.data %>%
+  group_by(orig.ident) %>%
+  tally() %>%
+  rename('filtered' := n)
+
+png(paste0(plot_path, 'remaining_cell_table.png'), height = 10, width = 18, units = 'cm', res = 400)
+grid.arrange(top=textGrob("Remaining Cell Count", gp=gpar(fontsize=12, fontface = "bold"), hjust = 0.5, vjust = 3),
+             tableGrob(filt_counts, rows=NULL, theme = ttheme_minimal()))
+graphics.off()
+
 saveRDS(contamination_filt_data, paste0(rds_path, "contamination_filt_data.RDS"), compress = FALSE)
