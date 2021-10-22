@@ -294,7 +294,7 @@ workflow {
                                         .combine(ch_full_cellrank)
                                         .map{[[sample_id:it[0].sample_id.split("_")[0]+'_gm_latent_time'], [it[1], it[2], it[3]]]}
     
-    GENE_MODULES_LATENT_TIME( ch_full_latent_time.concat(ch_stage_latent_time) )
+    // GENE_MODULES_LATENT_TIME( ch_full_latent_time.concat(ch_stage_latent_time) )
 
 
     // Run cellrank and gm dynamics with refined terminal states
@@ -306,5 +306,5 @@ workflow {
                                         .combine(ch_full_cellrank)
                                         .map{[[sample_id:'refined_gm_latent_time'], it]}
 
-    REFINED_GENE_MODULES_LATENT_TIME( ch_refined_latent_time.concat(ch_stage_latent_time) )
+    // REFINED_GENE_MODULES_LATENT_TIME( ch_refined_latent_time.concat(ch_stage_latent_time) )
 }

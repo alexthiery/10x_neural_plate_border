@@ -152,8 +152,9 @@ extract_bin <- function(seurat_object, gm_1, gm_2, meta_data='scHelper_cell_type
 }
 
 
-plot_umap_gm_coexpression <- function(seurat_object, gm_1, gm_2){
-  start = 0
+
+plot_umap_gm_coexpression <- function(seurat_object, gm_1, gm_2, col.threshold = 0.25, two.colors = c('#FF0000', '#00ff00'), negative.color = 'gray80', limit = 0, highlight_cell_size = 1, module_names = c('Gene module 1', 'Gene module 2')){
+  start = 1
   end = 100
   width = end - start
   gm_1_means <- t(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'scale.data'))[,gm_1] %>% rowMeans(.)
@@ -162,29 +163,46 @@ plot_umap_gm_coexpression <- function(seurat_object, gm_1, gm_2){
   gm_2_scaled <- (gm_2_means - min(gm_2_means))/(max(gm_2_means) - min(gm_2_means)) * width + start
   dat <- data.frame(gm_1_scaled, gm_2_scaled, row.names = names(gm_1_scaled))
   dat <-  round(dat, 0)
-  col.mat <- expand.grid(a=seq(0,100,by=1), b=seq(0,100,by=1))
-  col.mat <- within(col.mat, mix <- rgb(green = a, red = b, blue = b, maxColorValue = 100))
-  cell.cols <- unlist(apply(dat, 1, function(x){filter(col.mat, a == x[[1]] & b == x[[2]])[[3]]}))
-  col.mat[,1:2] <- col.mat[,1:2]/100
-  key.plot <- ggplot(col.mat, aes(x = col.mat[,1], y = col.mat[,2])) +
-    xlab("Gene module 1") +
-    ylab("Gene module 2") +
+  # col.mat <- expand.grid(a=seq(0,100,by=1), b=seq(0,100,by=1))
+  # col.mat <- within(col.mat, mix <- rgb(green = a, red = a, blue = 0, maxColorValue = 100))
+  col_mat = Seurat:::BlendMatrix(n = 100, col.threshold = 0, two.colors =  two.colors, negative.color = negative.color)
+  col_mat <- as.data.frame.table(col_mat, responseName = "value") %>% mutate_if(is.factor, as.integer)
+  col_mat[!(col_mat$Var1 > limit & col_mat$Var2 > limit), 'value'] <- negative.color
+  colnames(col_mat) <- c('a', 'b', 'mix')
+  
+  cell_cols <- unlist(apply(dat, 1, function(x){filter(col_mat, a == x[[1]] & b == x[[2]])[[3]]}))
+  col_mat[,1:2] <- col_mat[,1:2]/100
+  key_plot <- ggplot(col_mat, aes(x = col_mat[,1], y = col_mat[,2])) +
+    xlab(module_names[1]) +
+    ylab(module_names[2]) +
     geom_tile(aes(fill = mix)) +
     scale_fill_identity() +
-    theme(legend.position = "none", panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+    scale_x_continuous(breaks = c(0, 0.5, 1)) +
+    scale_y_continuous(breaks = c(0, 0.5, 1)) +
+    theme(legend.position = "none",
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
           panel.background = element_blank())
-  plot <- as.data.frame(seurat_object[["umap"]]@cell.embeddings)
-  umap.plot <- ggplot(plot, aes(x = plot[,1], y = plot[,2], color = rownames(plot))) +
-    geom_point() +
-    xlab("UMAP 1")+
-    ylab("UMAP 2")+
-    scale_color_manual(values=cell.cols)+
-    scale_fill_manual(values=cell.cols)+
-    theme(legend.position = "none", panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-          panel.background = element_blank(), axis.line = element_line(colour = "black"))
-  gridExtra::grid.arrange(umap.plot, key.plot, layout_matrix = rbind(c(1,1,2),
-                                                                     c(1,1,NA)))
+  
+  plot_data <- as.data.frame(seurat_object[["umap"]]@cell.embeddings)
+  
+  # add cell colours to plot_data
+  plot_data <- merge(plot_data, as.data.frame(cell_cols), by=0) %>% column_to_rownames('Row.names')
+  
+  umap_plot <- ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2, colour = cell_cols)) +
+    geom_point(colour = negative.color, size = 1) +
+    geom_point(data = plot_data %>% filter(cell_cols != negative.color), size = highlight_cell_size) +
+    scale_colour_manual(values=plot_data %>% filter(cell_cols != negative.color) %>% dplyr::pull(cell_cols))+
+    theme_void() +
+    NoLegend()
+  
+  layout <- '
+    BA
+    B#
+    '
+  wrap_plots(A = key_plot, B = umap_plot, design = layout, widths = c(4,1), heights = c(1,3))
 }
+
 
 
 
@@ -278,6 +296,12 @@ ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
   theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 15))
 graphics.off()
 
+png(paste0(plot_path, 'umap_coexpression_hh7.png'), width = 12, height = 10, res = 400, units = 'cm')
+plot_umap_gm_coexpression(hh7, gm_1 = ppr_gm, gm_2 = nc_gm, col.threshold = 0, two.colors = c("red", "blue"),
+                          negative.color = 'gray90', limit = 30, module_names = c('PPR module', 'NC module'), highlight_cell_size = 1.5)
+graphics.off()
+
+
 # 4ss
 ss4@meta.data$bin_class <- apply(ss4@meta.data %>% rownames_to_column, 1, function(x) if(x["rowname"] %in% bin_sub[[1]]){"a"} else if(x["rowname"] %in% bin_sub[[2]]){"b"} else if(x["rowname"] %in% bin_sub[[3]]){"c"} else {NA})
 plot_data <- merge(as.data.frame(ss4[["umap"]]@cell.embeddings), ss4@meta.data[,'bin_class',drop=FALSE], by = 0) %>% column_to_rownames('Row.names')
@@ -292,6 +316,13 @@ ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
   ggtitle('4ss') +
   theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 15))
 graphics.off()
+
+
+png(paste0(plot_path, 'umap_coexpression_ss4.png'), width = 12, height = 10, res = 400, units = 'cm')
+plot_umap_gm_coexpression(ss4, gm_1 = ppr_gm, gm_2 = nc_gm, col.threshold = 0, two.colors = c("red", "blue"),
+                          negative.color = 'gray90', limit = 30, module_names = c('PPR module', 'NC module'), highlight_cell_size = 1.5)
+graphics.off()
+
 
 # 8ss
 ss8@meta.data$bin_class <- apply(ss8@meta.data %>% rownames_to_column, 1, function(x) if(x["rowname"] %in% bin_sub[[1]]){"a"} else if(x["rowname"] %in% bin_sub[[2]]){"b"} else if(x["rowname"] %in% bin_sub[[3]]){"c"} else {NA})
@@ -309,47 +340,13 @@ ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
 graphics.off()
 
 
-
-plot_umap_gm_coexpression <- function(seurat_object, gm_1, gm_2, col.threshold = 0.25, two.colors = c('#FF0000', '#00ff00'), negative.color = 'gray80', limit = 0){
-  start = 0
-  end = 100
-  width = end - start
-  gm_1_means <- t(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'scale.data'))[,gm_1] %>% rowMeans(.)
-  gm_1_scaled <- (gm_1_means - min(gm_1_means))/(max(gm_1_means) - min(gm_1_means)) * width + start
-  gm_2_means <- t(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'scale.data'))[,gm_2] %>% rowMeans(.)
-  gm_2_scaled <- (gm_2_means - min(gm_2_means))/(max(gm_2_means) - min(gm_2_means)) * width + start
-  dat <- data.frame(gm_1_scaled, gm_2_scaled, row.names = names(gm_1_scaled))
-  dat <-  round(dat, 0)
-  # col.mat <- expand.grid(a=seq(0,100,by=1), b=seq(0,100,by=1))
-  # col.mat <- within(col.mat, mix <- rgb(green = a, red = a, blue = 0, maxColorValue = 100))
-  col.mat = Seurat:::BlendMatrix(n = 100, col.threshold = 0, two.colors =  two.colors, negative.color = 'gray90')
-  col.mat <- as.data.frame.table(col.mat, responseName = "value") %>% mutate_if(is.factor, as.integer)
-  col.mat[!(col.mat$Var1 > limit & col.mat$Var2 > limit), 'value'] <- 'gray90'
-  colnames(col.mat) <- c('a', 'b', 'mix')
-  
-  cell.cols <- unlist(apply(dat, 1, function(x){filter(col.mat, a == x[[1]] & b == x[[2]])[[3]]}))
-  col.mat[,1:2] <- col.mat[,1:2]/100
-  key.plot <- ggplot(col.mat, aes(x = col.mat[,1], y = col.mat[,2])) +
-    xlab("Gene module 1") +
-    ylab("Gene module 2") +
-    geom_tile(aes(fill = mix)) +
-    scale_fill_identity() +
-    theme(legend.position = "none", panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-          panel.background = element_blank())
-  plot <- as.data.frame(seurat_object[["umap"]]@cell.embeddings)
-  umap.plot <- ggplot(plot, aes(x = plot[,1], y = plot[,2], color = rownames(plot))) +
-    geom_point() +
-    xlab("UMAP 1")+
-    ylab("UMAP 2")+
-    scale_color_manual(values=cell.cols)+
-    scale_fill_manual(values=cell.cols)+
-    theme(legend.position = "none", panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-          panel.background = element_blank(), axis.line = element_line(colour = "black"))
-  gridExtra::grid.arrange(umap.plot, key.plot, layout_matrix = rbind(c(1,1,2),
-                                                                     c(1,1,NA)))
-}
+png(paste0(plot_path, 'umap_coexpression_ss8.png'), width = 12, height = 10, res = 200, units = 'cm')
+plot_umap_gm_coexpression(ss8, gm_1 = ppr_gm, gm_2 = nc_gm, col.threshold = 0, two.colors = c("red", "blue"),
+                          negative.color = 'gray90', limit = 30, module_names = c('PPR module', 'NC module'), highlight_cell_size = 1.5)
+graphics.off()
 
 
-plot_umap_gm_coexpression(ss4, gm_1 = ppr_gm, gm_2 = nc_gm, col.threshold = 0, two.colors = c("green", 
-                                                                                              "red"), negative.color = 'gray90', limit = 25)
+
+
+
 
