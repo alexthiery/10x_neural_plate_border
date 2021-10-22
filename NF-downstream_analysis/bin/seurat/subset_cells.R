@@ -26,14 +26,12 @@ opt_parser = OptionParser(option_list = option_list)
 opt <- parse_args(opt_parser)
 if(opt$verbose) print(opt)
 
-opt$groups1 = 'PPR,aPPR,pPPR,NPB,pNPB,aNPB,NC,delaminating_NC'
-opt$meta_col1 = 'scHelper_cell_type'
-
-opt$groups2 = 'hh6,hh7,ss4,ss8'
-opt$meta_col2 = 'stage'
-
-opt$groups1 = strsplit(opt$groups1, ',')[[1]]
+if(!is.null(opt$groups1)){
+    opt$groups1 = strsplit(opt$groups1, ',')[[1]]
+}
+if(!is.null(opt$groups2)){
 opt$groups2 = strsplit(opt$groups2, ',')[[1]]
+}
 
 if(is.na(opt$meta_col1)){
     stop("meta_col1 parameter must be provided. See script usage (--help)")
@@ -90,8 +88,13 @@ grid.arrange(full_plot, subset_plot, nrow = 1)
 graphics.off()
 
 # Subset cells
-seurat_subset <- subset(seurat_data, subset = !!as.symbol(opt$meta_col1) %in% opt$groups1 & !!as.symbol(opt$meta_col2) %in% opt$groups2)
-seurat_subset@meta.data[c(opt$meta_col1, opt$meta_col2)] <- lapply(seurat_subset@meta.data[c(opt$meta_col1, opt$meta_col2)], droplevels)
+if(!is.null(opt$meta_col2)){
+    seurat_subset <- subset(seurat_data, subset = !!as.symbol(opt$meta_col1) %in% opt$groups1 & !!as.symbol(opt$meta_col2) %in% opt$groups2)
+    seurat_subset@meta.data[c(opt$meta_col1, opt$meta_col2)] <- lapply(seurat_subset@meta.data[c(opt$meta_col1, opt$meta_col2)], droplevels)
+}else{
+    seurat_subset <- subset(seurat_data, subset = !!as.symbol(opt$meta_col1) %in% opt$groups1)
+    seurat_subset@meta.data[opt$meta_col1] <- lapply(seurat_subset@meta.data[opt$meta_col1], droplevels)
+}
 
 # save RDS object for each stage/run
 saveRDS(seurat_subset, paste0(rds_path, opt$output, ".RDS"), compress = FALSE)

@@ -46,6 +46,8 @@ RUN   R -e "install.packages('future')" && \
       R -e "install.packages('pheatmap')" && \
       R -e "install.packages('Seurat')" && \
       R -e "install.packages('qdapTools')" && \
+      R -e "install.packages('patchwork')" && \
+      R -e "install.packages('ggnewscale')" && \
       R -e "remotes::install_github('mojaveazure/seurat-disk')" && \
       # R -e "remotes::install_github('satijalab/seurat-wrappers', upgrade = 'default')" && \
       R -e "BiocManager::install('limma')" && \

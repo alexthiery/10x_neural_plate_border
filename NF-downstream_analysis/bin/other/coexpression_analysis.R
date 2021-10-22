@@ -1,3 +1,212 @@
+
+named_list_to_vector <- function(list){
+  if(is.null(names(list))){stop('list must be named')}
+  unlist(lapply(lapply(names(list), function(x) rep(x, length(list[[x]]))), function(y) names(y) <- x))
+}
+
+coexpression_highlight_cells = function(seurat_object, gm_1, gm_2, bin_number = 10){
+  # check gms are not null and are arrays
+  if(sum(is.null(gm_1), is.null(gm_2)) != 0){
+    stop("one or more gene modules lists are empty")
+  }
+  if(class(gm_1 ) != 'character' | class(gm_1 ) != 'character'){
+    stop("one or more gene modules lists are not characters")
+  }
+  # calculate expression aggregates and products per cell and use that to order them
+  x = seurat_object@meta.data[,'scHelper_cell_type']
+  gm_1_sum <- t(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'data'))[,gm_1] %>% rowSums(.)
+  gm_2_sum <- t(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'data'))[,gm_2] %>% rowSums(.)
+  plot_data <- data.frame(gm_1_sum = gm_1_sum, gm_2_sum = gm_2_sum, x = x)
+  plot_data <- plot_data %>% mutate(ratio = gm_1_sum/(gm_1_sum + gm_2_sum)) %>% arrange(ratio)
+  ordered_cells <- rownames(plot_data)
+  # create dimplots of cells in each of the bins
+  plots <- c()
+  bin_size <- length(ordered_cells)/bin_number
+  for (i in 0:(bin_number-1)){
+    start <- bin_size*i + 1
+    end <- (bin_size * (i+1))-1
+    bin <- ordered_cells[start:end]
+    plots[[i+1]] <- DimPlot(seurat_object, cells.highlight = bin, combine = TRUE) + NoLegend() + ggtitle(paste("Bin ", i+1))
+  }
+  return(grid.arrange(grobs = plots))
+}
+
+
+
+coexpression = function(seurat_object, gm_1, gm_2, facet_names = NULL, meta_col='scHelper_cell_type', show_bins = FALSE, bin_number = 10, extract_bins = NULL, bin_colour = 'Set2'){
+  
+  meta_data = seurat_object@meta.data[,meta_col,drop=FALSE]
+  gm_1_sum <- t(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'data'))[,gm_1] %>% rowSums(.)
+  gm_2_sum <- t(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'data'))[,gm_2] %>% rowSums(.)
+  
+  plot_data <- data.frame(gm_1_sum = gm_1_sum, gm_2_sum = gm_2_sum, meta_data)
+  
+  plot_data <- plot_data %>%
+    mutate(ratio = gm_1_sum/(gm_1_sum + gm_2_sum)) %>%
+    arrange(ratio) %>%
+    pivot_longer(cols = c(gm_1_sum, gm_2_sum)) %>%
+    rename(expression_magnitude = value)
+  
+  # Replace GM names for facet labels
+  if(!is.null(facet_names)){
+    if(length(facet_names) != 2){
+      stop('facet_names must be a character vector of length 2')
+    }
+    plot_data$name <- c('gm_1_sum' = facet_names[1], 'gm_2_sum' = facet_names[2])[plot_data$name]
+  }
+  
+  plot_data$cell_order <- 1:nrow(plot_data)
+  
+  p1 = ggplot(plot_data, aes(x = cell_order, y = expression_magnitude)) +
+    theme_classic() +
+    geom_point(aes(colour = scHelper_cell_type), alpha = 0.5, size = 0.5) +
+    scale_colour_manual(values = ggPlotColours(length(unique((plot_data[[meta_col]])))), guide = guide_legend(override.aes = list(size=3),
+                                                                                                              title = '')) +
+    geom_smooth(method = "gam", se = FALSE, colour="purple", size=1.5) +
+    facet_wrap(~name, dir = "v", scales = "free") +
+    xlab("Cells") + ylab("Expression level") +
+    theme(axis.text.x=element_blank(),
+          axis.ticks.x = element_blank(),
+          legend.title = element_blank(),
+          legend.text = element_text(size=10),
+          strip.text.x = element_text(size = 10))
+  
+  if (show_bins == TRUE){
+    bin_size = length(plot_data$cell_order) / bin_number
+    
+    start <- seq(min(plot_data$cell_order), max(plot_data$cell_order), by = bin_size)
+    end <- seq(min(plot_data$cell_order + bin_size-1), max(plot_data$cell_order + bin_size-1), by = bin_size)
+    bins <- data.frame(start, end) %>% mutate(x = ifelse(row_number() %% 2 == 0, 'even', 'odd'))
+    
+    if(!is.null(extract_bins)){
+      if(class(extract_bins) == 'list'){
+        bin_plot_data <- data.frame()
+        for(bin in extract_bins){
+          sub_bin = bins[bin,]
+          bin_plot_data <- rbind(bin_plot_data, c(sub_bin[1,][,1], sub_bin[nrow(sub_bin),][,2]))
+        }
+        bin_plot_data[['bin']] <- 1:nrow(bin_plot_data)
+        colnames(bin_plot_data) <- c('start', 'end', 'bin')
+      } else if(class(extract_bins) == 'numeric')
+        bin_plot_data <- bins[extract_bins,1:2]
+      bin_plot_data[['bin']] <- 1:nrow(bin_plot_data)
+    } else {
+      stop("'extract_bins' must be a numeric array or a list containing numeric arrays")
+    }
+    
+    p1 <- p1 +
+      new_scale_color() +
+      geom_rect(data = bins, inherit.aes = FALSE, aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf, fill = x), show.legend = F) +
+      scale_fill_manual(values = alpha(c("gray20", "gray80"), alpha = 0.07)) +
+      new_scale_color() +
+      geom_rect(data = bin_plot_data, inherit.aes = FALSE, aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf, colour = as.factor(bin)), fill=NA, show.legend = F) +
+      viridis::scale_color_viridis(discrete=TRUE)
+  }
+  
+  return(p1)
+}
+
+
+
+subset_seurat = function(seurat_data, population, split_by = "scHelper_cell_type", rerun_UMAP = FALSE){
+  subset <- subset(seurat_data, cells = rownames(seurat_data@meta.data)[seurat_data@meta.data[[split_by]] %in% population])
+  Idents(subset) <- split_by
+  if (rerun_UMAP == TRUE){
+    subset <- RunPCA(object = subset, verbose = FALSE)
+    pc_cutoff <- ElbowCutoff(subset)
+    subset <- FindNeighbors(subset, dim = 1:pc_cutoff)
+    subset <- RunUMAP(subset, dims = 1:pc_cutoff)
+  }
+  return(subset)
+}
+
+filter_genes = function(seurat_object, gene_list, ident_1, ident_2 = NULL, group_by, logfc = 0.5){
+  markers <- FindMarkers(seurat_object, group.by = group_by, ident.1 = ident_1, ident.2 = ident_2, only.pos = TRUE, logfc.threshold = logfc)
+  # markers <- markers[markers$avg_log2FC > 0, ]
+  filt_genes <- gene_list[gene_list %in% rownames(markers)]
+  print(setdiff(gene_list, filt_genes))
+  return(filt_genes)
+}
+
+
+extract_bin <- function(seurat_object, gm_1, gm_2, meta_data='scHelper_cell_type', bin_number = 10, bin_extract){
+  if(sum(is.null(gm_1), is.null(gm_2)) != 0){
+    stop("one or more gene modules lists are empty")
+  }
+  if(class(gm_1 ) != 'character' | class(gm_1 ) != 'character'){
+    stop("one or more gene modules lists are not characters")
+  }
+  # calculate expression aggregates and products per cell and use that to order them
+  x = seurat_object@meta.data[,'scHelper_cell_type']
+  gm_1_sum <- t(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'data'))[,gm_1] %>% rowSums(.)
+  gm_2_sum <- t(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'data'))[,gm_2] %>% rowSums(.)
+  plot_data <- data.frame(gm_1_sum = gm_1_sum, gm_2_sum = gm_2_sum, x = x)
+  plot_data <- plot_data %>% mutate(ratio = gm_1_sum/(gm_1_sum + gm_2_sum)) %>% arrange(ratio)
+  ordered_cells <- rownames(plot_data)
+  
+  bin_size <- length(ordered_cells)/bin_number
+  start = bin_size*(bin_extract[1]-1)
+  end = bin_size*(bin_extract[length(bin_extract)])-1
+  # end = start + (bin_size-1)
+  return(ordered_cells[start:end])
+}
+
+
+
+plot_umap_gm_coexpression <- function(seurat_object, gm_1, gm_2, col.threshold = 0.25, two.colors = c('#FF0000', '#00ff00'), negative.color = 'gray80', limit = 0, highlight_cell_size = 1, module_names = c('Gene module 1', 'Gene module 2')){
+  start = 1
+  end = 100
+  width = end - start
+  gm_1_means <- t(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'scale.data'))[,gm_1] %>% rowMeans(.)
+  gm_1_scaled <- (gm_1_means - min(gm_1_means))/(max(gm_1_means) - min(gm_1_means)) * width + start
+  gm_2_means <- t(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'scale.data'))[,gm_2] %>% rowMeans(.)
+  gm_2_scaled <- (gm_2_means - min(gm_2_means))/(max(gm_2_means) - min(gm_2_means)) * width + start
+  dat <- data.frame(gm_1_scaled, gm_2_scaled, row.names = names(gm_1_scaled))
+  dat <-  round(dat, 0)
+  # col.mat <- expand.grid(a=seq(0,100,by=1), b=seq(0,100,by=1))
+  # col.mat <- within(col.mat, mix <- rgb(green = a, red = a, blue = 0, maxColorValue = 100))
+  col_mat = Seurat:::BlendMatrix(n = 100, col.threshold = 0, two.colors =  two.colors, negative.color = negative.color)
+  col_mat <- as.data.frame.table(col_mat, responseName = "value") %>% mutate_if(is.factor, as.integer)
+  col_mat[!(col_mat$Var1 > limit & col_mat$Var2 > limit), 'value'] <- negative.color
+  colnames(col_mat) <- c('a', 'b', 'mix')
+  
+  cell_cols <- unlist(apply(dat, 1, function(x){filter(col_mat, a == x[[1]] & b == x[[2]])[[3]]}))
+  col_mat[,1:2] <- col_mat[,1:2]/100
+  key_plot <- ggplot(col_mat, aes(x = col_mat[,1], y = col_mat[,2])) +
+    xlab(module_names[1]) +
+    ylab(module_names[2]) +
+    geom_tile(aes(fill = mix)) +
+    scale_fill_identity() +
+    scale_x_continuous(breaks = c(0, 0.5, 1)) +
+    scale_y_continuous(breaks = c(0, 0.5, 1)) +
+    theme(legend.position = "none",
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.background = element_blank())
+  
+  plot_data <- as.data.frame(seurat_object[["umap"]]@cell.embeddings)
+  
+  # add cell colours to plot_data
+  plot_data <- merge(plot_data, as.data.frame(cell_cols), by=0) %>% column_to_rownames('Row.names')
+  
+  umap_plot <- ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2, colour = cell_cols)) +
+    geom_point(colour = negative.color, size = 1) +
+    geom_point(data = plot_data %>% filter(cell_cols != negative.color), size = highlight_cell_size) +
+    scale_colour_manual(values=plot_data %>% filter(cell_cols != negative.color) %>% dplyr::pull(cell_cols))+
+    theme_void() +
+    NoLegend()
+  
+  layout <- '
+    BA
+    B#
+    '
+  wrap_plots(A = key_plot, B = umap_plot, design = layout, widths = c(4,1), heights = c(1,3))
+}
+
+
+
+
+
 library(optparse)
 library(future)
 library(Seurat)
@@ -6,10 +215,10 @@ library(tidyverse)
 library(Antler)
 library(RColorBrewer)
 library(scHelper)
-
-
 install.packages('patchwork')
 library(patchwork)
+install.packages("ggnewscale")
+library(ggnewscale)
 
 # Set paths and load data
 plot_path = "./plots/"
@@ -20,222 +229,124 @@ ncores = opt$cores
 dir.create(plot_path, recursive = T)
 dir.create(rds_path, recursive = T)
 
-metadata <- read.csv(list.files(data_path, pattern = "*.csv", full.names = TRUE))
-# metadata <- read.csv('./output/NF-downstream_analysis_stacas/filtered_seurat/cellrank/NF-scRNAseq_alignment_out_metadata.csv')
+# metadata <- read.csv(list.files(data_path, pattern = "*.csv", full.names = TRUE))
+# # metadata <- read.csv('./output/NF-downstream_analysis_stacas/filtered_seurat/cellrank/NF-scRNAseq_alignment_out_metadata.csv')
 
-seurat_data <- readRDS(list.files(data_path, pattern = "*.RDS", full.names = TRUE)[!list.files(data_path, pattern = "*.RDS") %>% grepl('antler', .)])
-seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/clusters_subset/late_stage_subset/seurat/clusters_cluster/rds_files/late_clustered_data.RDS')
-
-# load antler data
-antler_data <- readRDS(list.files(data_path, pattern = "antler_out.RDS", full.names = TRUE))
-antler_data <- readRDS('./output/NF-downstream_analysis_stacas/clusters_subset/late_stage_subset/antler/clusters_gene_modules/rds_files/antler_out.RDS')
-
-
-
-metadata$CellID <- paste0(metadata$CellID, "-1")
-
-# Rename cellIDs to match seurat data based on string match
-new_names <- unlist(lapply(metadata$CellID, function(x) rownames(seurat_data@meta.data)[grep(x, rownames(seurat_data@meta.data))]))
-
-if(length(new_names) != nrow(metadata) | length(new_names) != nrow(seurat_data@meta.data)){stop('cell IDs differ between scvelo metadata and seurat object')}
-
-rownames(metadata) <- new_names
-metadata$CellID <- NULL
-
-# re-order metadata rows based on seurat metadata order
-metadata <- metadata[ order(match(rownames(metadata), rownames(seurat_data@meta.data))), ]
-
-# replace seurat metadata with scvelo metadata
-seurat_data@meta.data <- metadata
-
-# set boolean for whether dataset contains multiple batches
-multi_run <- ifelse(length(unique(seurat_data$run)) > 1, TRUE, FALSE)
+# seurat_data <- readRDS(list.files(data_path, pattern = "*.RDS", full.names = TRUE)[!list.files(data_path, pattern = "*.RDS") %>% grepl('antler', .)])
+# seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/transfer_labels/seurat/rds_files/seurat_label_transfer.RDS')
+# seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/transfer_subset/transfer_npb_subset/seurat/transfer_cluster/rds_files/transfer_clustered_data.RDS')
+hh6 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/hh6_splitstage_data/seurat/stage_state_classification/rds_files/hh6_cell_state_classification.RDS')
+hh7 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/hh7_splitstage_data/seurat/stage_state_classification/rds_files/hh7_cell_state_classification.RDS')
+ss8 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss8_splitstage_data/seurat/stage_state_classification/rds_files/ss8_cell_state_classification.RDS')
+ss4 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss4_splitstage_data/seurat/stage_state_classification/rds_files/ss4_cell_state_classification.RDS')
 
 
-#####################################################################################################
-#                           calculate module scores                   #
-#####################################################################################################
-# access DE gene modules (batchfilt if there are multiple batches in the dataset)
-if(is.null(antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt)){
-  gms <- antler_data$gene_modules$lists$unbiasedGMs_DE$content
-}else{
-  gms <- antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content
+####################################################################################################
+# Run coexpression using PPR and NC gene modules from ss8
+subset <- readRDS('./output/NF-downstream_analysis_stacas/transfer_subset/transfer_ppr_nc_subset/seurat/transfer_cluster/rds_files/transfer_clustered_data.RDS')
+
+subset <- subset_seurat(subset, population = c('hh7', 'ss4', 'ss8'), split_by = 'stage', rerun_UMAP = FALSE)
+subset <- subset_seurat(subset, population = c('pPPR', 'aPPR', 'NC', 'delaminating_NC', 'PPR', 'aNPB', 'pNPB'), split_by = 'scHelper_cell_type', rerun_UMAP = TRUE)
+DimPlot(subset, group.by = 'scHelper_cell_type')
+DimPlot(subset, group.by = 'stage')
+
+
+antler_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss8_splitstage_data/antler/stage_gene_modules/rds_files/antler_out.RDS')
+ppr_gm <- unlist(antler_data$gene_modules$lists$unbiasedGMs_DE$content[c('GM5')])
+nc_gm <- unlist(antler_data$gene_modules$lists$unbiasedGMs_DE$content[c('GM2')])
+
+
+coexpression_highlight_cells(subset, gm_1 = ppr_gm, gm_2 = nc_gm, bin_number = 10)
+
+
+# Plot module expression together with UMAPS
+extract_bins = list(c(1), c(4), c(10))
+plots = list()
+plots[[1]] <- coexpression(subset, gm_1 = ppr_gm, gm_2 = nc_gm, meta_col = c('scHelper_cell_type'), show_bins = TRUE, bin_number = 10, extract_bins = extract_bins, facet_names = c('PPR module', 'NC module'))
+for(i in 1:length(extract_bins)){
+  plots[[i+1]] <- DimPlot(object = subset, cells.highlight = extract_bin(subset, gm_1 = ppr_gm, gm_2 = nc_gm, meta_data = c('scHelper_cell_type'), bin_number = 10, bin_extract = extract_bins[[i]]), cols.highlight = viridis::viridis(3)[i]) +
+    theme_void() +
+    NoLegend()
 }
 
-if(is.null(names(gms))){names(gms) = paste0("GM: ", 1:length(gms))}
+layout <- '
+AAAAAAAA
+BB#CC#DD
+'
+png(paste0(plot_path, 'binned_mod_dyn.png'), width = 20, height = 20, res = 200, units = 'cm')
+wrap_plots(A = plots[[1]], B = plots[[2]], C = plots[[3]], D = plots[[4]], design = layout, heights = c(2,1))
+graphics.off()
 
 
-# Set RNA to default assay for plotting expression data
-DefaultAssay(seurat_data) <- "RNA"
+# Highlight bins on different stage subsets
+bin_sub <- lapply(extract_bins, function(x) extract_bin(subset, gm_1 = ppr_gm, gm_2 = nc_gm, meta_data = c('scHelper_cell_type'), bin_number = 10, bin_extract = x))
+
+# hh7
+hh7@meta.data$bin_class <- apply(hh7@meta.data %>% rownames_to_column, 1, function(x) if(x["rowname"] %in% bin_sub[[1]]){"a"} else if(x["rowname"] %in% bin_sub[[2]]){"b"} else if(x["rowname"] %in% bin_sub[[3]]){"c"} else {NA})
+plot_data <- merge(as.data.frame(hh7[["umap"]]@cell.embeddings), hh7@meta.data[,'bin_class',drop=FALSE], by = 0) %>% column_to_rownames('Row.names')
+
+png(paste0(plot_path, 'highlight_bins_hh7.png'), width = 8, height = 8, res = 200, units = 'cm')
+ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
+  geom_point(colour = 'gray80', size = 1) +
+  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2, colour = factor(bin_class))) +
+  viridis::scale_color_viridis(discrete=TRUE) +
+  theme_void() +
+  NoLegend() +
+  ggtitle('hh7') +
+  theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 15))
+graphics.off()
+
+png(paste0(plot_path, 'umap_coexpression_hh7.png'), width = 12, height = 10, res = 400, units = 'cm')
+plot_umap_gm_coexpression(hh7, gm_1 = ppr_gm, gm_2 = nc_gm, col.threshold = 0, two.colors = c("red", "blue"),
+                          negative.color = 'gray90', limit = 30, module_names = c('PPR module', 'NC module'), highlight_cell_size = 1.5)
+graphics.off()
 
 
-coexpression = function(seurat_object, gm_1, gm_2){
+# 4ss
+ss4@meta.data$bin_class <- apply(ss4@meta.data %>% rownames_to_column, 1, function(x) if(x["rowname"] %in% bin_sub[[1]]){"a"} else if(x["rowname"] %in% bin_sub[[2]]){"b"} else if(x["rowname"] %in% bin_sub[[3]]){"c"} else {NA})
+plot_data <- merge(as.data.frame(ss4[["umap"]]@cell.embeddings), ss4@meta.data[,'bin_class',drop=FALSE], by = 0) %>% column_to_rownames('Row.names')
 
-  x = seurat_object@meta.data[,'scHelper_cell_type']
-  
-  gm_1_sum <- t(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'data'))[,gm_1] %>% rowSums(.)
-  
-  # gm_1_sum = gm_1_sum/max(gm_1_sum)
-  
-  gm_2_sum <- t(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'data'))[,gm_2] %>% rowSums(.)
-  
-  # gm_2_sum = gm_2_sum/max(gm_2_sum)
-  
-
-  # gm_1 <- unlist(gms[gm_1])
-  # gm_1_sum <- t(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'data'))[,gm_1] %>% rowSums(.)
-  # 
-  # gm_2 <- unlist(gms[gm_2])
-  # gm_2_sum <- t(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'data'))[,gm_2] %>% rowSums(.)
-  
-  # gm_1_sum[gm_1_sum < 0] <- 0
-  # gm_2_sum[gm_2_sum < 0] <- 0
-  
-  gm_product <- gm_1_sum * gm_2_sum
-  plot_data <- data.frame(gm_1_sum = gm_1_sum, gm_2_sum = gm_2_sum, gm_product = gm_product, x = x)
-  
-  plot_data <- plot_data %>% mutate(ratio = gm_1_sum/(gm_1_sum + gm_2_sum)) %>% arrange(ratio)
-  
-  
-  # plot_data <- plot_data %>% arrange(x)
-  
-  if(class(plot_data$x) != 'numeric'){
-    plot_data$x <- 1:nrow(plot_data)
-  }
-  
-  p1 = ggplot(plot_data, aes(x = x, y = gm_1_sum)) +
-    # geom_point() +
-    geom_smooth(method = "gam", se = FALSE)
-  
-  p2 = ggplot(plot_data, aes(x = x, y = gm_2_sum)) +
-    # geom_point() +
-    geom_smooth(method = "gam", se = FALSE)
-  
-  p3 = ggplot(plot_data, aes(x = x, y = gm_product)) +
-    # geom_point() +
-    geom_smooth(method = "gam", se = FALSE)
-  
-  return(p1/p2/p3)
-}
-
-scHelper_cell_type_order <- c('extra_embryonic', 'early_NNE', 'NNE', 'prospective_epidermis', 'PPR', 'aPPR',
-                              'pPPR', 'early_border', 'early_NPB', 'NPB', 'early_aNPB', 'aNPB', 'early_pNPB', 'pNPB', 'NC', 'delaminating_NC', 'early_neural',
-                              'early_neural_plate', 'early_caudal_neural', 'neural_progenitors', 'p_neural_progenitors', 'early_hindbrain', 'hindbrain',
-                              'early_midbrain', 'midbrain', 'a_neural_progenitors', 'early_forebrain', 'forebrain', 'a_ventral_floorplate', 'streak', 'node')
+png(paste0(plot_path, 'highlight_bins_ss4.png'), width = 8, height = 8, res = 200, units = 'cm')
+ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
+  geom_point(colour = 'gray80', size = 1) +
+  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2, colour = factor(bin_class))) +
+  viridis::scale_color_viridis(discrete=TRUE) +
+  theme_void() +
+  NoLegend() +
+  ggtitle('4ss') +
+  theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 15))
+graphics.off()
 
 
-# seurat_data <- subset(seurat_data, cells = rownames(seurat_data@meta.data)[seurat_data@meta.data[['scHelper_cell_type']] %in% c('aPPR', 'pPPR', 'aNPB', 'pNPB', 'NC')])
-
-seurat_data@meta.data$scHelper_cell_type <- factor(seurat_data@meta.data$scHelper_cell_type, levels = scHelper_cell_type_order)
-
-coexpression(seurat_data, gm_1 = unlist(gms['GM8']), gm_2 = unlist(gms['GM40']))
-
-
-PPR = c("SIX1", "EYA2", "DLX3", "DLX5", "DLX6", "PRDM1")
-NC = c("PAX7", "MSX1", "MSX2", "ETS1", "ENSGALG00000030902", "FOXD3", "TFAP2B")
+png(paste0(plot_path, 'umap_coexpression_ss4.png'), width = 12, height = 10, res = 400, units = 'cm')
+plot_umap_gm_coexpression(ss4, gm_1 = ppr_gm, gm_2 = nc_gm, col.threshold = 0, two.colors = c("red", "blue"),
+                          negative.color = 'gray90', limit = 30, module_names = c('PPR module', 'NC module'), highlight_cell_size = 1.5)
+graphics.off()
 
 
-MultiFeaturePlot(seurat_data, NC)
+# 8ss
+ss8@meta.data$bin_class <- apply(ss8@meta.data %>% rownames_to_column, 1, function(x) if(x["rowname"] %in% bin_sub[[1]]){"a"} else if(x["rowname"] %in% bin_sub[[2]]){"b"} else if(x["rowname"] %in% bin_sub[[3]]){"c"} else {NA})
+plot_data <- merge(as.data.frame(ss8[["umap"]]@cell.embeddings), ss8@meta.data[,'bin_class',drop=FALSE], by = 0) %>% column_to_rownames('Row.names')
+
+png(paste0(plot_path, 'highlight_bins_ss8.png'), width = 8, height = 8, res = 200, units = 'cm')
+ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
+  geom_point(colour = 'gray80', size = 1) +
+  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2, colour = factor(bin_class))) +
+  viridis::scale_color_viridis(discrete=TRUE) +
+  theme_void() +
+  NoLegend() +
+  ggtitle('8ss') +
+  theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 15))
+graphics.off()
 
 
-coexpression(ss4_npb, gm_1 = PPR, gm_2 = NC)
-coexpression(ss8_npb, gm_1 = PPR, gm_2 = NC)
-
-test <- merge(ss4_npb, ss8_npb)
-
-
-coexpression(test, gm_1 = PPR, gm_2 = NC)
-
-
-ss4_npb <- subset(seurat_data, cells = rownames(seurat_data@meta.data)[seurat_data@meta.data[['stage']] == 'ss4'])
-ss4_npb <- subset(ss4_npb, cells = rownames(seurat_data@meta.data)[seurat_data@meta.data[['scHelper_cell_type']] %in% c('aPPR', 'pPPR', 'NC', 'delaminating_NC')])
-ss4_npb@meta.data$scHelper_cell_type <- factor(ss4_npb@meta.data$scHelper_cell_type, levels = scHelper_cell_type_order)
-
-coexpression(ss4_npb, gm_1 = unlist(gms['GM10']), gm_2 = unlist(gms['GM40']))
-
-ss8_npb <- subset(seurat_data, cells = rownames(seurat_data@meta.data)[seurat_data@meta.data[['stage']] == 'ss8'])
-ss8_npb <- subset(ss8_npb, cells = rownames(seurat_data@meta.data)[seurat_data@meta.data[['scHelper_cell_type']] %in% c('PPR', 'pPPR', 'NC', 'delaminating_NC')])
-ss8_npb@meta.data$scHelper_cell_type <- factor(ss8_npb@meta.data$scHelper_cell_type, levels = scHelper_cell_type_order)
-
-coexpression(ss8_npb, gm_1 = unlist(gms['GM8']), gm_2 = unlist(gms['GM1']))
+png(paste0(plot_path, 'umap_coexpression_ss8.png'), width = 12, height = 10, res = 200, units = 'cm')
+plot_umap_gm_coexpression(ss8, gm_1 = ppr_gm, gm_2 = nc_gm, col.threshold = 0, two.colors = c("red", "blue"),
+                          negative.color = 'gray90', limit = 30, module_names = c('PPR module', 'NC module'), highlight_cell_size = 1.5)
+graphics.off()
 
 
 
-# # Set gene module order
-# stage_order <- c("hh4", "hh5", "hh6", "hh7", "ss4", "ss8")
-# scHelper_cell_type_order <- c('extra_embryonic', 'early_non_neural', 'non_neural', 'early_NNE', 'early_PPR', 'early_aPPR', 'aPPR', 'iPPR',
-#                               'early_pPPR', 'pPPR', 'early_border', 'early_NPB', 'NPB', 'early_pNPB', 'pNPB', 'early_aNPB', 'aNPB', 'early_neural',
-#                               'early_neural_plate', 'early_caudal_neural', 'neural_progenitors', 'a_neural_progenitors', 'early_forebrain', 'forebrain',
-#                               'early_midbrain', 'midbrain', 'p_neural_progenitors', 'early_hindbrain', 'hindbrain', 'NC', 'delaminating_NC', 'node')
-# 
-# 
-# ### create cell_order object based on ordering from metadata
-# class_order = c('extra_embryonic', 'early_non_neural', 'non_neural', 'early_NNE', 'early_PPR', 'early_aPPR', 'aPPR', 'iPPR',
-#                 'early_pPPR', 'pPPR', 'early_border', 'early_NPB', 'NPB', 'early_aNPB', 'aNPB', 'early_pNPB', 'pNPB', 'NC',
-#                 'delaminating_NC', 'early_neural', 'early_neural_plate', 'early_caudal_neural', 'neural_progenitors', 'p_neural_progenitors',
-#                 'early_hindbrain', 'hindbrain', 'early_midbrain', 'midbrain', 'a_neural_progenitors', 'early_forebrain', 'forebrain', 'node')
-# seurat_data@meta.data$scHelper_cell_type <- factor(seurat_data@meta.data$scHelper_cell_type, levels = class_order)
-# col_ann <- seurat_data@meta.data[,metadata, drop=FALSE] %>% mutate_if(is.character, as.factor)
-# col_ann <- col_ann[do.call("order", c(col_ann[metadata], list(decreasing = FALSE))), , drop = FALSE]
-# cell_order = rownames(col_ann)
-
-################################################################################################################################
-# function to extract gm counts, calculate aggregate gene expression and calculate coexpression as a product of those aggregates
-GM_expression <- function(seurat_data = seurat_data, GM_1_genes, GM_2_genes, 
-                          cell_order = cell_order, assay = "RNA", slot = "data"){
-  
-  # extract counts and order cells based on cell_order
-  counts <- t(GetAssayData(object = seurat_data, assay = assay, slot = slot))
-  counts <- counts[cell_order,]
-  
-  # extract gene counts and calculate aggregate expression per module
-  GM_1 <- counts[, c(GM_1_genes)]
-  GM_1 <- rowSums(GM_1)
-  GM_1 <- data.frame(order = 1:length(GM_1), expression = GM_1)
-  GM_2 <- counts[, c(GM_2_genes)]
-  GM_2 <- rowSums(GM_2)
-  GM_2 <- data.frame(order = 1:length(GM_2), expression = GM_2)
-  
-  # merge and calculate coexpression as product
-  merge <- merge(GM_1, GM_2, by = "order")
-  colnames(merge) <- c("Cells", "Gene module A", "Gene module B")
-  merge$Coexpression <- merge$`Gene module A` * merge$`Gene module B`
-  
-  return(merge)
-}
-################################################################################################################################
-
-## choose which gms want to plot from antler_data (make generalisable)
-GM_1_genes <- antler_data$gene_modules$lists$unbiasedGMs_DE$content$GM17
-GM_2_genes <- antler_data$gene_modules$lists$unbiasedGMs_DE$content$GM4
-
-## run GM_expression function
-merge <- GM_expression(seurat_data, cell_order = cell_order,
-                       GM_1_genes = GM_1_genes, 
-                       GM_2_genes = GM_2_genes)
 
 
-## plot output of GM_expression
-plot_merge <- pivot_longer(merge,
-                     c("Gene module A", "Gene module B", "Coexpression"), 
-                     names_to = "group_by", values_to = "Expression")
 
-gm1 <- ggplot(data=plot_merge[which(plot_merge$group_by == "Gene module A"), ], aes(x=Cells, y=Expression)) +
-  geom_smooth(method = "gam", se = FALSE) +
-  facet_grid(group_by ~.) +
-  geom_point(alpha = 0.1) +
-  theme_light()
-
-gm2 <- ggplot(data=plot_merge[which(plot_merge$group_by == "Gene module B"), ], aes(x=Cells, y=Expression)) +
-  geom_smooth(method = "gam", se = FALSE) +
-  facet_grid(group_by ~.) +
-  geom_point(alpha = 0.1) +
-  theme_light()
-
-coexpression <- ggplot(data=plot_merge[which(plot_merge$group_by == "Coexpression"), ], aes(x=Cells, y=Expression)) +
-  geom_smooth(method = "gam", se = FALSE) +
-  facet_grid(group_by ~.) +
-  geom_point(alpha = 0.1) +
-  theme_light()
-
-grid.arrange(gm1, gm2, coexpression)
