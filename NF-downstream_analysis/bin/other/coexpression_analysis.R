@@ -14,8 +14,8 @@ coexpression_highlight_cells = function(seurat_object, gm_1, gm_2, bin_number = 
   }
   # calculate expression aggregates and products per cell and use that to order them
   x = seurat_object@meta.data[,'scHelper_cell_type']
-  gm_1_sum <- t(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'data'))[,gm_1] %>% rowSums(.)
-  gm_2_sum <- t(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'data'))[,gm_2] %>% rowSums(.)
+  gm_1_sum <- t(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'data'))[,gm_1] %>% rowMeans(.)
+  gm_2_sum <- t(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'data'))[,gm_2] %>% rowMeans(.)
   plot_data <- data.frame(gm_1_sum = gm_1_sum, gm_2_sum = gm_2_sum, x = x)
   plot_data <- plot_data %>% mutate(ratio = gm_1_sum/(gm_1_sum + gm_2_sum)) %>% arrange(ratio)
   ordered_cells <- rownames(plot_data)
@@ -33,50 +33,41 @@ coexpression_highlight_cells = function(seurat_object, gm_1, gm_2, bin_number = 
 
 
 
-coexpression = function(seurat_object, gm_1, gm_2, facet_names = NULL, meta_col='scHelper_cell_type', show_bins = FALSE, bin_number = 10, extract_bins = NULL, bin_colour = 'Set2'){
+# order_1 and order_2 are variables used to determine the gms used to order the cells. These should be either an integer/array of integers specifying which gene module should be used from 'gms', or a string/array of strings specifying the names to be used from 'gms'.
+
+coexpression = function(seurat_object, gms, order_1 = 1, order_2 = length(gms), meta_col='scHelper_cell_type', show_bins = FALSE, bin_number = 10, extract_bins = NULL, bin_colour = 'Set2', save_bins = NULL){
   
   meta_data = seurat_object@meta.data[,meta_col,drop=FALSE]
-  gm_1_sum <- t(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'data'))[,gm_1] %>% rowSums(.)
-  gm_2_sum <- t(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'data'))[,gm_2] %>% rowSums(.)
   
-  plot_data <- data.frame(gm_1_sum = gm_1_sum, gm_2_sum = gm_2_sum, meta_data)
+  gm_means = lapply(gms, function(x) t(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'data'))[,x] %>% rowMeans(.))
+  
+  if(is.null(names(gm_means))){names(gm_means) <- paste0('GM:', 1:length(gm_means), ' average')}
+  
+  plot_data <- cbind(do.call(cbind, gm_means), meta_data)
   
   plot_data <- plot_data %>%
-    mutate(ratio = gm_1_sum/(gm_1_sum + gm_2_sum)) %>%
+    rownames_to_column(var = 'cell_name') %>%
+    dplyr::select(-cell_name, cell_name) %>%
+    mutate(order_1 = rowMeans(.[, order_1, drop=FALSE])) %>%
+    mutate(order_2 = rowMeans(.[, order_2, drop=FALSE])) %>%
+    mutate(ratio = order_1/(order_1+order_2)) %>%
     arrange(ratio) %>%
-    pivot_longer(cols = c(gm_1_sum, gm_2_sum)) %>%
-    rename(expression_magnitude = value)
+    mutate(cell_order = row_number())
   
-  # Replace GM names for facet labels
-  if(!is.null(facet_names)){
-    if(length(facet_names) != 2){
-      stop('facet_names must be a character vector of length 2')
-    }
-    plot_data$name <- c('gm_1_sum' = facet_names[1], 'gm_2_sum' = facet_names[2])[plot_data$name]
-  }
-  
-  plot_data$cell_order <- 1:nrow(plot_data)
-  
-  p1 = ggplot(plot_data, aes(x = cell_order, y = expression_magnitude)) +
-    theme_classic() +
-    geom_point(aes(colour = scHelper_cell_type), alpha = 0.5, size = 0.5) +
-    scale_colour_manual(values = ggPlotColours(length(unique((plot_data[[meta_col]])))), guide = guide_legend(override.aes = list(size=3),
-                                                                                                              title = '')) +
-    geom_smooth(method = "gam", se = FALSE, colour="purple", size=1.5) +
-    facet_wrap(~name, dir = "v", scales = "free") +
-    xlab("Cells") + ylab("Expression level") +
-    theme(axis.text.x=element_blank(),
-          axis.ticks.x = element_blank(),
-          legend.title = element_blank(),
-          legend.text = element_text(size=10),
-          strip.text.x = element_text(size = 10))
-  
-  if (show_bins == TRUE){
-    bin_size = length(plot_data$cell_order) / bin_number
+  if(show_bins == TRUE | !is.null(save_bins)){
+    bin_size = nrow(meta_data) / bin_number
     
-    start <- seq(min(plot_data$cell_order), max(plot_data$cell_order), by = bin_size)
-    end <- seq(min(plot_data$cell_order + bin_size-1), max(plot_data$cell_order + bin_size-1), by = bin_size)
+    start <- floor(seq(min(plot_data$cell_order), max(plot_data$cell_order), by = bin_size))
+    end <- floor(seq(min(plot_data$cell_order + bin_size-1), max(plot_data$cell_order + bin_size-1), by = bin_size))
     bins <- data.frame(start, end) %>% mutate(x = ifelse(row_number() %% 2 == 0, 'even', 'odd'))
+    
+    if(!is.null(save_bins)){
+      plots = lapply(1:nrow(bins), function(x) DimPlot(seurat_object, cells.highlight = plot_data$cell_name[c(bins[x, 'start'] : bins[x, 'end'])], combine = TRUE) + NoLegend() + ggtitle(paste("Bin ", x)))
+      dir.create(dirname(save_bins), recursive = TRUE)
+      png(save_bins, width = floor(sqrt(bin_number)) * 7, height = ceiling(sqrt(bin_number)) * 7, units = 'cm', res = 200)
+      grid.arrange(grobs = plots)
+      graphics.off()
+    }
     
     if(!is.null(extract_bins)){
       if(class(extract_bins) == 'list'){
@@ -93,6 +84,26 @@ coexpression = function(seurat_object, gm_1, gm_2, facet_names = NULL, meta_col=
     } else {
       stop("'extract_bins' must be a numeric array or a list containing numeric arrays")
     }
+    
+    plot_data = plot_data %>%
+      dplyr::select(-c(order_1, order_2, ratio)) %>%
+      pivot_longer(cols = -c(meta_col, cell_order, cell_name), names_to = 'gms', values_to = 'expression_magnitude')
+    
+    
+    p1 = ggplot(plot_data, aes(x = cell_order, y = expression_magnitude)) +
+      theme_classic() +
+      geom_point(aes(colour = as.factor(scHelper_cell_type)), alpha = 0.5, size = 0.5) +
+      scale_colour_manual(values = ggPlotColours(length(unique((plot_data[[meta_col]])))), guide = guide_legend(override.aes = list(size=3),
+                                                                                                                title = '')) +
+      geom_smooth(method = "gam", se = FALSE, colour="purple", size=1.5) +
+      facet_wrap(~gms, dir = "v", scales = "free", ncol=1) +
+      xlab("Cells") + ylab("Expression level") +
+      theme(axis.text.x=element_blank(),
+            axis.ticks.x = element_blank(),
+            legend.title = element_blank(),
+            legend.text = element_text(size=10),
+            strip.text.x = element_text(size = 10))
+    
     
     p1 <- p1 +
       new_scale_color() +
@@ -215,9 +226,9 @@ library(tidyverse)
 library(Antler)
 library(RColorBrewer)
 library(scHelper)
-install.packages('patchwork')
+# install.packages('patchwork')
 library(patchwork)
-install.packages("ggnewscale")
+# install.packages("ggnewscale")
 library(ggnewscale)
 
 # Set paths and load data
@@ -235,118 +246,300 @@ dir.create(rds_path, recursive = T)
 # seurat_data <- readRDS(list.files(data_path, pattern = "*.RDS", full.names = TRUE)[!list.files(data_path, pattern = "*.RDS") %>% grepl('antler', .)])
 # seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/transfer_labels/seurat/rds_files/seurat_label_transfer.RDS')
 # seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/transfer_subset/transfer_npb_subset/seurat/transfer_cluster/rds_files/transfer_clustered_data.RDS')
+hh5 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/hh5_splitstage_data/seurat/stage_state_classification/rds_files/hh5_cell_state_classification.RDS')
 hh6 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/hh6_splitstage_data/seurat/stage_state_classification/rds_files/hh6_cell_state_classification.RDS')
 hh7 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/hh7_splitstage_data/seurat/stage_state_classification/rds_files/hh7_cell_state_classification.RDS')
-ss8 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss8_splitstage_data/seurat/stage_state_classification/rds_files/ss8_cell_state_classification.RDS')
 ss4 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss4_splitstage_data/seurat/stage_state_classification/rds_files/ss4_cell_state_classification.RDS')
+ss8 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss8_splitstage_data/seurat/stage_state_classification/rds_files/ss8_cell_state_classification.RDS')
 
 
 ####################################################################################################
 # Run coexpression using PPR and NC gene modules from ss8
 subset <- readRDS('./output/NF-downstream_analysis_stacas/transfer_subset/transfer_ppr_nc_subset/seurat/transfer_cluster/rds_files/transfer_clustered_data.RDS')
 
-subset <- subset_seurat(subset, population = c('hh7', 'ss4', 'ss8'), split_by = 'stage', rerun_UMAP = FALSE)
-subset <- subset_seurat(subset, population = c('pPPR', 'aPPR', 'NC', 'delaminating_NC', 'PPR', 'aNPB', 'pNPB'), split_by = 'scHelper_cell_type', rerun_UMAP = TRUE)
-DimPlot(subset, group.by = 'scHelper_cell_type')
-DimPlot(subset, group.by = 'stage')
-
-
 antler_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss8_splitstage_data/antler/stage_gene_modules/rds_files/antler_out.RDS')
+
 ppr_gm <- unlist(antler_data$gene_modules$lists$unbiasedGMs_DE$content[c('GM5')])
 nc_gm <- unlist(antler_data$gene_modules$lists$unbiasedGMs_DE$content[c('GM2')])
+bin_number = 10
 
+# Plot module coexpression dynamics
+extract_bins = c(1, 3, 10)
 
-coexpression_highlight_cells(subset, gm_1 = ppr_gm, gm_2 = nc_gm, bin_number = 10)
+coexpression_plot = coexpression(subset, gms = list('PPR GM' = ppr_gm, 'NC GM' = nc_gm), meta_col = c('scHelper_cell_type'),
+                    order_1 = 1, order_2 = c(2), show_bins = TRUE, bin_number = bin_number, extract_bins = extract_bins,
+                    save_bins = paste0(plot_path, 'bins.png'))
 
+png(paste0(plot_path, 'coexpression_dynamics.png'), width = 20, height = 20, res = 200, units = 'cm')
+coexpression_plot
+graphics.off()
 
-# Plot module expression together with UMAPS
-extract_bins = list(c(1), c(4), c(10))
-plots = list()
-plots[[1]] <- coexpression(subset, gm_1 = ppr_gm, gm_2 = nc_gm, meta_col = c('scHelper_cell_type'), show_bins = TRUE, bin_number = 10, extract_bins = extract_bins, facet_names = c('PPR module', 'NC module'))
+# Plot bins on UMAP
 for(i in 1:length(extract_bins)){
-  plots[[i+1]] <- DimPlot(object = subset, cells.highlight = extract_bin(subset, gm_1 = ppr_gm, gm_2 = nc_gm, meta_data = c('scHelper_cell_type'), bin_number = 10, bin_extract = extract_bins[[i]]), cols.highlight = viridis::viridis(3)[i]) +
-    theme_void() +
-    NoLegend()
+  png(paste0(plot_path, 'bin_', extract_bins[[i]], '.png'), width = 10, height = 10, res = 200, units = 'cm')
+  print(DimPlot(object = subset, cells.highlight = extract_bin(subset, gm_1 = ppr_gm, gm_2 = nc_gm, meta_data = c('scHelper_cell_type'), bin_number = bin_number, bin_extract = extract_bins[[i]]), cols.highlight = viridis::viridis(length(extract_bins))[i]) +
+          theme_void() +
+          NoLegend() +
+          ggtitle(paste0('Bin ', extract_bins[[i]])) +
+          theme(plot.title = element_text(hjust = 0.5, colour = viridis::viridis(length(extract_bins))[i], face = 'bold', size = 20)))
+  graphics.off()
 }
 
-layout <- '
-AAAAAAAA
-BB#CC#DD
-'
-png(paste0(plot_path, 'binned_mod_dyn.png'), width = 20, height = 20, res = 200, units = 'cm')
-wrap_plots(A = plots[[1]], B = plots[[2]], C = plots[[3]], D = plots[[4]], design = layout, heights = c(2,1))
+# Plot cell type and stage in same res as above
+subset@meta.data$scHelper_cell_type <- factor(subset@meta.data$scHelper_cell_type, levels = c('delaminating_NC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'))
+
+png(paste0(plot_path, 'cell_state.png'), width = 11.5, height = 9, res = 200, units = 'cm')
+DimPlot(subset, group.by = 'scHelper_cell_type') +
+  theme_void() +
+  theme(plot.title = element_blank())
 graphics.off()
 
 
-# Highlight bins on different stage subsets
-bin_sub <- lapply(extract_bins, function(x) extract_bin(subset, gm_1 = ppr_gm, gm_2 = nc_gm, meta_data = c('scHelper_cell_type'), bin_number = 10, bin_extract = x))
+png(paste0(plot_path, 'stage.png'), width = 10, height = 9, res = 200, units = 'cm')
+DimPlot(subset, group.by = 'stage') +
+  theme_void() +
+  theme(plot.title = element_blank())
+graphics.off()
 
-# hh7
-hh7@meta.data$bin_class <- apply(hh7@meta.data %>% rownames_to_column, 1, function(x) if(x["rowname"] %in% bin_sub[[1]]){"a"} else if(x["rowname"] %in% bin_sub[[2]]){"b"} else if(x["rowname"] %in% bin_sub[[3]]){"c"} else {NA})
-plot_data <- merge(as.data.frame(hh7[["umap"]]@cell.embeddings), hh7@meta.data[,'bin_class',drop=FALSE], by = 0) %>% column_to_rownames('Row.names')
 
-png(paste0(plot_path, 'highlight_bins_hh7.png'), width = 8, height = 8, res = 200, units = 'cm')
+
+
+###########
+# Stage subsets
+
+bin_extract = 3
+bin_sub <- lapply(extract_bins, function(x) extract_bin(subset, gm_1 = ppr_gm, gm_2 = nc_gm, meta_data = c('scHelper_cell_type'), bin_number = bin_number, bin_extract = bin_extract))
+
+
+# HH5
+############################################
+plot_data = merge(as.data.frame(hh5[["umap"]]@cell.embeddings), hh5@meta.data, by = 0) %>% column_to_rownames('Row.names')
+
+png(paste0(plot_path, 'hh5_subset.png'), width = 10, height = 9, res = 200, units = 'cm')
 ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
-  geom_point(colour = 'gray80', size = 1) +
-  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2, colour = factor(bin_class))) +
-  viridis::scale_color_viridis(discrete=TRUE) +
+  geom_point(colour = 'gray90', size = 1) +
+  geom_point(data = subset(plot_data, scHelper_cell_type %in% c('delaminating_NC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR')), size = 1, aes(colour = scHelper_cell_type)) +
+  guides(color = guide_legend(override.aes = list(size = 3))) +
+  theme_void() +
+  ggtitle('HH5') +
+  theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 20),
+        legend.title = element_blank(),
+        legend.text = element_text(size=9),
+        legend.key.size = unit(0.6, "cm"))
+graphics.off()
+
+
+# Highlight bin 3 on stage subset
+plot_data = subset(plot_data, scHelper_cell_type %in% c('delaminating_NC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'))
+
+plot_data$bin_class <- apply(plot_data %>% rownames_to_column, 1, function(x) if(x["rowname"] %in% bin_sub[[1]]){"a"} else if(x["rowname"] %in% bin_sub[[2]]){"b"} else if(x["rowname"] %in% bin_sub[[3]]){"c"} else {NA})
+
+png(paste0(plot_path, 'hh5_highlight_bins.png'), width = 9, height = 9, res = 200, units = 'cm')
+ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
+  geom_point(colour = 'gray90', size = 1) +
+  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2), colour = viridis::viridis(length(extract_bins))[2]) +
   theme_void() +
   NoLegend() +
-  ggtitle('hh7') +
-  theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 15))
-graphics.off()
-
-png(paste0(plot_path, 'umap_coexpression_hh7.png'), width = 12, height = 10, res = 400, units = 'cm')
-plot_umap_gm_coexpression(hh7, gm_1 = ppr_gm, gm_2 = nc_gm, col.threshold = 0, two.colors = c("red", "blue"),
-                          negative.color = 'gray90', limit = 30, module_names = c('PPR module', 'NC module'), highlight_cell_size = 1.5)
+  ggtitle('HH5; Bin 3') +
+  theme(plot.title = element_text(hjust = 0.5, colour = viridis::viridis(length(extract_bins))[2], face = 'bold', size = 20))
 graphics.off()
 
 
-# 4ss
-ss4@meta.data$bin_class <- apply(ss4@meta.data %>% rownames_to_column, 1, function(x) if(x["rowname"] %in% bin_sub[[1]]){"a"} else if(x["rowname"] %in% bin_sub[[2]]){"b"} else if(x["rowname"] %in% bin_sub[[3]]){"c"} else {NA})
-plot_data <- merge(as.data.frame(ss4[["umap"]]@cell.embeddings), ss4@meta.data[,'bin_class',drop=FALSE], by = 0) %>% column_to_rownames('Row.names')
+# Plot co-expression
+# subset cells from bins
+hh5_coexpression <- subset(hh5, cells = rownames(plot_data))
 
-png(paste0(plot_path, 'highlight_bins_ss4.png'), width = 8, height = 8, res = 200, units = 'cm')
-ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
-  geom_point(colour = 'gray80', size = 1) +
-  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2, colour = factor(bin_class))) +
-  viridis::scale_color_viridis(discrete=TRUE) +
-  theme_void() +
-  NoLegend() +
-  ggtitle('4ss') +
-  theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 15))
-graphics.off()
-
-
-png(paste0(plot_path, 'umap_coexpression_ss4.png'), width = 12, height = 10, res = 400, units = 'cm')
-plot_umap_gm_coexpression(ss4, gm_1 = ppr_gm, gm_2 = nc_gm, col.threshold = 0, two.colors = c("red", "blue"),
-                          negative.color = 'gray90', limit = 30, module_names = c('PPR module', 'NC module'), highlight_cell_size = 1.5)
-graphics.off()
-
-
-# 8ss
-ss8@meta.data$bin_class <- apply(ss8@meta.data %>% rownames_to_column, 1, function(x) if(x["rowname"] %in% bin_sub[[1]]){"a"} else if(x["rowname"] %in% bin_sub[[2]]){"b"} else if(x["rowname"] %in% bin_sub[[3]]){"c"} else {NA})
-plot_data <- merge(as.data.frame(ss8[["umap"]]@cell.embeddings), ss8@meta.data[,'bin_class',drop=FALSE], by = 0) %>% column_to_rownames('Row.names')
-
-png(paste0(plot_path, 'highlight_bins_ss8.png'), width = 8, height = 8, res = 200, units = 'cm')
-ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
-  geom_point(colour = 'gray80', size = 1) +
-  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2, colour = factor(bin_class))) +
-  viridis::scale_color_viridis(discrete=TRUE) +
-  theme_void() +
-  NoLegend() +
-  ggtitle('8ss') +
-  theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 15))
-graphics.off()
-
-
-png(paste0(plot_path, 'umap_coexpression_ss8.png'), width = 12, height = 10, res = 200, units = 'cm')
-plot_umap_gm_coexpression(ss8, gm_1 = ppr_gm, gm_2 = nc_gm, col.threshold = 0, two.colors = c("red", "blue"),
+png(paste0(plot_path, 'hh5_UMAP_coexpression.png'), width = 14, height = 10, res = 400, units = 'cm')
+plot_umap_gm_coexpression(hh5_coexpression, gm_1 = ppr_gm, gm_2 = nc_gm, col.threshold = 0, two.colors = c("red", "blue"),
                           negative.color = 'gray90', limit = 30, module_names = c('PPR module', 'NC module'), highlight_cell_size = 1.5)
 graphics.off()
 
 
 
 
+# HH6
+############################################
+plot_data = merge(as.data.frame(hh6[["umap"]]@cell.embeddings), hh6@meta.data, by = 0) %>% column_to_rownames('Row.names')
+
+png(paste0(plot_path, 'hh6_subset.png'), width = 10, height = 9, res = 200, units = 'cm')
+ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
+  geom_point(colour = 'gray90', size = 1) +
+  geom_point(data = subset(plot_data, scHelper_cell_type %in% c('delaminating_NC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR')), size = 1, aes(colour = scHelper_cell_type)) +
+  guides(color = guide_legend(override.aes = list(size = 3))) +
+  theme_void() +
+  ggtitle('HH6') +
+  theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 20),
+        legend.title = element_blank(),
+        legend.text = element_text(size=9),
+        legend.key.size = unit(0.6, "cm"))
+graphics.off()
+
+
+# Highlight bin 3 on stage subset
+plot_data = subset(plot_data, scHelper_cell_type %in% c('delaminating_NC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'))
+
+plot_data$bin_class <- apply(plot_data %>% rownames_to_column, 1, function(x) if(x["rowname"] %in% bin_sub[[1]]){"a"} else if(x["rowname"] %in% bin_sub[[2]]){"b"} else if(x["rowname"] %in% bin_sub[[3]]){"c"} else {NA})
+
+png(paste0(plot_path, 'hh6_highlight_bins.png'), width = 9, height = 9, res = 200, units = 'cm')
+ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
+  geom_point(colour = 'gray90', size = 1) +
+  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2), colour = viridis::viridis(length(extract_bins))[2]) +
+  theme_void() +
+  NoLegend() +
+  ggtitle('HH6; Bin 3') +
+  theme(plot.title = element_text(hjust = 0.5, colour = viridis::viridis(length(extract_bins))[2], face = 'bold', size = 20))
+graphics.off()
+
+
+# Plot co-expression
+# subset cells from bins
+hh6_coexpression <- subset(hh6, cells = rownames(plot_data))
+
+png(paste0(plot_path, 'hh6_UMAP_coexpression.png'), width = 14, height = 10, res = 400, units = 'cm')
+plot_umap_gm_coexpression(hh6_coexpression, gm_1 = ppr_gm, gm_2 = nc_gm, col.threshold = 0, two.colors = c("red", "blue"),
+                          negative.color = 'gray90', limit = 30, module_names = c('PPR module', 'NC module'), highlight_cell_size = 1.5)
+graphics.off()
+
+
+
+
+
+# HH7
+############################################
+plot_data = merge(as.data.frame(hh7[["umap"]]@cell.embeddings), hh7@meta.data, by = 0) %>% column_to_rownames('Row.names')
+
+png(paste0(plot_path, 'hh7_subset.png'), width = 10, height = 9, res = 200, units = 'cm')
+ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
+  geom_point(colour = 'gray90', size = 1) +
+  geom_point(data = subset(plot_data, scHelper_cell_type %in% c('delaminating_NC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR')), size = 1, aes(colour = scHelper_cell_type)) +
+  guides(color = guide_legend(override.aes = list(size = 3))) +
+  theme_void() +
+  ggtitle('HH7') +
+  theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 20),
+        legend.title = element_blank(),
+        legend.text = element_text(size=9),
+        legend.key.size = unit(0.6, "cm"))
+graphics.off()
+
+
+# Highlight bin 3 on stage subset
+plot_data = subset(plot_data, scHelper_cell_type %in% c('delaminating_NC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'))
+
+plot_data$bin_class <- apply(plot_data %>% rownames_to_column, 1, function(x) if(x["rowname"] %in% bin_sub[[1]]){"a"} else if(x["rowname"] %in% bin_sub[[2]]){"b"} else if(x["rowname"] %in% bin_sub[[3]]){"c"} else {NA})
+
+png(paste0(plot_path, 'hh7_highlight_bins.png'), width = 9, height = 9, res = 200, units = 'cm')
+ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
+  geom_point(colour = 'gray90', size = 1) +
+  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2), colour = viridis::viridis(length(extract_bins))[2]) +
+  theme_void() +
+  NoLegend() +
+  ggtitle('HH7; Bin 3') +
+  theme(plot.title = element_text(hjust = 0.5, colour = viridis::viridis(length(extract_bins))[2], face = 'bold', size = 20))
+graphics.off()
+
+
+# Plot co-expression
+# subset cells from bins
+hh7_coexpression <- subset(hh7, cells = rownames(plot_data))
+
+png(paste0(plot_path, 'hh7_UMAP_coexpression.png'), width = 14, height = 10, res = 400, units = 'cm')
+plot_umap_gm_coexpression(hh7_coexpression, gm_1 = ppr_gm, gm_2 = nc_gm, col.threshold = 0, two.colors = c("red", "blue"),
+                          negative.color = 'gray90', limit = 30, module_names = c('PPR module', 'NC module'), highlight_cell_size = 1.5)
+graphics.off()
+
+
+
+
+
+
+
+# SS4
+############################################
+plot_data = merge(as.data.frame(ss4[["umap"]]@cell.embeddings), ss4@meta.data, by = 0) %>% column_to_rownames('Row.names')
+
+png(paste0(plot_path, 'ss4_subset.png'), width = 12, height = 9, res = 200, units = 'cm')
+ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
+  geom_point(colour = 'gray90', size = 1) +
+  geom_point(data = subset(plot_data, scHelper_cell_type %in% c('delaminating_NC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR')), size = 1, aes(colour = scHelper_cell_type)) +
+  guides(color = guide_legend(override.aes = list(size = 3))) +
+  theme_void() +
+  ggtitle('SS4') +
+  theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 20),
+        legend.title = element_blank(),
+        legend.text = element_text(size=9),
+        legend.key.size = unit(0.6, "cm"))
+graphics.off()
+
+
+# Highlight bin 3 on stage subset
+plot_data = subset(plot_data, scHelper_cell_type %in% c('delaminating_NC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'))
+
+plot_data$bin_class <- apply(plot_data %>% rownames_to_column, 1, function(x) if(x["rowname"] %in% bin_sub[[1]]){"a"} else if(x["rowname"] %in% bin_sub[[2]]){"b"} else if(x["rowname"] %in% bin_sub[[3]]){"c"} else {NA})
+
+png(paste0(plot_path, 'ss4_highlight_bins.png'), width = 9, height = 9, res = 200, units = 'cm')
+ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
+  geom_point(colour = 'gray90', size = 1) +
+  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2), colour = viridis::viridis(length(extract_bins))[2]) +
+  theme_void() +
+  NoLegend() +
+  ggtitle('SS4; Bin 3') +
+  theme(plot.title = element_text(hjust = 0.5, colour = viridis::viridis(length(extract_bins))[2], face = 'bold', size = 20))
+graphics.off()
+
+
+# Plot co-expression
+# subset cells from bins
+ss4_coexpression <- subset(ss4, cells = rownames(plot_data))
+
+png(paste0(plot_path, 'ss4_UMAP_coexpression.png'), width = 14, height = 10, res = 400, units = 'cm')
+plot_umap_gm_coexpression(ss4_coexpression, gm_1 = ppr_gm, gm_2 = nc_gm, col.threshold = 0, two.colors = c("red", "blue"),
+                          negative.color = 'gray90', limit = 30, module_names = c('PPR module', 'NC module'), highlight_cell_size = 1.5)
+graphics.off()
+
+
+
+
+# SS8
+############################################
+plot_data = merge(as.data.frame(ss8[["umap"]]@cell.embeddings), ss8@meta.data, by = 0) %>% column_to_rownames('Row.names')
+
+png(paste0(plot_path, 'ss8_subset.png'), width = 12, height = 9, res = 200, units = 'cm')
+ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
+  geom_point(colour = 'gray90', size = 1) +
+  geom_point(data = subset(plot_data, scHelper_cell_type %in% c('delaminating_NC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR')), size = 1, aes(colour = scHelper_cell_type)) +
+  guides(color = guide_legend(override.aes = list(size = 3))) +
+  theme_void() +
+  ggtitle('SS8') +
+  theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 20),
+        legend.title = element_blank(),
+        legend.text = element_text(size=9),
+        legend.key.size = unit(0.6, "cm"))
+graphics.off()
+
+
+# Highlight bin 3 on stage subset
+plot_data = subset(plot_data, scHelper_cell_type %in% c('delaminating_NC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'))
+
+plot_data$bin_class <- apply(plot_data %>% rownames_to_column, 1, function(x) if(x["rowname"] %in% bin_sub[[1]]){"a"} else if(x["rowname"] %in% bin_sub[[2]]){"b"} else if(x["rowname"] %in% bin_sub[[3]]){"c"} else {NA})
+
+png(paste0(plot_path, 'ss8_highlight_bins.png'), width = 9, height = 9, res = 200, units = 'cm')
+ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
+  geom_point(colour = 'gray90', size = 1) +
+  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2), colour = viridis::viridis(length(extract_bins))[2]) +
+  theme_void() +
+  NoLegend() +
+  ggtitle('SS8; Bin 3') +
+  theme(plot.title = element_text(hjust = 0.5, colour = viridis::viridis(length(extract_bins))[2], face = 'bold', size = 20))
+graphics.off()
+
+
+# Plot co-expression
+# subset cells from bins
+ss8_coexpression <- subset(ss8, cells = rownames(plot_data))
+
+png(paste0(plot_path, 'ss8_UMAP_coexpression.png'), width = 14, height = 10, res = 400, units = 'cm')
+plot_umap_gm_coexpression(ss8_coexpression, gm_1 = ppr_gm, gm_2 = nc_gm, col.threshold = 0, two.colors = c("red", "blue"),
+                          negative.color = 'gray90', limit = 30, module_names = c('PPR module', 'NC module'), highlight_cell_size = 1.5)
+graphics.off()
 
 
