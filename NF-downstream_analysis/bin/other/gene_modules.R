@@ -123,9 +123,11 @@ gms <- DEGeneModules(seurat_data, antler_data$gene_modules$get("unbiasedGMs"), l
 antler_data$gene_modules$set(name= "unbiasedGMs_DE", content = gms)
 
 ########## DE batch filter GMs ##############
-# Filter gene modules which are deferentially expressed across batches
+# Filter gene modules which are deferentially expressed across batches - first filter stages which have multiple runs to test for DEA
 if(length(unique(seurat_data$run)) > 1){
-  batch_gms <- DEGeneModules(seurat_data, antler_data$gene_modules$get("unbiasedGMs"), logfc = 0.5, pval = 0.001, selected_gene_proportion = 0.5, active_ident = 'run')
+  temp_seurat <- subset(seurat_data, cells = seurat_data@meta.data %>% filter(stage %in% c('hh6', 'ss4')) %>% rownames())
+    
+  batch_gms <- DEGeneModules(temp_seurat, antler_data$gene_modules$get("unbiasedGMs"), logfc = 0.25, pval = 0.001, selected_gene_proportion = 0.5, active_ident = 'run')
   gms <- antler_data$gene_modules$lists$unbiasedGMs_DE$content[!names(antler_data$gene_modules$lists$unbiasedGMs_DE$content) %in% names(batch_gms)]
   
   # save unbiasedGMs_DE in antler object
