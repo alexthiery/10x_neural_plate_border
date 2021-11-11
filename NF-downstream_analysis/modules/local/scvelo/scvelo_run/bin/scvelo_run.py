@@ -95,7 +95,7 @@ def plot_proportions(adata, clusterColumn):
 def preprocess_anndata(adata):
     scv.pp.filter_genes(adata, min_shared_counts=20)
     scv.pp.normalize_per_cell(adata)
-    scv.pp.filter_genes_dispersion(adata, n_top_genes=2000)
+    scv.pp.filter_genes_dispersion(adata, n_top_genes=2000, subset=False)
     scv.pp.log1p(adata)
     return(adata)
 
