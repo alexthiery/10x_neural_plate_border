@@ -151,7 +151,7 @@ workflow {
         .map {[it[0], it[1].collect{ file(it+"/cellranger/count/filtered_feature_bc_matrix", checkIfExists: true) }]}
         .set {ch_scRNAseq_counts}
 
-    // SEURAT_FILTERING( ch_scRNAseq_counts )
+    SEURAT_FILTERING( ch_scRNAseq_counts )
         
     /*------------------------------------------------------------------------------------*/
     /* Prepare inputs for scVelo
