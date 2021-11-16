@@ -18,7 +18,7 @@ def analysis_scripts                                = [:]
 analysis_scripts.transfer_labels                    = file("$baseDir/bin/seurat/transfer_labels.R", checkIfExists: true)
 analysis_scripts.gene_modules_latent_time           = file("$baseDir/bin/other/gene_modules_latent_time.R", checkIfExists: true)
 analysis_scripts.refined_gene_modules_latent_time   = file("$baseDir/bin/other/refined_gene_modules_latent_time.R", checkIfExists: true)
-
+analysis_scripts.gene_modules_npb_latent_time       = file("$baseDir/bin/other/gene_modules_latent_time_npb.R", checkIfExists: true)
 
 /*------------------------------------------------------------------------------------*/
 /* Workflow inclusions
@@ -124,6 +124,12 @@ include {SEURAT_TRANSFER_FULL_PROCESS as REFINED_TRANSFER_FULL_PROCESS} from "$b
 include {R as GENE_MODULES_LATENT_TIME} from "$baseDir/modules/local/r/main"                                                            addParams(  options:                                modules['gene_modules_latent_time'],
                                                                                                                                                     script:                                 analysis_scripts.gene_modules_latent_time )
 
+include {R as GENE_MODULES_NPB_LATENT_TIME} from "$baseDir/modules/local/r/main"                                                            addParams(  options:                            modules['gene_modules_latent_time_npb'],
+                                                                                                                                                    script:                                 analysis_scripts.gene_modules_npb_latent_time )
+
+
+
+
 include {R as REFINED_GENE_MODULES_LATENT_TIME} from "$baseDir/modules/local/r/main"                                                    addParams(  options:                                modules['refined_gene_modules_latent_time'],
                                                                                                                                                     script:                                 analysis_scripts.refined_gene_modules_latent_time )
 
@@ -145,7 +151,7 @@ workflow {
         .map {[it[0], it[1].collect{ file(it+"/cellranger/count/filtered_feature_bc_matrix", checkIfExists: true) }]}
         .set {ch_scRNAseq_counts}
 
-    SEURAT_FILTERING( ch_scRNAseq_counts )
+    // SEURAT_FILTERING( ch_scRNAseq_counts )
         
     /*------------------------------------------------------------------------------------*/
     /* Prepare inputs for scVelo
@@ -186,14 +192,14 @@ workflow {
     TRANSFER_LABELS( ch_combined )
 
     SEURAT_TRANSFER_FULL_PROCESS( TRANSFER_LABELS.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
-    SEURAT_TRANSFER_FULL_PROCESS2( TRANSFER_LABELS.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
-    REFINED_TRANSFER_FULL_PROCESS( TRANSFER_LABELS.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} ) // Run cellrank and gm dynamics with refined terminal states
+    // SEURAT_TRANSFER_FULL_PROCESS2( TRANSFER_LABELS.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
+    // REFINED_TRANSFER_FULL_PROCESS( TRANSFER_LABELS.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} ) // Run cellrank and gm dynamics with refined terminal states
 
 
     /*------------------------------------------------------------------------------------*/
     /* Run analysis on cluster subsets after transfer labels
     --------------------------------------------------------------------------------------*/
-    SEURAT_TRANSFER_LATE_STAGE_PROCESS( TRANSFER_LABELS.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
+    // SEURAT_TRANSFER_LATE_STAGE_PROCESS( TRANSFER_LABELS.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
     SEURAT_TRANSFER_PPR_NC_PROCESS( TRANSFER_LABELS.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
     // SEURAT_TRANSFER_PPR_FB_PROCESS( TRANSFER_LABELS.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
     // SEURAT_TRANSFER_FB_MBHB_PROCESS( TRANSFER_LABELS.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
@@ -209,20 +215,28 @@ workflow {
                                         .combine(ch_full_cellrank)
                                         .map{[[sample_id:'full_gm_latent_time'], it]}
 
-    ch_stage_latent_time            = SEURAT_STAGE_PROCESS.out.gene_modules_out
-                                        .map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]}
+    ch_npb_latent_time              = SEURAT_TRANSFER_PPR_NC_PROCESS.out.gene_modules_out
+                                        .map{it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]}
                                         .combine(ch_full_state_classification)
                                         .combine(ch_full_cellrank)
-                                        .map{[[sample_id:it[0].sample_id.split("_")[0]+'_gm_latent_time'], [it[1], it[2], it[3]]]}
+                                        .map{[[sample_id:'npb_gm_latent_time'], it]}
+
+    GENE_MODULES_NPB_LATENT_TIME( ch_full_latent_time.concat(ch_stage_latent_time) )
+
+    // ch_stage_latent_time            = SEURAT_STAGE_PROCESS.out.gene_modules_out
+    //                                     .map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]}
+    //                                     .combine(ch_full_state_classification)
+    //                                     .combine(ch_full_cellrank)
+    //                                     .map{[[sample_id:it[0].sample_id.split("_")[0]+'_gm_latent_time'], [it[1], it[2], it[3]]]}
     
     // GENE_MODULES_LATENT_TIME( ch_full_latent_time.concat(ch_stage_latent_time) )
 
 
-    ch_refined_latent_time         = REFINED_TRANSFER_FULL_PROCESS.out.gene_modules_out
-                                        .map{it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]}
-                                        .combine(ch_full_state_classification)
-                                        .combine(ch_full_cellrank)
-                                        .map{[[sample_id:'refined_gm_latent_time'], it]}
+    // ch_refined_latent_time         = REFINED_TRANSFER_FULL_PROCESS.out.gene_modules_out
+    //                                     .map{it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]}
+    //                                     .combine(ch_full_state_classification)
+    //                                     .combine(ch_full_cellrank)
+    //                                     .map{[[sample_id:'refined_gm_latent_time'], it]}
 
     // REFINED_GENE_MODULES_LATENT_TIME( ch_refined_latent_time.concat(ch_stage_latent_time) )
 }
