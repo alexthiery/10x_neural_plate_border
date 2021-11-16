@@ -2,7 +2,7 @@
 #SBATCH --job-name=10x-NPB
 #SBATCH -t 72:00:00
 #SBATCH --mail-type=ALL,ARRAY_TASKS
-#SBATCH --mail-user=eva.hamrude@crick.ac.uk
+#SBATCH --mail-user=eva.hamrud@crick.ac.uk
 
 export TERM=xterm
 

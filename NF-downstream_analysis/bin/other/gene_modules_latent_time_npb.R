@@ -28,7 +28,7 @@ dir.create(plot_path, recursive = T)
 dir.create(rds_path, recursive = T)
 
 metadata <- read.csv(list.files(data_path, pattern = "*.csv", full.names = TRUE))
-metadata <- read.csv('./output/NF-downstream_analysis_stacas/transfer_subset/transfer_ppr_nc_subset/cellrank/transfer_ppr_nc_subset_metadata.csv')
+# metadata <- read.csv('./output/NF-downstream_analysis_stacas/transfer_subset/transfer_ppr_nc_subset/cellrank/transfer_ppr_nc_subset_metadata.csv')
 
 seurat_data <- readRDS(list.files(data_path, pattern = "*.RDS", full.names = TRUE)[!list.files(data_path, pattern = "*.RDS") %>% grepl('antler', .)])
 seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/transfer_subset/transfer_ppr_nc_subset/seurat/transfer_cluster/rds_files/transfer_clustered_data.RDS')
