@@ -221,7 +221,7 @@ workflow {
                                         .combine(ch_full_cellrank)
                                         .map{[[sample_id:'npb_gm_latent_time'], it]}
 
-    GENE_MODULES_NPB_LATENT_TIME( ch_full_latent_time.concat(ch_stage_latent_time) )
+    GENE_MODULES_NPB_LATENT_TIME( ch_npb_latent_time )
 
     // ch_stage_latent_time            = SEURAT_STAGE_PROCESS.out.gene_modules_out
     //                                     .map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]}
