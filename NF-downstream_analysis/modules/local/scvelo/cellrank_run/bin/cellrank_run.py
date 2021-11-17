@@ -141,12 +141,12 @@ def main(args=None):
     g.compute_absorption_probabilities()
     cr.pl.lineages(adata, same_plot=False, save='absorption_probabilities.pdf')
     
-    # if all(value is None for value in adata.obs['terminal_states_probs']):
-    #     adata.obs = adata.obs.drop(['terminal_states_probs'], axis=1)
+    if all(value is None for value in adata.obs['terminal_states_probs']):
+        adata.obs = adata.obs.drop(['terminal_states_probs'], axis=1)
 
-    # adata = write_lineage_probs(adata)
+    adata = write_lineage_probs(adata)
     adata.write(args.output + '_cellrank.h5ad')
-    # adata.obs.to_csv(args.output + '_metadata.csv')
+    adata.obs.to_csv(args.output + '_metadata.csv')
     # return(args, adata)
 
 if __name__ == '__main__':
