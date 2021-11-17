@@ -91,6 +91,12 @@ def refinedTerminalStates(adata, estimator):
     cr.pl.terminal_states(adata, save='terminal_states.pdf')
     return(estimator)
 
+def terminalStates_ppr_nc(adata, estimator):
+    estimator.set_terminal_states({"NC": adata[adata.obs["scHelper_cell_type"].isin(['delaminating_NC', 'NC']) & adata.obs["stage"].isin(['ss8'])].obs_names,
+                  "placodal": adata[adata.obs["scHelper_cell_type"].isin(['aPPR', 'pPPR', 'PPR']) & adata.obs["stage"].isin(['ss8'])].obs_names})
+    cr.pl.terminal_states(adata, save='terminal_states.pdf')
+    return(estimator)
+
 def write_lineage_probs(adata):
     for lineage in adata.obsm['to_terminal_states'].names:
         colname = 'lineage_' + lineage + '_probability'
@@ -129,6 +135,8 @@ def main(args=None):
         g = transferLabelTerminalStates2(adata, g)
     elif args.dataType == 'refined':
         g = refinedTerminalStates(adata, g)
+    elif args.dataType == 'ppr_nc':
+        g = terminalStates_ppr_nc(adata, g)
         
     g.compute_absorption_probabilities()
     cr.pl.lineages(adata, same_plot=False, save='absorption_probabilities.pdf')

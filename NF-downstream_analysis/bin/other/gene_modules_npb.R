@@ -29,11 +29,11 @@ if(opt$verbose) print(opt)
   if(length(commandArgs(trailingOnly = TRUE)) == 0){
     cat('No command line arguments provided, paths are set for running interactively in Rstudio server\n')
     
-    plot_path = "./output/NF-downstream_analysis_stacas/run_split/2_splitrun_data/antler/plots/"
-    rds_path = "./output/NF-downstream_analysis_stacas/run_split/2_splitrun_data/antler/rds_files/"
-    gm_path = "./output/NF-downstream_analysis_stacas/run_split/2_splitrun_data/antler/gene_module_lists/"
-    antler_path = "./output/NF-downstream_analysis_stacas/run_split/2_splitrun_data/antler/antler_data/"
-    data_path = "./output/NF-downstream_analysis_stacas/run_split/2_splitrun_data/seurat/run_state_classification/rds_files/"
+    plot_path = "./plot_path/"
+    rds_path = "./rds_path/"
+    gm_path = "./gm_path/"
+    antler_path = "./antler_data/"
+    data_path = "./output/NF-downstream_analysis_stacas/transfer_subset/transfer_ppr_nc_subset/seurat/transfer_cluster/rds_files/"
     
     ncores = 8
     meta_col = 'scHelper_cell_type'
@@ -115,9 +115,37 @@ if (is.null(names(antler_data$gene_modules$lists$unbiasedGMs$content))) {
   names(antler_data$gene_modules$lists$unbiasedGMs$content) <- paste0("GM", 1:length(antler_data$gene_modules$lists$unbiasedGMs$content))
 }
 
+# Edit DEGeneModules function to allow for pairwise DE tests
+DEGeneModules <- function (seurat_data, gene_modules, logfc = 0.25, pval = 0.001, 
+          selected_gene_proportion = 0.5, active_ident = NULL, ident_1 = NULL, ident_2 = NULL) 
+{
+  if (!is.null(active_ident)) {
+    Idents(object = seurat_data) <- active_ident
+  }
+  if (!is.null(ident_1) | !is.null(ident_2)){
+    if (is.null(ident_1) | is.null(ident_2)){
+      stop('both ident_1 and ident_2 must be specified for pairwise comparisons')
+    }
+    DE_genes <- FindMarkers(seurat_data, ident.1 = ident_1, ident.2 = ident_2, logfc.threshold = logfc) %>% 
+      filter(p_val_adj < pval)
+  } else {
+    DE_genes <- FindAllMarkers(seurat_data, only.pos = T, logfc.threshold = logfc) %>% 
+      filter(p_val_adj < pval)
+  }  
+  gms <- SubsetGeneModules(gene_modules, selected_genes = rownames(DE_genes), 
+                           keep_mod_ID = T, selected_gene_proportion = selected_gene_proportion)
+  return(gms)
+}
+
 ########## DE GMs ##############
-# Plot gene modules with at least 50% of genes DE > 0.25 logFC & FDR < 0.001
-gms <- DEGeneModules(seurat_data, antler_data$gene_modules$get("unbiasedGMs"), logfc = 0.5, pval = 0.001, selected_gene_proportion = 0.5, active_ident = meta_col)
+# Plot gene modules with at least 50% of genes DE > 0.25 logFC & FDR < 0.001 between placodal and NC clusters
+# gms <- DEGeneModules(seurat_data, antler_data$gene_modules$get("unbiasedGMs"), logfc = 0.5, pval = 0.001, selected_gene_proportion = 0.5, active_ident = meta_col)
+
+
+gms <- DEGeneModules(seurat_data, antler_data$gene_modules$get("unbiasedGMs"), logfc = 0.25, pval = 0.001, selected_gene_proportion = 0.5, active_ident = meta_col,
+                     ident_1 = c('aPPR', 'pPPR', 'PPR'), ident_2 = c('NC', 'delaminating_NC'))
+
+
 
 # save unbiasedGMs_DE in antler object
 antler_data$gene_modules$set(name= "unbiasedGMs_DE", content = gms)
@@ -146,7 +174,6 @@ metadata <- if(length(unique(seurat_data@meta.data$run)) == 1){metadata
 
 # Allow manual setting of metadata using --force_order command line arg
 if(!is.null(opt$force_order)){metadata <- unlist(str_split(opt$force_order, pattern = ','))}
-
 ## Hard-coded orders for stage, clusters and cell types
 stage_order <- c("hh4", "hh5", "hh6", "hh7", "ss4", "ss8")
 seurat_clusters_order <- as.character(1:40)
@@ -194,9 +221,9 @@ if(sum(labels %in% metadata) !=0){
 # Order gms
 if (!is.null(metadata_1)){
   antler_data$gene_modules$lists$unbiasedGMs$content <- GeneModuleOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$unbiasedGMs$content,
-                                                                   metadata_1 = metadata_1, order_1 = order_1,
-                                                                   metadata_2 = metadata_2, order_2 = order_2,
-                                                                   plot_path = "scHelper_log/GM_classification/unbiasedGMs/")
+                                                                        metadata_1 = metadata_1, order_1 = order_1,
+                                                                        metadata_2 = metadata_2, order_2 = order_2,
+                                                                        plot_path = "scHelper_log/GM_classification/unbiasedGMs/")
 }
 
 png(paste0(plot_path, 'unbiasedGMs.png'), height = 150, width = 75, units = 'cm', res = 400)
@@ -210,9 +237,9 @@ graphics.off()
 # Order gms
 if (!is.null(metadata_1)){
   antler_data$gene_modules$lists$unbiasedGMs_DE$content <- GeneModuleOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE$content,
-                         metadata_1 = metadata_1, order_1 = order_1,
-                         metadata_2 = metadata_2, order_2 = order_2,
-                         rename_modules = metadata_2, plot_path = "scHelper_log/GM_classification/unbiasedGMs_DE/")
+                                                                           metadata_1 = metadata_1, order_1 = order_1,
+                                                                           metadata_2 = metadata_2, order_2 = order_2,
+                                                                           plot_path = "scHelper_log/GM_classification/unbiasedGMs_DE/")
 }
 
 ngene = length(unlist(antler_data$gene_modules$lists$unbiasedGMs_DE$content))
@@ -240,9 +267,9 @@ if(length(unique(seurat_data$run)) > 1){
   # Order gms
   if (metadata_1 %in% c("stage", "scHelper_cell_type", "seurat_clusters")){
     antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content <- GeneModuleOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content,
-                           metadata_1 = metadata_1, order_1 = order_1,
-                           metadata_2 = metadata_2, order_2 = order_2,
-                           rename_modules = metadata_2, plot_path = "scHelper_log/GM_classification/unbiasedGMs_DE_batchfilt/")
+                                                                                       metadata_1 = metadata_1, order_1 = order_1,
+                                                                                       metadata_2 = metadata_2, order_2 = order_2,
+                                                                                       plot_path = "scHelper_log/GM_classification/unbiasedGMs_DE_batchfilt/")
   }
   
   # Plot heatmaps
@@ -276,3 +303,4 @@ export_antler_modules(antler_data, publish_dir = gm_path, names_list = c('unbias
 
 ########## Save Antler object ##############
 saveRDS(antler_data, paste0(rds_path, 'antler_out.RDS'))
+
