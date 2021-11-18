@@ -132,6 +132,21 @@ TenxPheatmap(data = seurat_data, metadata = c(opt$meta_col, "stage"), custom_ord
              custom_order = cluster_order, selected_genes = unique(top15$gene), gaps_col = opt$meta_col, assay = 'RNA')
 graphics.off()
 
+
+# Plot feature plots for all variable genes
+# Set RNA to default assay
+DefaultAssay(seurat_data) <- "RNA"
+
+dir.create(paste0(plot_path, 'feature_plots/'))
+for(i in seurat_data@assays$RNA@var.features){
+    png(paste0(plot_path, 'feature_plots/', i, '.png'), height = 12, width = 12, units = 'cm', res = 100)
+    print(FeaturePlot(seurat_data, i))
+    graphics.off()
+}
+
+system(paste0("zip -rj ", plot_path, "feature_plots.zip ", paste0(plot_path, 'feature_plots/')))
+unlink(paste0(plot_path, 'feature_plots/'), recursive=TRUE, force=TRUE)
+
 saveRDS(seurat_data, paste0(rds_path, label, "_clustered_data.RDS"), compress = FALSE)
 
 

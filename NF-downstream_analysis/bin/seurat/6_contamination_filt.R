@@ -176,6 +176,19 @@ graphics.off()
 # PlotGeneVariance(seurat_obj = contamination_filt_data, group_by = "stage")
 # graphics.off()
 
+# Plot feature plots for all variable genes
+# Set RNA to default assay
+DefaultAssay(contamination_filt_data) <- "RNA"
+
+dir.create(paste0(plot_path, 'feature_plots/'))
+for(i in contamination_filt_data@assays$RNA@var.features){
+    png(paste0(plot_path, 'feature_plots/', i, '.png'), height = 12, width = 12, units = 'cm', res = 100)
+    print(FeaturePlot(contamination_filt_data, i))
+    graphics.off()
+}
+
+system(paste0("zip -rj ", plot_path, "feature_plots.zip ", paste0(plot_path, 'feature_plots/')))
+unlink(paste0(plot_path, 'feature_plots/'), recursive=TRUE, force=TRUE)
 
 # Plot remaining cell counts
 filt_counts <- contamination_filt_data@meta.data %>%
