@@ -15,7 +15,7 @@ include { VELOCYTO_CELLRANGER } from '../velocyto_flows/main.nf'             add
                                                                                             velocyto_run_10x_options: params.velocyto_run_10x_options )
 
 
-workflow scRNAseq_alignment {
+workflow SCRNASEQ_ALIGNMENT {
     take:
         fasta
         gtf
