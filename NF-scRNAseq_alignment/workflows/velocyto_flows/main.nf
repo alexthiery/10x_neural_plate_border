@@ -10,7 +10,7 @@ include {VELOCYTO_SAMTOOLS} from "../../tools/velocyto/main.nf" addParams(option
 include {VELOCYTO_RUN_10X} from "../../tools/velocyto/main.nf" addParams(options: params.velocyto_run_10x_options)
 
 // Define workflow to subset and index a genome region fasta file
-workflow velocyto_cellranger {
+workflow VELOCYTO_CELLRANGER {
     take:
         gtf
         cellranger_out
