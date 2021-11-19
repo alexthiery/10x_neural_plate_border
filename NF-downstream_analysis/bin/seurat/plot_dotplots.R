@@ -24,8 +24,8 @@ opt = getopt(spec)
   if(length(commandArgs(trailingOnly = TRUE)) == 0){
     cat('No command line arguments provided, paths are set for running interactively in Rstudio server\n')
     
-    plot_path = "./test/state_classification/plots/"
-    rds_path = "./test/state_classification/rds_files/"
+    plot_path = "./plots/"
+    rds_path = "./rds_files/"
     data_path = "./output/NF-downstream_analysis_stacas/filtered_seurat/seurat/state_classification/rds_files/"
     
     ncores = 8
@@ -52,8 +52,6 @@ opt = getopt(spec)
 }
 
 seurat_data <- readRDS(list.files(data_path, full.names = TRUE, pattern = '*.RDS'))
-seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/transfer_labels/seurat/rds_files/seurat_label_transfer.RDS')
-
 
 dotplot <- function(data, cells, genes, group_by, facet, group_by_levels=NULL, facet_dir = 'h', limits = c(0, NA), range = c(0,8)){
   
@@ -100,8 +98,6 @@ dotplot <- function(data, cells, genes, group_by, facet, group_by_levels=NULL, f
   
   return(plot)
 }
-
-
 
 
 cell_type_order <- c('extra_embryonic', 'NNE', 'prospective_epidermis', 'PPR', 'aPPR', 'pPPR', 'early_NPB', 'NPB',

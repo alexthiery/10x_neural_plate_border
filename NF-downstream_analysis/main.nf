@@ -107,7 +107,8 @@ include {SEURAT_TRANSFER_FULL_PROCESS} from "$baseDir/subworkflows/seurat_transf
                                                                                                                                                     seurat_h5ad_options:                    modules['seurat_h5ad'],
                                                                                                                                                     seurat_intersect_loom_options:          modules['transfer_labels_seurat_intersect_loom'],
                                                                                                                                                     scvelo_run_options:                     modules['transfer_labels_scvelo_run'],
-                                                                                                                                                    cellrank_run_options:                   modules['transfer_labels_cellrank_run'])
+                                                                                                                                                    cellrank_run_options:                   modules['transfer_labels_cellrank_run'],
+                                                                                                                                                    plot_dotplots_options:                  modules['plot_dotplots'])
 
 include {SEURAT_TRANSFER_FULL_PROCESS as SEURAT_TRANSFER_FULL_PROCESS2} from "$baseDir/subworkflows/seurat_transfer_full_process/main"  addParams(  gene_modules_options:                   modules['transfer_labels_gene_modules'],
                                                                                                                                                     seurat_h5ad_options:                    modules['seurat_h5ad'],
@@ -128,10 +129,9 @@ include {R as GENE_MODULES_NPB_LATENT_TIME} from "$baseDir/modules/local/r/main"
                                                                                                                                                     script:                                 analysis_scripts.gene_modules_npb_latent_time )
 
 
-
-
 include {R as REFINED_GENE_MODULES_LATENT_TIME} from "$baseDir/modules/local/r/main"                                                    addParams(  options:                                modules['refined_gene_modules_latent_time'],
                                                                                                                                                     script:                                 analysis_scripts.refined_gene_modules_latent_time )
+
 
 
 // Set channel for binary knowledge matrix for cell state classification

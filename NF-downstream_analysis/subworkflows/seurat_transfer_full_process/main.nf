@@ -8,13 +8,14 @@
 
 def analysis_scripts                                = [:]
 analysis_scripts.gene_modules                       = file("$baseDir/bin/other/gene_modules.R", checkIfExists: true)
-analysis_scripts.state_classification               = file("$baseDir/bin/seurat/state_classification.R", checkIfExists: true)
+analysis_scripts.plot_dotplots                      = file("$baseDir/bin/seurat/plot_dotplots.R", checkIfExists: true)
 
 params.gene_modules_options                         = [:]
 params.seurat_h5ad_options                          = [:]
 params.seurat_intersect_loom_options                = [:]
 params.scvelo_run_options                           = [:]
 params.cellrank_run_options                         = [:]
+params.plot_dotplots_options                        = [:]
 
 // Include Seurat R processes
 include {R as GENE_MODULES} from "$baseDir/modules/local/r/main"                    addParams(  options:                        params.gene_modules_options,
@@ -26,6 +27,8 @@ include {SEURAT_SCVELO} from "$baseDir/subworkflows/seurat_scvelo/main"         
                                                                                                 scvelo_run_options:             params.scvelo_run_options )
 
 include {CELLRANK_RUN} from "$baseDir/modules/local/scvelo/cellrank_run/main"       addParams(  options:                        params.cellrank_run_options)
+
+include {R as PLOT_DOTPLOTS} from "$baseDir/modules/local/r/main"                   addParams(  options:                        analysis_scripts.gene_modules)
 
 /*-----------------------------------------------------------------------------------------------------------------------------
 Log
@@ -47,6 +50,8 @@ workflow SEURAT_TRANSFER_FULL_PROCESS {
     main:
     // Run Seurat pipeline
     GENE_MODULES( seurat_out )
+
+    PLOT_DOTPLOTS( seurat_out )
 
     // Run scVelo
     SEURAT_H5AD( seurat_out )
