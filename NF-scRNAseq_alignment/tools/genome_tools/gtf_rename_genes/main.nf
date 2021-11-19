@@ -27,9 +27,9 @@ process GTF_RENAME_GENES {
 
     """
     #!/usr/local/bin/python
-        
+    
     import re
-
+    
     def rename_genes(gtf, outfile):
         gtf =  open(gtf, 'rt')
         
