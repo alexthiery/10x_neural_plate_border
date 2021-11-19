@@ -16,7 +16,7 @@ process cellranger_count {
         mode: 'copy',
         saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:'') }
 
-    container "streitlab/custom-nf-modules-cellranger:latest"
+    container "streitlab/custom-nf-modules-cellranger:base-4.0.0"
 
     input:
         tuple val(meta), path('fastqs/*')
@@ -53,7 +53,7 @@ process cellranger_mkgtf {
         mode: 'copy',
         saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:'') }
 
-    container "streitlab/custom-nf-modules-cellranger:latest"
+    container "streitlab/custom-nf-modules-cellranger:base-4.0.0"
 
     input:
         path(gtf)
@@ -84,7 +84,7 @@ process cellranger_mkref {
         mode: 'copy',
         saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:'') }
 
-    container "streitlab/custom-nf-modules-cellranger:latest"
+    container "streitlab/custom-nf-modules-cellranger:base-4.0.0"
 
     input:
         path(gtf)
