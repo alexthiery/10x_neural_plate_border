@@ -26,7 +26,7 @@ process GTF_RENAME_GENES {
         prefix = options.suffix ? "${options.suffix}" : "rename_genes"
 
     """
-    ./script.py --input ${gtf} --output ${prefix}.gtf
+    $moduleDir/bin/script.py --input ${gtf} --output ${prefix}.gtf
     """
 }
 
