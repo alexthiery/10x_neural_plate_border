@@ -8,7 +8,7 @@ params.options = [:]
 def options    = initOptions(params.options)
 
 
-process cellranger_count {
+process CELLRANGER_COUNT {
 
     label 'process_high'
 
@@ -45,7 +45,7 @@ process cellranger_count {
 }
 
 
-process cellranger_mkgtf {
+process CELLRANGER_MKGTF {
 
     label 'process_low'
 
@@ -76,7 +76,7 @@ process cellranger_mkgtf {
         """
 }
 
-process cellranger_mkref {
+process CELLRANGER_MKREF {
 
     label 'process_medium'
 

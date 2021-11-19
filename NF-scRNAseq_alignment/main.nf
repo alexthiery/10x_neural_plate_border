@@ -5,16 +5,16 @@ nextflow.enable.dsl=2
 // Don't overwrite global params.modules, create a copy instead and use that within the main script.
 def modules = params.modules.clone()
 
-include { gtf_tag_chroms } from './tools/genome_tools/gtf_tag_chroms/main.nf' addParams(  options: modules['gtf_tag_chroms'] )
+include {GTF_TAG_CHROMS} from './tools/genome_tools/gtf_tag_chroms/main.nf'     addParams(  options: modules['gtf_tag_chroms'] )
 
-include { gtf_rename_genes } from './tools/genome_tools/gtf_rename_genes/main.nf' addParams(  options: modules['gtf_rename_genes'] )
+include {GTF_RENAME_GENES} from './tools/genome_tools/gtf_rename_genes/main.nf' addParams(  options: modules['gtf_rename_genes'] )
 
 //  include whole alignment workflow
-include { scRNAseq_alignment } from './workflows/scRNAseq_alignment/main.nf' addParams(cellranger_mkgtf_options: modules['cellranger_mkgtf'],
-                                                                                                cellranger_mkref_options: modules['cellranger_mkref'],
-                                                                                                cellranger_count_options: modules['cellranger_count'],
-                                                                                                velocyto_samtools_options: modules['velocyto_samtools'],
-                                                                                                velocyto_run_10x_options: modules['velocyto_run_10x'] )
+include {SCRNASEQ_ALIGNMENT} from './workflows/scRNAseq_alignment/main.nf'      addParams(  cellranger_mkgtf_options: modules['cellranger_mkgtf'],
+                                                                                            cellranger_mkref_options: modules['cellranger_mkref'],
+                                                                                            cellranger_count_options: modules['cellranger_count'],
+                                                                                            velocyto_samtools_options: modules['velocyto_samtools'],
+                                                                                            velocyto_run_10x_options: modules['velocyto_run_10x'] )
 
 Channel
     .value(file(params.fasta, checkIfExists: true))
@@ -27,9 +27,9 @@ Channel
 
 workflow {
     // Add prefix to chromosomes of interest
-    gtf_tag_chroms( ch_gtf )
+    GTF_TAG_CHROMS( ch_gtf )
 
-    gtf_rename_genes(gtf_tag_chroms.out)
+    GTF_RENAME_GENES(GTF_TAG_CHROMS.out)
 
-    scRNAseq_alignment( ch_fasta, gtf_rename_genes.out, params.input )
+    SCRNASEQ_ALIGNMENT( ch_fasta, GTF_RENAME_GENES.out, params.input )
 }

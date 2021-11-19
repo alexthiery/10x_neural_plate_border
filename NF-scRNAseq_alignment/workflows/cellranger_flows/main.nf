@@ -4,13 +4,13 @@ params.cellranger_mkgtf_options    = [:]
 params.cellranger_mkref_options    = [:]
 params.cellranger_count_options    = [:]
 
-include {metadata} from "../../tools/metadata/main.nf"
-include {cellranger_mkgtf} from "../../tools/cellranger/main.nf" addParams(options: params.cellranger_mkgtf_options)
-include {cellranger_mkref} from "../../tools/cellranger/main.nf" addParams(options: params.cellranger_mkref_options)
-include {cellranger_count} from "../../tools/cellranger/main.nf" addParams(options: params.cellranger_count_options)
+include {METADATA} from "../../tools/metadata/main.nf"
+include {CELLRANGER_MKGTF} from "../../tools/cellranger/main.nf" addParams(options: params.cellranger_mkgtf_options)
+include {CELLRANGER_MKREF} from "../../tools/cellranger/main.nf" addParams(options: params.cellranger_mkref_options)
+include {CELLRANGER_COUNT} from "../../tools/cellranger/main.nf" addParams(options: params.cellranger_count_options)
 
 // Define workflow to subset and index a genome region fasta file
-workflow scRNAseq_alignment_cellranger {
+workflow SCRNASEQ_ALIGNMENT_CELLRANGER {
     take:
         fasta
         gtf
@@ -19,18 +19,18 @@ workflow scRNAseq_alignment_cellranger {
     main:
 
         // Set sample channel from samplesheet input
-        metadata( samplesheet )
+        METADATA( samplesheet )
 
         // Filter GTF based on gene biotypes passed in params.modules
-        cellranger_mkgtf( gtf )
+        CELLRANGER_MKGTF( gtf )
 
         // Make reference genome
-        cellranger_mkref( cellranger_mkgtf.out, fasta )
+        CELLRANGER_MKREF( CELLRANGER_MKGTF.out, fasta )
 
         // Obtain read counts
-        cellranger_count( metadata.out, cellranger_mkref.out.collect() )
+        CELLRANGER_COUNT( METADATA.out, CELLRANGER_MKREF.out.collect() )
 
     emit:
-        read_counts = cellranger_count.out.read_counts
-        cellranger_out = cellranger_count.out.cellranger_out
+        read_counts = CELLRANGER_COUNT.out.read_counts
+        cellranger_out = CELLRANGER_COUNT.out.cellranger_out
 }

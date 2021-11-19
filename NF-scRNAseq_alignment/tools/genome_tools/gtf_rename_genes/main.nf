@@ -6,7 +6,7 @@ include { initOptions; saveFiles; getSoftwareName } from './functions'
 params.options = [:]
 def options    = initOptions(params.options)
 
-process gtf_tag_chroms {
+process GTF_RENAME_GENES {
     
     label 'process_low'
 

@@ -7,7 +7,7 @@ include { initOptions; saveFiles; getSoftwareName } from './functions'
 params.options = [:]
 def options    = initOptions(params.options)
 
-process velocyto_run_10x {
+process VELOCYTO_RUN_10X {
 
     label "process_high"
 
@@ -39,7 +39,7 @@ process velocyto_run_10x {
         """
 }
 
-process velocyto_samtools {
+process VELOCYTO_SAMTOOLS {
 
     label "process_medium"
 

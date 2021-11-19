@@ -7,7 +7,7 @@ import groovy.transform.Synchronized
 nextflow.enable.dsl=2
 
 
-workflow metadata {
+workflow METADATA {
     take: file_path
     main:
         Channel
