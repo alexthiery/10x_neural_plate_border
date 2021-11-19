@@ -5,10 +5,10 @@ nextflow.enable.dsl=2
 // Don't overwrite global params.modules, create a copy instead and use that within the main script.
 def modules = params.modules.clone()
 
-include { gtf_tag_chroms } from '../modules/tools/genome_tools/main.nf' addParams(  options: modules['gtf_tag_chroms'] )
+include { gtf_tag_chroms } from './tools/genome_tools/main.nf' addParams(  options: modules['gtf_tag_chroms'] )
 
 //  include whole alignment workflow
-include { scRNAseq_alignment } from '../modules/workflows/scRNAseq_alignment/main.nf' addParams(cellranger_mkgtf_options: modules['cellranger_mkgtf'],
+include { scRNAseq_alignment } from './workflows/scRNAseq_alignment/main.nf' addParams(cellranger_mkgtf_options: modules['cellranger_mkgtf'],
                                                                                                 cellranger_mkref_options: modules['cellranger_mkref'],
                                                                                                 cellranger_count_options: modules['cellranger_count'],
                                                                                                 velocyto_samtools_options: modules['velocyto_samtools'],
