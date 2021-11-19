@@ -1,5 +1,8 @@
 #!/usr/local/bin/python
-    
+
+import os
+import sys
+import argparse
 import re
 
 def parse_args(args=None):
@@ -9,11 +12,12 @@ def parse_args(args=None):
     parser = argparse.ArgumentParser()
 
     parser.add_argument('-i', '--input', type=str, help="Input gtf path.", metavar='')
-    parser.add_argument('-o', '--output', type=str, help="Prefix for output gtf file.", metavar=''
+    parser.add_argument('-o', '--output', type=str, help="Prefix for output gtf file.", metavar='')
     return parser.parse_args(args)
 
 
-def rename_genes(gtf, outfile):
+def rename_genes(gtf, outfile, goi):
+        
     gtf =  open(gtf, 'rt')
     
     # create output file to write to
@@ -39,7 +43,7 @@ def main(args=None):
 
     goi = {'ENSGALG00000030902': 'SNAI2'}
 
-    rename_genes(gtf = args.input, 'rt', outfile = args.output)
+    rename_genes(gtf = args.input, outfile = args.output, goi = goi)
 
 if __name__ == '__main__':
     sys.exit(main())
