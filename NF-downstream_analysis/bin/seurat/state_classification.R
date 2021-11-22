@@ -72,22 +72,22 @@ cell_state_markers <- read.csv(list.files(data_path, full.names = TRUE, pattern 
 cell_state_markers <- apply(cell_state_markers, 2, function(x) rownames(cell_state_markers)[x > 0])
 
 cell_states = list(
-  hh4 = c('NNE', 'node', 'streak', 'extra_embryonic', 'early_NPB', 'early_neural', 'early_caudal_neural'),
+  hh4 = c('NNE', 'node', 'streak', 'EE', 'eNPB', 'eN', 'eCN'),
 
-  hh5 = c('NNE', 'node', 'streak', 'extra_embryonic', 'early_NPB', 'early_neural', 'early_caudal_neural',
+  hh5 = c('NNE', 'node', 'streak', 'EE', 'eNPB', 'eN', 'eCN',
           'NPB', 'aNPB', 'pNPB', 'NP', 'pNP', 'iNP', 'aNP', 'PPR', 'aPPR', 'pPPR'),
   
-  hh6 = c('NNE', 'node', 'streak', 'early_neural', 'early_caudal_neural',
+  hh6 = c('NNE', 'node', 'streak', 'eN', 'eCN',
           'NPB', 'aNPB', 'pNPB', 'NP', 'pNP', 'iNP', 'aNP', 'PPR', 'aPPR', 'pPPR'),
 
-  hh7 = c('prospective_epidermis', 'NPB', 'aNPB', 'pNPB', 'NC', 'delaminating_NC', 'NP', 'pNP', 'iNP',
-          'aNP', 'hindbrain', 'midbrain', 'forebrain', 'ventral_forebrain', 'PPR', 'aPPR', 'pPPR'),
+  hh7 = c('pEpi', 'NPB', 'aNPB', 'pNPB', 'NC', 'dNC', 'NP', 'pNP', 'iNP',
+          'aNP', 'HB', 'MB', 'FB', 'vFB', 'PPR', 'aPPR', 'pPPR'),
 
-  ss4 = c('prospective_epidermis', 'NPB', 'aNPB', 'pNPB', 'NC', 'delaminating_NC', 'NP', 'pNP', 'iNP',
-          'aNP', 'hindbrain', 'midbrain', 'forebrain', 'ventral_forebrain', 'PPR', 'aPPR', 'pPPR'),
+  ss4 = c('pEpi', 'NPB', 'aNPB', 'pNPB', 'NC', 'dNC', 'NP', 'pNP', 'iNP',
+          'aNP', 'HB', 'MB', 'FB', 'vFB', 'PPR', 'aPPR', 'pPPR'),
 
-  ss8 = c('prospective_epidermis', 'NPB', 'aNPB', 'pNPB', 'NC', 'delaminating_NC', 'NP', 'pNP', 'iNP',
-          'aNP', 'hindbrain', 'midbrain', 'forebrain', 'ventral_forebrain', 'PPR', 'aPPR', 'pPPR')
+  ss8 = c('pEpi', 'NPB', 'aNPB', 'pNPB', 'NC', 'dNC', 'NP', 'pNP', 'iNP',
+          'aNP', 'HB', 'MB', 'FB', 'vFB', 'PPR', 'aPPR', 'pPPR')
 )
 
 cell_state_markers <- lapply(cell_states, function(x) cell_state_markers[names(cell_state_markers) %in% x])
@@ -159,10 +159,10 @@ seurat_data@meta.data[['scHelper_cell_type']] <- unlist(apply(seurat_data@meta.d
 # seurat_data <- ClusterClassification(seurat_obj = seurat_data, cell_state_markers = cell_state_markers, force_assign = FALSE, quantile = 0.5, plot_path = paste0(plot_path, "scHelper_log/"))
 
 # Set scHelper levels and colours
-scHelper_cell_type_order <- c('extra_embryonic', 'NNE', 'prospective_epidermis', 'PPR', 'aPPR', 'pPPR',
-                              'early_NPB', 'NPB', 'aNPB', 'pNPB','NC', 'delaminating_NC',
-                              'early_neural', 'early_caudal_neural', 'NP', 'pNP', 'hindbrain', 'iNP', 'midbrain', 
-                              'aNP', 'forebrain', 'ventral_forebrain', 'node', 'streak')
+scHelper_cell_type_order <- c('EE', 'NNE', 'pEpi', 'PPR', 'aPPR', 'pPPR',
+                              'eNPB', 'NPB', 'aNPB', 'pNPB','NC', 'dNC',
+                              'eN', 'eCN', 'NP', 'pNP', 'HB', 'iNP', 'MB', 
+                              'aNP', 'FB', 'vFB', 'node', 'streak')
 
 scHelper_ann_colours <- c("#676060", "#AD2828", "#551616", "#FF0000", "#DE4D00", "#FF8300",
                           "#C8E81E", "#A5E702", "#6EE702", "#16973F", "#19B4A1", "#10E0E8",

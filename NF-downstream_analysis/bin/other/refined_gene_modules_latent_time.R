@@ -80,10 +80,10 @@ plot_data <- data.frame()
 for(mod_name in names(gms)){
   temp <- GetAssayData(seurat_data, assay = 'RNA', slot = 'scale.data')[gms[[mod_name]],]
   
-  temp <- merge(t(temp), seurat_data@meta.data[,c('latent_time', 'lineage_NC_probability', 'lineage_forebrain_probability', 'lineage_midbrain_probability', 'lineage_hindbrain_probability', 'lineage_aPPR_probability', 'lineage_pPPR_probability'), drop=FALSE], by=0)
+  temp <- merge(t(temp), seurat_data@meta.data[,c('latent_time', 'lineage_NC_probability', 'lineage_FB_probability', 'lineage_MB_probability', 'lineage_HB_probability', 'lineage_aPPR_probability', 'lineage_pPPR_probability'), drop=FALSE], by=0)
   plot_data <- temp %>%
     column_to_rownames('Row.names') %>%
-    pivot_longer(!c(latent_time, lineage_NC_probability, lineage_forebrain_probability, lineage_midbrain_probability, lineage_hindbrain_probability, lineage_aPPR_probability, lineage_pPPR_probability)) %>%
+    pivot_longer(!c(latent_time, lineage_NC_probability, lineage_FB_probability, lineage_MB_probability, lineage_HB_probability, lineage_aPPR_probability, lineage_pPPR_probability)) %>%
     rename(scaled_expression = value) %>%
     rename(gene = name) %>%
     pivot_longer(cols = !c(latent_time, gene, scaled_expression)) %>%

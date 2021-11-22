@@ -100,9 +100,9 @@ dotplot <- function(data, cells, genes, group_by, facet, group_by_levels=NULL, f
 }
 
 
-cell_type_order <- c('extra_embryonic', 'NNE', 'prospective_epidermis', 'PPR', 'aPPR', 'pPPR', 'early_NPB', 'NPB',
-                     'aNPB', 'pNPB', 'NC', 'delaminating_NC', 'early_neural', 'early_caudal_neural', 'NP', 'pNP',
-                     'hindbrain', 'iNP', 'midbrain', 'aNP', 'forebrain', 'ventral_forebrain', 'node', 'streak')
+cell_type_order <- c('EE', 'NNE', 'pEpi', 'PPR', 'aPPR', 'pPPR', 'eNPB', 'NPB',
+                     'aNPB', 'pNPB', 'NC', 'dNC', 'eN', 'eCN', 'NP', 'pNP',
+                     'HB', 'iNP', 'MB', 'aNP', 'FB', 'vFB', 'node', 'streak')
 
 
 genes <- rev(c('EPAS1', 'GATA3', 'SIX1', 'EYA2', 'DLX5', 'BMP4', 'MSX1', 'TFAP2A', 'TFAP2B', 'PAX7', 'SOX2', 'OTX2', 'YEATS4', 'SOX21', 'GBX2', 'SIX3', 'ADMP', 'EOMES'))

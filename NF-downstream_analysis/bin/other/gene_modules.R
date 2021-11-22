@@ -152,9 +152,9 @@ stage_order <- c("hh4", "hh5", "hh6", "hh7", "ss4", "ss8")
 seurat_clusters_order <- as.character(1:40)
 
 if(meta_col == 'scHelper_cell_type'){
-  scHelper_cell_type_order <- c('extra_embryonic', 'NNE', 'prospective_epidermis', 'PPR', 'aPPR', 'pPPR', 'early_NPB', 'NPB',
-                                'aNPB', 'pNPB', 'NC', 'delaminating_NC', 'early_neural', 'early_caudal_neural', 'NP', 'pNP',
-                                'hindbrain', 'iNP', 'midbrain', 'aNP', 'forebrain', 'ventral_forebrain', 'node', 'streak')
+  scHelper_cell_type_order <- c('EE', 'NNE', 'pEpi', 'PPR', 'aPPR', 'pPPR', 'eNPB', 'NPB',
+                                'aNPB', 'pNPB', 'NC', 'dNC', 'eN', 'eCN', 'NP', 'pNP',
+                                'HB', 'iNP', 'MB', 'aNP', 'FB', 'vFB', 'node', 'streak')
   
   scHelper_cell_type_order <- scHelper_cell_type_order[scHelper_cell_type_order %in% unique(seurat_data@meta.data[[meta_col]])]
   

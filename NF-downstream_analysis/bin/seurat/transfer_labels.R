@@ -45,10 +45,10 @@ DimPlot(seurat_data, group.by = opt$group_by, label = TRUE, label.size = 3, labe
 graphics.off()
 
 # read in scHelper_cell_type order and colours for every script
-scHelper_cell_type_order <- c('extra_embryonic', 'NNE', 'prospective_epidermis', 'PPR', 'aPPR', 'pPPR',
-                              'early_NPB', 'NPB', 'aNPB', 'pNPB','NC', 'delaminating_NC',
-                              'early_neural', 'early_caudal_neural', 'NP', 'pNP', 'hindbrain', 'iNP', 'midbrain', 
-                              'aNP', 'forebrain', 'ventral_forebrain', 'node', 'streak')
+scHelper_cell_type_order <- c('EE', 'NNE', 'pEpi', 'PPR', 'aPPR', 'pPPR',
+                              'eNPB', 'NPB', 'aNPB', 'pNPB','NC', 'dNC',
+                              'eN', 'eCN', 'NP', 'pNP', 'HB', 'iNP', 'MB', 
+                              'aNP', 'FB', 'vFB', 'node', 'streak')
 
 scHelper_ann_colours <- c("#676060", "#AD2828", "#551616", "#FF0000", "#DE4D00", "#FF8300",
                           "#C8E81E", "#A5E702", "#6EE702", "#16973F", "#19B4A1", "#10E0E8",

@@ -547,7 +547,7 @@ for(tissue in names(gm_class)){
 
 
 
-PPR_genes <- FindMarkers(seurat_data, ident.1 = c('aPPR', 'pPPR'), ident.2 = c('NC', 'delaminating_NC'), group.by = 'scHelper_cell_type', logfc.threshold = 1, only.pos = TRUE)
+PPR_genes <- FindMarkers(seurat_data, ident.1 = c('aPPR', 'pPPR'), ident.2 = c('NC', 'dNC'), group.by = 'scHelper_cell_type', logfc.threshold = 1, only.pos = TRUE)
 
 
 ggplot(plot_data %>% filter(module %in% gm_class$placodal) %>% filter(gene %in% rownames(PPR_genes)) %>% filter(lineage == 'placodal'),

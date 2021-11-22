@@ -286,7 +286,7 @@ for(i in 1:length(extract_bins)){
 }
 
 # Plot cell type and stage in same res as above
-subset@meta.data$scHelper_cell_type <- factor(subset@meta.data$scHelper_cell_type, levels = c('delaminating_NC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'))
+subset@meta.data$scHelper_cell_type <- factor(subset@meta.data$scHelper_cell_type, levels = c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'))
 
 png(paste0(plot_path, 'cell_state.png'), width = 11.5, height = 9, res = 200, units = 'cm')
 DimPlot(subset, group.by = 'scHelper_cell_type') +
@@ -318,7 +318,7 @@ plot_data = merge(as.data.frame(hh5[["umap"]]@cell.embeddings), hh5@meta.data, b
 png(paste0(plot_path, 'hh5_subset.png'), width = 10, height = 9, res = 200, units = 'cm')
 ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
   geom_point(colour = 'gray90', size = 1) +
-  geom_point(data = subset(plot_data, scHelper_cell_type %in% c('delaminating_NC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR')), size = 1, aes(colour = scHelper_cell_type)) +
+  geom_point(data = subset(plot_data, scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR')), size = 1, aes(colour = scHelper_cell_type)) +
   guides(color = guide_legend(override.aes = list(size = 3))) +
   theme_void() +
   ggtitle('HH5') +
@@ -330,7 +330,7 @@ graphics.off()
 
 
 # Highlight bin 3 on stage subset
-plot_data = subset(plot_data, scHelper_cell_type %in% c('delaminating_NC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'))
+plot_data = subset(plot_data, scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'))
 
 plot_data$bin_class <- apply(plot_data %>% rownames_to_column, 1, function(x) if(x["rowname"] %in% bin_sub[[1]]){"a"} else if(x["rowname"] %in% bin_sub[[2]]){"b"} else if(x["rowname"] %in% bin_sub[[3]]){"c"} else {NA})
 
@@ -364,7 +364,7 @@ plot_data = merge(as.data.frame(hh6[["umap"]]@cell.embeddings), hh6@meta.data, b
 png(paste0(plot_path, 'hh6_subset.png'), width = 10, height = 9, res = 200, units = 'cm')
 ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
   geom_point(colour = 'gray90', size = 1) +
-  geom_point(data = subset(plot_data, scHelper_cell_type %in% c('delaminating_NC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR')), size = 1, aes(colour = scHelper_cell_type)) +
+  geom_point(data = subset(plot_data, scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR')), size = 1, aes(colour = scHelper_cell_type)) +
   guides(color = guide_legend(override.aes = list(size = 3))) +
   theme_void() +
   ggtitle('HH6') +
@@ -376,7 +376,7 @@ graphics.off()
 
 
 # Highlight bin 3 on stage subset
-plot_data = subset(plot_data, scHelper_cell_type %in% c('delaminating_NC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'))
+plot_data = subset(plot_data, scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'))
 
 plot_data$bin_class <- apply(plot_data %>% rownames_to_column, 1, function(x) if(x["rowname"] %in% bin_sub[[1]]){"a"} else if(x["rowname"] %in% bin_sub[[2]]){"b"} else if(x["rowname"] %in% bin_sub[[3]]){"c"} else {NA})
 
@@ -411,7 +411,7 @@ plot_data = merge(as.data.frame(hh7[["umap"]]@cell.embeddings), hh7@meta.data, b
 png(paste0(plot_path, 'hh7_subset.png'), width = 10, height = 9, res = 200, units = 'cm')
 ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
   geom_point(colour = 'gray90', size = 1) +
-  geom_point(data = subset(plot_data, scHelper_cell_type %in% c('delaminating_NC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR')), size = 1, aes(colour = scHelper_cell_type)) +
+  geom_point(data = subset(plot_data, scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR')), size = 1, aes(colour = scHelper_cell_type)) +
   guides(color = guide_legend(override.aes = list(size = 3))) +
   theme_void() +
   ggtitle('HH7') +
@@ -423,7 +423,7 @@ graphics.off()
 
 
 # Highlight bin 3 on stage subset
-plot_data = subset(plot_data, scHelper_cell_type %in% c('delaminating_NC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'))
+plot_data = subset(plot_data, scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'))
 
 plot_data$bin_class <- apply(plot_data %>% rownames_to_column, 1, function(x) if(x["rowname"] %in% bin_sub[[1]]){"a"} else if(x["rowname"] %in% bin_sub[[2]]){"b"} else if(x["rowname"] %in% bin_sub[[3]]){"c"} else {NA})
 
@@ -460,7 +460,7 @@ plot_data = merge(as.data.frame(ss4[["umap"]]@cell.embeddings), ss4@meta.data, b
 png(paste0(plot_path, 'ss4_subset.png'), width = 12, height = 9, res = 200, units = 'cm')
 ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
   geom_point(colour = 'gray90', size = 1) +
-  geom_point(data = subset(plot_data, scHelper_cell_type %in% c('delaminating_NC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR')), size = 1, aes(colour = scHelper_cell_type)) +
+  geom_point(data = subset(plot_data, scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR')), size = 1, aes(colour = scHelper_cell_type)) +
   guides(color = guide_legend(override.aes = list(size = 3))) +
   theme_void() +
   ggtitle('SS4') +
@@ -472,7 +472,7 @@ graphics.off()
 
 
 # Highlight bin 3 on stage subset
-plot_data = subset(plot_data, scHelper_cell_type %in% c('delaminating_NC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'))
+plot_data = subset(plot_data, scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'))
 
 plot_data$bin_class <- apply(plot_data %>% rownames_to_column, 1, function(x) if(x["rowname"] %in% bin_sub[[1]]){"a"} else if(x["rowname"] %in% bin_sub[[2]]){"b"} else if(x["rowname"] %in% bin_sub[[3]]){"c"} else {NA})
 
@@ -506,7 +506,7 @@ plot_data = merge(as.data.frame(ss8[["umap"]]@cell.embeddings), ss8@meta.data, b
 png(paste0(plot_path, 'ss8_subset.png'), width = 12, height = 9, res = 200, units = 'cm')
 ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
   geom_point(colour = 'gray90', size = 1) +
-  geom_point(data = subset(plot_data, scHelper_cell_type %in% c('delaminating_NC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR')), size = 1, aes(colour = scHelper_cell_type)) +
+  geom_point(data = subset(plot_data, scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR')), size = 1, aes(colour = scHelper_cell_type)) +
   guides(color = guide_legend(override.aes = list(size = 3))) +
   theme_void() +
   ggtitle('SS8') +
@@ -518,7 +518,7 @@ graphics.off()
 
 
 # Highlight bin 3 on stage subset
-plot_data = subset(plot_data, scHelper_cell_type %in% c('delaminating_NC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'))
+plot_data = subset(plot_data, scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'))
 
 plot_data$bin_class <- apply(plot_data %>% rownames_to_column, 1, function(x) if(x["rowname"] %in% bin_sub[[1]]){"a"} else if(x["rowname"] %in% bin_sub[[2]]){"b"} else if(x["rowname"] %in% bin_sub[[3]]){"c"} else {NA})
 
