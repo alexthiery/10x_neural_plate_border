@@ -26,7 +26,7 @@ opt = getopt(spec)
     
     plot_path = "./plots/"
     rds_path = "./rds_files/"
-    data_path = "./output/NF-downstream_analysis_stacas/filtered_seurat/seurat/state_classification/rds_files/"
+    data_path = "./output/NF-downstream_analysis_stacas/transfer_labels/seurat/rds_files/"
     
     ncores = 8
     
@@ -59,7 +59,7 @@ dotplot <- function(data, cells, genes, group_by, facet, group_by_levels=NULL, f
     group_by_levels <- unique(seurat_data@meta.data[cells, group_by])
   }
   # Extract normalised data for genes and cells of interest and scale
-  scale_data <- t(GetAssayData(data, assay = 'RNA', slot = 'data')[genes, cells])
+  scale_data <- t(as.matrix(GetAssayData(data, assay = 'RNA', slot = 'data'))[genes, cells])
   
   # cbind facet and group data with expression data
   plot_data <- cbind(as.data.frame(scale_data), data@meta.data[rownames(scale_data),c(facet, group_by)])
@@ -117,7 +117,7 @@ dotplot(seurat_data, cells, genes, group_by = 'scHelper_cell_type', facet = 'sta
 graphics.off()
 
 
-genes <- rev(c('GATA3', 'DLX5', 'SIX1', 'EYA2', 'MSX1', 'TFAP2A', 'TFAP2B', 'Pax3', 'PAX7', 'CSRNP1', 'ENSGALG00000030902', 'SOX10', 'SOX2', 'SOX21', 'GBX2', 'PAX2', 'SIX3'))
+genes <- rev(c('GATA3', 'DLX5', 'SIX1', 'EYA2', 'MSX1', 'TFAP2A', 'TFAP2B', 'Pax3', 'PAX7', 'CSRNP1', 'SNAI2', 'SOX10', 'SOX2', 'SOX21', 'GBX2', 'PAX2', 'WNT4', 'SIX3', 'SHH'))
 cells <- rownames(filter(seurat_data@meta.data, stage %in% c('hh7', 'ss4', 'ss8')))
 
 png(paste0(plot_path, 'hh7-ss8_dotplot.png'), width = 23, height = 13, units = 'cm', res = 400)
