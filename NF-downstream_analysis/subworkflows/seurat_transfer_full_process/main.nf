@@ -28,7 +28,7 @@ include {SEURAT_SCVELO} from "$baseDir/subworkflows/seurat_scvelo/main"         
 
 include {CELLRANK_RUN} from "$baseDir/modules/local/scvelo/cellrank_run/main"       addParams(  options:                        params.cellrank_run_options)
 
-include {R as PLOT_DOTPLOTS} from "$baseDir/modules/local/r/main"                   addParams(  options:                        analysis_scripts.gene_modules)
+include {R as PLOT_DOTPLOTS} from "$baseDir/modules/local/r/main"                   addParams(  plot_dotplots_options:          params.plot_dotplots_options)
 
 /*-----------------------------------------------------------------------------------------------------------------------------
 Log
