@@ -19,6 +19,19 @@ spec = matrix(c(
 ), byrow=TRUE, ncol=4)
 opt = getopt(spec)
 
+#### PARAMS
+# Set scHelper levels and colours
+scHelper_cell_type_order <- c('EE', 'NNE', 'pEpi', 'PPR', 'aPPR', 'pPPR',
+                              'eNPB', 'NPB', 'aNPB', 'pNPB','NC', 'dNC',
+                              'eN', 'eCN', 'NP', 'pNP', 'HB', 'iNP', 'MB', 
+                              'aNP', 'FB', 'vFB', 'node', 'streak')
+
+scHelper_ann_colours <- c("#676060", "#AD2828", "#551616", "#FF0000", "#DE4D00", "#FF8300",
+                          "#C8E81E", "#A5E702", "#6EE702", "#16973F", "#19B4A1", "#10E0E8",
+                          "#BA3CA5", "#8A4FC5", "#0A0075", "#3B0075", "#8000FF", "#D800FF",
+                          "#FF00D4", "#F16DDB", "#FFBAF3", "#B672AA", "#BBBEBE", "#787878")
+names(scHelper_ann_colours) <- scHelper_cell_type_order
+
 # Set paths and load data
 {
   if(length(commandArgs(trailingOnly = TRUE)) == 0){
@@ -158,18 +171,6 @@ seurat_data@meta.data[['scHelper_cell_type']] <- unlist(apply(seurat_data@meta.d
 # Old method
 # seurat_data <- ClusterClassification(seurat_obj = seurat_data, cell_state_markers = cell_state_markers, force_assign = FALSE, quantile = 0.5, plot_path = paste0(plot_path, "scHelper_log/"))
 
-# Set scHelper levels and colours
-scHelper_cell_type_order <- c('EE', 'NNE', 'pEpi', 'PPR', 'aPPR', 'pPPR',
-                              'eNPB', 'NPB', 'aNPB', 'pNPB','NC', 'dNC',
-                              'eN', 'eCN', 'NP', 'pNP', 'HB', 'iNP', 'MB', 
-                              'aNP', 'FB', 'vFB', 'node', 'streak')
-
-scHelper_ann_colours <- c("#676060", "#AD2828", "#551616", "#FF0000", "#DE4D00", "#FF8300",
-                          "#C8E81E", "#A5E702", "#6EE702", "#16973F", "#19B4A1", "#10E0E8",
-                          "#BA3CA5", "#8A4FC5", "#0A0075", "#3B0075", "#8000FF", "#D800FF",
-                          "#FF00D4", "#F16DDB", "#FFBAF3", "#B672AA", "#BBBEBE", "#787878")
-names(scHelper_ann_colours) <- scHelper_cell_type_order
-
 # set levels and extract appropriate colours depending on seurat obj
 cell_type_order <- scHelper_cell_type_order[scHelper_cell_type_order %in% unique(seurat_data@meta.data[["scHelper_cell_type"]])]
 seurat_data@meta.data$scHelper_cell_type <- factor(seurat_data@meta.data$scHelper_cell_type, levels = cell_type_order)
@@ -182,9 +183,11 @@ ClustStagePlot(seurat_data, stage_col = "stage", cluster_col = "scHelper_cell_ty
 graphics.off()
 
 png(paste0(plot_path, "scHelper_celltype_umap_pretty.png"), width=12, height=12, units = 'cm', res = 200)
-DimPlot(seurat_data, group.by = 'scHelper_cell_type', label = TRUE, label.size = 5, 
+DimPlot(seurat_data, group.by = 'scHelper_cell_type', label = TRUE, 
+        label.size = ifelse(length(unique(seurat_data$run)) == 1, 5, 3),
         label.box = TRUE, repel = TRUE,
-        pt.size = 2, cols = cols) +
+        pt.size = ifelse(length(unique(seurat_data$run)) == 1, 2, 1), 
+        cols = cols) +
   ggplot2::theme_void() +
   ggplot2::theme(legend.position = "none", 
                  plot.title = element_blank())
