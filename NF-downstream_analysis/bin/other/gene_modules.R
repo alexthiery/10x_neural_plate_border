@@ -263,7 +263,7 @@ if (!is.null(metadata_1)){
   antler_data$gene_modules$lists$unbiasedGMs_DE$content <- GeneModuleOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE$content,
                          metadata_1 = metadata_1, order_1 = order_1,
                          metadata_2 = metadata_2, order_2 = order_2,
-                         rename_modules = metadata_2, plot_path = "scHelper_log/GM_classification/unbiasedGMs_DE/")
+                         plot_path = "scHelper_log/GM_classification/unbiasedGMs_DE/")
 }
 
 ngene = length(unlist(antler_data$gene_modules$lists$unbiasedGMs_DE$content))
@@ -293,7 +293,7 @@ if(length(unique(seurat_data$run)) > 1){
     antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content <- GeneModuleOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content,
                            metadata_1 = metadata_1, order_1 = order_1,
                            metadata_2 = metadata_2, order_2 = order_2,
-                           rename_modules = metadata_2, plot_path = "scHelper_log/GM_classification/unbiasedGMs_DE_batchfilt/")
+                           plot_path = "scHelper_log/GM_classification/unbiasedGMs_DE_batchfilt/")
   }
   
   # Plot heatmaps
