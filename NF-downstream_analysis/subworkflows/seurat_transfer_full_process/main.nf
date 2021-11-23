@@ -11,15 +11,18 @@ analysis_scripts.gene_modules                       = file("$baseDir/bin/other/g
 analysis_scripts.plot_dotplots                      = file("$baseDir/bin/seurat/plot_dotplots.R", checkIfExists: true)
 
 params.gene_modules_options                         = [:]
+params.plot_dotplots_options                        = [:]
 params.seurat_h5ad_options                          = [:]
 params.seurat_intersect_loom_options                = [:]
 params.scvelo_run_options                           = [:]
 params.cellrank_run_options                         = [:]
-params.plot_dotplots_options                        = [:]
 
 // Include Seurat R processes
 include {R as GENE_MODULES} from "$baseDir/modules/local/r/main"                    addParams(  options:                        params.gene_modules_options,
                                                                                                 script:                         analysis_scripts.gene_modules )
+
+include {R as PLOT_DOTPLOTS} from "$baseDir/modules/local/r/main"                   addParams(  options:                        params.plot_dotplots_options,
+                                                                                                script:                         analysis_scripts.plot_dotplots)
 
 include {SEURAT_H5AD} from "$baseDir/modules/local/seurat_h5ad/main"                addParams(  options:                        params.seurat_h5ad_options)
 
@@ -28,7 +31,6 @@ include {SEURAT_SCVELO} from "$baseDir/subworkflows/seurat_scvelo/main"         
 
 include {CELLRANK_RUN} from "$baseDir/modules/local/scvelo/cellrank_run/main"       addParams(  options:                        params.cellrank_run_options)
 
-include {R as PLOT_DOTPLOTS} from "$baseDir/modules/local/r/main"                   addParams(  plot_dotplots_options:          params.plot_dotplots_options)
 
 /*-----------------------------------------------------------------------------------------------------------------------------
 Log
