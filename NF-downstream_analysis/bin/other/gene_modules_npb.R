@@ -10,6 +10,56 @@ library(Antler)
 library(RColorBrewer)
 library(scHelper)
 
+### TEMP - overwrite scHelper GeneModuleOrder function
+GeneModuleOrder <- function (seurat_obj, gene_modules, metadata_1 = NULL, order_1 = NULL, 
+          metadata_2 = NULL, order_2 = NULL, rename_modules = NULL, 
+          plot_path = "scHelper_log/GM_classification/") 
+{
+  classified_gms_1 <- GeneModuleClassify(seurat_obj, gene_modules, 
+                                         metadata = metadata_1, plot_path = plot_path)
+  classified_gms_1 <- classified_gms_1 %>% arrange(match(!!sym(metadata_1), 
+                                                         order_1)) %>% group_by(!!sym(metadata_1)) %>% mutate(pos = 1:n()) %>% 
+    mutate(new_name = paste(!!sym(metadata_1), pos, sep = "-")) %>% 
+    dplyr::select(gene_module, !!sym(metadata_1), new_name)
+  ordered_gms <- gene_modules[order(match(names(gene_modules), 
+                                          classified_gms_1$gene_module))] # ordered on metadata_1 but not renamed
+  if (is.null(metadata_2) || is.na(metadata_2) || is.nan(metadata_2)) {
+    print(paste0("Gene modules ordered only on ", metadata_1))
+  }
+  else {
+    print(paste0("Gene modules ordered on ", metadata_1, 
+                 " AND ", metadata_2))
+    temp_seurat <- SplitObject(seurat_data, split.by = metadata_1)
+    classified_gms_2 <- c()
+    for (i in order_1) {
+      print(i)
+      subset_gms <- gene_modules[classified_gms_1 %>% filter(!!sym(metadata_1) == 
+                                                               i) %>% dplyr::pull(gene_module)]
+      if (length(subset_gms) != 0) {
+        temp <- GeneModuleClassify(seurat_data, subset_gms, 
+                                   metadata = metadata_2, plot_path = paste0(plot_path, 
+                                                                             i, "/"))
+        classified_gms_2 <- rbind(classified_gms_2, temp)
+      }
+    }
+    
+    classified_gms_2 <- classified_gms_2 %>% add_column(!!sym(metadata_1) := classified_gms_1[[metadata_1]])
+    
+    classified_gms_2 <- classified_gms_2 %>% arrange(!!sym(metadata_1), (match(!!sym(metadata_2), order_2))) %>% 
+      mutate(pos = 1:n()) %>% mutate(new_name = paste(!!sym(metadata_2), pos, sep = "-")) %>% 
+      dplyr::select(gene_module, !!sym(metadata_2), !!sym(metadata_1), new_name)
+    
+    ordered_gms <- gene_modules[order(match(names(gene_modules), classified_gms_2$gene_module))]
+    
+    if (!is.null(rename_modules) && rename_modules == metadata_2) {
+      names(ordered_gms) <- classified_gms_2$new_name
+    }
+  }
+  if (!is.null(rename_modules) && rename_modules == metadata_1) {
+    names(ordered_gms) <- classified_gms_1$new_name
+  }
+  return(ordered_gms)
+}
 
 # Read in command line opts
 option_list <- list(
