@@ -1,5 +1,110 @@
 #!/usr/bin/env Rscript
 
+
+test = function (seurat_obj, metadata, col_order = metadata[1], custom_order = NULL, 
+          custom_order_column = NULL, assay = "RNA", slot = "scale.data", 
+          gene_modules, selected_genes = NULL, hide_annotation = NULL,
+          gm_row_annotation = TRUE,
+          cell_subset = NULL, use_seurat_colours = TRUE, colour_scheme = c("PRGn", 
+                                                                           "RdYlBu", "Greys"), col_ann_order = rev(metadata),
+          order_genes = TRUE, annotation_names_row = FALSE, ...)
+
+
+{
+  if (!is.null(cell_subset)) {
+    seurat_obj <- subset(seurat_obj, cells = cell_subset)
+  }
+  seurat_obj@meta.data <- seurat_obj@meta.data[, metadata, 
+                                               drop = FALSE] %>% mutate_if(is.character, as.factor)
+  seurat_obj@meta.data[] <- lapply(seurat_obj@meta.data, function(x) if (is.factor(x)) 
+    factor(x)
+    else x)
+  col_ann <- seurat_obj@meta.data
+  col_ann <- col_ann[do.call("order", c(col_ann[col_order], 
+                                        list(decreasing = FALSE))), , drop = FALSE]
+  if (!is.null(custom_order)) {
+    if (is.null(custom_order_column)) {
+      "custom_order column must be specified \n"
+    }
+    if (!setequal(custom_order, unique(col_ann[[custom_order_column]]))) {
+      stop("custom_order factors missing from custom_order_column \n\n")
+    }
+    levels(col_ann[[custom_order_column]]) <- custom_order
+    col_ann <- col_ann[order(col_ann[[custom_order_column]]), 
+                       , drop = FALSE]
+  }
+
+  
+
+  if (use_seurat_colours == FALSE) {
+    ann_colours <- lapply(1:ncol(col_ann), function(x) setNames(colorRampPalette(brewer.pal(9, 
+                                                                                            colour_scheme[x])[2:9])(length(unique(col_ann[, x]))), 
+                                                                unique(col_ann[, x])))
+  }
+  else {
+    ann_colours <- lapply(colnames(col_ann), function(x) {
+      temp <- setNames(ggPlotColours(n = length(levels(col_ann[, 
+                                                               x]))), levels(col_ann[, x]))
+      temp[match(levels(col_ann[[x]]), names(temp))]
+    })
+  }
+  names(ann_colours) <- colnames(col_ann)
+  if (!is.null(selected_genes)) {
+    selected_GM <- SubsetGeneModules(gm = gene_modules, selected_genes = selected_genes)
+  }
+  else {
+    if (is.null(names(gene_modules))) {
+      names(gene_modules) <- paste0("GM: ", 1:length(gene_modules))
+    }
+    selected_GM <- gene_modules
+  }
+  if (gm_row_annotation == TRUE) {
+    row_ann <- stack(selected_GM) %>% rename(`Gene Modules` = ind) %>% 
+      column_to_rownames("values")
+  }
+  else {
+    row_ann <- NA
+  }
+  
+  ann_colours[["Gene Modules"]] <- setNames(colorRampPalette(brewer.pal(9, 
+                                                                        "Paired"))(length(unique(row_ann[["Gene Modules"]]))), 
+                                            unique(row_ann[["Gene Modules"]]))
+  
+  if (order_genes == TRUE) {
+    dir.create("scHelper_log/gene_hclustering/", recursive = TRUE, 
+               showWarnings = FALSE)
+    GMs_ordered_genes <- c()
+    for (i in names(selected_GM)) {
+      mat <- GetAssayData(object = seurat_obj, assay = assay, 
+                          slot = slot)
+      dist_mat <- dist(mat[selected_GM[[i]], ], method = "euclidean")
+      hclust_avg <- hclust(dist_mat, method = "average")
+      ordered_genes <- hclust_avg$labels[c(hclust_avg$order)]
+      GMs_ordered_genes[[i]] <- ordered_genes
+    }
+    selected_GM <- GMs_ordered_genes
+  }
+  
+  plot_data <- t(as.matrix(x = GetAssayData(object = seurat_obj, 
+                                            assay = assay, slot = slot)[unlist(selected_GM), rownames(col_ann), 
+                                                                        drop = FALSE]))
+  if (!is.null(cell_subset)) {
+    cat("rescaling data as cells have been subset \n")
+    plot_data <- t(scale(t(plot_data)))
+  }
+  plot_data <- replace(plot_data, plot_data >= 2, 2)
+  plot_data <- replace(plot_data, plot_data <= -2, -2)
+  
+  # test <- rle(as.character(col_ann$scHelper_cell_type))
+  
+  return(Heatmap(t(plot_data), col = PurpleAndYellow(),
+                 row_split = ifelse(!is.null(row_split), row_ann[[row_split]], NULL),
+                 column_split = ifelse(!is.null(row_split), col_ann[[column_split]], NULL),
+                 ...))
+}
+
+
+
 # Define arguments for Rscript
 library(getopt)
 library(future)
@@ -28,14 +133,14 @@ dir.create(plot_path, recursive = T)
 dir.create(rds_path, recursive = T)
 
 metadata <- read.csv(list.files(data_path, pattern = "*.csv", full.names = TRUE))
-# metadata <- read.csv('./output/NF-downstream_analysis_stacas/filtered_seurat/cellrank/NF-scRNAseq_alignment_out_metadata.csv')
+# metadata <- read.csv('./output/NF-downstream_analysis_stacas/transfer_labels/cellrank1/all_stages_filtered_metadata.csv')
 
 seurat_data <- readRDS(list.files(data_path, pattern = "*.RDS", full.names = TRUE)[!list.files(data_path, pattern = "*.RDS") %>% grepl('antler', .)])
 # seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/transfer_labels/seurat/rds_files/seurat_label_transfer.RDS')
 
 # load antler data
 antler_data <- readRDS(list.files(data_path, pattern = "antler_out.RDS", full.names = TRUE))
-# antler_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss8_splitstage_data/antler/stage_gene_modules/rds_files/antler_out.RDS')
+# antler_data <- readRDS('./output/NF-downstream_analysis_stacas/transfer_labels/antler/gene_modules/rds_files/antler_out.RDS')
 
 metadata$CellID <- paste0(metadata$CellID, "-1")
 
@@ -56,9 +161,6 @@ metadata <- metadata[ order(match(rownames(metadata), rownames(seurat_data@meta.
 # replace seurat metadata with scvelo metadata
 seurat_data@meta.data <- metadata
 
-# set boolean for whether dataset contains multiple batches
-multi_run <- ifelse(length(unique(seurat_data$run)) > 1, TRUE, FALSE)
-
 
 #############################################################################
 #                           NC Plac Neural gm subset                        #
@@ -66,8 +168,88 @@ multi_run <- ifelse(length(unique(seurat_data$run)) > 1, TRUE, FALSE)
 
 ####### Select modules of interest and plot new heatmap #######
 
+
+library(devtools)
+install_github("jokergoo/ComplexHeatmap")
+library(ComplexHeatmap)
+
+# Gu, Z. (2016) Complex heatmaps reveal patterns and correlations in multidimensional genomic data. DOI: 10.1093/bioinformatics/btw313
+
 # Set RNA to default assay for plotting expression data
 DefaultAssay(seurat_data) <- "RNA"
+
+
+debug(GeneModulePheatmap)
+
+scHelper_cell_type_order <- c('EE', 'NNE', 'pEpi', 'PPR', 'aPPR', 'pPPR', 'eNPB', 'NPB',
+                              'aNPB', 'pNPB', 'NC', 'dNC', 'eN', 'eCN', 'NP', 'pNP',
+                              'HB', 'iNP', 'MB', 'aNP', 'FB', 'vFB', 'node', 'streak')
+
+seurat_data@meta.data$scHelper_cell_type <- factor(seurat_data@meta.data$scHelper_cell_type, levels = scHelper_cell_type_order)
+
+png(paste0(plot_path, 'temp.png'), height = 50, width = 60, units = 'cm', res = 400)
+GeneModulePheatmap(seurat_obj = seurat_data,  metadata = c('stage', 'scHelper_cell_type'), gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content[1:3],
+                   show_rownames = FALSE, col_order = c('stage', 'scHelper_cell_type'), col_ann_order = c('stage', 'scHelper_cell_type'), gaps_col = 'stage', fontsize = 15, fontsize_row = 10)
+
+
+graphics.off()
+
+
+test <- rle(as.character(col_ann$scHelper_cell_type))
+test <- rle(as.character(col_ann$scHelper_cell_type))
+
+png('./test.png', width = 100, height = 50, res = 400, units = 'cm')
+test(seurat_obj = seurat_data,  metadata = c('stage', 'scHelper_cell_type'), gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content[1:3],
+     col_order = c('stage', 'scHelper_cell_type'), col_ann_order = c('stage', 'scHelper_cell_type'),
+     cluster_rows = FALSE,
+     show_row_names = FALSE, show_column_names = FALSE, column_title = NULL,
+     row_split = 'Gene Modules', column_split = 'stage')
+graphics.off()
+
+
+
+
+
+png('./test.png', width = 100, height = 50, res = 1200, units = 'cm')
+Heatmap(t(plot_data), col = PurpleAndYellow(), cluster_columns = cluster_cols, cluster_rows = cluster_rows,
+        show_column_names = show_colnames, column_title = NULL, show_row_names = show_rownames, row_split = row_ann$`Gene Modules`, column_split = col_ann$stage, row_title = NULL,
+        heatmap_legend_param = list(
+          title = "Scaled expression", at = c(-2, 0, 2), 
+          labels = c(-2, 0, 2),
+          legend_height = unit(7, "cm"),
+          grid_width = unit(1, "cm"),
+          title_gp = gpar(fontsize = 25, fontface = 'bold'),
+          labels_gp = gpar(fontsize = 20, fontface = 'bold'),
+          title_position = 'lefttop-rot',
+          x = unit(10, "npc")
+          # title_gap = unit(1, "cm")
+        ),
+        top_annotation = HeatmapAnnotation(stage = anno_block(gp = gpar(fill = ann_colours$stage),
+                                                              labels = levels(col_ann$stage), 
+                                                              labels_gp = gpar(col = "white", fontsize = 50, fontface='bold'))),
+        bottom_annotation = HeatmapAnnotation(scHelper_cell_type = anno_simple(x = as.character(col_ann$scHelper_cell_type),
+                                                                               col = ann_colours[['scHelper_cell_type']], height = unit(1, "cm")), show_annotation_name = FALSE,
+                                              labels = anno_mark(at = cumsum(test$lengths) - floor(test$lengths/2), labels = test$values, which = "column", side = 'bottom', labels_gp = gpar(fontsize = 40), lines_gp = gpar(lwd=8))),
+        left_annotation = rowAnnotation(stage = anno_block(gp = gpar(fill = ann_colours$`Gene Modules`),
+                                                           labels = levels(row_ann$`Gene Modules`), 
+                                                           labels_gp = gpar(col = "white", fontsize = 50, fontface='bold'))),
+        
+        
+)
+graphics.off()
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Iteratively get expression data for each gene module and bind to tidy dataframe
 plot_data <- data.frame()
