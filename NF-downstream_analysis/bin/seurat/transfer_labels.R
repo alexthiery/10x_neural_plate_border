@@ -18,7 +18,7 @@ scHelper_all_colours <- c("#676060", "#AD2828", "#551616", "#FF0000", "#DE4D00",
                           "#FF00D4", "#F16DDB", "#FFBAF3", "#B672AA", "#BBBEBE", "#787878")
 names(scHelper_all_colours) <- scHelper_all_order
 ########################       STAGE COLOURS     ###########################################
-stage_all_order <- c("HH4", "HH5", "HH6", "HH7", "ss4", "ss8")
+stage_all_order <- c("hh4", "hh5", "hh6", "hh7", "ss4", "ss8")
 
 stage_all_colours = c("#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F")
 names(stage_all_colours) <- stage_all_order
