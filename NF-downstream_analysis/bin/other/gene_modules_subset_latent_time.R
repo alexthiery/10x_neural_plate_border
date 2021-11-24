@@ -1,15 +1,13 @@
 #!/usr/bin/env Rscript
 
-
-test = function (seurat_obj, metadata, col_order = metadata[1], custom_order = NULL, 
-          custom_order_column = NULL, assay = "RNA", slot = "scale.data", 
-          gene_modules, selected_genes = NULL, hide_annotation = NULL,
-          gm_row_annotation = TRUE,
-          cell_subset = NULL, use_seurat_colours = TRUE, colour_scheme = c("PRGn", 
-                                                                           "RdYlBu", "Greys"), col_ann_order = rev(metadata),
-          order_genes = TRUE, annotation_names_row = FALSE, ...)
-
-
+GeneModulePheatmap <- function (seurat_obj, metadata, col_order = metadata[1], custom_order = NULL, 
+                  custom_order_column = NULL, assay = "RNA", slot = "scale.data", 
+                  gene_modules, selected_genes = NULL, hide_annotation = NULL, 
+                  gaps_row = TRUE, gaps_col = NULL, gm_row_annotation = TRUE, 
+                  cell_subset = NULL, use_seurat_colours = TRUE, colour_scheme = c("PRGn", 
+                                                                                   "RdYlBu", "Greys"), col_ann_order = rev(metadata), show_colnames = FALSE, 
+                  show_rownames = TRUE, cluster_rows = FALSE, cluster_cols = FALSE, 
+                  order_genes = TRUE, annotation_names_row = FALSE, ..., return = 'plot') 
 {
   if (!is.null(cell_subset)) {
     seurat_obj <- subset(seurat_obj, cells = cell_subset)
@@ -33,9 +31,13 @@ test = function (seurat_obj, metadata, col_order = metadata[1], custom_order = N
     col_ann <- col_ann[order(col_ann[[custom_order_column]]), 
                        , drop = FALSE]
   }
-
-  
-
+  if (!is.null(gaps_col)) {
+    ifelse(class(gaps_col) != "character", stop("gaps_col must be a metadata column name"), 
+           gaps_col <- cumsum(rle(as.vector(col_ann[[gaps_col]]))[["lengths"]]))
+  }
+  if (!is.null(hide_annotation)) {
+    col_ann[, hide_annotation] <- NULL
+  }
   if (use_seurat_colours == FALSE) {
     ann_colours <- lapply(1:ncol(col_ann), function(x) setNames(colorRampPalette(brewer.pal(9, 
                                                                                             colour_scheme[x])[2:9])(length(unique(col_ann[, x]))), 
@@ -65,11 +67,17 @@ test = function (seurat_obj, metadata, col_order = metadata[1], custom_order = N
   else {
     row_ann <- NA
   }
-  
+  if (gaps_row == TRUE) {
+    row_ann <- droplevels(row_ann)
+    gaps_row = cumsum(summary(row_ann[["Gene Modules"]], 
+                              maxsum = max(lengths(lapply(row_ann, unique)))))
+  }
+  else {
+    gaps_row = NULL
+  }
   ann_colours[["Gene Modules"]] <- setNames(colorRampPalette(brewer.pal(9, 
                                                                         "Paired"))(length(unique(row_ann[["Gene Modules"]]))), 
                                             unique(row_ann[["Gene Modules"]]))
-  
   if (order_genes == TRUE) {
     dir.create("scHelper_log/gene_hclustering/", recursive = TRUE, 
                showWarnings = FALSE)
@@ -84,7 +92,6 @@ test = function (seurat_obj, metadata, col_order = metadata[1], custom_order = N
     }
     selected_GM <- GMs_ordered_genes
   }
-  
   plot_data <- t(as.matrix(x = GetAssayData(object = seurat_obj, 
                                             assay = assay, slot = slot)[unlist(selected_GM), rownames(col_ann), 
                                                                         drop = FALSE]))
@@ -95,14 +102,24 @@ test = function (seurat_obj, metadata, col_order = metadata[1], custom_order = N
   plot_data <- replace(plot_data, plot_data >= 2, 2)
   plot_data <- replace(plot_data, plot_data <= -2, -2)
   
-  # test <- rle(as.character(col_ann$scHelper_cell_type))
+  if(return == 'plot'){
+    return(pheatmap(t(plot_data), color = PurpleAndYellow(), 
+                    annotation_col = col_ann[, rev(col_ann_order), drop = FALSE], 
+                    annotation_row = row_ann, annotation_colors = ann_colours, 
+                    cluster_rows = cluster_rows, cluster_cols = cluster_cols, 
+                    show_colnames = show_colnames, show_rownames = show_rownames, 
+                    gaps_col = gaps_col, gaps_row = gaps_row, annotation_names_row = annotation_names_row, 
+                    ...))
+  } else if (return == 'plot_data'){
+    return(list(plot_data = plot_data,
+                row_ann = row_ann,
+                col_ann = col_ann,
+                ann_colours = ann_colours))
+  } else {
+    stop('return must be either "plot" or "plot_data"')
+  }
   
-  return(Heatmap(t(plot_data), col = PurpleAndYellow(),
-                 row_split = ifelse(!is.null(row_split), row_ann[[row_split]], NULL),
-                 column_split = ifelse(!is.null(row_split), col_ann[[column_split]], NULL),
-                 ...))
 }
-
 
 
 # Define arguments for Rscript
@@ -116,6 +133,9 @@ library(RColorBrewer)
 library(scHelper)
 library(gridExtra)
 library(grid)
+library(devtools)
+install_github("jokergoo/ComplexHeatmap") # Gu, Z. (2016) Complex heatmaps reveal patterns and correlations in multidimensional genomic data. DOI: 10.1093/bioinformatics/btw313
+library(ComplexHeatmap)
 
 spec = matrix(c(
   'runtype', 'l', 2, "character",
@@ -169,12 +189,6 @@ seurat_data@meta.data <- metadata
 ####### Select modules of interest and plot new heatmap #######
 
 
-library(devtools)
-install_github("jokergoo/ComplexHeatmap")
-library(ComplexHeatmap)
-
-# Gu, Z. (2016) Complex heatmaps reveal patterns and correlations in multidimensional genomic data. DOI: 10.1093/bioinformatics/btw313
-
 # Set RNA to default assay for plotting expression data
 DefaultAssay(seurat_data) <- "RNA"
 
@@ -187,64 +201,56 @@ scHelper_cell_type_order <- c('EE', 'NNE', 'pEpi', 'PPR', 'aPPR', 'pPPR', 'eNPB'
 
 seurat_data@meta.data$scHelper_cell_type <- factor(seurat_data@meta.data$scHelper_cell_type, levels = scHelper_cell_type_order)
 
-png(paste0(plot_path, 'temp.png'), height = 50, width = 60, units = 'cm', res = 400)
-GeneModulePheatmap(seurat_obj = seurat_data,  metadata = c('stage', 'scHelper_cell_type'), gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content[1:3],
-                   show_rownames = FALSE, col_order = c('stage', 'scHelper_cell_type'), col_ann_order = c('stage', 'scHelper_cell_type'), gaps_col = 'stage', fontsize = 15, fontsize_row = 10)
 
 
-graphics.off()
+gms <- antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content
+gms_sub <- gms[paste0('GM', c(24, 21, 23, 13, 9, 7, 11))]
 
+# Get plot data from GeneModulePheatmap to plot with Complex Heatmap for extra functionality
+plot_data <- GeneModulePheatmap(seurat_obj = seurat_data,  metadata = c('stage', 'scHelper_cell_type'), gene_modules = gms_sub,
+                  col_order = c('stage', 'scHelper_cell_type'), col_ann_order = c('stage', 'scHelper_cell_type'), return = 'plot_data')
 
-test <- rle(as.character(col_ann$scHelper_cell_type))
-test <- rle(as.character(col_ann$scHelper_cell_type))
+goi <- which(rownames(plot_data$row_ann) %in% c('EPCAM', 'SALL4',
+                                                'HOMER2', 'TFAP2C',
+                                                'SIX1', 'EYA2', 'DLX5', 'DLX6', 'GATA2', 'GATA3',
+                                                'PAX7', 'SNAI2', 'SOX10',
+                                                'LMO1', 'SOX21',
+                                                'SIX3', 'PAX6',
+                                                'OTX2', 'PAX2', 'WNT4'))
 
-png('./test.png', width = 100, height = 50, res = 400, units = 'cm')
-test(seurat_obj = seurat_data,  metadata = c('stage', 'scHelper_cell_type'), gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content[1:3],
-     col_order = c('stage', 'scHelper_cell_type'), col_ann_order = c('stage', 'scHelper_cell_type'),
-     cluster_rows = FALSE,
-     show_row_names = FALSE, show_column_names = FALSE, column_title = NULL,
-     row_split = 'Gene Modules', column_split = 'stage')
-graphics.off()
-
-
-
-
-
-png('./test.png', width = 100, height = 50, res = 1200, units = 'cm')
-Heatmap(t(plot_data), col = PurpleAndYellow(), cluster_columns = cluster_cols, cluster_rows = cluster_rows,
-        show_column_names = show_colnames, column_title = NULL, show_row_names = show_rownames, row_split = row_ann$`Gene Modules`, column_split = col_ann$stage, row_title = NULL,
+png(paste0(plot_path, 'subsetGMs.png'), width = 100, height = 60, res = 800, units = 'cm')
+Heatmap(t(plot_data$plot_data), col = PurpleAndYellow(), cluster_columns = FALSE, cluster_rows = FALSE,
+        show_column_names = FALSE, column_title = NULL, show_row_names = FALSE, row_title_gp = gpar(fontsize = 45), row_title_rot = 0,
+        row_split = plot_data$row_ann$`Gene Modules`, column_split = plot_data$col_ann$stage, 
         heatmap_legend_param = list(
           title = "Scaled expression", at = c(-2, 0, 2), 
           labels = c(-2, 0, 2),
-          legend_height = unit(7, "cm"),
-          grid_width = unit(1, "cm"),
-          title_gp = gpar(fontsize = 25, fontface = 'bold'),
-          labels_gp = gpar(fontsize = 20, fontface = 'bold'),
+          legend_height = unit(11, "cm"),
+          grid_width = unit(1.5, "cm"),
+          title_gp = gpar(fontsize = 35, fontface = 'bold'),
+          labels_gp = gpar(fontsize = 30, fontface = 'bold'),
           title_position = 'lefttop-rot',
-          x = unit(10, "npc")
-          # title_gap = unit(1, "cm")
+          x = unit(13, "npc")
         ),
-        top_annotation = HeatmapAnnotation(stage = anno_block(gp = gpar(fill = ann_colours$stage),
-                                                              labels = levels(col_ann$stage), 
+        
+        top_annotation = HeatmapAnnotation(stage = anno_block(gp = gpar(fill = plot_data$ann_colours$stage),
+                                                              labels = levels(plot_data$col_ann$stage),
                                                               labels_gp = gpar(col = "white", fontsize = 50, fontface='bold'))),
-        bottom_annotation = HeatmapAnnotation(scHelper_cell_type = anno_simple(x = as.character(col_ann$scHelper_cell_type),
-                                                                               col = ann_colours[['scHelper_cell_type']], height = unit(1, "cm")), show_annotation_name = FALSE,
-                                              labels = anno_mark(at = cumsum(test$lengths) - floor(test$lengths/2), labels = test$values, which = "column", side = 'bottom', labels_gp = gpar(fontsize = 40), lines_gp = gpar(lwd=8))),
-        left_annotation = rowAnnotation(stage = anno_block(gp = gpar(fill = ann_colours$`Gene Modules`),
-                                                           labels = levels(row_ann$`Gene Modules`), 
-                                                           labels_gp = gpar(col = "white", fontsize = 50, fontface='bold'))),
+
+        bottom_annotation = HeatmapAnnotation(scHelper_cell_type = anno_simple(x = as.character(plot_data$col_ann$scHelper_cell_type),
+                                                                               col = plot_data$ann_colours$scHelper_cell_type, height = unit(1, "cm")), show_annotation_name = FALSE,
+                                              labels = anno_mark(at = cumsum(rle(as.character(plot_data$col_ann$scHelper_cell_type))$lengths) - floor(rle(as.character(plot_data$col_ann$scHelper_cell_type))$lengths/2),
+                                                                 labels = rle(as.character(plot_data$col_ann$scHelper_cell_type))$values,
+                                                                 which = "column", side = 'bottom',
+                                                                 labels_gp = gpar(fontsize = 40), lines_gp = gpar(lwd=8))),
         
-        
+        right_annotation = rowAnnotation(foo = anno_mark(at = goi,
+                                                         labels = rownames(plot_data$row_ann)[goi],
+                                                         labels_gp = gpar(fontsize = 35), lines_gp = gpar(lwd=8))),
+
+        raster_quality = 8
 )
 graphics.off()
-
-
-
-
-
-
-
-
 
 
 
