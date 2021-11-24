@@ -59,15 +59,7 @@ workflow SEURAT_TRANSFER_FULL_PROCESS {
     SEURAT_H5AD( seurat_out )
     SEURAT_SCVELO( SEURAT_H5AD.out, loom, annotations ) // Channel: [[meta], seurat.h5ad], Channel: merged.loom, Channel: seurat_annotations.csv
     CELLRANK_RUN( SEURAT_SCVELO.out.scvelo_run_out_h5ad )
-
-    // // Run gene module analysis across latent time
-    // ch_cluster_rds              = CLUSTER.out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
-    // ch_gene_modules_rds         = GENE_MODULES.out.map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]} //Channel: [[meta], *.rds_file]
-    // ch_gene_module_latent_time  = ch_cluster_rds.combine(ch_gene_modules_rds, by: 0).combine(SEURAT_SCVELO.out.scvelo_run_out_metadata, by: 0)
-    // ch_gene_module_latent_time  = ch_gene_module_latent_time.map{[it[0], [it[1], it[2], it[3]]]}
     
-    // GENE_MODULES_LATENT_TIME(ch_gene_module_latent_time)
-
     emit:
     gene_modules_out                = GENE_MODULES.out                          //Channel: [[meta], [output]]
     cellrank_run_out_metadata       = CELLRANK_RUN.out.csv                      //Channel: [[meta], csv]
