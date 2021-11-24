@@ -1,5 +1,11 @@
 #!/usr/bin/env Rscript
 
+
+##### TO DO:
+# fix latent time GM heatmaps so show latent time along x axis (+plot title?)
+# individual gene expression line graphs
+
+
 # Define arguments for Rscript
 library(getopt)
 library(future)
@@ -11,6 +17,14 @@ library(RColorBrewer)
 library(scHelper)
 library(gridExtra)
 library(grid)
+set.seed(100)
+library(mgcv)
+library(viridis)
+library(circlize)
+
+BiocManager::install("ComplexHeatmap")
+
+library(ComplexHeatmap)
 
 spec = matrix(c(
   'runtype', 'l', 2, "character",
@@ -27,14 +41,18 @@ ncores = opt$cores
 dir.create(plot_path, recursive = T)
 dir.create(rds_path, recursive = T)
 
-metadata <- read.csv(list.files(data_path, pattern = "*.csv", full.names = TRUE))
-# metadata <- read.csv('./output/NF-downstream_analysis_stacas/transfer_subset/transfer_ppr_nc_subset/cellrank/transfer_ppr_nc_subset_metadata.csv')
+#####################################################################################################
+#                           Read in data and combine into seurat object                  #
+#####################################################################################################
 
-seurat_data <- readRDS(list.files(data_path, pattern = "*.RDS", full.names = TRUE)[!list.files(data_path, pattern = "*.RDS") %>% grepl('antler', .)])
+#metadata <- read.csv(list.files(data_path, pattern = "*.csv", full.names = TRUE))
+metadata <- read.csv('./output/NF-downstream_analysis_stacas/transfer_subset/transfer_ppr_nc_subset/cellrank/transfer_ppr_nc_subset_metadata.csv')
+
+#seurat_data <- readRDS(list.files(data_path, pattern = "*.RDS", full.names = TRUE)[!list.files(data_path, pattern = "*.RDS") %>% grepl('antler', .)])
 seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/transfer_subset/transfer_ppr_nc_subset/seurat/transfer_cluster/rds_files/transfer_clustered_data.RDS')
 
 # load antler data
-antler_data <- readRDS(list.files(data_path, pattern = "antler_out.RDS", full.names = TRUE))
+#antler_data <- readRDS(list.files(data_path, pattern = "antler_out.RDS", full.names = TRUE))
 antler_data <- readRDS('./output/NF-downstream_analysis_stacas/transfer_subset/transfer_ppr_nc_subset/antler/transfer_gene_modules/rds_files/antler_out.RDS')
 
 metadata$CellID <- paste0(metadata$CellID, "-1")
@@ -61,7 +79,63 @@ multi_run <- ifelse(length(unique(seurat_data$run)) > 1, TRUE, FALSE)
 
 
 #####################################################################################################
-#                           calculate module scores                   #
+#                                          FUNCTIONS                                               #
+#####################################################################################################
+
+###   Function to extract gene expression data + lineage probs + latent time for each gene module of interest into tidy df
+#NB this function is not generalisable for use outside of npb subset
+extract_gm_expression <- function(seurat_obj = seurat_data, assay = "RNA", slot = "data", gms, filter_max = TRUE){
+  plot_data <- data.frame()
+  for(module in names(gms)){
+    temp <- GetAssayData(seurat_obj, assay = assay, slot = slot)[gms[[module]],]
+    meta <- merge(t(temp), seurat_data@meta.data[,c('latent_time', 'lineage_NC_probability', 'lineage_placodal_probability'), drop=FALSE], by=0)
+    plot_data <- meta %>%
+      column_to_rownames('Row.names') %>%
+      pivot_longer(!c(latent_time, lineage_NC_probability, lineage_placodal_probability)) %>%
+      rename(scaled_expression = value) %>%
+      rename(gene = name) %>%
+      pivot_longer(cols = !c(latent_time, gene, scaled_expression)) %>%
+      mutate(module = module) %>%
+      rename(lineage_probability = value) %>%
+      rename(lineage = name) %>%
+      group_by(lineage) %>%
+      mutate(lineage = unlist(strsplit(lineage, '_'))[2]) %>%
+      bind_rows(plot_data) %>%
+      ungroup()
+  }
+  
+  if (filter_max == TRUE){
+    plot_data <- plot_data %>%
+      group_by(lineage) %>%
+      mutate(max_lineage_probability = max(lineage_probability)) %>%
+      mutate(max_latent_time = max(latent_time[lineage_probability == max_lineage_probability])) %>%
+      filter(latent_time < max_latent_time) %>%
+      ungroup()
+  }
+  
+  return(plot_data)
+}
+
+###   Function to generate predicted GAM values to plot from extracted gene expression/latent time df
+multi_gam <- function(data, variable, values, lineage, max_latent_time = 1){
+  pdat <- tibble(latent_time = seq(0, max_latent_time, length = 1000))
+  for(value in values){
+    temp <- data %>% filter(lineage == !!lineage & !!sym(variable) == value)
+    mod <- gam(scaled_expression ~ s(latent_time, bs = "cs"), weights = lineage_probability, data = temp)
+    pdat <- cbind(pdat, predict.gam(mod, newdata = pdat))
+    colnames(pdat)[ncol(pdat)]  <- value
+  }
+  rownames(pdat) <- NULL
+  pdat <- pdat %>% column_to_rownames('latent_time')
+  #pdat <- scale(pdat)
+  #pdat[pdat < -2] <- -2
+  #pdat[pdat > 2] <- 2
+  return(pdat)
+}
+
+
+#####################################################################################################
+#                                  Set up gene modules of interest                                 #
 #####################################################################################################
 
 # access DE gene modules (batchfilt if there are multiple batches in the dataset)
@@ -71,13 +145,175 @@ if(is.null(antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt)){
   gms <- antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content
 }
 
-# names(gms) <- c(paste(rep('neural', 4), 1:4, sep = '-'), paste(rep('placodal', 6), 1:6, sep = '-'), paste(rep('NC', 3), 1:3, sep = '-'))
-# if(is.null(names(gms))){names(gms) = paste0("GM: ", 1:length(gms))}
-# names(gms) <- paste0("GM", 1:length(gms))
+NC_gms <- c("GM40", "GM42", "GM44", "GM43")
+PPR_gms <- c("GM12", "GM13", "GM14", "GM10")
 
 # Set RNA to default assay for plotting expression data
 DefaultAssay(seurat_data) <- "RNA"
 
+# Extract expression data along with latent time and probabilities of different lineages
+expression_data <- extract_gm_expression(seurat_data, gms = gms, filter_max = TRUE)
+
+#####################################################################################################
+#                    Plot gene module heatmap of all filtered gms in npb subset                  #
+#####################################################################################################
+
+# Plot heatmap without gene names of all the filtered gene modules
+ngene = length(unlist(antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content))
+metadata = c("stage", "scHelper_cell_type")
+antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content <- GeneModuleOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content,
+                                                                                   metadata_1 = "stage", 
+                                                                                   order_1 = c("hh4", "hh5", "hh6", "hh7", "ss4", "ss8"),
+                                                                                   metadata_2 = "scHelper_cell_type", 
+                                                                                   order_2 = c("PPR", "aPPR", "pPPR", "aNPB", "pNPB", "NC", "delaminating_NC"),
+                                                                                   plot_path = "scHelper_log/GM_classification/unbiasedGMs_DE_batchfilt/")
+
+png(paste0(plot_path, 'unbiasedGMs_DE_batchfilt.png'), height = min(c(150, ifelse(round(ngene/8) < 20, 20, round(ngene/8)))), width = 60, units = 'cm', res = 400)
+GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content,
+                   show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
+graphics.off()
+
+# Plot heatmap without gene names of just PPR and NC gene modules -- NEED TO DEBUG
+gene_modules <- antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content[c(NC_gms, PPR_gms)]
+
+png(paste0(plot_path, 'PPR_NC_gms.png'), height = min(c(150, ifelse(round(ngene/8) < 20, 20, round(ngene/8)))), width = 60, units = 'cm', res = 400)
+GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = gene_modules,
+                   show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
+graphics.off()
+
+#### need to maybe change colours and make annotations clearer
+
+#####################################################################################################
+#                    plot latent time heatmaps using GAM data for GMs of interest                  #
+#####################################################################################################
+
+##################    NC GMs on NC lineage - rename GMs to match next plots?
+NC_gms_GAM <- multi_gam(expression_data, variable = "module", values = NC_gms, lineage = 'NC', max_latent_time = 1)
+
+## OLD - pheatmap
+#gaps_row <- c(1, 2, 3)
+#png(paste0(plot_path, 'NC_latent_hm.png'), width = 30, height = 10, res = 200, units = 'cm')
+#pheatmap(t(NC_gms_GAM), cluster_cols = FALSE, color = viridis(n=100), border_color = NA, show_colnames = FALSE, treeheight_row = FALSE, cluster_rows = FALSE,
+#         cellwidth = 0.6, gaps_row = gaps_row, show_rownames = T, main = "NC gene module expression in the NC lineage")
+#grid.text("Latent time", x=0.45, y=0.02)
+#graphics.off()
+
+col_fun = colorRamp2(c(0, 1000), c("purple", "yellow"))
+column_ha = HeatmapAnnotation(labels = anno_mark(at = c(2, 500, 999), labels = c("0", "Latent Time", "1"), which = "column", side = "top", 
+                                                 labels_gp = gpar(fontsize = 22), 
+                                                 labels_rot = 0, link_gp = gpar(lty = 0),
+                                                 link_height = unit(0.5, "mm")),
+                              Latent_time = 1:(ncol(t(NC_gms_GAM))), col = list(Latent_time = col_fun), show_legend = FALSE, 
+                              annotation_label = "Latent time", show_annotation_name = FALSE)
+
+Heatmap(t(NC_gms_GAM), cluster_rows = FALSE, cluster_columns = FALSE,
+        show_column_names = FALSE, show_row_names = FALSE,
+        col = viridis(n=100), row_split = colnames(NC_gms_GAM),
+        row_title_gp = gpar(fontsize = 22),
+        top_annotation = column_ha,
+        heatmap_legend_param = list(
+          title = "Scaled Expression",
+          title_gp = gpar(fontsize = 18),
+          legend_height = unit(8, "cm"),
+          grid_width = unit(1, "cm"),
+          title_position = "leftcenter-rot",
+          labels_gp = gpar(fontsize = 16)),
+        raster_quality = 4)
+
+
+##################    PPR GMs on PPR lineage
+PPR_gms_GAM <- multi_gam(expression_data, variable = "module", values = PPR_gms, lineage = 'placodal', max_latent_time = 0.887)
+
+## OLD
+# gaps_row <- c(1, 2, 3)
+# png(paste0(plot_path, 'PPR_latent_hm.png'), width = 30, height = 10, res = 200, units = 'cm')
+# pheatmap(t(PPR_gms_GAM), cluster_cols = FALSE, color = viridis(n=100), border_color = NA, show_colnames = FALSE, treeheight_row = FALSE, cluster_rows = FALSE,
+#          cellwidth = 0.6, gaps_row = gaps_row, show_rownames = T)
+# graphics.off()
+
+col_fun = colorRamp2(c(0, 1000), c("purple", "yellow"))
+column_ha = HeatmapAnnotation(labels = anno_mark(at = c(2, 500, 999), labels = c("0", "Latent Time", "1"), which = "column", side = "top", 
+                                                 labels_gp = gpar(fontsize = 22), 
+                                                 labels_rot = 0, link_gp = gpar(lty = 0),
+                                                 link_height = unit(0.5, "mm")),
+                              Latent_time = 1:(ncol(t(PPR_gms_GAM))), col = list(Latent_time = col_fun), show_legend = FALSE, 
+                              annotation_label = "Latent time", show_annotation_name = FALSE)
+
+Heatmap(t(PPR_gms_GAM), cluster_rows = FALSE, cluster_columns = FALSE,
+        show_column_names = FALSE, show_row_names = FALSE,
+        col = viridis(n=100), row_split = colnames(NC_gms_GAM),
+        row_title_gp = gpar(fontsize = 22),
+        top_annotation = column_ha,
+        heatmap_legend_param = list(
+          title = "Scaled Expression",
+          title_gp = gpar(fontsize = 18),
+          legend_height = unit(8, "cm"),
+          grid_width = unit(1, "cm"),
+          title_position = "leftcenter-rot",
+          labels_gp = gpar(fontsize = 16)),
+        raster_quality = 4)
+
+
+#####################################################################################################
+#                plot latent time line graphs using GAM data for genes of interest                  #
+#####################################################################################################
+
+##################    NC genes on NC lineage
+annotations <- list(GM1 = c('MSX1', 'GADD45A', 'AGTRAP', 'SOX11'),
+                    GM2 = c('PAX7', 'ZNF423', 'Z-ENC1'),
+                    GM3 = c('SOX5', 'OLFML3', 'GLIPR2'),
+                    GM4 = c('SOX10', 'Z-MEF2C', 'RFTN2', 'ETS1', 'PPP1R1C'))
+
+annotations <- list(GM1 = c('MSX1', 'GADD45A', 'AGTRAP', 'SOX11'))
+
+annotations <- stack(annotations) %>% column_to_rownames('values')
+colnames(annotations) <- c('gm')
+
+NC_genes_NC_lineage <- multi_gam(expression_data, variable = "gene", values = rownames(annotations), lineage = 'NC', max_latent_time = 0.75)
+
+gaps_row <- cumsum(rle(as.vector(annotations[['gm']]))[["lengths"]])
+
+png(paste0(plot_path, 'NC_genes_latent_hm.png'), width = 30, height = 10, res = 200, units = 'cm')
+pheatmap(t(NC_genes_NC_lineage), cluster_cols = FALSE, color = viridis(n=100), border_color = NA, show_colnames = FALSE, treeheight_row = FALSE, cluster_rows = FALSE,
+         annotation_row = annotations, gaps_row = gaps_row, cellwidth = 0.6)
+graphics.off()
+
+
+NC_genes_PPR_lineage <- multi_gam(expression_data, variable = "gene", values = rownames(annotations), lineage = 'placodal', max_latent_time = 0.75)
+
+
+NC_genes_NC_lineage <- NC_genes_NC_lineage %>% as.data.frame %>% mutate(lineage = "NC") %>% rownames_to_column("latent_time")
+NC_genes_PPR_lineage <- NC_genes_PPR_lineage %>% as.data.frame %>% mutate(lineage = "placodal") %>% rownames_to_column("latent_time")
+
+NC_genes_both_lineages <- rbind(NC_genes_NC_lineage, NC_genes_PPR_lineage)
+NC_genes_both_lineages <- NC_genes_both_lineages %>% pivot_longer(cols = !c(latent_time, lineage)) %>% rename(gene = name)
+
+
+#####     NEED TO WORK HERE TO SET MAX LATENT TIME??
+png(paste0(plot_path, 'NC_genes_latent_line.png'), width = 30, height = 20, res = 200, units = 'cm')
+ggplot(NC_genes_both_lineages, aes(x = latent_time, y = value, colour = lineage)) +
+  geom_point(size = 1) +
+  geom_line() +
+  facet_wrap(~gene, dir = 'v', scales = 'free', ncol = 2) +
+  theme_classic()
+graphics.off()
+
+# make sure latent time read in as continuous variable
+# change the colours 
+
+ggplot(filter(expression_data, gene %in% rownames(annotations) & latent_time < 0.75), aes(x = latent_time, y = scaled_expression, colour = gene)) +
+  geom_smooth(method="gam", se=FALSE, mapping = aes(weight = lineage_probability, linetype = lineage)) +
+  facet_wrap(~gene, dir = 'v', scales = 'free', ncol = 2) +
+  theme_classic()
+
+
+
+
+
+
+
+
+########################################################       OLD        ###################################################
 # Iteratively get expression data for each gene module and bind to tidy dataframe
 plot_data <- data.frame()
 for(module in names(gms)){
@@ -113,9 +349,9 @@ for(module in names(gms)){
 # plot_data <- plot_data %>% filter(latent_time < 0.75)
 
 
-# ggplot(plot_data %>% filter(gene == 'DLX6'), aes(x = latent_time, y = scaled_expression)) +
-#   geom_smooth(method="gam", se=FALSE, mapping = aes(weight = lineage_probability, group=lineage, colour = lineage)) +
-#   geom_point()
+ggplot(plot_data %>% filter(gene == 'DLX6'), aes(x = latent_time, y = scaled_expression)) +
+  geom_smooth(method="gam", se=FALSE, mapping = aes(weight = lineage_probability, group=lineage, colour = lineage)) +
+  geom_point()
 # 
 # 
 # library(biomaRt)
@@ -300,7 +536,7 @@ annotations <- list(GM1 = c('MSX1', 'GADD45A', 'AGTRAP', 'SOX11'),
 annotations <- stack(annotations) %>% column_to_rownames('values')
 colnames(annotations) <- c('gm')
 
-test <- multi_gam(heatmap_data, genes = rownames(annotations), lineage = 'NC', max_latent_time = 0.75)
+test <- multi_gam(expression_data, variable = "gene", values = rownames(annotations), lineage = 'NC', max_latent_time = 0.75)
 
 test <- scale(test)
 test[test < -2] <- -2
@@ -312,6 +548,10 @@ png(paste0(plot_path, 'NC_latent_hm.png'), width = 30, height = 10, res = 200, u
 pheatmap(t(test), cluster_cols = FALSE, color = viridis(n=100), border_color = NA, show_colnames = FALSE, treeheight_row = FALSE, cluster_rows = FALSE,
          annotation_row = annotations, gaps_row = gaps_row, cellwidth = 0.6)
 graphics.off()
+
+pheatmap(t(test), cluster_cols = FALSE, color = viridis(n=100), border_color = NA, show_colnames = FALSE, treeheight_row = FALSE, cluster_rows = FALSE,
+         cellwidth = 0.6)
+
 
 
 for(mod in unique(annotations$gm)){
@@ -329,6 +569,9 @@ for(mod in unique(annotations$gm)){
   print(p1)
   graphics.off()
 }
+
+
+
 
 
 
@@ -547,7 +790,7 @@ for(tissue in names(gm_class)){
 
 
 
-PPR_genes <- FindMarkers(seurat_data, ident.1 = c('aPPR', 'pPPR'), ident.2 = c('NC', 'dNC'), group.by = 'scHelper_cell_type', logfc.threshold = 1, only.pos = TRUE)
+PPR_genes <- FindMarkers(seurat_data, ident.1 = c('aPPR', 'pPPR'), ident.2 = c('NC', 'delaminating_NC'), group.by = 'scHelper_cell_type', logfc.threshold = 1, only.pos = TRUE)
 
 
 ggplot(plot_data %>% filter(module %in% gm_class$placodal) %>% filter(gene %in% rownames(PPR_genes)) %>% filter(lineage == 'placodal'),
