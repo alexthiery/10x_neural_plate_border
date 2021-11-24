@@ -152,6 +152,10 @@ ncores = opt$cores
 dir.create(plot_path, recursive = T)
 dir.create(rds_path, recursive = T)
 
+
+# Params
+lineage_colours = c('placodal' = '#DE4D00', 'NC' = '#10E0E8', 'neural' = '#8000FF')
+
 metadata <- read.csv(list.files(data_path, pattern = "*.csv", full.names = TRUE))
 # metadata <- read.csv('./output/NF-downstream_analysis_stacas/transfer_labels/cellrank1/all_stages_filtered_metadata.csv')
 
@@ -254,9 +258,6 @@ graphics.off()
 
 
 
-
-
-
 # Iteratively get expression data for each gene module and bind to tidy dataframe
 plot_data <- data.frame()
 for(module in names(gms)){
@@ -297,144 +298,26 @@ for(row in 1:nrow(gams)){
 }
 
 for(module in unique(plot_data$module)){
-  plot <- ggplot(plot_data, aes(x = latent_time, y = scaled_expression, colour = lineage)) +
+  plot <- ggplot(filter(plot_data, module == !!module), aes(x = latent_time, y = scaled_expression, colour = lineage)) +
     geom_point(size = 0.25) +
     geom_line() +
+    scale_colour_manual(values=lineage_colours) +
     theme_classic()
   
-  png(paste0(plot_path, module, '_lineage_dynamics.png'), width = 25, height = 15, units='cm', res=200)
+  png(paste0(plot_path, module, '_lineage_dynamics.png'), width = 15, height = 10, units='cm', res=200)
   print(plot)
   graphics.off()
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# set colours
-gms_cols <- setNames(colorRampPalette(brewer.pal(9, "Paired"))(length(gms)), names(gms))
-
-# Plot dynamics for each module individually
+# Calculate average module expression for plotting feature plots
 for(module in names(gms)){
-  plot = ggplot(filter(plot_data, module %in% !!module), aes(x = latent_time, y = scaled_expression, color = module)) +
-    # scale_color_manual(values=gms_cols[[module]]) +
-    geom_smooth(method="gam", se=FALSE, mapping = aes(weight = lineage_probability, linetype = lineage, group=lineage)) +
-    xlab("Latent time") + ylab("Scaled expression") +
-    # facet_wrap(~lineage, dir = 'v') +
-    theme_classic()
-  
-  png(paste0(plot_path, module, '_lineage_dynamics.png'), width = 25, height = 15, units='cm', res=200)
-  print(plot)
-  graphics.off()
-  
-  # Calculate average module expression for plotting multi-feature plot
   seurat_data@meta.data[[module]] <-  colMeans(GetAssayData(seurat_data, assay = 'RNA', slot = 'scale.data')[gms[[module]],])
-}
-
-ncol = ceiling((length(names(gms))+1)/8)+1
-nrow = ceiling((length(names(gms))+1)/ncol)
-
-png(paste0(plot_path, 'gene_module_feature.png'), width = ncol*10, height = nrow*10, units = "cm", res = 200)
-MultiFeaturePlot(seurat_object = seurat_data, gene_list = grep('GM', colnames(seurat_data@meta.data), value = TRUE), plot_stage = TRUE,
-                 stage_col = 'stage', plot_clusters = FALSE, n_col = ncol)
-graphics.off()
-
-
-
-# Soft assign gene modules to lineages and plot multi-gm dynamics plots
-
-gm_class = plot_data %>%
-  group_by(lineage) %>%
-  mutate(lineage_expression = scaled_expression*lineage_probability) %>%
-  group_by(module, lineage) %>%
-  summarise(lineage_expression = mean(lineage_expression), .groups = 'keep') %>%
-  filter(lineage_expression > 0) %>%
-  dplyr::select(!lineage_expression)
-
-
-gm_class <- gm_class %>%
-  group_by(lineage) %>%
-  group_split() %>%
-  setNames(unique(gm_class$lineage))
-
-gm_class <- lapply(gm_class, function(x) as.data.frame(x) %>% dplyr::pull(module))
-
-for(lineage in names(gm_class)){
-  plot = ggplot(plot_data[plot_data$module %in% gm_class[[lineage]],], aes(x = latent_time, y = scaled_expression, group = module, colour = module)) +
-    scale_color_manual(values= colours[gm_class[[lineage]]]) +
-    geom_smooth(method="gam", se=FALSE, mapping = aes(weight = lineage_probability, group = module)) +
-    xlab("Latent time") + ylab("Scaled expression") +
-    facet_wrap(~lineage, dir = 'v') +
-    theme_classic()
   
-  png(paste0(plot_path, lineage, '_multi_module_dynamics.png'), width = 12, height = 25, units='cm', res=200)
-  print(plot)
+  png(paste0(plot_path, module, '_feature_plot.png'), width = 15, height = 15, units='cm', res=200)
+  print(FeaturePlot(seurat_data, features = module, pt.size = 1) +
+          theme_void() +
+          theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 20))) 
   graphics.off()
 }
 
-
-# Plot multi-mod dynamics for selected modules (which show pan expression across sub-cell-types)
-gm_class = list(
-  neural = c('GM16', 'GM11', 'GM12', 'GM13'),
-  NC = c('GM8', 'GM2', 'GM7', 'GM1'),
-  placodal = c('GM6', 'GM4', 'GM5', 'GM8'))
-
-for(tissue in names(gm_class)){
-  plot = ggplot(plot_data %>% filter(module %in% gm_class[[tissue]]) %>% filter(lineage == tissue),
-                aes(x = latent_time, y = scaled_expression, group = module, colour = module)) +
-    scale_color_manual(values= colours[gm_class[[tissue]]]) +
-    geom_smooth(method="gam", se=FALSE, mapping = aes(weight = lineage_probability, group = module)) +
-    xlab("Latent time") + ylab("Scaled expression") +
-    theme_classic()
-  
-  png(paste0(plot_path, tissue, '_selected_multi_module_dynamics.png'), width = 15, height = 12, units='cm', res=200)
-  print(plot)
-  graphics.off()
-}
-
-
-
-
-
-
-
-
-PPR_genes <- FindMarkers(seurat_data, ident.1 = c('aPPR', 'pPPR'), ident.2 = c('NC', 'dNC'), group.by = 'scHelper_cell_type', logfc.threshold = 1, only.pos = TRUE)
-
-
-ggplot(plot_data %>% filter(module %in% gm_class$placodal) %>% filter(gene %in% rownames(PPR_genes)) %>% filter(lineage == 'placodal'),
-       aes(x = latent_time, y = scaled_expression, group = gene, colour = gene)) +
-  # scale_color_manual(values= colours[gm_class[[tissue]]]) +
-  geom_smooth(method="gam", se=FALSE, mapping = aes(weight = lineage_probability, group = gene)) +
-  xlab("Latent time") + ylab("Scaled expression") +
-  theme_classic()
-
-
-test = c('SOX10', 'TFAP2B', 'PAX7', 'TFAP2A')
-ggplot(plot_data %>% filter(module %in% gm_class$NC) %>% filter(gene %in% test) %>% filter(lineage == 'NC'),
-       aes(x = latent_time, y = scaled_expression, group = gene, colour = gene)) +
-  # scale_color_manual(values= colours[gm_class[[tissue]]]) +
-  geom_smooth(method="gam", se=FALSE, mapping = aes(weight = lineage_probability, group = gene)) +
-  xlab("Latent time") + ylab("Scaled expression") +
-  theme_classic()
-
-
-
-test = c('SIX1', 'TFAP2B', 'PAX7', 'TFAP2A', 'EYA2')
-ggplot(plot_data %>% filter(gene %in% test) %>% filter(lineage == 'placodal'),
-       aes(x = latent_time, y = scaled_expression, group = gene, colour = gene)) +
-  # scale_color_manual(values= colours[gm_class[[tissue]]]) +
-  geom_smooth(method="gam", se=FALSE, mapping = aes(weight = lineage_probability, group = gene)) +
-  xlab("Latent time") + ylab("Scaled expression") +
-  theme_classic()
 
