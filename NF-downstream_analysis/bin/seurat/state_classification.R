@@ -73,10 +73,10 @@ names(stage_all_colours) <- stage_all_order
 label <- sub('_.*', '', list.files(data_path, pattern = '*.RDS'))
 
 seurat_data <- readRDS(list.files(data_path, full.names = TRUE, pattern = '*.RDS'))
-# seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/HH4_splitstage_data/seurat/stage_cluster/rds_files/HH4_clustered_data.RDS')
-# seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/HH5_splitstage_data/seurat/stage_cluster/rds_files/HH5_clustered_data.RDS')
-# seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/HH6_splitstage_data/seurat/stage_cluster/rds_files/HH6_clustered_data.RDS')
-# seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/HH7_splitstage_data/seurat/stage_cluster/rds_files/HH7_clustered_data.RDS')
+# seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/hh4_splitstage_data/seurat/stage_cluster/rds_files/hh4_clustered_data.RDS')
+# seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/hh5_splitstage_data/seurat/stage_cluster/rds_files/hh5_clustered_data.RDS')
+# seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/hh6_splitstage_data/seurat/stage_cluster/rds_files/hh6_clustered_data.RDS')
+# seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/hh7_splitstage_data/seurat/stage_cluster/rds_files/hh7_clustered_data.RDS')
 # seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss4_splitstage_data/seurat/stage_cluster/rds_files/ss4_clustered_data.RDS')
 # seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss8_splitstage_data/seurat/stage_cluster/rds_files/ss8_clustered_data.RDS')
 
@@ -90,15 +90,15 @@ cell_state_markers <- read.csv(list.files(data_path, full.names = TRUE, pattern 
 cell_state_markers <- apply(cell_state_markers, 2, function(x) rownames(cell_state_markers)[x > 0])
 
 cell_states = list(
-  HH4 = c('NNE', 'node', 'streak', 'EE', 'eNPB', 'eN', 'eCN'),
+  hh4 = c('NNE', 'node', 'streak', 'EE', 'eNPB', 'eN', 'eCN'),
 
-  HH5 = c('NNE', 'node', 'streak', 'EE', 'eNPB', 'eN', 'eCN',
+  hh5 = c('NNE', 'node', 'streak', 'EE', 'eNPB', 'eN', 'eCN',
           'NPB', 'aNPB', 'pNPB', 'NP', 'pNP', 'iNP', 'aNP', 'PPR', 'aPPR', 'pPPR'),
   
-  HH6 = c('NNE', 'node', 'streak', 'eN', 'eCN',
+  hh6 = c('NNE', 'node', 'streak', 'eN', 'eCN',
           'NPB', 'aNPB', 'pNPB', 'NP', 'pNP', 'iNP', 'aNP', 'PPR', 'aPPR', 'pPPR'),
 
-  HH7 = c('pEpi', 'NPB', 'aNPB', 'pNPB', 'NC', 'dNC', 'NP', 'pNP', 'iNP',
+  hh7 = c('pEpi', 'NPB', 'aNPB', 'pNPB', 'NC', 'dNC', 'NP', 'pNP', 'iNP',
           'aNP', 'HB', 'MB', 'FB', 'vFB', 'PPR', 'aPPR', 'pPPR'),
 
   ss4 = c('pEpi', 'NPB', 'aNPB', 'pNPB', 'NC', 'dNC', 'NP', 'pNP', 'iNP',
@@ -116,7 +116,7 @@ stage = unique(seurat_data@meta.data$stage)
 
 if(length(stage) == 1){
   cell_state_markers = cell_state_markers[[stage]]
-  cluster_res = list(HH4 = 1.2, HH5 = 1.2, HH6 = 1.2, HH7 = 1.2, ss4 = 1.2, ss8 = 1.2)[[stage]]
+  cluster_res = list(hh4 = 1.2, hh5 = 1.2, hh6 = 1.2, hh7 = 1.2, ss4 = 1.2, ss8 = 1.2)[[stage]]
   metadata = c('scHelper_cell_type')
 } else {
   cell_state_markers = flatten(cell_state_markers)
@@ -200,7 +200,7 @@ png(paste0(plot_path, "scHelper_celltype_umap.png"), width=12, height=12, units 
 DimPlot(seurat_data, group.by = 'scHelper_cell_type', label = TRUE, 
         label.size = ifelse(length(unique(seurat_data$stage)) == 1, 5, 3),
         label.box = TRUE, repel = TRUE,
-        pt.size = ifelse(length(unique(seurat_data$stage)) == 1, 2, 1), 
+        pt.size = ifelse(length(unique(seurat_data$stage)) == 1, 1.5, 1), 
         cols = scHelper_cols) +
   ggplot2::theme_void() +
   ggplot2::theme(legend.position = "none", 
@@ -212,7 +212,7 @@ png(paste0(plot_path, "stage_umap.png"), width=12, height=12, units = 'cm', res 
 DimPlot(seurat_data, group.by = 'stage', label = TRUE, 
         label.size = ifelse(length(unique(seurat_data$stage)) == 1, 5, 3),
         label.box = TRUE, repel = TRUE,
-        pt.size = ifelse(length(unique(seurat_data$stage)) == 1, 2, 1), 
+        pt.size = ifelse(length(unique(seurat_data$stage)) == 1, 1.5, 1), 
         cols = stage_cols) +
   ggplot2::theme_void() +
   ggplot2::theme(legend.position = "none", 
