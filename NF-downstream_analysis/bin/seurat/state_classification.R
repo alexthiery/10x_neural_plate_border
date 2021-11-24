@@ -19,18 +19,23 @@ spec = matrix(c(
 ), byrow=TRUE, ncol=4)
 opt = getopt(spec)
 
-#### PARAMS
-# Set scHelper levels and colours
-scHelper_cell_type_order <- c('EE', 'NNE', 'pEpi', 'PPR', 'aPPR', 'pPPR',
-                              'eNPB', 'NPB', 'aNPB', 'pNPB','NC', 'dNC',
-                              'eN', 'eCN', 'NP', 'pNP', 'HB', 'iNP', 'MB', 
-                              'aNP', 'FB', 'vFB', 'node', 'streak')
+########################       CELL STATE COLOURS    ########################################
+scHelper_all_order <- c('EE', 'NNE', 'pEpi', 'PPR', 'aPPR', 'pPPR',
+                        'eNPB', 'NPB', 'aNPB', 'pNPB','NC', 'dNC',
+                        'eN', 'eCN', 'NP', 'pNP', 'HB', 'iNP', 'MB', 
+                        'aNP', 'FB', 'vFB', 'node', 'streak')
 
-scHelper_ann_colours <- c("#676060", "#AD2828", "#551616", "#FF0000", "#DE4D00", "#FF8300",
+scHelper_all_colours <- c("#676060", "#AD2828", "#551616", "#FF0000", "#DE4D00", "#FF8300",
                           "#C8E81E", "#A5E702", "#6EE702", "#16973F", "#19B4A1", "#10E0E8",
                           "#BA3CA5", "#8A4FC5", "#0A0075", "#3B0075", "#8000FF", "#D800FF",
                           "#FF00D4", "#F16DDB", "#FFBAF3", "#B672AA", "#BBBEBE", "#787878")
-names(scHelper_ann_colours) <- scHelper_cell_type_order
+names(scHelper_all_colours) <- scHelper_all_order
+########################       STAGE COLOURS     ###########################################
+stage_all_order <- c("hh4", "hh5", "hh6", "hh7", "ss4", "ss8")
+
+stage_all_colours = c("#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F")
+names(stage_all_colours) <- stage_all_order
+############################################################################################
 
 # Set paths and load data
 {
@@ -171,23 +176,44 @@ seurat_data@meta.data[['scHelper_cell_type']] <- unlist(apply(seurat_data@meta.d
 # Old method
 # seurat_data <- ClusterClassification(seurat_obj = seurat_data, cell_state_markers = cell_state_markers, force_assign = FALSE, quantile = 0.5, plot_path = paste0(plot_path, "scHelper_log/"))
 
-# set levels and extract appropriate colours depending on seurat obj
-cell_type_order <- scHelper_cell_type_order[scHelper_cell_type_order %in% unique(seurat_data@meta.data[["scHelper_cell_type"]])]
-seurat_data@meta.data$scHelper_cell_type <- factor(seurat_data@meta.data$scHelper_cell_type, levels = cell_type_order)
-cols = scHelper_ann_colours[levels(seurat_data@meta.data$scHelper_cell_type)]
-names(cols) <- NULL
+#####################   Set levels and colours for scHelper_cell_type  ###########################################
+scHelper_order <- scHelper_all_order[scHelper_all_order %in% unique(seurat_data@meta.data[["scHelper_cell_type"]])]
+seurat_data@meta.data$scHelper_cell_type <- factor(seurat_data@meta.data$scHelper_cell_type, levels = scHelper_all_order)
+
+scHelper_cols = scHelper_all_colours[unique(seurat_data@meta.data$scHelper_cell_type)]
+names(scHelper_cols) <- NULL
+
+#####################   Set levels and colours for stage   ###########################################
+stage_order <- stage_all_order[stage_all_order %in% unique(seurat_data@meta.data[["stage"]])]
+seurat_data@meta.data$stage <- factor(seurat_data@meta.data$stage, levels = stage_all_order)
+
+stage_cols = stage_all_colours[levels(seurat_data@meta.data$stage)]
+names(stage_cols) <- NULL
 
 # Plot UMAP for clusters and developmental stage
-png(paste0(plot_path, "scHelper_celltype_umap.png"), width=24, height=12, units = 'cm', res = 200)
+png(paste0(plot_path, "ClustStagePlot_scHelper_celltype_umap.png"), width=24, height=12, units = 'cm', res = 200)
 ClustStagePlot(seurat_data, stage_col = "stage", cluster_col = "scHelper_cell_type", label_clusters = TRUE)
 graphics.off()
 
-png(paste0(plot_path, "scHelper_celltype_umap_pretty.png"), width=12, height=12, units = 'cm', res = 200)
+# UMAP for cell state
+png(paste0(plot_path, "scHelper_celltype_umap.png"), width=12, height=12, units = 'cm', res = 200)
 DimPlot(seurat_data, group.by = 'scHelper_cell_type', label = TRUE, 
-        label.size = ifelse(length(unique(seurat_data$run)) == 1, 5, 3),
+        label.size = ifelse(length(unique(seurat_data$stage)) == 1, 5, 3),
         label.box = TRUE, repel = TRUE,
-        pt.size = ifelse(length(unique(seurat_data$run)) == 1, 2, 1), 
-        cols = cols) +
+        pt.size = ifelse(length(unique(seurat_data$stage)) == 1, 2, 1), 
+        cols = scHelper_cols) +
+  ggplot2::theme_void() +
+  ggplot2::theme(legend.position = "none", 
+                 plot.title = element_blank())
+graphics.off()
+
+# UMAP for stage
+png(paste0(plot_path, "stage_umap.png"), width=12, height=12, units = 'cm', res = 200)
+DimPlot(seurat_data, group.by = 'stage', label = TRUE, 
+        label.size = ifelse(length(unique(seurat_data$stage)) == 1, 5, 3),
+        label.box = TRUE, repel = TRUE,
+        pt.size = ifelse(length(unique(seurat_data$stage)) == 1, 2, 1), 
+        cols = stage_cols) +
   ggplot2::theme_void() +
   ggplot2::theme(legend.position = "none", 
                  plot.title = element_blank())
@@ -220,5 +246,3 @@ for(i in names(cell_state_markers)){
                    gene_list = cell_state_markers[[i]], n_col = ncol, label = '')
   graphics.off()
 }
-
-
