@@ -31,7 +31,7 @@ scHelper_all_colours <- c("#676060", "#AD2828", "#551616", "#FF0000", "#DE4D00",
                           "#FF00D4", "#F16DDB", "#FFBAF3", "#B672AA", "#BBBEBE", "#787878")
 names(scHelper_all_colours) <- scHelper_all_order
 ########################       STAGE COLOURS     ###########################################
-stage_all_order <- c("hh4", "hh5", "hh6", "hh7", "ss4", "ss8")
+stage_all_order <- c("HH4", "HH5", "HH6", "HH7", "ss4", "ss8")
 
 stage_all_colours = c("#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F")
 names(stage_all_colours) <- stage_all_order
@@ -73,10 +73,10 @@ names(stage_all_colours) <- stage_all_order
 label <- sub('_.*', '', list.files(data_path, pattern = '*.RDS'))
 
 seurat_data <- readRDS(list.files(data_path, full.names = TRUE, pattern = '*.RDS'))
-# seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/hh4_splitstage_data/seurat/stage_cluster/rds_files/hh4_clustered_data.RDS')
-# seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/hh5_splitstage_data/seurat/stage_cluster/rds_files/hh5_clustered_data.RDS')
-# seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/hh6_splitstage_data/seurat/stage_cluster/rds_files/hh6_clustered_data.RDS')
-# seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/hh7_splitstage_data/seurat/stage_cluster/rds_files/hh7_clustered_data.RDS')
+# seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/HH4_splitstage_data/seurat/stage_cluster/rds_files/HH4_clustered_data.RDS')
+# seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/HH5_splitstage_data/seurat/stage_cluster/rds_files/HH5_clustered_data.RDS')
+# seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/HH6_splitstage_data/seurat/stage_cluster/rds_files/HH6_clustered_data.RDS')
+# seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/HH7_splitstage_data/seurat/stage_cluster/rds_files/HH7_clustered_data.RDS')
 # seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss4_splitstage_data/seurat/stage_cluster/rds_files/ss4_clustered_data.RDS')
 # seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss8_splitstage_data/seurat/stage_cluster/rds_files/ss8_clustered_data.RDS')
 
@@ -90,15 +90,15 @@ cell_state_markers <- read.csv(list.files(data_path, full.names = TRUE, pattern 
 cell_state_markers <- apply(cell_state_markers, 2, function(x) rownames(cell_state_markers)[x > 0])
 
 cell_states = list(
-  hh4 = c('NNE', 'node', 'streak', 'EE', 'eNPB', 'eN', 'eCN'),
+  HH4 = c('NNE', 'node', 'streak', 'EE', 'eNPB', 'eN', 'eCN'),
 
-  hh5 = c('NNE', 'node', 'streak', 'EE', 'eNPB', 'eN', 'eCN',
+  HH5 = c('NNE', 'node', 'streak', 'EE', 'eNPB', 'eN', 'eCN',
           'NPB', 'aNPB', 'pNPB', 'NP', 'pNP', 'iNP', 'aNP', 'PPR', 'aPPR', 'pPPR'),
   
-  hh6 = c('NNE', 'node', 'streak', 'eN', 'eCN',
+  HH6 = c('NNE', 'node', 'streak', 'eN', 'eCN',
           'NPB', 'aNPB', 'pNPB', 'NP', 'pNP', 'iNP', 'aNP', 'PPR', 'aPPR', 'pPPR'),
 
-  hh7 = c('pEpi', 'NPB', 'aNPB', 'pNPB', 'NC', 'dNC', 'NP', 'pNP', 'iNP',
+  HH7 = c('pEpi', 'NPB', 'aNPB', 'pNPB', 'NC', 'dNC', 'NP', 'pNP', 'iNP',
           'aNP', 'HB', 'MB', 'FB', 'vFB', 'PPR', 'aPPR', 'pPPR'),
 
   ss4 = c('pEpi', 'NPB', 'aNPB', 'pNPB', 'NC', 'dNC', 'NP', 'pNP', 'iNP',
@@ -116,7 +116,7 @@ stage = unique(seurat_data@meta.data$stage)
 
 if(length(stage) == 1){
   cell_state_markers = cell_state_markers[[stage]]
-  cluster_res = list(hh4 = 1.2, hh5 = 1.2, hh6 = 1.2, hh7 = 1.2, ss4 = 1.2, ss8 = 1.2)[[stage]]
+  cluster_res = list(HH4 = 1.2, HH5 = 1.2, HH6 = 1.2, HH7 = 1.2, ss4 = 1.2, ss8 = 1.2)[[stage]]
   metadata = c('scHelper_cell_type')
 } else {
   cell_state_markers = flatten(cell_state_markers)

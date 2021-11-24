@@ -122,8 +122,13 @@ include {SEURAT_TRANSFER_FULL_PROCESS as REFINED_TRANSFER_FULL_PROCESS} from "$b
                                                                                                                                                     scvelo_run_options:                     modules['transfer_labels_scvelo_run'],
                                                                                                                                                     cellrank_run_options:                   modules['refined_cellrank_run'])
 
-include {R as GENE_MODULES_LATENT_TIME} from "$baseDir/modules/local/r/main"                                                            addParams(  options:                                modules['gene_modules_latent_time'],
+include {R as GENE_MODULES_SUBSET_LATENT_TIME} from "$baseDir/modules/local/r/main"                                                            addParams(  options:                                modules['gene_modules_latent_time'],
                                                                                                                                                     script:                                 analysis_scripts.gene_modules_latent_time )
+
+
+
+// include {R as GENE_MODULES_LATENT_TIME} from "$baseDir/modules/local/r/main"                                                            addParams(  options:                                modules['gene_modules_latent_time'],
+//                                                                                                                                                     script:                                 analysis_scripts.gene_modules_latent_time )
 
 include {R as GENE_MODULES_NPB_LATENT_TIME} from "$baseDir/modules/local/r/main"                                                            addParams(  options:                            modules['gene_modules_latent_time_npb'],
                                                                                                                                                     script:                                 analysis_scripts.gene_modules_npb_latent_time )
@@ -191,7 +196,11 @@ workflow {
     // Transfer labels from stage subsets to full data
     TRANSFER_LABELS( ch_combined )
 
-    SEURAT_TRANSFER_FULL_PROCESS( TRANSFER_LABELS.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
+    SEURAT_TRANSFER_FULL_PROCESS( TRANSFER_LABELS.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]}
+
+    
+
+
     // SEURAT_TRANSFER_FULL_PROCESS2( TRANSFER_LABELS.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} )
     // REFINED_TRANSFER_FULL_PROCESS( TRANSFER_LABELS.out, MERGE_LOOM.out.loom.map{it[1]}, SEURAT_FILTERING.out.annotations.map{it[1]} ) // Run cellrank and gm dynamics with refined terminal states
 
@@ -214,6 +223,8 @@ workflow {
                                         .combine(ch_full_state_classification)
                                         .combine(ch_full_cellrank)
                                         .map{[[sample_id:'full_gm_latent_time'], it]}
+    
+    GENE_MODULES_SUBSET_LATENT_TIME( ch_full_latent_time )
 
     ch_npb_latent_time              = SEURAT_TRANSFER_PPR_NC_PROCESS.out.gene_modules_out
                                         .map{it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]}

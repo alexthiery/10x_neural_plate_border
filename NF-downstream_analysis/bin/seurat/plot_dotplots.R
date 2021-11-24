@@ -106,9 +106,9 @@ cell_type_order <- c('EE', 'NNE', 'pEpi', 'PPR', 'aPPR', 'pPPR', 'eNPB', 'NPB',
 
 
 genes <- rev(c('EPAS1', 'GATA3', 'SIX1', 'EYA2', 'DLX5', 'BMP4', 'MSX1', 'TFAP2A', 'TFAP2B', 'PAX7', 'SOX2', 'OTX2', 'YEATS4', 'SOX21', 'GBX2', 'SIX3', 'ADMP', 'EOMES'))
-cells <- rownames(filter(seurat_data@meta.data, stage %in% c('hh4', 'hh5', 'hh6')))
+cells <- rownames(filter(seurat_data@meta.data, stage %in% c('HH4', 'HH5', 'HH6')))
 
-png(paste0(plot_path, 'hh4-hh6_dotplot.png'), width = 23, height = 13, units = 'cm', res = 400)
+png(paste0(plot_path, 'HH4-HH6_dotplot.png'), width = 23, height = 13, units = 'cm', res = 400)
 dotplot(seurat_data, cells, genes, group_by = 'scHelper_cell_type', facet = 'stage', group_by_levels = cell_type_order, limits = c(5, NA), range = c(0,6)) +
   guides(size=guide_legend(title="Percent cells expressing"), colour = guide_colourbar(title="Average expression")) +
   theme(strip.text.x = element_text(size=15),
@@ -118,9 +118,9 @@ graphics.off()
 
 
 genes <- rev(c('GATA3', 'DLX5', 'SIX1', 'EYA2', 'MSX1', 'TFAP2A', 'TFAP2B', 'Pax3', 'PAX7', 'CSRNP1', 'SNAI2', 'SOX10', 'SOX2', 'SOX21', 'GBX2', 'PAX2', 'WNT4', 'SIX3', 'SHH'))
-cells <- rownames(filter(seurat_data@meta.data, stage %in% c('hh7', 'ss4', 'ss8')))
+cells <- rownames(filter(seurat_data@meta.data, stage %in% c('HH7', 'ss4', 'ss8')))
 
-png(paste0(plot_path, 'hh7-ss8_dotplot.png'), width = 23, height = 13, units = 'cm', res = 400)
+png(paste0(plot_path, 'HH7-ss8_dotplot.png'), width = 23, height = 13, units = 'cm', res = 400)
 dotplot(seurat_data, cells, genes, group_by = 'scHelper_cell_type', facet = 'stage', group_by_levels = cell_type_order, limits = c(5, NA), range = c(0,6)) +
   guides(size=guide_legend(title="Percent cells expressing"), colour = guide_colourbar(title="Average expression")) +
   theme(strip.text.x = element_text(size=15),

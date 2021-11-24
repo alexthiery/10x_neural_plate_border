@@ -31,10 +31,10 @@ def parse_args(args=None):
     parser.add_argument('-np', '--npcs', type=int, help='Number of PCs to use for calculating moments', default=30)
     parser.add_argument('-nn', '--nneighbours', type=int, help='Number of neighbours to use for calculating moments', default=30)
     parser.add_argument('-r', '--root', type=str, help='Name of root', default=None)
-    parser.add_argument('-re', '--rootEarliest', type=str, help='Space separated array specifying temporal arrangement of stages (i.e. hh4,hh5,hh6)', nargs='+', default=None)
+    parser.add_argument('-re', '--rootEarliest', type=str, help='Space separated array specifying temporal arrangement of stages (i.e. HH4,HH5,HH6)', nargs='+', default=None)
     parser.add_argument('-rc', '--rootCol', type=str, help='Name of root metadata column', default=None)
     parser.add_argument('-e', '--end', type=str, help='Name of end', default=None)
-    parser.add_argument('-el', '--endLatest', type=str, help='Space separated array specifying temporal arrangement of stages (i.e. hh4,hh5,hh6)', nargs='+', default=None)
+    parser.add_argument('-el', '--endLatest', type=str, help='Space separated array specifying temporal arrangement of stages (i.e. HH4,HH5,HH6)', nargs='+', default=None)
     parser.add_argument('-ec', '--endCol', type=str, help='Name of end metadata column', default=None)
     parser.add_argument('-w', '--weightDiffusion', type=float, help='Weight applied to couple latent time with diffusion-based velocity pseudotime', default=None)
     return parser.parse_args(args)
@@ -309,7 +309,7 @@ if __name__ == '__main__':
 
 
 # args = ['-i', '../output/NF-downstream_analysis_stacas/scvelo/NF-scRNAseq_alignment_out/seurat_intersect_loom/NF-scRNAseq_alignment_out_seurat_intersect.loom', '-o', 'out.h5ad', '-m', 'dynamical', '-c',
-#         'scHelper_cell_type', '-s', 'stage', '-b', 'run', '--ncores', '32', '--coloursColumn', 'cell_colours', '--npcs', '20', '--nneighbours', '20', '--root', 'hh4', '--rootCol', 'stage',
+#         'scHelper_cell_type', '-s', 'stage', '-b', 'run', '--ncores', '32', '--coloursColumn', 'cell_colours', '--npcs', '20', '--nneighbours', '20', '--root', 'HH4', '--rootCol', 'stage',
 #         '--weightDiffusion', '0.2', '--diffKinetics', 'True']
 
 # args, adata = main(args)

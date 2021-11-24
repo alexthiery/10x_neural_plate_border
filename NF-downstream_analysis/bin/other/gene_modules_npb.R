@@ -203,7 +203,7 @@ antler_data$gene_modules$set(name= "unbiasedGMs_DE", content = gms)
 ########## DE batch filter GMs ##############
 # Filter gene modules which are deferentially expressed across batches - first filter stages which have multiple runs to test for DEA
 if(length(unique(seurat_data$run)) > 1){
-  temp_seurat <- subset(seurat_data, cells = seurat_data@meta.data %>% filter(stage %in% c('hh6', 'ss4')) %>% rownames())
+  temp_seurat <- subset(seurat_data, cells = seurat_data@meta.data %>% filter(stage %in% c('HH6', 'ss4')) %>% rownames())
     
   batch_gms <- DEGeneModules(temp_seurat, antler_data$gene_modules$get("unbiasedGMs"), logfc = 0.25, pval = 0.001, selected_gene_proportion = 0.5, active_ident = 'run')
   gms <- antler_data$gene_modules$lists$unbiasedGMs_DE$content[!names(antler_data$gene_modules$lists$unbiasedGMs_DE$content) %in% names(batch_gms)]
@@ -225,7 +225,7 @@ metadata <- if(length(unique(seurat_data@meta.data$run)) == 1){metadata
 # Allow manual setting of metadata using --force_order command line arg
 if(!is.null(opt$force_order)){metadata <- unlist(str_split(opt$force_order, pattern = ','))}
 ## Hard-coded orders for stage, clusters and cell types
-stage_order <- c("hh4", "hh5", "hh6", "hh7", "ss4", "ss8")
+stage_order <- c("HH4", "HH5", "HH6", "HH7", "ss4", "ss8")
 seurat_clusters_order <- as.character(1:40)
 
 if(meta_col == 'scHelper_cell_type'){

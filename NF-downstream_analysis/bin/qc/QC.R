@@ -72,7 +72,7 @@ files <- list.files(data.path, recursive = T, full.names = T)
 file.path <- dirname(files)[!duplicated(dirname(files))]
 # make dataframe with stage matching directory 
 ### NEED TO MAKE THIS BIT GENERIC
-sample = c("THI300A1" = "hh4-1", "THI300A3" = "ss4-1")
+sample = c("THI300A1" = "HH4-1", "THI300A3" = "ss4-1")
 matches <- sapply(names(sample), function(x) file.path[grep(pattern = x, x = file.path)])
 
 sample.paths <- data.frame(row.names = sample, sample = sample, stage = names(matches), path = matches, run = gsub(".*-", "", sample))

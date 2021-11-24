@@ -163,7 +163,7 @@ ngene = length(unlist(antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$co
 metadata = c("stage", "scHelper_cell_type")
 antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content <- GeneModuleOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content,
                                                                                    metadata_1 = "stage", 
-                                                                                   order_1 = c("hh4", "hh5", "hh6", "hh7", "ss4", "ss8"),
+                                                                                   order_1 = c("HH4", "HH5", "HH6", "HH7", "ss4", "ss8"),
                                                                                    metadata_2 = "scHelper_cell_type", 
                                                                                    order_2 = c("PPR", "aPPR", "pPPR", "aNPB", "pNPB", "NC", "delaminating_NC"),
                                                                                    plot_path = "scHelper_log/GM_classification/unbiasedGMs_DE_batchfilt/")

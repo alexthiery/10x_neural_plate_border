@@ -66,10 +66,10 @@ pre_sex_filt_data <- FindVariableFeatures(pre_sex_filt_data, selection.method = 
 pre_sex_filt_data <- ScaleData(pre_sex_filt_data, features = rownames(pre_sex_filt_data), vars.to.regress = "percent.mt")
 
 
-# There is a strong sex effect - this plot shows DE genes between top hh4 clusters. Clustering is driven by sex genes
+# There is a strong sex effect - this plot shows DE genes between top HH4 clusters. Clustering is driven by sex genes
 
-# Select two largest hh4 clusters to look at sex effect
-sex_clusters <- pre_sex_filt_data@meta.data %>% filter(grepl("hh4", orig.ident)) %>% count(seurat_clusters) %>%
+# Select two largest HH4 clusters to look at sex effect
+sex_clusters <- pre_sex_filt_data@meta.data %>% filter(grepl("HH4", orig.ident)) %>% count(seurat_clusters) %>%
   top_n(n, n = 2) %>% pull(seurat_clusters) %>% as.character()
 
 # Find differentially expressed genes and plot heatmap of top DE genes for each cluster
