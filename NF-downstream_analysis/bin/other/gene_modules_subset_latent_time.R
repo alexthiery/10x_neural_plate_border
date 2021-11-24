@@ -279,14 +279,56 @@ for(module in names(gms)){
 }
 
 
+# Generate gams for each group (lineage, module)
+gams <- plot_data %>%
+  group_by(module, lineage) %>%
+  do(gams = gam(scaled_expression ~ s(latent_time, bs = "cs"), weights = lineage_probability, data = .))
+
+# Generate latent time values to predict gams on
+pdat <- tibble(latent_time = seq(0, 0.75, length = 1000))
+
+# Generate predicted values in long format
+plot_data <- data.frame()
+for(row in 1:nrow(gams)){
+  plot_data <- rbind(plot_data, data.frame(module = gams[[row, 'module']],
+                                 lineage = gams[[row, 'lineage']],
+                                 scaled_expression = predict.gam(gams[[row,'gams']][[1]], newdata = pdat),
+                                 pdat))
+}
+
+for(module in unique(plot_data$module)){
+  plot <- ggplot(plot_data, aes(x = latent_time, y = scaled_expression, colour = lineage)) +
+    geom_point(size = 0.25) +
+    geom_line() +
+    theme_classic()
+  
+  png(paste0(plot_path, module, '_lineage_dynamics.png'), width = 25, height = 15, units='cm', res=200)
+  print(plot)
+  graphics.off()
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # set colours
-colours <- setNames(colorRampPalette(brewer.pal(9, "Paired"))(length(gms)), names(gms))
+gms_cols <- setNames(colorRampPalette(brewer.pal(9, "Paired"))(length(gms)), names(gms))
 
 # Plot dynamics for each module individually
 for(module in names(gms)){
-  plot = ggplot(filter(plot_data, module == module), aes(x = latent_time, y = scaled_expression, color = module)) +
-    scale_color_manual(values=colours[[module]]) +
-    geom_smooth(method="gam", se=FALSE, mapping = aes(weight = value, linetype = lineage, group=lineage)) +
+  plot = ggplot(filter(plot_data, module %in% !!module), aes(x = latent_time, y = scaled_expression, color = module)) +
+    # scale_color_manual(values=gms_cols[[module]]) +
+    geom_smooth(method="gam", se=FALSE, mapping = aes(weight = lineage_probability, linetype = lineage, group=lineage)) +
     xlab("Latent time") + ylab("Scaled expression") +
     # facet_wrap(~lineage, dir = 'v') +
     theme_classic()
@@ -354,7 +396,7 @@ for(tissue in names(gm_class)){
     geom_smooth(method="gam", se=FALSE, mapping = aes(weight = lineage_probability, group = module)) +
     xlab("Latent time") + ylab("Scaled expression") +
     theme_classic()
-
+  
   png(paste0(plot_path, tissue, '_selected_multi_module_dynamics.png'), width = 15, height = 12, units='cm', res=200)
   print(plot)
   graphics.off()
