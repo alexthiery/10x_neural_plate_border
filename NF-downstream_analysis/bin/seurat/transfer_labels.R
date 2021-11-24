@@ -78,20 +78,22 @@ stage_cols = stage_all_colours[unique(seurat_data@meta.data$stage)]
 names(stage_cols) <- NULL
 
 ################ DimPlot of scHelper_cell_types
-png(paste0(plot_path, "scHelper_celltype_umap.png"), width=20, height=20, units = 'cm', res = 200)
-DimPlot(seurat_data, group.by = 'scHelper_cell_type', label = TRUE, label.size = 3, 
-        label.box = TRUE, repel = TRUE,
-        pt.size = 1, cols = scHelper_cols) +
+png(paste0(plot_path, "scHelper_celltype_umap.png"), width=26, height=20, units = 'cm', res = 200)
+DimPlot(seurat_data, group.by = 'scHelper_cell_type', label = FALSE, 
+        pt.size = 0.9, cols = scHelper_cols) +
     ggplot2::theme_void() +
-    ggplot2::theme(legend.position = "none", 
-                   plot.title = element_blank())
+    ggplot2::theme(plot.title = element_blank(),
+                   legend.key.size = unit(1.5, 'cm'), #change legend key size
+                   legend.key.height = unit(1, 'cm'), #change legend key height
+                   legend.key.width = unit(1, 'cm'), #change legend key width
+                   legend.text = element_text(size=20))
 graphics.off()
 
 ################ DimPlot of stages
 png(paste0(plot_path, "stage_umap.png"), width=20, height=20, units = 'cm', res = 200)
-DimPlot(seurat_data, group.by = 'stage', label = TRUE, label.size = 5, 
+DimPlot(seurat_data, group.by = 'stage', label = TRUE, label.size = 8, 
         label.box = TRUE, repel = TRUE,
-        pt.size = 1, cols = stage_cols) +
+        pt.size = 0.9, cols = stage_cols) +
     ggplot2::theme_void() +
     ggplot2::theme(legend.position = "none", 
                    plot.title = element_blank())
