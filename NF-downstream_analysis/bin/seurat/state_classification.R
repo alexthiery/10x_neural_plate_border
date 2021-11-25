@@ -196,7 +196,7 @@ DimPlot(seurat_data, group.by = 'scHelper_cell_type', label = TRUE,
         label.size = ifelse(length(unique(seurat_data$stage)) == 1, 5, 3),
         label.box = TRUE, repel = TRUE,
         pt.size = ifelse(length(unique(seurat_data$stage)) == 1, 1.2, 1), 
-        cols = scHelper_cols) +
+        cols = scHelper_cols, shuffle = TRUE) +
   ggplot2::theme_void() +
   ggplot2::theme(legend.position = "none", 
                  plot.title = element_blank())
