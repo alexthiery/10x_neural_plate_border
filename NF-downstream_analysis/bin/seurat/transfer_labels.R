@@ -67,14 +67,14 @@ seurat_data@meta.data[[opt$group_by]] <- cell_states[match(rownames(seurat_data@
 scHelper_order <- scHelper_all_order[scHelper_all_order %in% unique(seurat_data@meta.data[["scHelper_cell_type"]])]
 seurat_data@meta.data$scHelper_cell_type <- factor(seurat_data@meta.data$scHelper_cell_type, levels = scHelper_all_order)
 
-scHelper_cols = scHelper_all_colours[unique(seurat_data@meta.data$scHelper_cell_type)]
+scHelper_cols = scHelper_all_colours[scHelper_order]
 names(scHelper_cols) <- NULL
 
 #####################   Set levels and colours for stage   ###########################################
 stage_order <- stage_all_order[stage_all_order %in% unique(seurat_data@meta.data[["stage"]])]
 seurat_data@meta.data$stage <- factor(seurat_data@meta.data$stage, levels = stage_all_order)
 
-stage_cols = stage_all_colours[unique(seurat_data@meta.data$stage)]
+stage_cols = stage_all_colours[stage_order]
 names(stage_cols) <- NULL
 
 ################ DimPlot of scHelper_cell_types
