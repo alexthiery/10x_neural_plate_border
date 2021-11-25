@@ -180,40 +180,23 @@ seurat_data@meta.data[['scHelper_cell_type']] <- unlist(apply(seurat_data@meta.d
 scHelper_order <- scHelper_all_order[scHelper_all_order %in% unique(seurat_data@meta.data[["scHelper_cell_type"]])]
 seurat_data@meta.data$scHelper_cell_type <- factor(seurat_data@meta.data$scHelper_cell_type, levels = scHelper_all_order)
 
-scHelper_cols = scHelper_all_colours[unique(seurat_data@meta.data$scHelper_cell_type)]
+scHelper_cols = scHelper_all_colours[scHelper_order]
 names(scHelper_cols) <- NULL
 
 #####################   Set levels and colours for stage   ###########################################
 stage_order <- stage_all_order[stage_all_order %in% unique(seurat_data@meta.data[["stage"]])]
 seurat_data@meta.data$stage <- factor(seurat_data@meta.data$stage, levels = stage_all_order)
 
-stage_cols = stage_all_colours[levels(seurat_data@meta.data$stage)]
+stage_cols = stage_all_colours[stage_order]
 names(stage_cols) <- NULL
-
-# Plot UMAP for clusters and developmental stage
-png(paste0(plot_path, "ClustStagePlot_scHelper_celltype_umap.png"), width=24, height=12, units = 'cm', res = 200)
-ClustStagePlot(seurat_data, stage_col = "stage", cluster_col = "scHelper_cell_type", label_clusters = TRUE)
-graphics.off()
 
 # UMAP for cell state
 png(paste0(plot_path, "scHelper_celltype_umap.png"), width=12, height=12, units = 'cm', res = 200)
 DimPlot(seurat_data, group.by = 'scHelper_cell_type', label = TRUE, 
         label.size = ifelse(length(unique(seurat_data$stage)) == 1, 5, 3),
         label.box = TRUE, repel = TRUE,
-        pt.size = ifelse(length(unique(seurat_data$stage)) == 1, 1.5, 1), 
+        pt.size = ifelse(length(unique(seurat_data$stage)) == 1, 1.2, 1), 
         cols = scHelper_cols) +
-  ggplot2::theme_void() +
-  ggplot2::theme(legend.position = "none", 
-                 plot.title = element_blank())
-graphics.off()
-
-# UMAP for stage
-png(paste0(plot_path, "stage_umap.png"), width=12, height=12, units = 'cm', res = 200)
-DimPlot(seurat_data, group.by = 'stage', label = TRUE, 
-        label.size = ifelse(length(unique(seurat_data$stage)) == 1, 5, 3),
-        label.box = TRUE, repel = TRUE,
-        pt.size = ifelse(length(unique(seurat_data$stage)) == 1, 1.5, 1), 
-        cols = stage_cols) +
   ggplot2::theme_void() +
   ggplot2::theme(legend.position = "none", 
                  plot.title = element_blank())
