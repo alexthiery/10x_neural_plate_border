@@ -110,7 +110,7 @@ cells <- rownames(filter(seurat_data@meta.data, stage %in% c('HH4', 'HH5', 'HH6'
 
 png(paste0(plot_path, 'HH4-HH6_dotplot.png'), width = 23, height = 13, units = 'cm', res = 400)
 dotplot(seurat_data, cells, genes, group_by = 'scHelper_cell_type', facet = 'stage', group_by_levels = cell_type_order, limits = c(5, NA), range = c(0,6)) +
-  guides(size=guide_legend(title="Percent cells expressing"), colour = guide_colourbar(title="Average expression")) +
+  guides(size=guide_legend(title="Percent cells\nexpressing"), colour = guide_colourbar(title="Average\nexpression")) +
   theme(strip.text.x = element_text(size=15),
         axis.text.x=element_text(size=12),
         axis.text.y=element_text(size=11))
@@ -122,7 +122,7 @@ cells <- rownames(filter(seurat_data@meta.data, stage %in% c('HH7', 'ss4', 'ss8'
 
 png(paste0(plot_path, 'HH7-ss8_dotplot.png'), width = 23, height = 13, units = 'cm', res = 400)
 dotplot(seurat_data, cells, genes, group_by = 'scHelper_cell_type', facet = 'stage', group_by_levels = cell_type_order, limits = c(5, NA), range = c(0,6)) +
-  guides(size=guide_legend(title="Percent cells expressing"), colour = guide_colourbar(title="Average expression")) +
+  guides(size=guide_legend(title="Percent cells\nexpressing"), colour = guide_colourbar(title="Average\nexpression")) +
   theme(strip.text.x = element_text(size=15),
         axis.text.x=element_text(size=12),
         axis.text.y=element_text(size=11))
