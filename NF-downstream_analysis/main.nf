@@ -190,6 +190,7 @@ workflow {
     ch_seurat_npb_subset            = SEURAT_TRANSFER_PPR_NC_PROCESS.out.cluster_out
 
     ch_stage_data                   = SEURAT_STAGE_PROCESS.out
+                                        .state_classification_out
                                         .map{it[1].findAll{it =~ /rds/}} // it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]
                                         .collect()
     
