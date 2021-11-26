@@ -143,8 +143,8 @@ dir.create(rds_path, recursive = T)
 # seurat_data <- readRDS(list.files(data_path, pattern = "*.RDS", full.names = TRUE)[!list.files(data_path, pattern = "*.RDS") %>% grepl('antler', .)])
 # seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/transfer_labels/seurat/rds_files/seurat_label_transfer.RDS')
 # seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/transfer_subset/transfer_npb_subset/seurat/transfer_cluster/rds_files/transfer_clustered_data.RDS')
-hh6 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/hh6_splitstage_data/seurat/stage_state_classification/rds_files/hh6_cell_state_classification.RDS')
-hh7 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/hh7_splitstage_data/seurat/stage_state_classification/rds_files/hh7_cell_state_classification.RDS')
+HH6 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/HH6_splitstage_data/seurat/stage_state_classification/rds_files/HH6_cell_state_classification.RDS')
+HH7 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/HH7_splitstage_data/seurat/stage_state_classification/rds_files/HH7_cell_state_classification.RDS')
 ss8 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss8_splitstage_data/seurat/stage_state_classification/rds_files/ss8_cell_state_classification.RDS')
 ss4 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss4_splitstage_data/seurat/stage_state_classification/rds_files/ss4_cell_state_classification.RDS')
 
@@ -154,16 +154,16 @@ ss4 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss4_splitstag
 
 
 # Rename cell states based on group var
-# new_cell_states = c('aPPR' = 'PPR', 'PPR' = 'PPR', 'pPPR' = 'PPR', 'aNPB' = 'NPB', 'pNPB' = 'NPB', 'NC' = 'NC', 'delaminating_NC' = 'NC')
+# new_cell_states = c('aPPR' = 'PPR', 'PPR' = 'PPR', 'pPPR' = 'PPR', 'aNPB' = 'NPB', 'pNPB' = 'NPB', 'NC' = 'NC', 'dNC' = 'NC')
 # seurat_data$scHelper_cell_type = new_cell_states[as.character(seurat_data$scHelper_cell_type)]
 
 # # Set RNA to default assay for plotting expression data
 # DefaultAssay(seurat_data) <- "integrated"
 # # 
 # # Subset cell states and stages from full dataset
-# subset <- subset_seurat(seurat_data, population = c('hh7', 'ss4', 'ss8'), split_by = 'stage', rerun_UMAP = FALSE)
+# subset <- subset_seurat(seurat_data, population = c('HH7', 'ss4', 'ss8'), split_by = 'stage', rerun_UMAP = FALSE)
 # DimPlot(subset, group.by = 'scHelper_cell_type')
-# subset <- subset_seurat(subset, population = c('pPPR', 'aPPR', 'NC', 'delaminating_NC', 'PPR', 'aNPB', 'pNPB'), split_by = 'scHelper_cell_type', rerun_UMAP = TRUE)
+# subset <- subset_seurat(subset, population = c('pPPR', 'aPPR', 'NC', 'dNC', 'PPR', 'aNPB', 'pNPB'), split_by = 'scHelper_cell_type', rerun_UMAP = TRUE)
 # DimPlot(subset, group.by = 'scHelper_cell_type')
 # 
 # 
@@ -186,16 +186,16 @@ ss4 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss4_splitstag
 # bin <- extract_bin(subset, gm_1 = ppr_gm, gm_2 = nc_gm, meta_data = c('scHelper_cell_type'), bin_number = 20, bin_extract = 6)
 # DimPlot(ss4, cells.highlight = bin) + NoLegend()
 # DimPlot(ss8, cells.highlight = bin) + NoLegend()
-# DimPlot(hh7, cells.highlight = bin) + NoLegend()
+# DimPlot(HH7, cells.highlight = bin) + NoLegend()
 # 
 # ppr_gm <- filter_genes(subset, gene_list = ppr_gm, ident_1 = c('pPPR', 'aPPR', 'PPR'), group_by = 'scHelper_cell_type', logfc = 0.5)
-# nc_gm <- filter_genes(subset, gene_list = nc_gm, ident_1 = c('NC', 'delaminating_NC'), group_by = 'scHelper_cell_type', logfc = 0.5)
+# nc_gm <- filter_genes(subset, gene_list = nc_gm, ident_1 = c('NC', 'dNC'), group_by = 'scHelper_cell_type', logfc = 0.5)
 # 
 # coexpression_highlight_cells(subset, gm_1 = ppr_gm, gm_2 = nc_gm, bin_number = 20)
 # coexpression(subset, gm_1 = ppr_gm, gm_2 = nc_gm, meta_data = c('scHelper_cell_type'), show_bins = TRUE, bin_number = 20)
 # 
 # bin <- extract_bin(subset, gm_1 = ppr_gm, gm_2 = nc_gm, meta_data = c('scHelper_cell_type'), bin_number = 20, bin_extract = 6)
-# DimPlot(hh7, cells.highlight = bin) + NoLegend()
+# DimPlot(HH7, cells.highlight = bin) + NoLegend()
 # DimPlot(ss4, cells.highlight = bin) + NoLegend()
 # DimPlot(ss8, cells.highlight = bin) + NoLegend()
 # 
@@ -205,16 +205,16 @@ ss4 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss4_splitstag
 # bin <- extract_bin(subset, gm_1 = ppr_gm, gm_2 = nc_gm, meta_data = c('scHelper_cell_type'), bin_number = 20, bin_extract = 7)
 # DimPlot(ss4, cells.highlight = bin) + NoLegend()
 # DimPlot(ss8, cells.highlight = bin) + NoLegend()
-# DimPlot(hh7, cells.highlight = bin) + NoLegend()
+# DimPlot(HH7, cells.highlight = bin) + NoLegend()
 # 
 # ppr_gm <- filter_genes(subset, gene_list = ppr_gm, ident_1 = c('pPPR', 'aPPR', 'PPR'), group_by = 'scHelper_cell_type', logfc = 0.5)
-# nc_gm <- filter_genes(subset, gene_list = nc_gm, ident_1 = c('NC', 'delaminating_NC'), group_by = 'scHelper_cell_type', logfc = 0.5)
+# nc_gm <- filter_genes(subset, gene_list = nc_gm, ident_1 = c('NC', 'dNC'), group_by = 'scHelper_cell_type', logfc = 0.5)
 # 
 # coexpression_highlight_cells(subset, gm_1 = ppr_gm, gm_2 = nc_gm, bin_number = 20)
 # coexpression(subset, gm_1 = ppr_gm, gm_2 = nc_gm, meta_data = c('scHelper_cell_type'), show_bins = TRUE, bin_number = 20)
 # 
 # bin <- extract_bin(subset, gm_1 = ppr_gm, gm_2 = nc_gm, meta_data = c('scHelper_cell_type'), bin_number = 10, bin_extract = 4)
-# DimPlot(hh7, cells.highlight = bin) + NoLegend()
+# DimPlot(HH7, cells.highlight = bin) + NoLegend()
 # DimPlot(ss4, cells.highlight = bin) + NoLegend()
 # DimPlot(ss8, cells.highlight = bin) + NoLegend()
 # 
@@ -232,8 +232,8 @@ ss4 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss4_splitstag
 # Run coexpression using PPR and NC gene modules from ss8
 subset <- readRDS('./output/NF-downstream_analysis_stacas/transfer_subset/transfer_ppr_nc_subset/seurat/transfer_cluster/rds_files/transfer_clustered_data.RDS')
 
-subset <- subset_seurat(subset, population = c('hh7', 'ss4', 'ss8'), split_by = 'stage', rerun_UMAP = FALSE)
-subset <- subset_seurat(subset, population = c('pPPR', 'aPPR', 'NC', 'delaminating_NC', 'PPR', 'aNPB', 'pNPB'), split_by = 'scHelper_cell_type', rerun_UMAP = TRUE)
+subset <- subset_seurat(subset, population = c('HH7', 'ss4', 'ss8'), split_by = 'stage', rerun_UMAP = FALSE)
+subset <- subset_seurat(subset, population = c('pPPR', 'aPPR', 'NC', 'dNC', 'PPR', 'aNPB', 'pNPB'), split_by = 'scHelper_cell_type', rerun_UMAP = TRUE)
 DimPlot(subset, group.by = 'scHelper_cell_type')
 DimPlot(subset, group.by = 'stage')
 
@@ -248,14 +248,14 @@ coexpression_highlight_cells(subset, gm_1 = ppr_gm, gm_2 = nc_gm, bin_number = 1
 bin<- extract_bin(subset, gm_1 = ppr_gm, gm_2 = nc_gm, meta_data = c('scHelper_cell_type'), bin_number = 10, bin_extract = 3)
 # bin2 <- extract_bin(subset, gm_1 = ppr_gm, gm_2 = nc_gm, meta_data = c('scHelper_cell_type'), bin_number = 10, bin_extract = 8)
 # bin = c(bin1, bin2)
-DimPlot(hh7, cells.highlight = bin) + NoLegend()
+DimPlot(HH7, cells.highlight = bin) + NoLegend()
 DimPlot(ss4, cells.highlight = bin) + NoLegend()
 DimPlot(ss8, cells.highlight = bin) + NoLegend()
 
 ####################################################################################################
 # Run coexpression using MB and NC gene modules from ss8
 subset <- readRDS('./output/NF-downstream_analysis_stacas/transfer_subset/transfer_npb_subset/seurat/transfer_cluster/rds_files/transfer_clustered_data.RDS')
-subset <- subset_seurat(subset, population = c('NC', 'delaminating_NC', 'iNP', 'midbrain'), split_by = 'scHelper_cell_type', rerun_UMAP = TRUE)
+subset <- subset_seurat(subset, population = c('NC', 'dNC', 'iNP', 'MB'), split_by = 'scHelper_cell_type', rerun_UMAP = TRUE)
 DimPlot(subset, group.by = 'scHelper_cell_type')
 DimPlot(subset, group.by = 'stage')
 
@@ -270,7 +270,7 @@ coexpression_highlight_cells(subset, gm_1 = mbhb_gm, gm_2 = nc_gm, bin_number = 
 bin1 <- extract_bin(subset, gm_1 = mbhb_gm, gm_2 = nc_gm, meta_data = c('scHelper_cell_type'), bin_number = 10, bin_extract = 5)
 bin2 <- extract_bin(subset, gm_1 = mbhb_gm, gm_2 = nc_gm, meta_data = c('scHelper_cell_type'), bin_number = 10, bin_extract = 5)
 bin = c(bin1, bin2)
-DimPlot(hh7, cells.highlight = bin) + NoLegend()
+DimPlot(HH7, cells.highlight = bin) + NoLegend()
 DimPlot(ss4, cells.highlight = bin) + NoLegend()
 DimPlot(ss8, cells.highlight = bin) + NoLegend()
 
@@ -278,8 +278,8 @@ DimPlot(ss8, cells.highlight = bin) + NoLegend()
 ####################################################################################################
 # Run coexpression using FB and PPR gene modules from ss8
 subset <- readRDS('./output/NF-downstream_analysis_stacas/transfer_subset/transfer_ppr_fb_subset/seurat/transfer_cluster/rds_files/transfer_clustered_data.RDS')
-# subset <- subset_seurat(subset, population = c('NC', 'delaminating_NC', 'iNP', 'midbrain'), split_by = 'scHelper_cell_type', rerun_UMAP = TRUE)
-subset <- subset_seurat(subset, population = c('hh6', 'hh7', 'ss4', 'ss8'), split_by = 'stage', rerun_UMAP = TRUE)
+# subset <- subset_seurat(subset, population = c('NC', 'dNC', 'iNP', 'MB'), split_by = 'scHelper_cell_type', rerun_UMAP = TRUE)
+subset <- subset_seurat(subset, population = c('HH6', 'HH7', 'ss4', 'ss8'), split_by = 'stage', rerun_UMAP = TRUE)
 
 DimPlot(subset, group.by = 'scHelper_cell_type')
 DimPlot(subset, group.by = 'stage')
@@ -297,16 +297,16 @@ bin2 <- extract_bin(subset, gm_1 = aPPR_gm, gm_2 = fb_gm, meta_data = c('scHelpe
 bin = c(bin1, bin2)
 DimPlot(ss4, cells.highlight = bin) + NoLegend()
 DimPlot(ss8, cells.highlight = bin) + NoLegend()
-DimPlot(hh7, cells.highlight = bin) + NoLegend()
-DimPlot(hh6, cells.highlight = bin) + NoLegend()
+DimPlot(HH7, cells.highlight = bin) + NoLegend()
+DimPlot(HH6, cells.highlight = bin) + NoLegend()
 
 
 ####################################################################################################
 # Run coexpression using FB and HB gene modules from ss8
 subset <- readRDS('./output/NF-downstream_analysis_stacas/transfer_subset/transfer_fb_mbhb_subset/seurat/transfer_cluster/rds_files/transfer_clustered_data.RDS')
-# subset <- subset_seurat(subset, population = c('NC', 'delaminating_NC', 'iNP', 'midbrain'), split_by = 'scHelper_cell_type', rerun_UMAP = TRUE)
-subset <- subset_seurat(subset, population = c('hh6', 'hh7', 'ss4', 'ss8'), split_by = 'stage', rerun_UMAP = TRUE)
-subset <- subset_seurat(subset, population = c('aNP', 'iNP', 'midbrain', 'forebrain'), split_by = 'scHelper_cell_type', rerun_UMAP = TRUE)
+# subset <- subset_seurat(subset, population = c('NC', 'dNC', 'iNP', 'MB'), split_by = 'scHelper_cell_type', rerun_UMAP = TRUE)
+subset <- subset_seurat(subset, population = c('HH6', 'HH7', 'ss4', 'ss8'), split_by = 'stage', rerun_UMAP = TRUE)
+subset <- subset_seurat(subset, population = c('aNP', 'iNP', 'MB', 'FB'), split_by = 'scHelper_cell_type', rerun_UMAP = TRUE)
 
 DimPlot(subset, group.by = 'scHelper_cell_type')
 
@@ -323,8 +323,8 @@ bin2 <- extract_bin(subset, gm_1 = mb_gm, gm_2 = fb_gm, meta_data = c('scHelper_
 bin = c(bin1, bin2)
 DimPlot(ss4, cells.highlight = bin) + NoLegend()
 DimPlot(ss8, cells.highlight = bin) + NoLegend()
-DimPlot(hh7, cells.highlight = bin) + NoLegend()
-DimPlot(hh6, cells.highlight = bin) + NoLegend()
+DimPlot(HH7, cells.highlight = bin) + NoLegend()
+DimPlot(HH6, cells.highlight = bin) + NoLegend()
 
 
 

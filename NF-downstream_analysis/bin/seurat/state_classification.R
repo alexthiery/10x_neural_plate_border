@@ -19,6 +19,24 @@ spec = matrix(c(
 ), byrow=TRUE, ncol=4)
 opt = getopt(spec)
 
+########################       CELL STATE COLOURS    ########################################
+scHelper_cell_type_order <- c('EE', 'NNE', 'pEpi', 'PPR', 'aPPR', 'pPPR',
+                        'eNPB', 'NPB', 'aNPB', 'pNPB','NC', 'dNC',
+                        'eN', 'eCN', 'NP', 'pNP', 'HB', 'iNP', 'MB', 
+                        'aNP', 'FB', 'vFB', 'node', 'streak')
+
+scHelper_cell_type_colours <- c("#ed5e5f", "#A73C52", "#6B5F88", "#3780B3", "#3F918C", "#47A266", "#53A651", "#6D8470",
+                          "#87638F", "#A5548D", "#C96555", "#ED761C", "#FF9508", "#FFC11A", "#FFEE2C", "#EBDA30",
+                          "#CC9F2C", "#AD6428", "#BB614F", "#D77083", "#F37FB8", "#DA88B3", "#B990A6", "#b3b3b3")
+
+names(scHelper_cell_type_colours) <- c('NNE', 'HB', 'eNPB', 'PPR', 'aPPR', 'streak',
+                                 'pPPR', 'NPB', 'aNPB', 'pNPB','eCN', 'dNC',
+                                 'eN', 'NC', 'NP', 'pNP', 'EE', 'iNP', 'MB', 
+                                 'vFB', 'aNP', 'node', 'FB', 'pEpi')
+
+stage_order <- c("HH4", "HH5", "HH6", "HH7", "ss4", "ss8")
+############################################################################################
+
 # Set paths and load data
 {
   if(length(commandArgs(trailingOnly = TRUE)) == 0){
@@ -26,7 +44,7 @@ opt = getopt(spec)
     
     plot_path = "./test/state_classification/plots/"
     rds_path = "./test/state_classification/rds_files/"
-    data_path = "./output/NF-downstream_analysis_stacas/filtered_seurat/seurat/state_classification/rds_files/"
+    data_path = "./output/NF-downstream_analysis_stacas/seurat_filtering/6_contamination_filt/rds_files/"
     
     ncores = 8
     
@@ -66,28 +84,28 @@ seurat_data <- readRDS(list.files(data_path, full.names = TRUE, pattern = '*.RDS
 #                                      Cell state classification                                    #
 #######################################################################################
 # Convert knowledge matrix to gene list
-# cell_state_markers <- read.csv('./knowlege_matrices/temp_km.csv', row.names = 1) %>% select(!c(evidence, PPR, NP, NPB, iNP))
+# cell_state_markers <- read.csv('./NF-downstream_analysis/binary_knowledge_matrix.csv', row.names = 1) %>% select(!c(evidence, PPR, NP, NPB, iNP))
 cell_state_markers <- read.csv(list.files(data_path, full.names = TRUE, pattern = '*.csv'), row.names = 1) %>% select(!c(evidence))
 
 cell_state_markers <- apply(cell_state_markers, 2, function(x) rownames(cell_state_markers)[x > 0])
 
 cell_states = list(
-  hh4 = c('NNE', 'node', 'streak', 'extra_embryonic', 'early_NPB', 'early_neural', 'early_caudal_neural'),
+  HH4 = c('NNE', 'node', 'streak', 'EE', 'eNPB', 'eN', 'eCN'),
 
-  hh5 = c('NNE', 'node', 'streak', 'extra_embryonic', 'early_NPB', 'early_neural', 'early_caudal_neural',
+  HH5 = c('NNE', 'node', 'streak', 'EE', 'eNPB', 'eN', 'eCN',
           'NPB', 'aNPB', 'pNPB', 'NP', 'pNP', 'iNP', 'aNP', 'PPR', 'aPPR', 'pPPR'),
   
-  hh6 = c('NNE', 'node', 'streak', 'early_neural', 'early_caudal_neural',
+  HH6 = c('NNE', 'node', 'streak', 'eN', 'eCN',
           'NPB', 'aNPB', 'pNPB', 'NP', 'pNP', 'iNP', 'aNP', 'PPR', 'aPPR', 'pPPR'),
 
-  hh7 = c('prospective_epidermis', 'NPB', 'aNPB', 'pNPB', 'NC', 'delaminating_NC', 'NP', 'pNP', 'iNP',
-          'aNP', 'hindbrain', 'midbrain', 'forebrain', 'ventral_forebrain', 'PPR', 'aPPR', 'pPPR'),
+  HH7 = c('pEpi', 'NPB', 'aNPB', 'pNPB', 'NC', 'dNC', 'NP', 'pNP', 'iNP',
+          'aNP', 'HB', 'MB', 'FB', 'vFB', 'PPR', 'aPPR', 'pPPR'),
 
-  ss4 = c('prospective_epidermis', 'NPB', 'aNPB', 'pNPB', 'NC', 'delaminating_NC', 'NP', 'pNP', 'iNP',
-          'aNP', 'hindbrain', 'midbrain', 'forebrain', 'ventral_forebrain', 'PPR', 'aPPR', 'pPPR'),
+  ss4 = c('pEpi', 'NPB', 'aNPB', 'pNPB', 'NC', 'dNC', 'NP', 'pNP', 'iNP',
+          'aNP', 'HB', 'MB', 'FB', 'vFB', 'PPR', 'aPPR', 'pPPR'),
 
-  ss8 = c('prospective_epidermis', 'NPB', 'aNPB', 'pNPB', 'NC', 'delaminating_NC', 'NP', 'pNP', 'iNP',
-          'aNP', 'hindbrain', 'midbrain', 'forebrain', 'ventral_forebrain', 'PPR', 'aPPR', 'pPPR')
+  ss8 = c('pEpi', 'NPB', 'aNPB', 'pNPB', 'NC', 'dNC', 'NP', 'pNP', 'iNP',
+          'aNP', 'HB', 'MB', 'FB', 'vFB', 'PPR', 'aPPR', 'pPPR')
 )
 
 cell_state_markers <- lapply(cell_states, function(x) cell_state_markers[names(cell_state_markers) %in% x])
@@ -98,7 +116,7 @@ stage = unique(seurat_data@meta.data$stage)
 
 if(length(stage) == 1){
   cell_state_markers = cell_state_markers[[stage]]
-  cluster_res = list(hh4 = 1.2, hh5 = 1.2, hh6 = 1.2, hh7 = 1.2, ss4 = 1.2, ss8 = 1.2)[[stage]]
+  cluster_res = list(HH4 = 1.2, HH5 = 1.2, HH6 = 1.2, HH7 = 1.2, ss4 = 1.2, ss8 = 1.2)[[stage]]
   metadata = c('scHelper_cell_type')
 } else {
   cell_state_markers = flatten(cell_state_markers)
@@ -158,13 +176,23 @@ seurat_data@meta.data[['scHelper_cell_type']] <- unlist(apply(seurat_data@meta.d
 # Old method
 # seurat_data <- ClusterClassification(seurat_obj = seurat_data, cell_state_markers = cell_state_markers, force_assign = FALSE, quantile = 0.5, plot_path = paste0(plot_path, "scHelper_log/"))
 
-# Plot UMAP for clusters and developmental stage
-png(paste0(plot_path, "scHelper_celltype_umap.png"), width=24, height=12, units = 'cm', res = 200)
-ClustStagePlot(seurat_data, stage_col = "stage", cluster_col = "scHelper_cell_type", label_clusters = TRUE)
-graphics.off()
+#####################   Set levels
+seurat_data@meta.data$scHelper_cell_type <- factor(seurat_data@meta.data$scHelper_cell_type, levels = scHelper_cell_type_order)
+seurat_data@meta.data$stage <- factor(seurat_data@meta.data$stage, levels = stage_order)
 
-png(paste0(plot_path, "scHelper_celltype_umap2.png"), width=12, height=12, units = 'cm', res = 200)
-DimPlot(seurat_data, group.by = 'scHelper_cell_type', label = TRUE, label.size = 3, label.box = TRUE, repel = TRUE) + ggplot2::theme(legend.position = "none")
+#####################   Set colours
+scHelper_cols <- scHelper_cell_type_colours[levels(droplevels(seurat_data@meta.data$scHelper_cell_type))]
+
+# UMAP for cell state
+png(paste0(plot_path, "scHelper_celltype_umap.png"), width=12, height=12, units = 'cm', res = 200)
+DimPlot(seurat_data, group.by = 'scHelper_cell_type', label = TRUE, 
+        label.size = ifelse(length(unique(seurat_data$stage)) == 1, 5, 3),
+        label.box = TRUE, repel = TRUE,
+        pt.size = ifelse(length(unique(seurat_data$stage)) == 1, 1.2, 1), 
+        cols = scHelper_cols, shuffle = TRUE) +
+  ggplot2::theme_void() +
+  ggplot2::theme(legend.position = "none", 
+                 plot.title = element_blank())
 graphics.off()
 
 saveRDS(seurat_data, paste0(rds_path, label, "_cell_state_classification.RDS"), compress = FALSE)
@@ -190,9 +218,7 @@ for(i in names(cell_state_markers)){
   nrow = ceiling((length(cell_state_markers[[i]])+1)/ncol)
 
   png(paste0(curr_plot_path, i, '.png'), width = ncol*10, height = nrow*10, units = "cm", res = 200)
-  MultiFeaturePlot(seurat_data, plot_stage = TRUE, stage_col = "stage", plot_celltype = TRUE, celltype_col = "seurat_clusters",
+  MultiFeaturePlot(seurat_data, plot_stage = TRUE, stage_col = "stage", plot_celltype = TRUE, celltype_col = "scHelper_cell_type",
                    gene_list = cell_state_markers[[i]], n_col = ncol, label = '')
   graphics.off()
 }
-
-

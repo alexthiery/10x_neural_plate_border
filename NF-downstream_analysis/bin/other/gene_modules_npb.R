@@ -10,6 +10,56 @@ library(Antler)
 library(RColorBrewer)
 library(scHelper)
 
+### TEMP - overwrite scHelper GeneModuleOrder function
+GeneModuleOrder <- function (seurat_obj, gene_modules, metadata_1 = NULL, order_1 = NULL, 
+          metadata_2 = NULL, order_2 = NULL, rename_modules = NULL, 
+          plot_path = "scHelper_log/GM_classification/") 
+{
+  classified_gms_1 <- GeneModuleClassify(seurat_obj, gene_modules, 
+                                         metadata = metadata_1, plot_path = plot_path)
+  classified_gms_1 <- classified_gms_1 %>% arrange(match(!!sym(metadata_1), 
+                                                         order_1)) %>% group_by(!!sym(metadata_1)) %>% mutate(pos = 1:n()) %>% 
+    mutate(new_name = paste(!!sym(metadata_1), pos, sep = "-")) %>% 
+    dplyr::select(gene_module, !!sym(metadata_1), new_name)
+  ordered_gms <- gene_modules[order(match(names(gene_modules), 
+                                          classified_gms_1$gene_module))] # ordered on metadata_1 but not renamed
+  if (is.null(metadata_2) || is.na(metadata_2) || is.nan(metadata_2)) {
+    print(paste0("Gene modules ordered only on ", metadata_1))
+  }
+  else {
+    print(paste0("Gene modules ordered on ", metadata_1, 
+                 " AND ", metadata_2))
+    temp_seurat <- SplitObject(seurat_data, split.by = metadata_1)
+    classified_gms_2 <- c()
+    for (i in order_1) {
+      print(i)
+      subset_gms <- gene_modules[classified_gms_1 %>% filter(!!sym(metadata_1) == 
+                                                               i) %>% dplyr::pull(gene_module)]
+      if (length(subset_gms) != 0) {
+        temp <- GeneModuleClassify(seurat_data, subset_gms, 
+                                   metadata = metadata_2, plot_path = paste0(plot_path, 
+                                                                             i, "/"))
+        classified_gms_2 <- rbind(classified_gms_2, temp)
+      }
+    }
+    
+    classified_gms_2 <- classified_gms_2 %>% add_column(!!sym(metadata_1) := classified_gms_1[[metadata_1]])
+    
+    classified_gms_2 <- classified_gms_2 %>% arrange(!!sym(metadata_1), (match(!!sym(metadata_2), order_2))) %>% 
+      mutate(pos = 1:n()) %>% mutate(new_name = paste(!!sym(metadata_2), pos, sep = "-")) %>% 
+      dplyr::select(gene_module, !!sym(metadata_2), !!sym(metadata_1), new_name)
+    
+    ordered_gms <- gene_modules[order(match(names(gene_modules), classified_gms_2$gene_module))]
+    
+    if (!is.null(rename_modules) && rename_modules == metadata_2) {
+      names(ordered_gms) <- classified_gms_2$new_name
+    }
+  }
+  if (!is.null(rename_modules) && rename_modules == metadata_1) {
+    names(ordered_gms) <- classified_gms_1$new_name
+  }
+  return(ordered_gms)
+}
 
 # Read in command line opts
 option_list <- list(
@@ -143,7 +193,7 @@ DEGeneModules <- function (seurat_data, gene_modules, logfc = 0.25, pval = 0.001
 
 
 gms <- DEGeneModules(seurat_data, antler_data$gene_modules$get("unbiasedGMs"), logfc = 0.25, pval = 0.001, selected_gene_proportion = 0.5, active_ident = meta_col,
-                     ident_1 = c('aPPR', 'pPPR', 'PPR'), ident_2 = c('NC', 'delaminating_NC'))
+                     ident_1 = c('aPPR', 'pPPR', 'PPR'), ident_2 = c('NC', 'dNC'))
 
 
 
@@ -153,7 +203,7 @@ antler_data$gene_modules$set(name= "unbiasedGMs_DE", content = gms)
 ########## DE batch filter GMs ##############
 # Filter gene modules which are deferentially expressed across batches - first filter stages which have multiple runs to test for DEA
 if(length(unique(seurat_data$run)) > 1){
-  temp_seurat <- subset(seurat_data, cells = seurat_data@meta.data %>% filter(stage %in% c('hh6', 'ss4')) %>% rownames())
+  temp_seurat <- subset(seurat_data, cells = seurat_data@meta.data %>% filter(stage %in% c('HH6', 'ss4')) %>% rownames())
     
   batch_gms <- DEGeneModules(temp_seurat, antler_data$gene_modules$get("unbiasedGMs"), logfc = 0.25, pval = 0.001, selected_gene_proportion = 0.5, active_ident = 'run')
   gms <- antler_data$gene_modules$lists$unbiasedGMs_DE$content[!names(antler_data$gene_modules$lists$unbiasedGMs_DE$content) %in% names(batch_gms)]
@@ -175,13 +225,13 @@ metadata <- if(length(unique(seurat_data@meta.data$run)) == 1){metadata
 # Allow manual setting of metadata using --force_order command line arg
 if(!is.null(opt$force_order)){metadata <- unlist(str_split(opt$force_order, pattern = ','))}
 ## Hard-coded orders for stage, clusters and cell types
-stage_order <- c("hh4", "hh5", "hh6", "hh7", "ss4", "ss8")
+stage_order <- c("HH4", "HH5", "HH6", "HH7", "ss4", "ss8")
 seurat_clusters_order <- as.character(1:40)
 
 if(meta_col == 'scHelper_cell_type'){
-  scHelper_cell_type_order <- c('extra_embryonic', 'NNE', 'prospective_epidermis', 'PPR', 'aPPR', 'pPPR', 'early_NPB', 'NPB',
-                                'aNPB', 'pNPB', 'NC', 'delaminating_NC', 'early_neural', 'early_caudal_neural', 'NP', 'pNP',
-                                'hindbrain', 'iNP', 'midbrain', 'aNP', 'forebrain', 'ventral_forebrain', 'node', 'streak')
+  scHelper_cell_type_order <- c('EE', 'NNE', 'pEpi', 'PPR', 'aPPR', 'pPPR', 'eNPB', 'NPB',
+                                'aNPB', 'pNPB', 'NC', 'dNC', 'eN', 'eCN', 'NP', 'pNP',
+                                'HB', 'iNP', 'MB', 'aNP', 'FB', 'vFB', 'node', 'streak')
   
   scHelper_cell_type_order <- scHelper_cell_type_order[scHelper_cell_type_order %in% unique(seurat_data@meta.data[[meta_col]])]
   

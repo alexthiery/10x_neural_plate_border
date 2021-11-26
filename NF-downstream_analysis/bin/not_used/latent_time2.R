@@ -159,8 +159,8 @@ graphics.off()
 # 
 
 
-test = seurat_data@meta.data[,c('latent_time', 'lineage_delaminating_NC_probability', 'lineage_neural_probability', 'lineage_placodal_probability', names(gms))] %>%
-  pivot_longer(cols = !c(latent_time, lineage_delaminating_NC_probability, lineage_neural_probability, lineage_placodal_probability)) %>%
+test = seurat_data@meta.data[,c('latent_time', 'lineage_dNC_probability', 'lineage_neural_probability', 'lineage_placodal_probability', names(gms))] %>%
+  pivot_longer(cols = !c(latent_time, lineage_dNC_probability, lineage_neural_probability, lineage_placodal_probability)) %>%
   rename(module = name) %>%
   rename(module_score = value) %>%
   filter(module == 'GM9') %>%
