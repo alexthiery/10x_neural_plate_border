@@ -1,4 +1,22 @@
+#!/usr/bin/env Rscript
 
+# Define arguments for Rscript
+library(getopt)
+library(future)
+library(Seurat)
+library(pheatmap)
+library(tidyverse)
+library(RColorBrewer)
+library(scHelper)
+library(gridExtra)
+library(grid)
+set.seed(100)
+library(mgcv)
+library(viridis)
+library(circlize)
+
+#######################################################################################################
+#########################################   FUNCTIONS   ###############################################
 named_list_to_vector <- function(list){
   if(is.null(names(list))){stop('list must be named')}
   unlist(lapply(lapply(names(list), function(x) rep(x, length(list[[x]]))), function(y) names(y) <- x))
@@ -30,10 +48,6 @@ coexpression_highlight_cells = function(seurat_object, gm_1, gm_2, bin_number = 
   }
   return(grid.arrange(grobs = plots))
 }
-
-
-
-# order_1 and order_2 are variables used to determine the gms used to order the cells. These should be either an integer/array of integers specifying which gene module should be used from 'gms', or a string/array of strings specifying the names to be used from 'gms'.
 
 coexpression = function(seurat_object, gms, order_1 = 1, order_2 = length(gms), meta_col='scHelper_cell_type', show_bins = FALSE, bin_number = 10, extract_bins = NULL, bin_colour = 'Set2', save_bins = NULL){
   
@@ -117,8 +131,6 @@ coexpression = function(seurat_object, gms, order_1 = 1, order_2 = length(gms), 
   return(p1)
 }
 
-
-
 subset_seurat = function(seurat_data, population, split_by = "scHelper_cell_type", rerun_UMAP = FALSE){
   subset <- subset(seurat_data, cells = rownames(seurat_data@meta.data)[seurat_data@meta.data[[split_by]] %in% population])
   Idents(subset) <- split_by
@@ -138,7 +150,6 @@ filter_genes = function(seurat_object, gene_list, ident_1, ident_2 = NULL, group
   print(setdiff(gene_list, filt_genes))
   return(filt_genes)
 }
-
 
 extract_bin <- function(seurat_object, gm_1, gm_2, meta_data='scHelper_cell_type', bin_number = 10, bin_extract){
   if(sum(is.null(gm_1), is.null(gm_2)) != 0){
@@ -161,8 +172,6 @@ extract_bin <- function(seurat_object, gm_1, gm_2, meta_data='scHelper_cell_type
   # end = start + (bin_size-1)
   return(ordered_cells[start:end])
 }
-
-
 
 plot_umap_gm_coexpression <- function(seurat_object, gm_1, gm_2, col.threshold = 0.25, two.colors = c('#FF0000', '#00ff00'), negative.color = 'gray80', limit = 0, highlight_cell_size = 1, module_names = c('Gene module 1', 'Gene module 2')){
   start = 1
@@ -213,23 +222,13 @@ plot_umap_gm_coexpression <- function(seurat_object, gm_1, gm_2, col.threshold =
     '
   wrap_plots(A = key_plot, B = umap_plot, design = layout, widths = c(4,1), heights = c(1,3))
 }
+#######################################################################################################
 
-
-
-
-
-library(optparse)
-library(future)
-library(Seurat)
-library(pheatmap)
-library(tidyverse)
-library(Antler)
-library(RColorBrewer)
-library(scHelper)
-# install.packages('patchwork')
-library(patchwork)
-# install.packages("ggnewscale")
-library(ggnewscale)
+spec = matrix(c(
+  'runtype', 'l', 2, "character",
+  'cores'   , 'c', 2, "integer"
+), byrow=TRUE, ncol=4)
+opt = getopt(spec)
 
 # Set paths and load data
 plot_path = "./plots/"
@@ -240,25 +239,25 @@ ncores = opt$cores
 dir.create(plot_path, recursive = T)
 dir.create(rds_path, recursive = T)
 
-# metadata <- read.csv(list.files(data_path, pattern = "*.csv", full.names = TRUE))
-# # metadata <- read.csv('./output/NF-downstream_analysis_stacas/filtered_seurat/cellrank/NF-scRNAseq_alignment_out_metadata.csv')
+antler_data <- readRDS(list.files(data_path, pattern = "antler_out.RDS", full.names = TRUE))
+HH5 <- readRDS(list.files(data_path, pattern = "^HH5", full.names = TRUE))
+HH6 <- readRDS(list.files(data_path, pattern = "^HH6", full.names = TRUE))
+HH7 <- readRDS(list.files(data_path, pattern = "^HH7", full.names = TRUE))
+ss4 <- readRDS(list.files(data_path, pattern = "^ss4", full.names = TRUE))
+ss8 <- readRDS(list.files(data_path, pattern = "^ss8", full.names = TRUE))
+subset <- readRDS(list.files(data_path, pattern = "^transfer_ppr_nc_subset", full.names = TRUE))
 
 # seurat_data <- readRDS(list.files(data_path, pattern = "*.RDS", full.names = TRUE)[!list.files(data_path, pattern = "*.RDS") %>% grepl('antler', .)])
 # seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/transfer_labels/seurat/rds_files/seurat_label_transfer.RDS')
-# seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/transfer_subset/transfer_npb_subset/seurat/transfer_cluster/rds_files/transfer_clustered_data.RDS')
-HH5 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/HH5_splitstage_data/seurat/stage_state_classification/rds_files/HH5_cell_state_classification.RDS')
-HH6 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/HH6_splitstage_data/seurat/stage_state_classification/rds_files/HH6_cell_state_classification.RDS')
-HH7 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/HH7_splitstage_data/seurat/stage_state_classification/rds_files/HH7_cell_state_classification.RDS')
-ss4 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss4_splitstage_data/seurat/stage_state_classification/rds_files/ss4_cell_state_classification.RDS')
-ss8 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss8_splitstage_data/seurat/stage_state_classification/rds_files/ss8_cell_state_classification.RDS')
-
+# subset <- readRDS('./output/NF-downstream_analysis_stacas/transfer_subset/transfer_npb_subset/seurat/transfer_cluster/rds_files/transfer_clustered_data.RDS')
+#HH5 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/HH5_splitstage_data/seurat/stage_state_classification/rds_files/HH5_cell_state_classification.RDS')
+#HH6 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/HH6_splitstage_data/seurat/stage_state_classification/rds_files/HH6_cell_state_classification.RDS')
+#HH7 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/HH7_splitstage_data/seurat/stage_state_classification/rds_files/HH7_cell_state_classification.RDS')
+#ss4 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss4_splitstage_data/seurat/stage_state_classification/rds_files/ss4_cell_state_classification.RDS')
+#ss8 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss8_splitstage_data/seurat/stage_state_classification/rds_files/ss8_cell_state_classification.RDS')
 
 ####################################################################################################
 # Run coexpression using PPR and NC gene modules from ss8
-subset <- readRDS('./output/NF-downstream_analysis_stacas/transfer_subset/transfer_ppr_nc_subset/seurat/transfer_cluster/rds_files/transfer_clustered_data.RDS')
-
-antler_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss8_splitstage_data/antler/stage_gene_modules/rds_files/antler_out.RDS')
-
 ppr_gm <- unlist(antler_data$gene_modules$lists$unbiasedGMs_DE$content[c('GM5')])
 nc_gm <- unlist(antler_data$gene_modules$lists$unbiasedGMs_DE$content[c('GM2')])
 bin_number = 10
