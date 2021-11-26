@@ -18,6 +18,7 @@ def analysis_scripts                                = [:]
 analysis_scripts.transfer_labels                    = file("$baseDir/bin/seurat/transfer_labels.R", checkIfExists: true)
 analysis_scripts.gene_modules_subset_latent_time    = file("$baseDir/bin/other/gene_modules_subset_latent_time.R", checkIfExists: true)
 analysis_scripts.gene_modules_npb_latent_time       = file("$baseDir/bin/other/gene_modules_npb_latent_time.R", checkIfExists: true)
+analysis_scripts.coexpression_analysis_npb          = file("$baseDir/bin/other/coexpression_analysis_npb.R", checkIfExists: true)
 
 /*------------------------------------------------------------------------------------*/
 /* Workflow inclusions
@@ -86,6 +87,10 @@ include {R as GENE_MODULES_SUBSET_LATENT_TIME} from "$baseDir/modules/local/r/ma
 
 include {R as GENE_MODULES_NPB_LATENT_TIME} from "$baseDir/modules/local/r/main"                                                        addParams(  options:                                modules['gene_modules_npb_latent_time'],
                                                                                                                                                     script:                                 analysis_scripts.gene_modules_npb_latent_time )
+
+include {R as COEXPRESSION_ANALYSIS_NPB} from "$baseDir/modules/local/r/main"                                                        addParams(  options:                                modules['coexpression_analysis_npb'],
+                                                                                                                                                    script:                                 analysis_scripts.coexpression_analysis_npb )
+
 
 // include {SEURAT_TRANSFER_FULL_PROCESS as SEURAT_TRANSFER_FULL_PROCESS2} from "$baseDir/subworkflows/seurat_transfer_full_process/main"  addParams(  gene_modules_options:                   modules['transfer_labels_gene_modules'],
 //                                                                                                                                                     seurat_h5ad_options:                    modules['seurat_h5ad'],
@@ -179,4 +184,25 @@ workflow {
 
     GENE_MODULES_NPB_LATENT_TIME( ch_npb_latent_time )
 
+
+    // Set up channels for running co-expression analysis on npb subset //[[meta], ['HH5.rds', 'HH6.rds' … 'ss8.rds', 'npb_subset.rds', 'ss8_antler.rds']]
+
+    ch_seurat_npb_subset            = SEURAT_TRANSFER_PPR_NC_PROCESS.out.seurat_clusters_out
+
+    ch_stage_data                   = SEURAT_STAGE_PROCESS.out
+                                        .map{it[1].findAll{it =~ /rds/}} // it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]
+                                        .collect()
+    
+    ch_ss8_gms                      = SEURAT_TRANSFER_FULL_PROCESS.out
+                                        .gene_modules_out
+                                        .filter{ it[0].sample_id == 'ss8' }
+                                        .map{it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]}
+
+    ch_coexpression_analysis_npb    = ch_ss8_gms
+                                        .combine(ch_stage_data)
+                                        .combine(ch_ss8_gms)
+                                        .map{[[sample_id:'coexpression_analysis_npb'], it]}
+
+
+    COEXPRESSION_ANALYSIS_NPB(ch_coexpression_analysis_npb)
 }

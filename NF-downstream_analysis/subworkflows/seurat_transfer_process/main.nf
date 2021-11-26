@@ -10,7 +10,6 @@ def analysis_scripts                                = [:]
 analysis_scripts.subset                             = file("$baseDir/bin/seurat/subset_cells.R", checkIfExists: true)
 analysis_scripts.cluster                            = file("$baseDir/bin/seurat/subset_cluster.R", checkIfExists: true)
 analysis_scripts.gene_modules                       = file("$baseDir/bin/other/gene_modules_npb.R", checkIfExists: true)
-analysis_scripts.state_classification               = file("$baseDir/bin/seurat/state_classification.R", checkIfExists: true)
 
 params.subset_options                               = [:]
 params.cluster_options                              = [:]
@@ -74,6 +73,7 @@ workflow SEURAT_TRANSFER_PROCESS {
     CELLRANK_RUN( SEURAT_SCVELO.out.scvelo_run_out_h5ad )
 
     emit:
+    cluster_out                     = CLUSTER.out                               //Channel: [[meta], [output]]
     gene_modules_out                = GENE_MODULES.out                          //Channel: [[meta], [output]]
     cellrank_run_out_metadata       = CELLRANK_RUN.out.csv                      //Channel: [[meta], csv]
 }
