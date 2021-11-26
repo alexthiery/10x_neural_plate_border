@@ -33,6 +33,8 @@ names(scHelper_cell_type_colours) <- c('NNE', 'HB', 'eNPB', 'PPR', 'aPPR', 'stre
                                  'pPPR', 'NPB', 'aNPB', 'pNPB','eCN', 'dNC',
                                  'eN', 'NC', 'NP', 'pNP', 'EE', 'iNP', 'MB', 
                                  'vFB', 'aNP', 'node', 'FB', 'pEpi')
+
+stage_order <- c("hh4", "hh5", "hh6", "hh7", "ss4", "ss8")
 ############################################################################################
 
 # Set paths and load data
