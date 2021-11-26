@@ -9,6 +9,7 @@ library(tidyverse)
 library(Antler)
 library(RColorBrewer)
 library(scHelper)
+library(ComplexHeatmap) # Gu, Z. (2016) Complex heatmaps reveal patterns and correlations in multidimensional genomic data. DOI: 10.1093/bioinformatics/btw313
 
 ### TEMP - overwrite scHelper GeneModuleOrder function
 GeneModuleOrder <- function (seurat_obj, gene_modules, metadata_1 = NULL, order_1 = NULL, 

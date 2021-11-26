@@ -9,6 +9,7 @@ library(tidyverse)
 library(Antler)
 library(RColorBrewer)
 library(scHelper)
+library(ComplexHeatmap) # Gu, Z. (2016) Complex heatmaps reveal patterns and correlations in multidimensional genomic data. DOI: 10.1093/bioinformatics/btw313
 
 ########################       CELL STATE COLOURS    ########################################
 scHelper_cell_type_colours <- c("#ed5e5f", "#A73C52", "#6B5F88", "#3780B3", "#3F918C", "#47A266", "#53A651", "#6D8470",

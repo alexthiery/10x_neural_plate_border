@@ -134,8 +134,7 @@ library(scHelper)
 library(gridExtra)
 library(grid)
 library(devtools)
-install_github("jokergoo/ComplexHeatmap") # Gu, Z. (2016) Complex heatmaps reveal patterns and correlations in multidimensional genomic data. DOI: 10.1093/bioinformatics/btw313
-library(ComplexHeatmap)
+library(ComplexHeatmap) # Gu, Z. (2016) Complex heatmaps reveal patterns and correlations in multidimensional genomic data. DOI: 10.1093/bioinformatics/btw313
 
 spec = matrix(c(
   'runtype', 'l', 2, "character",
