@@ -10,20 +10,18 @@ library(Antler)
 library(RColorBrewer)
 library(scHelper)
 
-BiocManager::install("ComplexHeatmap")
-library(ComplexHeatmap)
-
-#####################   CELL STATE COLOURS    ###########################################
-scHelper_all_colours <- c("#676060", "#AD2828", "#551616", "#FF0000", "#DE4D00", "#FF8300",
-                          "#C8E81E", "#A5E702", "#6EE702", "#16973F", "#19B4A1", "#10E0E8",
-                          "#BA3CA5", "#8A4FC5", "#0A0075", "#3B0075", "#8000FF", "#D800FF",
-                          "#FF00D4", "#F16DDB", "#FFBAF3", "#B672AA", "#BBBEBE", "#787878")
-names(scHelper_all_colours) <- levels(seurat_data@meta.data$scHelper_cell_type)
-
+########################       CELL STATE COLOURS    ########################################
+scHelper_cell_type_colours <- c("#ed5e5f", "#A73C52", "#6B5F88", "#3780B3", "#3F918C", "#47A266", "#53A651", "#6D8470",
+                                "#87638F", "#A5548D", "#C96555", "#ED761C", "#FF9508", "#FFC11A", "#FFEE2C", "#EBDA30",
+                                "#CC9F2C", "#AD6428", "#BB614F", "#D77083", "#F37FB8", "#DA88B3", "#B990A6", "#b3b3b3")
+names(scHelper_cell_type_colours) <- c('NNE', 'HB', 'eNPB', 'PPR', 'aPPR', 'streak',
+                                       'pPPR', 'NPB', 'aNPB', 'pNPB','eCN', 'dNC',
+                                       'eN', 'NC', 'NP', 'pNP', 'EE', 'iNP', 'MB', 
+                                       'vFB', 'aNP', 'node', 'FB', 'pEpi')
 ########################       STAGE COLOURS     ###########################################
-stage_all_colours = c("#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F")
-names(stage_all_colours) <- levels(seurat_data@meta.data$stage)
-
+stage_colours = c("#E78AC3", "#8DA0CB", "#66C2A5", "#A6D854", "#FFD92F", "#FC8D62")
+names(stage_colours) <- c("HH4", "HH5", "HH6", "HH7", "ss4", "ss8")
+############################################################################################
 
 ### TEMP - overwrite scHelper GeneModuleOrder function
 GeneModuleOrder <- function (seurat_obj, gene_modules, metadata_1 = NULL, order_1 = NULL, 
@@ -217,11 +215,23 @@ if(opt$verbose) print(opt)
   if(length(commandArgs(trailingOnly = TRUE)) == 0){
     cat('No command line arguments provided, paths are set for running interactively in Rstudio server\n')
     
-    plot_path = "./output/NF-downstream_analysis_stacas/run_split/2_splitrun_data/antler/plots/"
-    rds_path = "./output/NF-downstream_analysis_stacas/run_split/2_splitrun_data/antler/rds_files/"
-    gm_path = "./output/NF-downstream_analysis_stacas/run_split/2_splitrun_data/antler/gene_module_lists/"
-    antler_path = "./output/NF-downstream_analysis_stacas/run_split/2_splitrun_data/antler/antler_data/"
-    data_path = "./output/NF-downstream_analysis_stacas/run_split/2_splitrun_data/seurat/run_state_classification/rds_files/"
+    # plot_path = "./output/NF-downstream_analysis_stacas/run_split/2_splitrun_data/antler/plots/"
+    # rds_path = "./output/NF-downstream_analysis_stacas/run_split/2_splitrun_data/antler/rds_files/"
+    # gm_path = "./output/NF-downstream_analysis_stacas/run_split/2_splitrun_data/antler/gene_module_lists/"
+    # antler_path = "./output/NF-downstream_analysis_stacas/run_split/2_splitrun_data/antler/antler_data/"
+    # data_path = "./output/NF-downstream_analysis_stacas/run_split/2_splitrun_data/seurat/run_state_classification/rds_files/"
+    
+    # plot_path = "./output/NF-downstream_analysis_stacas/stage_split/HH4_splitstage_data/antler/plots/"
+    # rds_path = "./output/NF-downstream_analysis_stacas/stage_split/HH4_splitstage_data/antler/rds_files/"
+    # gm_path = "./output/NF-downstream_analysis_stacas/stage_split/HH4_splitstage_data/antler/gene_module_lists/"
+    # antler_path = "./output/NF-downstream_analysis_stacas/stage_split/HH4_splitstage_data/antler/antler_data/"
+    # data_path = "./output/NF-downstream_analysis_stacas/stage_split/HH4_splitstage_data/seurat/stage_state_classification/rds_files/"
+    
+    plot_path = "./output/NF-downstream_analysis_stacas/stage_split/HH6_splitstage_data/antler/plots/"
+    rds_path = "./output/NF-downstream_analysis_stacas/stage_split/HH6_splitstage_data/antler/rds_files/"
+    gm_path = "./output/NF-downstream_analysis_stacas/stage_split/HH6_splitstage_data/antler/gene_module_lists/"
+    antler_path = "./output/NF-downstream_analysis_stacas/stage_split/HH6_splitstage_data/antler/antler_data/"
+    data_path = "./output/NF-downstream_analysis_stacas/stage_split/HH6_splitstage_data/seurat/stage_state_classification/rds_files/"
     
     ncores = 8
     meta_col = 'scHelper_cell_type'
@@ -313,7 +323,7 @@ antler_data$gene_modules$set(name= "unbiasedGMs_DE", content = gms)
 ########## DE batch filter GMs ##############
 # Filter gene modules which are deferentially expressed across batches - first filter stages which have multiple runs to test for DEA
 if(length(unique(seurat_data$run)) > 1){
-  temp_seurat <- subset(seurat_data, cells = seurat_data@meta.data %>% filter(stage %in% c('hh6', 'ss4')) %>% rownames())
+  temp_seurat <- subset(seurat_data, cells = seurat_data@meta.data %>% filter(stage %in% c('HH6', 'ss4')) %>% rownames())
     
   batch_gms <- DEGeneModules(temp_seurat, antler_data$gene_modules$get("unbiasedGMs"), logfc = 0.25, pval = 0.001, selected_gene_proportion = 0.5, active_ident = 'run')
   gms <- antler_data$gene_modules$lists$unbiasedGMs_DE$content[!names(antler_data$gene_modules$lists$unbiasedGMs_DE$content) %in% names(batch_gms)]
@@ -378,16 +388,19 @@ if (!is.null(metadata_1)){
 #                    show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15)
 # graphics.off()
 
-plot_data <- GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE$content,
+# if stage not present in metadata, add it here so all heatmaps have the stage annotation
+if (!("stage" %in% metadata)){
+  metadata <- c("stage", metadata)}
+
+# generate plot data
+plot_data <- GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs$content,
                                 show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10,
                                 return = "plot_data")
-plot_data$ann_colours$scHelper_cell_type <- scHelper_all_colours[names(plot_data$ann_colours$scHelper_cell_type)]
-if(is.null(plot_data$ann_colours$stage)) {
-  plot_data$ann_colours$stage <- stage_all_colours[unique(seurat_data@meta.data$stage)]
-} else {plot_data$ann_colours$stage <- stage_all_colours[names(plot_data$ann_colours$stage)]}
+plot_data$ann_colours$scHelper_cell_type <- scHelper_cell_type_colours[names(plot_data$ann_colours$scHelper_cell_type)]
+plot_data$ann_colours$stage <- stage_colours[names(plot_data$ann_colours$stage)]
 
 # plot complex heatmap
-png(paste0(plot_path, 'unbiasedGMs.png'), width = 100, height = 60, res = 800, units = 'cm')
+png(paste0(plot_path, 'unbiasedGMs.png'), height = 150, width = 100, units = 'cm', res = 400)
 Heatmap(t(plot_data$plot_data), col = PurpleAndYellow(), cluster_columns = FALSE, cluster_rows = FALSE,
         show_column_names = FALSE, column_title = NULL, show_row_names = FALSE, row_title_gp = gpar(fontsize = 45), row_title_rot = 0,
         row_split = plot_data$row_ann$`Gene Modules`, column_split = plot_data$col_ann$stage, 
@@ -403,7 +416,11 @@ Heatmap(t(plot_data$plot_data), col = PurpleAndYellow(), cluster_columns = FALSE
         ),
         top_annotation = HeatmapAnnotation(stage = anno_block(gp = gpar(fill = plot_data$ann_colours$stage),
                                                               labels = levels(plot_data$col_ann$stage),
-                                                              labels_gp = gpar(col = "white", fontsize = 50, fontface='bold'))),
+                                                              labels_gp = gpar(col = "white", fontsize = 50, fontface='bold')),
+                                           run = anno_simple(x = as.character(plot_data$col_ann$run),
+                                                             col = plot_data$ann_colours$run, height = unit(1, "cm")),
+                                           simple_anno_size = unit(1, "cm"),
+                                           annotation_label = "Run", gp = gpar(fontsize = 35)),
         bottom_annotation = HeatmapAnnotation(scHelper_cell_type = anno_simple(x = as.character(plot_data$col_ann$scHelper_cell_type),
                                                                                col = plot_data$ann_colours$scHelper_cell_type, height = unit(1, "cm")), show_annotation_name = FALSE,
                                               labels = anno_mark(at = cumsum(rle(as.character(plot_data$col_ann$scHelper_cell_type))$lengths) - floor(rle(as.character(plot_data$col_ann$scHelper_cell_type))$lengths/2),
@@ -427,17 +444,56 @@ if (!is.null(metadata_1)){
 
 ngene = length(unlist(antler_data$gene_modules$lists$unbiasedGMs_DE$content))
 
-# Plot heatmaps
-png(paste0(plot_path, 'unbiasedGMs_DE_rownames.png'), height = min(c(150, round(ngene/3))), width = 75, units = 'cm', res = 200)
-GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE$content,
-                   show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col),
-                   fontsize = 15, fontsize_row = 10)
+# generate plot data
+plot_data <- GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE$content,
+                                show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10,
+                                return = "plot_data")
+plot_data$ann_colours$scHelper_cell_type <- scHelper_cell_type_colours[names(plot_data$ann_colours$scHelper_cell_type)]
+plot_data$ann_colours$stage <- stage_colours[names(plot_data$ann_colours$stage)]
+
+# plot complex heatmap
+png(paste0(plot_path, 'unbiasedGMs_DE.png'), height = 150, width = 100, units = 'cm', res = 400)
+Heatmap(t(plot_data$plot_data), col = PurpleAndYellow(), cluster_columns = FALSE, cluster_rows = FALSE,
+        show_column_names = FALSE, column_title = NULL, show_row_names = FALSE, row_title_gp = gpar(fontsize = 45), row_title_rot = 0,
+        row_split = plot_data$row_ann$`Gene Modules`, column_split = plot_data$col_ann$stage, 
+        heatmap_legend_param = list(
+          title = "Scaled expression", at = c(-2, 0, 2), 
+          labels = c(-2, 0, 2),
+          legend_height = unit(11, "cm"),
+          grid_width = unit(1.5, "cm"),
+          title_gp = gpar(fontsize = 35, fontface = 'bold'),
+          labels_gp = gpar(fontsize = 30, fontface = 'bold'),
+          title_position = 'lefttop-rot',
+          x = unit(13, "npc")
+        ),
+        top_annotation = HeatmapAnnotation(stage = anno_block(gp = gpar(fill = plot_data$ann_colours$stage),
+                                                              labels = levels(plot_data$col_ann$stage),
+                                                              labels_gp = gpar(col = "white", fontsize = 50, fontface='bold')),
+                                           run = anno_simple(x = as.character(plot_data$col_ann$run),
+                                                             col = plot_data$ann_colours$run, height = unit(1, "cm")),
+                                           simple_anno_size = unit(1, "cm"),
+                                           annotation_label = "Run", gp = gpar(fontsize = 35)),
+        bottom_annotation = HeatmapAnnotation(scHelper_cell_type = anno_simple(x = as.character(plot_data$col_ann$scHelper_cell_type),
+                                                                               col = plot_data$ann_colours$scHelper_cell_type, height = unit(1, "cm")), show_annotation_name = FALSE,
+                                              labels = anno_mark(at = cumsum(rle(as.character(plot_data$col_ann$scHelper_cell_type))$lengths) - floor(rle(as.character(plot_data$col_ann$scHelper_cell_type))$lengths/2),
+                                                                 labels = rle(as.character(plot_data$col_ann$scHelper_cell_type))$values,
+                                                                 which = "column", side = 'bottom',
+                                                                 labels_gp = gpar(fontsize = 40), lines_gp = gpar(lwd=8))),
+        raster_quality = 8
+)
 graphics.off()
 
-png(paste0(plot_path, 'unbiasedGMs_DE.png'), height = min(c(150, ifelse(round(ngene/8) < 20, 20, round(ngene/8)))), width = 75, units = 'cm', res = 600)
-GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE$content,
-                   show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
-graphics.off()
+# Plot heatmaps
+# png(paste0(plot_path, 'unbiasedGMs_DE_rownames.png'), height = min(c(150, round(ngene/3))), width = 75, units = 'cm', res = 200)
+# GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE$content,
+#                    show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col),
+#                    fontsize = 15, fontsize_row = 10)
+# graphics.off()
+# 
+# png(paste0(plot_path, 'unbiasedGMs_DE.png'), height = min(c(150, ifelse(round(ngene/8) < 20, 20, round(ngene/8)))), width = 75, units = 'cm', res = 600)
+# GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE$content,
+#                    show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
+# graphics.off()
 
 
 ##########################################################################################
@@ -455,16 +511,55 @@ if(length(unique(seurat_data$run)) > 1){
                            plot_path = "scHelper_log/GM_classification/unbiasedGMs_DE_batchfilt/")
   }
   
-  # Plot heatmaps
-  png(paste0(plot_path, 'unbiasedGMs_DE_batchfilt_rownames.png'), height = min(c(150, round(ngene/3))), width = 75, units = 'cm', res = 400)
-  GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content,
-                     show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
+  # generate plot data
+  plot_data <- GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content,
+                                  show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10,
+                                  return = "plot_data")
+  plot_data$ann_colours$scHelper_cell_type <- scHelper_cell_type_colours[names(plot_data$ann_colours$scHelper_cell_type)]
+  plot_data$ann_colours$stage <- stage_colours[names(plot_data$ann_colours$stage)]
+  
+  # plot complex heatmap
+  png(paste0(plot_path, 'unbiasedGMs_DE_batchfilt.png'), height = min(c(150, ifelse(round(ngene/8) < 20, 20, round(ngene/8)))), width = 60, units = 'cm', res = 400)
+  Heatmap(t(plot_data$plot_data), col = PurpleAndYellow(), cluster_columns = FALSE, cluster_rows = FALSE,
+          show_column_names = FALSE, column_title = NULL, show_row_names = FALSE, row_title_gp = gpar(fontsize = 25), row_title_rot = 0,
+          row_split = plot_data$row_ann$`Gene Modules`, column_split = plot_data$col_ann$stage, 
+          heatmap_legend_param = list(
+            title = "Scaled expression", at = c(-2, 0, 2), 
+            labels = c(-2, 0, 2),
+            legend_height = unit(11, "cm"),
+            grid_width = unit(1.5, "cm"),
+            title_gp = gpar(fontsize = 25, fontface = 'bold'),
+            labels_gp = gpar(fontsize = 20, fontface = 'bold'),
+            title_position = 'lefttop-rot',
+            x = unit(13, "npc")
+          ),
+          top_annotation = HeatmapAnnotation(stage = anno_block(gp = gpar(fill = plot_data$ann_colours$stage),
+                                                                labels = levels(plot_data$col_ann$stage),
+                                                                labels_gp = gpar(col = "white", fontsize = 40, fontface='bold')),
+                                             run = anno_simple(x = as.character(plot_data$col_ann$run),
+                                                               col = plot_data$ann_colours$run, height = unit(1, "cm")),
+                                             simple_anno_size = unit(1, "cm"),
+                                             annotation_label = "Run", gp = gpar(fontsize = 25)),
+          bottom_annotation = HeatmapAnnotation(scHelper_cell_type = anno_simple(x = as.character(plot_data$col_ann$scHelper_cell_type),
+                                                                                 col = plot_data$ann_colours$scHelper_cell_type, height = unit(1, "cm")), show_annotation_name = FALSE,
+                                                labels = anno_mark(at = cumsum(rle(as.character(plot_data$col_ann$scHelper_cell_type))$lengths) - floor(rle(as.character(plot_data$col_ann$scHelper_cell_type))$lengths/2),
+                                                                   labels = rle(as.character(plot_data$col_ann$scHelper_cell_type))$values,
+                                                                   which = "column", side = 'bottom',
+                                                                   labels_gp = gpar(fontsize = 25), lines_gp = gpar(lwd=8))),
+          raster_quality = 8
+  )
   graphics.off()
   
-  png(paste0(plot_path, 'unbiasedGMs_DE_batchfilt.png'), height = min(c(150, ifelse(round(ngene/8) < 20, 20, round(ngene/8)))), width = 60, units = 'cm', res = 400)
-  GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content,
-                     show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
-  graphics.off()
+  # # Plot heatmaps
+  # png(paste0(plot_path, 'unbiasedGMs_DE_batchfilt_rownames.png'), height = min(c(150, round(ngene/3))), width = 75, units = 'cm', res = 400)
+  # GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content,
+  #                    show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
+  # graphics.off()
+  # 
+  # png(paste0(plot_path, 'unbiasedGMs_DE_batchfilt.png'), height = min(c(150, ifelse(round(ngene/8) < 20, 20, round(ngene/8)))), width = 60, units = 'cm', res = 400)
+  # GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content,
+  #                    show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
+  # graphics.off()
 }
 
 
