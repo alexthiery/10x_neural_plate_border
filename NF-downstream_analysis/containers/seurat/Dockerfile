@@ -51,7 +51,10 @@ RUN   R -e "install.packages('future')" && \
       R -e "remotes::install_github('mojaveazure/seurat-disk')" && \
       # R -e "remotes::install_github('satijalab/seurat-wrappers', upgrade = 'default')" && \
       R -e "BiocManager::install('limma')" && \
-      R -e "remotes::install_github('carmonalab/STACAS')"
+      R -e "remotes::install_github('carmonalab/STACAS')" && \
+      R -e "BiocManager::install('ComplexHeatmap')" && \
+      R -e "install.packages('patchwork')" && \
+      R -e "install.packages('ggnewscale')"
 
 RUN   R -e "devtools::install_version('ArrayBin', version = '0.2')" && \
       R -e "devtools::install_version('heatmap.plus', version = '1.3')" && \
