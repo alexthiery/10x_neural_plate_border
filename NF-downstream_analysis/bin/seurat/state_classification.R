@@ -90,15 +90,15 @@ cell_state_markers <- read.csv(list.files(data_path, full.names = TRUE, pattern 
 cell_state_markers <- apply(cell_state_markers, 2, function(x) rownames(cell_state_markers)[x > 0])
 
 cell_states = list(
-  hh4 = c('NNE', 'node', 'streak', 'EE', 'eNPB', 'eN', 'eCN'),
+  HH4 = c('NNE', 'node', 'streak', 'EE', 'eNPB', 'eN', 'eCN'),
 
-  hh5 = c('NNE', 'node', 'streak', 'EE', 'eNPB', 'eN', 'eCN',
+  HH5 = c('NNE', 'node', 'streak', 'EE', 'eNPB', 'eN', 'eCN',
           'NPB', 'aNPB', 'pNPB', 'NP', 'pNP', 'iNP', 'aNP', 'PPR', 'aPPR', 'pPPR'),
   
-  hh6 = c('NNE', 'node', 'streak', 'eN', 'eCN',
+  HH6 = c('NNE', 'node', 'streak', 'eN', 'eCN',
           'NPB', 'aNPB', 'pNPB', 'NP', 'pNP', 'iNP', 'aNP', 'PPR', 'aPPR', 'pPPR'),
 
-  hh7 = c('pEpi', 'NPB', 'aNPB', 'pNPB', 'NC', 'dNC', 'NP', 'pNP', 'iNP',
+  HH7 = c('pEpi', 'NPB', 'aNPB', 'pNPB', 'NC', 'dNC', 'NP', 'pNP', 'iNP',
           'aNP', 'HB', 'MB', 'FB', 'vFB', 'PPR', 'aPPR', 'pPPR'),
 
   ss4 = c('pEpi', 'NPB', 'aNPB', 'pNPB', 'NC', 'dNC', 'NP', 'pNP', 'iNP',
@@ -116,7 +116,7 @@ stage = unique(seurat_data@meta.data$stage)
 
 if(length(stage) == 1){
   cell_state_markers = cell_state_markers[[stage]]
-  cluster_res = list(hh4 = 1.2, hh5 = 1.2, hh6 = 1.2, hh7 = 1.2, ss4 = 1.2, ss8 = 1.2)[[stage]]
+  cluster_res = list(HH4 = 1.2, HH5 = 1.2, HH6 = 1.2, HH7 = 1.2, ss4 = 1.2, ss8 = 1.2)[[stage]]
   metadata = c('scHelper_cell_type')
 } else {
   cell_state_markers = flatten(cell_state_markers)
@@ -218,7 +218,7 @@ for(i in names(cell_state_markers)){
   nrow = ceiling((length(cell_state_markers[[i]])+1)/ncol)
 
   png(paste0(curr_plot_path, i, '.png'), width = ncol*10, height = nrow*10, units = "cm", res = 200)
-  MultiFeaturePlot(seurat_data, plot_stage = TRUE, stage_col = "stage", plot_celltype = TRUE, celltype_col = "seurat_clusters",
+  MultiFeaturePlot(seurat_data, plot_stage = TRUE, stage_col = "stage", plot_celltype = TRUE, celltype_col = "scHelper_cell_type",
                    gene_list = cell_state_markers[[i]], n_col = ncol, label = '')
   graphics.off()
 }
