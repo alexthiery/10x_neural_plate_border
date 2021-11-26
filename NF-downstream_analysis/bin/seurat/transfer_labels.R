@@ -21,7 +21,7 @@ names(scHelper_cell_type_colours) <- c('NNE', 'HB', 'eNPB', 'PPR', 'aPPR', 'stre
                                        'eN', 'NC', 'NP', 'pNP', 'EE', 'iNP', 'MB', 
                                        'vFB', 'aNP', 'node', 'FB', 'pEpi')
 ########################       STAGE COLOURS     ###########################################
-stage_order <- c("hh4", "hh5", "hh6", "hh7", "ss4", "ss8")
+stage_order <- c("HH4", "HH5", "HH6", "HH7", "ss4", "ss8")
 
 stage_colours = c("#E78AC3", "#8DA0CB", "#66C2A5", "#A6D854", "#FFD92F", "#FC8D62")
 names(stage_colours) <- stage_order
