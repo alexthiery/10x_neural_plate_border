@@ -51,7 +51,7 @@ RUN   R -e "install.packages('future')" && \
       R -e "remotes::install_github('mojaveazure/seurat-disk')" && \
       # R -e "remotes::install_github('satijalab/seurat-wrappers', upgrade = 'default')" && \
       R -e "BiocManager::install('limma')" && \
-      R -e "remotes::install_github('carmonalab/STACAS')" && \
+      R -e "remotes::install_github('carmonalab/STACAS@1.1.0')" && \
       R -e "BiocManager::install('ComplexHeatmap')" && \
       R -e "install.packages('patchwork')" && \
       R -e "install.packages('ggnewscale')"
