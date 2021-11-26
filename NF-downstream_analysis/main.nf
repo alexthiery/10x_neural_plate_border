@@ -187,7 +187,7 @@ workflow {
 
     // Set up channels for running co-expression analysis on npb subset //[[meta], ['HH5.rds', 'HH6.rds' … 'ss8.rds', 'npb_subset.rds', 'ss8_antler.rds']]
 
-    ch_seurat_npb_subset            = SEURAT_TRANSFER_PPR_NC_PROCESS.out.seurat_clusters_out
+    ch_seurat_npb_subset            = SEURAT_TRANSFER_PPR_NC_PROCESS.out.cluster_out
 
     ch_stage_data                   = SEURAT_STAGE_PROCESS.out
                                         .map{it[1].findAll{it =~ /rds/}} // it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]
