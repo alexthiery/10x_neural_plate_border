@@ -222,17 +222,17 @@ if(opt$verbose) print(opt)
     # antler_path = "./output/NF-downstream_analysis_stacas/run_split/2_splitrun_data/antler/antler_data/"
     # data_path = "./output/NF-downstream_analysis_stacas/run_split/2_splitrun_data/seurat/run_state_classification/rds_files/"
     
-    # plot_path = "./output/NF-downstream_analysis_stacas/stage_split/HH4_splitstage_data/antler/plots/"
-    # rds_path = "./output/NF-downstream_analysis_stacas/stage_split/HH4_splitstage_data/antler/rds_files/"
-    # gm_path = "./output/NF-downstream_analysis_stacas/stage_split/HH4_splitstage_data/antler/gene_module_lists/"
-    # antler_path = "./output/NF-downstream_analysis_stacas/stage_split/HH4_splitstage_data/antler/antler_data/"
-    # data_path = "./output/NF-downstream_analysis_stacas/stage_split/HH4_splitstage_data/seurat/stage_state_classification/rds_files/"
+    plot_path = "./output/NF-downstream_analysis_stacas/stage_split/HH4_splitstage_data/antler/plots/"
+    rds_path = "./output/NF-downstream_analysis_stacas/stage_split/HH4_splitstage_data/antler/rds_files/"
+    gm_path = "./output/NF-downstream_analysis_stacas/stage_split/HH4_splitstage_data/antler/gene_module_lists/"
+    antler_path = "./output/NF-downstream_analysis_stacas/stage_split/HH4_splitstage_data/antler/antler_data/"
+    data_path = "./output/NF-downstream_analysis_stacas/stage_split/HH4_splitstage_data/seurat/stage_state_classification/rds_files/"
     
-    plot_path = "./output/NF-downstream_analysis_stacas/stage_split/HH6_splitstage_data/antler/plots/"
-    rds_path = "./output/NF-downstream_analysis_stacas/stage_split/HH6_splitstage_data/antler/rds_files/"
-    gm_path = "./output/NF-downstream_analysis_stacas/stage_split/HH6_splitstage_data/antler/gene_module_lists/"
-    antler_path = "./output/NF-downstream_analysis_stacas/stage_split/HH6_splitstage_data/antler/antler_data/"
-    data_path = "./output/NF-downstream_analysis_stacas/stage_split/HH6_splitstage_data/seurat/stage_state_classification/rds_files/"
+    #plot_path = "./output/NF-downstream_analysis_stacas/stage_split/HH6_splitstage_data/antler/plots/"
+    #rds_path = "./output/NF-downstream_analysis_stacas/stage_split/HH6_splitstage_data/antler/rds_files/"
+    #gm_path = "./output/NF-downstream_analysis_stacas/stage_split/HH6_splitstage_data/antler/gene_module_lists/"
+    #antler_path = "./output/NF-downstream_analysis_stacas/stage_split/HH6_splitstage_data/antler/antler_data/"
+    #data_path = "./output/NF-downstream_analysis_stacas/stage_split/HH6_splitstage_data/seurat/stage_state_classification/rds_files/"
     
     ncores = 8
     meta_col = 'scHelper_cell_type'
@@ -401,6 +401,21 @@ plot_data$ann_colours$scHelper_cell_type <- scHelper_cell_type_colours[names(plo
 plot_data$ann_colours$stage <- stage_colours[names(plot_data$ann_colours$stage)]
 
 # plot complex heatmap
+if (is.null(plot_data$ann_colours$run)){
+  top_annotation <- HeatmapAnnotation(stage = anno_block(gp = gpar(fill = plot_data$ann_colours$stage),
+                                                         labels = levels(plot_data$col_ann$stage),
+                                                         labels_gp = gpar(col = "white", fontsize = 50, fontface='bold')))
+}else{
+  top_annotation <- HeatmapAnnotation(stage = anno_block(gp = gpar(fill = plot_data$ann_colours$stage),
+                                                         labels = levels(plot_data$col_ann$stage),
+                                                         labels_gp = gpar(col = "white", fontsize = 50, fontface='bold')),
+                                      run = anno_simple(x = as.character(plot_data$col_ann$run),
+                                                        col = plot_data$ann_colours$run, height = unit(1, "cm")),
+                                      simple_anno_size = unit(1, "cm"),
+                                      annotation_label = "Run", gp = gpar(fontsize = 35))
+  }
+
+
 png(paste0(plot_path, 'unbiasedGMs.png'), height = 150, width = 100, units = 'cm', res = 400)
 Heatmap(t(plot_data$plot_data), col = PurpleAndYellow(), cluster_columns = FALSE, cluster_rows = FALSE,
         show_column_names = FALSE, column_title = NULL, show_row_names = FALSE, row_title_gp = gpar(fontsize = 45), row_title_rot = 0,
@@ -415,13 +430,7 @@ Heatmap(t(plot_data$plot_data), col = PurpleAndYellow(), cluster_columns = FALSE
           title_position = 'lefttop-rot',
           x = unit(13, "npc")
         ),
-        top_annotation = HeatmapAnnotation(stage = anno_block(gp = gpar(fill = plot_data$ann_colours$stage),
-                                                              labels = levels(plot_data$col_ann$stage),
-                                                              labels_gp = gpar(col = "white", fontsize = 50, fontface='bold')),
-                                           run = anno_simple(x = as.character(plot_data$col_ann$run),
-                                                             col = plot_data$ann_colours$run, height = unit(1, "cm")),
-                                           simple_anno_size = unit(1, "cm"),
-                                           annotation_label = "Run", gp = gpar(fontsize = 35)),
+        top_annotation = top_annotation,
         bottom_annotation = HeatmapAnnotation(scHelper_cell_type = anno_simple(x = as.character(plot_data$col_ann$scHelper_cell_type),
                                                                                col = plot_data$ann_colours$scHelper_cell_type, height = unit(1, "cm")), show_annotation_name = FALSE,
                                               labels = anno_mark(at = cumsum(rle(as.character(plot_data$col_ann$scHelper_cell_type))$lengths) - floor(rle(as.character(plot_data$col_ann$scHelper_cell_type))$lengths/2),
@@ -453,6 +462,21 @@ plot_data$ann_colours$scHelper_cell_type <- scHelper_cell_type_colours[names(plo
 plot_data$ann_colours$stage <- stage_colours[names(plot_data$ann_colours$stage)]
 
 # plot complex heatmap
+if (is.null(plot_data$ann_colours$run)){
+  top_annotation <- HeatmapAnnotation(stage = anno_block(gp = gpar(fill = plot_data$ann_colours$stage),
+                                                         labels = levels(plot_data$col_ann$stage),
+                                                         labels_gp = gpar(col = "white", fontsize = 50, fontface='bold')))
+}else{
+  top_annotation <- HeatmapAnnotation(stage = anno_block(gp = gpar(fill = plot_data$ann_colours$stage),
+                                                         labels = levels(plot_data$col_ann$stage),
+                                                         labels_gp = gpar(col = "white", fontsize = 50, fontface='bold')),
+                                      run = anno_simple(x = as.character(plot_data$col_ann$run),
+                                                        col = plot_data$ann_colours$run, height = unit(1, "cm")),
+                                      simple_anno_size = unit(1, "cm"),
+                                      annotation_label = "Run", gp = gpar(fontsize = 35))
+}
+
+
 png(paste0(plot_path, 'unbiasedGMs_DE.png'), height = 150, width = 100, units = 'cm', res = 400)
 Heatmap(t(plot_data$plot_data), col = PurpleAndYellow(), cluster_columns = FALSE, cluster_rows = FALSE,
         show_column_names = FALSE, column_title = NULL, show_row_names = FALSE, row_title_gp = gpar(fontsize = 45), row_title_rot = 0,
@@ -467,13 +491,7 @@ Heatmap(t(plot_data$plot_data), col = PurpleAndYellow(), cluster_columns = FALSE
           title_position = 'lefttop-rot',
           x = unit(13, "npc")
         ),
-        top_annotation = HeatmapAnnotation(stage = anno_block(gp = gpar(fill = plot_data$ann_colours$stage),
-                                                              labels = levels(plot_data$col_ann$stage),
-                                                              labels_gp = gpar(col = "white", fontsize = 50, fontface='bold')),
-                                           run = anno_simple(x = as.character(plot_data$col_ann$run),
-                                                             col = plot_data$ann_colours$run, height = unit(1, "cm")),
-                                           simple_anno_size = unit(1, "cm"),
-                                           annotation_label = "Run", gp = gpar(fontsize = 35)),
+        top_annotation = top_annotation,
         bottom_annotation = HeatmapAnnotation(scHelper_cell_type = anno_simple(x = as.character(plot_data$col_ann$scHelper_cell_type),
                                                                                col = plot_data$ann_colours$scHelper_cell_type, height = unit(1, "cm")), show_annotation_name = FALSE,
                                               labels = anno_mark(at = cumsum(rle(as.character(plot_data$col_ann$scHelper_cell_type))$lengths) - floor(rle(as.character(plot_data$col_ann$scHelper_cell_type))$lengths/2),
@@ -522,31 +540,62 @@ if(length(unique(seurat_data$run)) > 1){
   # plot complex heatmap
   png(paste0(plot_path, 'unbiasedGMs_DE_batchfilt.png'), height = min(c(150, ifelse(round(ngene/8) < 20, 20, round(ngene/8)))), width = 60, units = 'cm', res = 400)
   Heatmap(t(plot_data$plot_data), col = PurpleAndYellow(), cluster_columns = FALSE, cluster_rows = FALSE,
-          show_column_names = FALSE, column_title = NULL, show_row_names = FALSE, row_title_gp = gpar(fontsize = 25), row_title_rot = 0,
+          show_column_names = FALSE, column_title = NULL, show_row_names = FALSE, row_title_gp = gpar(fontsize = 45), row_title_rot = 0,
           row_split = plot_data$row_ann$`Gene Modules`, column_split = plot_data$col_ann$stage, 
           heatmap_legend_param = list(
             title = "Scaled expression", at = c(-2, 0, 2), 
             labels = c(-2, 0, 2),
             legend_height = unit(11, "cm"),
             grid_width = unit(1.5, "cm"),
-            title_gp = gpar(fontsize = 25, fontface = 'bold'),
-            labels_gp = gpar(fontsize = 20, fontface = 'bold'),
+            title_gp = gpar(fontsize = 35, fontface = 'bold'),
+            labels_gp = gpar(fontsize = 30, fontface = 'bold'),
             title_position = 'lefttop-rot',
             x = unit(13, "npc")
           ),
           top_annotation = HeatmapAnnotation(stage = anno_block(gp = gpar(fill = plot_data$ann_colours$stage),
                                                                 labels = levels(plot_data$col_ann$stage),
-                                                                labels_gp = gpar(col = "white", fontsize = 40, fontface='bold')),
+                                                                labels_gp = gpar(col = "white", fontsize = 50, fontface='bold')),
                                              run = anno_simple(x = as.character(plot_data$col_ann$run),
                                                                col = plot_data$ann_colours$run, height = unit(1, "cm")),
                                              simple_anno_size = unit(1, "cm"),
-                                             annotation_label = "Run", gp = gpar(fontsize = 25)),
+                                             annotation_label = "Run", gp = gpar(fontsize = 35)),
           bottom_annotation = HeatmapAnnotation(scHelper_cell_type = anno_simple(x = as.character(plot_data$col_ann$scHelper_cell_type),
                                                                                  col = plot_data$ann_colours$scHelper_cell_type, height = unit(1, "cm")), show_annotation_name = FALSE,
                                                 labels = anno_mark(at = cumsum(rle(as.character(plot_data$col_ann$scHelper_cell_type))$lengths) - floor(rle(as.character(plot_data$col_ann$scHelper_cell_type))$lengths/2),
                                                                    labels = rle(as.character(plot_data$col_ann$scHelper_cell_type))$values,
                                                                    which = "column", side = 'bottom',
-                                                                   labels_gp = gpar(fontsize = 25), lines_gp = gpar(lwd=8))),
+                                                                   labels_gp = gpar(fontsize = 40), lines_gp = gpar(lwd=8))),
+          raster_quality = 8
+  )
+  graphics.off()
+  
+  png(paste0(plot_path, 'unbiasedGMs_DE_batchfilt_rownames.png'), height = min(c(150, round(ngene/3))), width = 75, units = 'cm', res = 400)
+  Heatmap(t(plot_data$plot_data), col = PurpleAndYellow(), cluster_columns = FALSE, cluster_rows = FALSE,
+          show_column_names = FALSE, column_title = NULL, show_row_names = TRUE, row_title_gp = gpar(fontsize = 45), row_title_rot = 0,
+          row_split = plot_data$row_ann$`Gene Modules`, column_split = plot_data$col_ann$stage, 
+          heatmap_legend_param = list(
+            title = "Scaled expression", at = c(-2, 0, 2), 
+            labels = c(-2, 0, 2),
+            legend_height = unit(11, "cm"),
+            grid_width = unit(1.5, "cm"),
+            title_gp = gpar(fontsize = 35, fontface = 'bold'),
+            labels_gp = gpar(fontsize = 30, fontface = 'bold'),
+            title_position = 'lefttop-rot',
+            x = unit(13, "npc")
+          ),
+          top_annotation = HeatmapAnnotation(stage = anno_block(gp = gpar(fill = plot_data$ann_colours$stage),
+                                                                labels = levels(plot_data$col_ann$stage),
+                                                                labels_gp = gpar(col = "white", fontsize = 50, fontface='bold')),
+                                             run = anno_simple(x = as.character(plot_data$col_ann$run),
+                                                               col = plot_data$ann_colours$run, height = unit(1, "cm")),
+                                             simple_anno_size = unit(1, "cm"),
+                                             annotation_label = "Run", gp = gpar(fontsize = 35)),
+          bottom_annotation = HeatmapAnnotation(scHelper_cell_type = anno_simple(x = as.character(plot_data$col_ann$scHelper_cell_type),
+                                                                                 col = plot_data$ann_colours$scHelper_cell_type, height = unit(1, "cm")), show_annotation_name = FALSE,
+                                                labels = anno_mark(at = cumsum(rle(as.character(plot_data$col_ann$scHelper_cell_type))$lengths) - floor(rle(as.character(plot_data$col_ann$scHelper_cell_type))$lengths/2),
+                                                                   labels = rle(as.character(plot_data$col_ann$scHelper_cell_type))$values,
+                                                                   which = "column", side = 'bottom',
+                                                                   labels_gp = gpar(fontsize = 40), lines_gp = gpar(lwd=8))),
           raster_quality = 8
   )
   graphics.off()
