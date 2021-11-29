@@ -13,7 +13,7 @@ library(grid)
 set.seed(100)
 library(mgcv)
 library(viridis)
-library(circlize)
+library(ggnewscale)
 
 ########################       CELL STATE COLOURS    ########################################
 scHelper_cell_type_order <- c('EE', 'NNE', 'pEpi', 'PPR', 'aPPR', 'pPPR',
@@ -70,11 +70,12 @@ coexpression_highlight_cells = function(seurat_object, gm_1, gm_2, bin_number = 
   return(grid.arrange(grobs = plots))
 }
 
-coexpression = function(seurat_object, gms, order_1 = 1, order_2 = length(gms), meta_col='scHelper_cell_type', show_bins = FALSE, bin_number = 10, extract_bins = NULL, bin_colour = 'Set2', save_bins = NULL){
+coexpression = function(seurat_object, gms, order_1 = 1, order_2 = length(gms), meta_col='scHelper_cell_type', meta_col_colours = NULL,
+                        show_bins = FALSE, bin_number = 10, extract_bins = NULL, bin_colour = 'Set2', save_bins = NULL){
   
   meta_data = seurat_object@meta.data[,meta_col,drop=FALSE]
   
-  gm_means = lapply(gms, function(x) t(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'data'))[,x] %>% rowMeans(.))
+  gm_means = lapply(gms, function(x) t(as.matrix(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'data')))[,x] %>% rowMeans(.))
   
   if(is.null(names(gm_means))){names(gm_means) <- paste0('GM:', 1:length(gm_means), ' average')}
   
@@ -124,12 +125,14 @@ coexpression = function(seurat_object, gms, order_1 = 1, order_2 = length(gms), 
       dplyr::select(-c(order_1, order_2, ratio)) %>%
       pivot_longer(cols = -c(meta_col, cell_order, cell_name), names_to = 'gms', values_to = 'expression_magnitude')
     
+    if (is.null(meta_col_colours)){
+      cols = ggPlotColours(length(unique((plot_data[[meta_col]]))))
+    } else {cols = meta_col_colours}
     
     p1 = ggplot(plot_data, aes(x = cell_order, y = expression_magnitude)) +
       theme_classic() +
       geom_point(aes(colour = as.factor(scHelper_cell_type)), alpha = 0.5, size = 0.5) +
-      scale_colour_manual(values = ggPlotColours(length(unique((plot_data[[meta_col]])))), guide = guide_legend(override.aes = list(size=3),
-                                                                                                                title = '')) +
+      scale_colour_manual(values = cols, guide = guide_legend(override.aes = list(size=6), title = '')) +
       geom_smooth(method = "gam", se = FALSE, colour="purple", size=1.5) +
       facet_wrap(~gms, dir = "v", scales = "free", ncol=1) +
       xlab("Cells") + ylab("Expression level") +
@@ -146,7 +149,7 @@ coexpression = function(seurat_object, gms, order_1 = 1, order_2 = length(gms), 
       scale_fill_manual(values = alpha(c("gray20", "gray80"), alpha = 0.07)) +
       new_scale_color() +
       geom_rect(data = bin_plot_data, inherit.aes = FALSE, aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf, colour = as.factor(bin)), fill=NA, show.legend = F) +
-      viridis::scale_color_viridis(discrete=TRUE)
+      scale_colour_manual(values = c("red", "blue", "yellow"))
   }
   
   return(p1)
@@ -181,8 +184,8 @@ extract_bin <- function(seurat_object, gm_1, gm_2, meta_data='scHelper_cell_type
   }
   # calculate expression aggregates and products per cell and use that to order them
   x = seurat_object@meta.data[,'scHelper_cell_type']
-  gm_1_sum <- t(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'data'))[,gm_1] %>% rowSums(.)
-  gm_2_sum <- t(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'data'))[,gm_2] %>% rowSums(.)
+  gm_1_sum <- t(as.matrix(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'data')))[,gm_1] %>% rowSums(.)
+  gm_2_sum <- t(as.matrix(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'data')))[,gm_2] %>% rowSums(.)
   plot_data <- data.frame(gm_1_sum = gm_1_sum, gm_2_sum = gm_2_sum, x = x)
   plot_data <- plot_data %>% mutate(ratio = gm_1_sum/(gm_1_sum + gm_2_sum)) %>% arrange(ratio)
   ordered_cells <- rownames(plot_data)
@@ -285,9 +288,10 @@ nc_gm <- unlist(antler_data$gene_modules$lists$unbiasedGMs_DE$content[c('GM2')])
 bin_number = 10
 
 # Plot module coexpression dynamics
+scHelper_cols_subset <- scHelper_cell_type_colours[levels(droplevels(subset@meta.data$scHelper_cell_type))]
 extract_bins = c(1, 3, 10)
 
-coexpression_plot = coexpression(subset, gms = list('PPR GM' = ppr_gm, 'NC GM' = nc_gm), meta_col = c('scHelper_cell_type'),
+coexpression_plot = coexpression(subset, gms = list('PPR GM' = ppr_gm, 'NC GM' = nc_gm), meta_col = c('scHelper_cell_type'), meta_col_colours = scHelper_cols_subset,
                     order_1 = 1, order_2 = c(2), show_bins = TRUE, bin_number = bin_number, extract_bins = extract_bins,
                     save_bins = paste0(plot_path, 'bins.png'))
 
@@ -298,14 +302,14 @@ graphics.off()
 # Plot bins on UMAP
 for(i in 1:length(extract_bins)){
   png(paste0(plot_path, 'bin_', extract_bins[[i]], '.png'), width = 10, height = 10, res = 200, units = 'cm')
-  print(DimPlot(object = subset, cells.highlight = extract_bin(subset, gm_1 = ppr_gm, gm_2 = nc_gm, meta_data = c('scHelper_cell_type'), bin_number = bin_number, bin_extract = extract_bins[[i]]), cols.highlight = viridis::viridis(length(extract_bins))[i]) +
+  print(DimPlot(object = subset, cells.highlight = extract_bin(subset, gm_1 = ppr_gm, gm_2 = nc_gm, meta_data = c('scHelper_cell_type'), bin_number = bin_number, bin_extract = extract_bins[[i]]), 
+                cols.highlight = c("red", "blue", "yellow")[i]) +
           theme_void() +
           NoLegend() +
           ggtitle(paste0('Bin ', extract_bins[[i]])) +
-          theme(plot.title = element_text(hjust = 0.5, colour = viridis::viridis(length(extract_bins))[i], face = 'bold', size = 20)))
+          theme(plot.title = element_text(hjust = 0.5, colour = c("red", "blue", "yellow")[i], face = 'bold', size = 20)))
   graphics.off()
 }
-
 
 
 ################ DimPlot of scHelper_cell_types and stage in npb subset
@@ -334,9 +338,8 @@ DimPlot(subset, group.by = 'stage', label = TRUE,
                  plot.title = element_blank())
 graphics.off()
 
-###########
-# Stage subsets
-
+#############################################################################
+############################# Stage subsets #################################
 bin_extract = 3
 bin_sub <- lapply(extract_bins, function(x) extract_bin(subset, gm_1 = ppr_gm, gm_2 = nc_gm, meta_data = c('scHelper_cell_type'), bin_number = bin_number, bin_extract = bin_extract))
 
