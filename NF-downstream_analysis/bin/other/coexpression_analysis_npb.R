@@ -279,13 +279,13 @@ subset <- readRDS(list.files(data_path, pattern = "^transfer_ppr_nc_subset", ful
 
 # seurat_data <- readRDS(list.files(data_path, pattern = "*.RDS", full.names = TRUE)[!list.files(data_path, pattern = "*.RDS") %>% grepl('antler', .)])
 # seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/transfer_labels/seurat/rds_files/seurat_label_transfer.RDS')
-subset <- readRDS('./output/NF-downstream_analysis_stacas/transfer_subset/transfer_ppr_nc_subset/seurat/transfer_cluster/rds_files/transfer_clustered_data.RDS')
-HH5 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/HH5_splitstage_data/seurat/stage_state_classification/rds_files/HH5_cell_state_classification.RDS')
-HH6 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/HH6_splitstage_data/seurat/stage_state_classification/rds_files/HH6_cell_state_classification.RDS')
-HH7 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/HH7_splitstage_data/seurat/stage_state_classification/rds_files/HH7_cell_state_classification.RDS')
-ss4 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss4_splitstage_data/seurat/stage_state_classification/rds_files/ss4_cell_state_classification.RDS')
-ss8 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss8_splitstage_data/seurat/stage_state_classification/rds_files/ss8_cell_state_classification.RDS')
-antler_data <- readRDS("~/output/NF-downstream_analysis_stacas/stage_split/ss8_splitstage_data/antler/stage_gene_modules/rds_files/antler_out.RDS")
+# subset <- readRDS('./output/NF-downstream_analysis_stacas/transfer_subset/transfer_ppr_nc_subset/seurat/transfer_cluster/rds_files/transfer_clustered_data.RDS')
+# HH5 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/HH5_splitstage_data/seurat/stage_state_classification/rds_files/HH5_cell_state_classification.RDS')
+# HH6 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/HH6_splitstage_data/seurat/stage_state_classification/rds_files/HH6_cell_state_classification.RDS')
+# HH7 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/HH7_splitstage_data/seurat/stage_state_classification/rds_files/HH7_cell_state_classification.RDS')
+# ss4 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss4_splitstage_data/seurat/stage_state_classification/rds_files/ss4_cell_state_classification.RDS')
+# ss8 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss8_splitstage_data/seurat/stage_state_classification/rds_files/ss8_cell_state_classification.RDS')
+# antler_data <- readRDS("~/output/NF-downstream_analysis_stacas/stage_split/ss8_splitstage_data/antler/stage_gene_modules/rds_files/antler_out.RDS")
 
 ####################################################################################################
 # Run coexpression using PPR and NC gene modules from ss8
@@ -322,20 +322,35 @@ for(i in 1:length(extract_bins)){
 scHelper_cols_subset <- scHelper_cell_type_colours[levels(droplevels(subset@meta.data$scHelper_cell_type))]
 stage_cols <- stage_colours[levels(droplevels(subset@meta.data$stage))]
 
-png(paste0(plot_path, "npb_subset_scHelper_celltype_umap.png"), width=26, height=20, units = 'cm', res = 200)
-DimPlot(subset, group.by = 'scHelper_cell_type', label = TRUE, 
+png(paste0(plot_path, "npb_subset_scHelper_celltype_umap.png"), width=29, height=20, units = 'cm', res = 200)
+DimPlot(subset, group.by = 'scHelper_cell_type', label = FALSE, 
         label.size = 10,
         label.box = TRUE, repel = TRUE,
         pt.size = 1.2, 
         cols = scHelper_cols_subset, shuffle = TRUE) +
   ggplot2::theme_void() +
-  ggplot2::theme(legend.position = "none", 
-                 plot.title = element_blank())
+  ggplot2::theme(plot.title = element_blank(),
+                 legend.key.size = unit(10, 'cm'), #change legend key size
+                 legend.key.height = unit(1, 'cm'), #change legend key height
+                 legend.key.width = unit(1, 'cm'), #change legend key width
+                 legend.text = element_text(size=20)) +
+  guides(color = guide_legend(override.aes = list(size = 8)))
+graphics.off()
+
+png(paste0(plot_path, "npb_subset_scHelper_celltype_umap_no_legend.png"), width=26, height=20, units = 'cm', res = 200)
+DimPlot(subset, group.by = 'scHelper_cell_type', label = FALSE, 
+        label.size = 10,
+        label.box = TRUE, repel = TRUE,
+        pt.size = 1.2, 
+        cols = scHelper_cols_subset, shuffle = TRUE) +
+  ggplot2::theme_void() +
+  ggplot2::theme(plot.title = element_blank(),
+                 legend.position = "NULL")
 graphics.off()
 
 png(paste0(plot_path, "npb_subset_stage_umap.png"), width=26, height=20, units = 'cm', res = 200)
 DimPlot(subset, group.by = 'stage', label = TRUE, 
-        label.size = 10,
+        label.size = 15,
         label.box = TRUE, repel = TRUE,
         pt.size = 1.2, 
         cols = stage_cols, shuffle = TRUE) +
