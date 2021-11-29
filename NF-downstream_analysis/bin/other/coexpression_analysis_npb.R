@@ -15,6 +15,27 @@ library(mgcv)
 library(viridis)
 library(circlize)
 
+########################       CELL STATE COLOURS    ########################################
+scHelper_cell_type_order <- c('EE', 'NNE', 'pEpi', 'PPR', 'aPPR', 'pPPR',
+                              'eNPB', 'NPB', 'aNPB', 'pNPB','NC', 'dNC',
+                              'eN', 'eCN', 'NP', 'pNP', 'HB', 'iNP', 'MB', 
+                              'aNP', 'FB', 'vFB', 'node', 'streak')
+
+scHelper_cell_type_colours <- c("#ed5e5f", "#A73C52", "#6B5F88", "#3780B3", "#3F918C", "#47A266", "#53A651", "#6D8470",
+                                "#87638F", "#A5548D", "#C96555", "#ED761C", "#FF9508", "#FFC11A", "#FFEE2C", "#EBDA30",
+                                "#CC9F2C", "#AD6428", "#BB614F", "#D77083", "#F37FB8", "#DA88B3", "#B990A6", "#b3b3b3")
+
+names(scHelper_cell_type_colours) <- c('NNE', 'HB', 'eNPB', 'PPR', 'aPPR', 'streak',
+                                       'pPPR', 'NPB', 'aNPB', 'pNPB','eCN', 'dNC',
+                                       'eN', 'NC', 'NP', 'pNP', 'EE', 'iNP', 'MB', 
+                                       'vFB', 'aNP', 'node', 'FB', 'pEpi')
+########################       STAGE COLOURS     ###########################################
+stage_order <- c("HH4", "HH5", "HH6", "HH7", "ss4", "ss8")
+
+stage_colours = c("#E78AC3", "#8DA0CB", "#66C2A5", "#A6D854", "#FFD92F", "#FC8D62")
+names(stage_colours) <- stage_order
+############################################################################################
+
 #######################################################################################################
 #########################################   FUNCTIONS   ###############################################
 named_list_to_vector <- function(list){
@@ -249,12 +270,13 @@ subset <- readRDS(list.files(data_path, pattern = "^transfer_ppr_nc_subset", ful
 
 # seurat_data <- readRDS(list.files(data_path, pattern = "*.RDS", full.names = TRUE)[!list.files(data_path, pattern = "*.RDS") %>% grepl('antler', .)])
 # seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/transfer_labels/seurat/rds_files/seurat_label_transfer.RDS')
-# subset <- readRDS('./output/NF-downstream_analysis_stacas/transfer_subset/transfer_npb_subset/seurat/transfer_cluster/rds_files/transfer_clustered_data.RDS')
+# subset <- readRDS('./output/NF-downstream_analysis_stacas/transfer_subset/transfer_ppr_nc_subset/seurat/transfer_cluster/rds_files/transfer_clustered_data.RDS')
 #HH5 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/HH5_splitstage_data/seurat/stage_state_classification/rds_files/HH5_cell_state_classification.RDS')
 #HH6 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/HH6_splitstage_data/seurat/stage_state_classification/rds_files/HH6_cell_state_classification.RDS')
 #HH7 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/HH7_splitstage_data/seurat/stage_state_classification/rds_files/HH7_cell_state_classification.RDS')
 #ss4 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss4_splitstage_data/seurat/stage_state_classification/rds_files/ss4_cell_state_classification.RDS')
 #ss8 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss8_splitstage_data/seurat/stage_state_classification/rds_files/ss8_cell_state_classification.RDS')
+#antler_data <- readRDS("~/output/NF-downstream_analysis_stacas/stage_split/ss8_splitstage_data/antler/stage_gene_modules/rds_files/antler_out.RDS")
 
 ####################################################################################################
 # Run coexpression using PPR and NC gene modules from ss8
@@ -284,24 +306,33 @@ for(i in 1:length(extract_bins)){
   graphics.off()
 }
 
-# Plot cell type and stage in same res as above
-subset@meta.data$scHelper_cell_type <- factor(subset@meta.data$scHelper_cell_type, levels = c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'))
 
-png(paste0(plot_path, 'cell_state.png'), width = 11.5, height = 9, res = 200, units = 'cm')
-DimPlot(subset, group.by = 'scHelper_cell_type') +
-  theme_void() +
-  theme(plot.title = element_blank())
+
+################ DimPlot of scHelper_cell_types and stage in npb subset
+scHelper_cols_subset <- scHelper_cell_type_colours[levels(droplevels(subset@meta.data$scHelper_cell_type))]
+stage_cols <- stage_colours[levels(droplevels(subset@meta.data$stage))]
+
+png(paste0(plot_path, "npb_subset_scHelper_celltype_umap.png"), width=26, height=20, units = 'cm', res = 200)
+DimPlot(subset, group.by = 'scHelper_cell_type', label = TRUE, 
+        label.size = 10,
+        label.box = TRUE, repel = TRUE,
+        pt.size = 1.2, 
+        cols = scHelper_cols_subset, shuffle = TRUE) +
+  ggplot2::theme_void() +
+  ggplot2::theme(legend.position = "none", 
+                 plot.title = element_blank())
 graphics.off()
 
-
-png(paste0(plot_path, 'stage.png'), width = 10, height = 9, res = 200, units = 'cm')
-DimPlot(subset, group.by = 'stage') +
-  theme_void() +
-  theme(plot.title = element_blank())
+png(paste0(plot_path, "npb_subset_stage_umap.png"), width=26, height=20, units = 'cm', res = 200)
+DimPlot(subset, group.by = 'stage', label = TRUE, 
+        label.size = 10,
+        label.box = TRUE, repel = TRUE,
+        pt.size = 1.2, 
+        cols = stage_cols, shuffle = TRUE) +
+  ggplot2::theme_void() +
+  ggplot2::theme(legend.position = "none", 
+                 plot.title = element_blank())
 graphics.off()
-
-
-
 
 ###########
 # Stage subsets
@@ -313,24 +344,38 @@ bin_sub <- lapply(extract_bins, function(x) extract_bin(subset, gm_1 = ppr_gm, g
 # HH5
 ############################################
 plot_data = merge(as.data.frame(HH5[["umap"]]@cell.embeddings), HH5@meta.data, by = 0) %>% column_to_rownames('Row.names')
+plot_data <- plot_data %>% mutate(scHelper_cols = ifelse(scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'), scHelper_cell_type_colours[scHelper_cell_type], "gray90"))
 
-png(paste0(plot_path, 'HH5_subset.png'), width = 10, height = 9, res = 200, units = 'cm')
+# subset all one colour on full UMAP
+png(paste0(plot_path, "HH5_subset_full_UMAP.png"), width=12, height=12, units = 'cm', res = 200)
 ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
-  geom_point(colour = 'gray90', size = 1) +
-  geom_point(data = subset(plot_data, scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR')), size = 1, aes(colour = scHelper_cell_type)) +
-  guides(color = guide_legend(override.aes = list(size = 3))) +
+  geom_point(colour = 'gray90', size = 2) +
+  geom_point(data = subset(plot_data, scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR')), size = 2, aes(colour = "red")) +
   theme_void() +
-  ggtitle('HH5') +
-  theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 20),
-        legend.title = element_blank(),
-        legend.text = element_text(size=9),
-        legend.key.size = unit(0.6, "cm"))
+  theme(legend.position = "none")
 graphics.off()
 
+# subset coloured by scHelper_cell_state on full UMAP
+png(paste0(plot_path, "HH5_subset_cell_state_full_UMAP.png"), width=12, height=12, units = 'cm', res = 200)
+ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
+  geom_point(colour = plot_data$scHelper_cols, size = 2) +
+  scale_fill_manual(values=as.character(plot_data$scHelper_cols)) +
+  theme_void() +
+  theme(legend.position = "none")
+graphics.off()
 
-# Highlight bin 3 on stage subset
+# subset coloured by scHelper_cell_state on subset UMAP
 plot_data = subset(plot_data, scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'))
 
+png(paste0(plot_path, "HH5_subset_cell_state_subset_UMAP.png"), width=12, height=12, units = 'cm', res = 200)
+ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
+  geom_point(colour = plot_data$scHelper_cols, size = 2) +
+  scale_fill_manual(values=as.character(plot_data$scHelper_cols)) +
+  theme_void() +
+  theme(legend.position = "none")
+graphics.off()
+
+# Highlight bin 3 on stage subset
 plot_data$bin_class <- apply(plot_data %>% rownames_to_column, 1, function(x) if(x["rowname"] %in% bin_sub[[1]]){"a"} else if(x["rowname"] %in% bin_sub[[2]]){"b"} else if(x["rowname"] %in% bin_sub[[3]]){"c"} else {NA})
 
 png(paste0(plot_path, 'HH5_highlight_bins.png'), width = 9, height = 9, res = 200, units = 'cm')
@@ -342,7 +387,6 @@ ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
   ggtitle('HH5; Bin 3') +
   theme(plot.title = element_text(hjust = 0.5, colour = viridis::viridis(length(extract_bins))[2], face = 'bold', size = 20))
 graphics.off()
-
 
 # Plot co-expression
 # subset cells from bins
@@ -359,20 +403,36 @@ graphics.off()
 # HH6
 ############################################
 plot_data = merge(as.data.frame(HH6[["umap"]]@cell.embeddings), HH6@meta.data, by = 0) %>% column_to_rownames('Row.names')
+plot_data <- plot_data %>% mutate(scHelper_cols = ifelse(scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'), scHelper_cell_type_colours[scHelper_cell_type], "gray90"))
 
-png(paste0(plot_path, 'HH6_subset.png'), width = 10, height = 9, res = 200, units = 'cm')
+# subset all one colour on full UMAP
+png(paste0(plot_path, "HH6_subset_full_UMAP.png"), width=12, height=12, units = 'cm', res = 200)
 ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
-  geom_point(colour = 'gray90', size = 1) +
-  geom_point(data = subset(plot_data, scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR')), size = 1, aes(colour = scHelper_cell_type)) +
-  guides(color = guide_legend(override.aes = list(size = 3))) +
+  geom_point(colour = 'gray90', size = 2) +
+  geom_point(data = subset(plot_data, scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR')), size = 2, aes(colour = "red")) +
   theme_void() +
-  ggtitle('HH6') +
-  theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 20),
-        legend.title = element_blank(),
-        legend.text = element_text(size=9),
-        legend.key.size = unit(0.6, "cm"))
+  theme(legend.position = "none")
 graphics.off()
 
+# subset coloured by scHelper_cell_state on full UMAP
+png(paste0(plot_path, "HH6_subset_cell_state_full_UMAP.png"), width=12, height=12, units = 'cm', res = 200)
+ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
+  geom_point(colour = plot_data$scHelper_cols, size = 2) +
+  scale_fill_manual(values=as.character(plot_data$scHelper_cols)) +
+  theme_void() +
+  theme(legend.position = "none")
+graphics.off()
+
+# subset coloured by scHelper_cell_state on subset UMAP
+plot_data = subset(plot_data, scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'))
+
+png(paste0(plot_path, "HH6_subset_cell_state_subset_UMAP.png"), width=12, height=12, units = 'cm', res = 200)
+ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
+  geom_point(colour = plot_data$scHelper_cols, size = 2) +
+  scale_fill_manual(values=as.character(plot_data$scHelper_cols)) +
+  theme_void() +
+  theme(legend.position = "none")
+graphics.off()
 
 # Highlight bin 3 on stage subset
 plot_data = subset(plot_data, scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'))
@@ -406,18 +466,35 @@ graphics.off()
 # HH7
 ############################################
 plot_data = merge(as.data.frame(HH7[["umap"]]@cell.embeddings), HH7@meta.data, by = 0) %>% column_to_rownames('Row.names')
+plot_data <- plot_data %>% mutate(scHelper_cols = ifelse(scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'), scHelper_cell_type_colours[scHelper_cell_type], "gray90"))
 
-png(paste0(plot_path, 'HH7_subset.png'), width = 10, height = 9, res = 200, units = 'cm')
+# subset all one colour on full UMAP
+png(paste0(plot_path, "HH7_subset_full_UMAP.png"), width=12, height=12, units = 'cm', res = 200)
 ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
-  geom_point(colour = 'gray90', size = 1) +
-  geom_point(data = subset(plot_data, scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR')), size = 1, aes(colour = scHelper_cell_type)) +
-  guides(color = guide_legend(override.aes = list(size = 3))) +
+  geom_point(colour = 'gray90', size = 2) +
+  geom_point(data = subset(plot_data, scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR')), size = 2, aes(colour = "red")) +
   theme_void() +
-  ggtitle('HH7') +
-  theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 20),
-        legend.title = element_blank(),
-        legend.text = element_text(size=9),
-        legend.key.size = unit(0.6, "cm"))
+  theme(legend.position = "none")
+graphics.off()
+
+# subset coloured by scHelper_cell_state on full UMAP
+png(paste0(plot_path, "HH7_subset_cell_state_full_UMAP.png"), width=12, height=12, units = 'cm', res = 200)
+ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
+  geom_point(colour = plot_data$scHelper_cols, size = 2) +
+  scale_fill_manual(values=as.character(plot_data$scHelper_cols)) +
+  theme_void() +
+  theme(legend.position = "none")
+graphics.off()
+
+# subset coloured by scHelper_cell_state on subset UMAP
+plot_data = subset(plot_data, scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'))
+
+png(paste0(plot_path, "HH7_subset_cell_state_subset_UMAP.png"), width=12, height=12, units = 'cm', res = 200)
+ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
+  geom_point(colour = plot_data$scHelper_cols, size = 2) +
+  scale_fill_manual(values=as.character(plot_data$scHelper_cols)) +
+  theme_void() +
+  theme(legend.position = "none")
 graphics.off()
 
 
@@ -455,18 +532,35 @@ graphics.off()
 # SS4
 ############################################
 plot_data = merge(as.data.frame(ss4[["umap"]]@cell.embeddings), ss4@meta.data, by = 0) %>% column_to_rownames('Row.names')
+plot_data <- plot_data %>% mutate(scHelper_cols = ifelse(scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'), scHelper_cell_type_colours[scHelper_cell_type], "gray90"))
 
-png(paste0(plot_path, 'ss4_subset.png'), width = 12, height = 9, res = 200, units = 'cm')
+# subset all one colour on full UMAP
+png(paste0(plot_path, "ss4_subset_full_UMAP.png"), width=12, height=12, units = 'cm', res = 200)
 ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
-  geom_point(colour = 'gray90', size = 1) +
-  geom_point(data = subset(plot_data, scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR')), size = 1, aes(colour = scHelper_cell_type)) +
-  guides(color = guide_legend(override.aes = list(size = 3))) +
+  geom_point(colour = 'gray90', size = 2) +
+  geom_point(data = subset(plot_data, scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR')), size = 2, aes(colour = "red")) +
   theme_void() +
-  ggtitle('SS4') +
-  theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 20),
-        legend.title = element_blank(),
-        legend.text = element_text(size=9),
-        legend.key.size = unit(0.6, "cm"))
+  theme(legend.position = "none")
+graphics.off()
+
+# subset coloured by scHelper_cell_state on full UMAP
+png(paste0(plot_path, "ss4_subset_cell_state_full_UMAP.png"), width=12, height=12, units = 'cm', res = 200)
+ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
+  geom_point(colour = plot_data$scHelper_cols, size = 2) +
+  scale_fill_manual(values=as.character(plot_data$scHelper_cols)) +
+  theme_void() +
+  theme(legend.position = "none")
+graphics.off()
+
+# subset coloured by scHelper_cell_state on subset UMAP
+plot_data = subset(plot_data, scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'))
+
+png(paste0(plot_path, "ss4_subset_cell_state_subset_UMAP.png"), width=12, height=12, units = 'cm', res = 200)
+ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
+  geom_point(colour = plot_data$scHelper_cols, size = 2) +
+  scale_fill_manual(values=as.character(plot_data$scHelper_cols)) +
+  theme_void() +
+  theme(legend.position = "none")
 graphics.off()
 
 
@@ -501,19 +595,37 @@ graphics.off()
 # SS8
 ############################################
 plot_data = merge(as.data.frame(ss8[["umap"]]@cell.embeddings), ss8@meta.data, by = 0) %>% column_to_rownames('Row.names')
+plot_data <- plot_data %>% mutate(scHelper_cols = ifelse(scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'), scHelper_cell_type_colours[scHelper_cell_type], "gray90"))
 
-png(paste0(plot_path, 'ss8_subset.png'), width = 12, height = 9, res = 200, units = 'cm')
+# subset all one colour on full UMAP
+png(paste0(plot_path, "ss8_subset_full_UMAP.png"), width=12, height=12, units = 'cm', res = 200)
 ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
-  geom_point(colour = 'gray90', size = 1) +
-  geom_point(data = subset(plot_data, scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR')), size = 1, aes(colour = scHelper_cell_type)) +
-  guides(color = guide_legend(override.aes = list(size = 3))) +
+  geom_point(colour = 'gray90', size = 2) +
+  geom_point(data = subset(plot_data, scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR')), size = 2, aes(colour = "red")) +
   theme_void() +
-  ggtitle('SS8') +
-  theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 20),
-        legend.title = element_blank(),
-        legend.text = element_text(size=9),
-        legend.key.size = unit(0.6, "cm"))
+  theme(legend.position = "none")
 graphics.off()
+
+# subset coloured by scHelper_cell_state on full UMAP
+png(paste0(plot_path, "ss8_subset_cell_state_full_UMAP.png"), width=12, height=12, units = 'cm', res = 200)
+ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
+  geom_point(colour = plot_data$scHelper_cols, size = 2) +
+  scale_fill_manual(values=as.character(plot_data$scHelper_cols)) +
+  theme_void() +
+  theme(legend.position = "none")
+graphics.off()
+
+# subset coloured by scHelper_cell_state on subset UMAP
+plot_data = subset(plot_data, scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'))
+
+png(paste0(plot_path, "ss8_subset_cell_state_subset_UMAP.png"), width=12, height=12, units = 'cm', res = 200)
+ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
+  geom_point(colour = plot_data$scHelper_cols, size = 2) +
+  scale_fill_manual(values=as.character(plot_data$scHelper_cols)) +
+  theme_void() +
+  theme(legend.position = "none")
+graphics.off()
+
 
 
 # Highlight bin 3 on stage subset
