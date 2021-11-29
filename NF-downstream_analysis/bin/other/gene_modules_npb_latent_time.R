@@ -17,14 +17,12 @@ library(RColorBrewer)
 library(scHelper)
 library(gridExtra)
 library(grid)
-set.seed(100)
 library(mgcv)
 library(viridis)
 library(circlize)
-
-BiocManager::install("ComplexHeatmap")
-
 library(ComplexHeatmap)
+
+set.seed(100)
 
 spec = matrix(c(
   'runtype', 'l', 2, "character",
@@ -475,11 +473,6 @@ ggplot(plot_data %>% filter(gene == 'DLX6'), aes(x = latent_time, y = scaled_exp
 
 
 # Running GAM before ggplot
-# some random data
-set.seed(100)
-
-
-
 library(mgcv)
 library(viridis)
 
