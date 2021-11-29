@@ -213,8 +213,8 @@ gms_sub <- gms[paste0('GM', c(24, 21, 23, 13, 9, 7, 11))]
 plot_data <- GeneModulePheatmap(seurat_obj = seurat_data,  metadata = c('stage', 'scHelper_cell_type'), gene_modules = gms_sub,
                   col_order = c('stage', 'scHelper_cell_type'), col_ann_order = c('stage', 'scHelper_cell_type'), return = 'plot_data')
 
-goi <- which(rownames(plot_data$row_ann) %in% c('EPCAM', 'SALL4',
-                                                'HOMER2', 'TFAP2C',
+goi <- which(rownames(plot_data$row_ann) %in% c('EPCAM', 'SALL4', 'TSPAN13',
+                                                'HOMER2', 'TFAP2C', 'BAMBI', 'CITED4',
                                                 'SIX1', 'EYA2', 'DLX5', 'DLX6', 'GATA2', 'GATA3',
                                                 'PAX7', 'SNAI2', 'SOX10',
                                                 'LMO1', 'SOX21',
