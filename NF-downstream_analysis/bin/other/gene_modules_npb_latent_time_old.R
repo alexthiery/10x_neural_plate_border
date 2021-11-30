@@ -1,9 +1,125 @@
 #!/usr/bin/env Rscript
 
-
-##### TO DO:
-# fix latent time GM heatmaps so show latent time along x axis (+plot title?)
-# individual gene expression line graphs
+GeneModulePheatmap <- function (seurat_obj, metadata, col_order = metadata[1], custom_order = NULL, 
+                                custom_order_column = NULL, assay = "RNA", slot = "scale.data", 
+                                gene_modules, selected_genes = NULL, hide_annotation = NULL, 
+                                gaps_row = TRUE, gaps_col = NULL, gm_row_annotation = TRUE, 
+                                cell_subset = NULL, use_seurat_colours = TRUE, colour_scheme = c("PRGn", 
+                                                                                                 "RdYlBu", "Greys"), col_ann_order = rev(metadata), show_colnames = FALSE, 
+                                show_rownames = TRUE, cluster_rows = FALSE, cluster_cols = FALSE, 
+                                order_genes = TRUE, annotation_names_row = FALSE, ..., return = 'plot') 
+{
+  if (!is.null(cell_subset)) {
+    seurat_obj <- subset(seurat_obj, cells = cell_subset)
+  }
+  seurat_obj@meta.data <- seurat_obj@meta.data[, metadata, 
+                                               drop = FALSE] %>% mutate_if(is.character, as.factor)
+  seurat_obj@meta.data[] <- lapply(seurat_obj@meta.data, function(x) if (is.factor(x)) 
+    factor(x)
+    else x)
+  col_ann <- seurat_obj@meta.data
+  col_ann <- col_ann[do.call("order", c(col_ann[col_order], 
+                                        list(decreasing = FALSE))), , drop = FALSE]
+  if (!is.null(custom_order)) {
+    if (is.null(custom_order_column)) {
+      "custom_order column must be specified \n"
+    }
+    if (!setequal(custom_order, unique(col_ann[[custom_order_column]]))) {
+      stop("custom_order factors missing from custom_order_column \n\n")
+    }
+    levels(col_ann[[custom_order_column]]) <- custom_order
+    col_ann <- col_ann[order(col_ann[[custom_order_column]]), 
+                       , drop = FALSE]
+  }
+  if (!is.null(gaps_col)) {
+    ifelse(class(gaps_col) != "character", stop("gaps_col must be a metadata column name"), 
+           gaps_col <- cumsum(rle(as.vector(col_ann[[gaps_col]]))[["lengths"]]))
+  }
+  if (!is.null(hide_annotation)) {
+    col_ann[, hide_annotation] <- NULL
+  }
+  if (use_seurat_colours == FALSE) {
+    ann_colours <- lapply(1:ncol(col_ann), function(x) setNames(colorRampPalette(brewer.pal(9, 
+                                                                                            colour_scheme[x])[2:9])(length(unique(col_ann[, x]))), 
+                                                                unique(col_ann[, x])))
+  }
+  else {
+    ann_colours <- lapply(colnames(col_ann), function(x) {
+      temp <- setNames(ggPlotColours(n = length(levels(col_ann[, 
+                                                               x]))), levels(col_ann[, x]))
+      temp[match(levels(col_ann[[x]]), names(temp))]
+    })
+  }
+  names(ann_colours) <- colnames(col_ann)
+  if (!is.null(selected_genes)) {
+    selected_GM <- SubsetGeneModules(gm = gene_modules, selected_genes = selected_genes)
+  }
+  else {
+    if (is.null(names(gene_modules))) {
+      names(gene_modules) <- paste0("GM: ", 1:length(gene_modules))
+    }
+    selected_GM <- gene_modules
+  }
+  if (gm_row_annotation == TRUE) {
+    row_ann <- stack(selected_GM) %>% rename(`Gene Modules` = ind) %>% 
+      column_to_rownames("values")
+  }
+  else {
+    row_ann <- NA
+  }
+  if (gaps_row == TRUE) {
+    row_ann <- droplevels(row_ann)
+    gaps_row = cumsum(summary(row_ann[["Gene Modules"]], 
+                              maxsum = max(lengths(lapply(row_ann, unique)))))
+  }
+  else {
+    gaps_row = NULL
+  }
+  ann_colours[["Gene Modules"]] <- setNames(colorRampPalette(brewer.pal(9, 
+                                                                        "Paired"))(length(unique(row_ann[["Gene Modules"]]))), 
+                                            unique(row_ann[["Gene Modules"]]))
+  if (order_genes == TRUE) {
+    dir.create("scHelper_log/gene_hclustering/", recursive = TRUE, 
+               showWarnings = FALSE)
+    GMs_ordered_genes <- c()
+    for (i in names(selected_GM)) {
+      mat <- GetAssayData(object = seurat_obj, assay = assay, 
+                          slot = slot)
+      dist_mat <- dist(mat[selected_GM[[i]], ], method = "euclidean")
+      hclust_avg <- hclust(dist_mat, method = "average")
+      ordered_genes <- hclust_avg$labels[c(hclust_avg$order)]
+      GMs_ordered_genes[[i]] <- ordered_genes
+    }
+    selected_GM <- GMs_ordered_genes
+  }
+  plot_data <- t(as.matrix(x = GetAssayData(object = seurat_obj, 
+                                            assay = assay, slot = slot)[unlist(selected_GM), rownames(col_ann), 
+                                                                        drop = FALSE]))
+  if (!is.null(cell_subset)) {
+    cat("rescaling data as cells have been subset \n")
+    plot_data <- t(scale(t(plot_data)))
+  }
+  plot_data <- replace(plot_data, plot_data >= 2, 2)
+  plot_data <- replace(plot_data, plot_data <= -2, -2)
+  
+  if(return == 'plot'){
+    return(pheatmap(t(plot_data), color = PurpleAndYellow(), 
+                    annotation_col = col_ann[, rev(col_ann_order), drop = FALSE], 
+                    annotation_row = row_ann, annotation_colors = ann_colours, 
+                    cluster_rows = cluster_rows, cluster_cols = cluster_cols, 
+                    show_colnames = show_colnames, show_rownames = show_rownames, 
+                    gaps_col = gaps_col, gaps_row = gaps_row, annotation_names_row = annotation_names_row, 
+                    ...))
+  } else if (return == 'plot_data'){
+    return(list(plot_data = plot_data,
+                row_ann = row_ann,
+                col_ann = col_ann,
+                ann_colours = ann_colours))
+  } else {
+    stop('return must be either "plot" or "plot_data"')
+  }
+  
+}
 
 
 # Define arguments for Rscript
@@ -17,12 +133,9 @@ library(RColorBrewer)
 library(scHelper)
 library(gridExtra)
 library(grid)
+library(devtools)
 library(mgcv)
-library(viridis)
-library(circlize)
-library(ComplexHeatmap)
-
-set.seed(100)
+library(ComplexHeatmap) # Gu, Z. (2016) Complex heatmaps reveal patterns and correlations in multidimensional genomic data. DOI: 10.1093/bioinformatics/btw313
 
 spec = matrix(c(
   'runtype', 'l', 2, "character",
@@ -38,6 +151,10 @@ ncores = opt$cores
 
 dir.create(plot_path, recursive = T)
 dir.create(rds_path, recursive = T)
+
+
+# Params
+lineage_colours = c('placodal' = '#DE4D00', 'NC' = '#10E0E8')
 
 #####################################################################################################
 #                           Read in data and combine into seurat object                  #
@@ -72,141 +189,191 @@ metadata <- metadata[ order(match(rownames(metadata), rownames(seurat_data@meta.
 # replace seurat metadata with scvelo metadata
 seurat_data@meta.data <- metadata
 
-# set boolean for whether dataset contains multiple batches
-multi_run <- ifelse(length(unique(seurat_data$run)) > 1, TRUE, FALSE)
 
+#############################################################################
+#                           NC Plac Neural gm subset                        #
+#############################################################################
 
-#####################################################################################################
-#                                          FUNCTIONS                                               #
-#####################################################################################################
+####### Select modules of interest and plot new heatmap #######
 
-###   Function to extract gene expression data + lineage probs + latent time for each gene module of interest into tidy df
-#NB this function is not generalisable for use outside of npb subset
-extract_gm_expression <- function(seurat_obj = seurat_data, assay = "RNA", slot = "data", gms, filter_max = TRUE){
-  plot_data <- data.frame()
-  for(module in names(gms)){
-    temp <- GetAssayData(seurat_obj, assay = assay, slot = slot)[gms[[module]],]
-    meta <- merge(t(temp), seurat_data@meta.data[,c('latent_time', 'lineage_NC_probability', 'lineage_placodal_probability'), drop=FALSE], by=0)
-    plot_data <- meta %>%
-      column_to_rownames('Row.names') %>%
-      pivot_longer(!c(latent_time, lineage_NC_probability, lineage_placodal_probability)) %>%
-      rename(scaled_expression = value) %>%
-      rename(gene = name) %>%
-      pivot_longer(cols = !c(latent_time, gene, scaled_expression)) %>%
-      mutate(module = module) %>%
-      rename(lineage_probability = value) %>%
-      rename(lineage = name) %>%
-      group_by(lineage) %>%
-      mutate(lineage = unlist(strsplit(lineage, '_'))[2]) %>%
-      bind_rows(plot_data) %>%
-      ungroup()
-  }
-  
-  if (filter_max == TRUE){
-    plot_data <- plot_data %>%
-      group_by(lineage) %>%
-      mutate(max_lineage_probability = max(lineage_probability)) %>%
-      mutate(max_latent_time = max(latent_time[lineage_probability == max_lineage_probability])) %>%
-      filter(latent_time < max_latent_time) %>%
-      ungroup()
-  }
-  
-  return(plot_data)
-}
-
-###   Function to generate predicted GAM values to plot from extracted gene expression/latent time df
-multi_gam <- function(data, variable, values, lineage, max_latent_time = 1){
-  pdat <- tibble(latent_time = seq(0, max_latent_time, length = 1000))
-  for(value in values){
-    temp <- data %>% filter(lineage == !!lineage & !!sym(variable) == value)
-    mod <- gam(scaled_expression ~ s(latent_time, bs = "cs"), weights = lineage_probability, data = temp)
-    pdat <- cbind(pdat, predict.gam(mod, newdata = pdat))
-    colnames(pdat)[ncol(pdat)]  <- value
-  }
-  rownames(pdat) <- NULL
-  pdat <- pdat %>% column_to_rownames('latent_time')
-  #pdat <- scale(pdat)
-  #pdat[pdat < -2] <- -2
-  #pdat[pdat > 2] <- 2
-  return(pdat)
-}
-
-
-#####################################################################################################
-#                                  Set up gene modules of interest                                 #
-#####################################################################################################
-
-# access DE gene modules (batchfilt if there are multiple batches in the dataset)
-if(is.null(antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt)){
-  gms <- antler_data$gene_modules$lists$unbiasedGMs_DE$content
-}else{
-  gms <- antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content
-}
-
-NC_gms <- c("GM40", "GM42", "GM44", "GM43")
-PPR_gms <- c("GM12", "GM13", "GM14", "GM10")
 
 # Set RNA to default assay for plotting expression data
 DefaultAssay(seurat_data) <- "RNA"
 
-# Extract expression data along with latent time and probabilities of different lineages
-expression_data <- extract_gm_expression(seurat_data, gms = gms, filter_max = TRUE)
 
-#####################################################################################################
-#                    Plot gene module heatmap of all filtered gms in npb subset                  #
-#####################################################################################################
+scHelper_cell_type_order <- c('EE', 'NNE', 'pEpi', 'PPR', 'aPPR', 'pPPR', 'eNPB', 'NPB',
+                              'aNPB', 'pNPB', 'NC', 'dNC', 'eN', 'eCN', 'NP', 'pNP',
+                              'HB', 'iNP', 'MB', 'aNP', 'FB', 'vFB', 'node', 'streak')
 
-# Plot heatmap without gene names of all the filtered gene modules
-ngene = length(unlist(antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content))
-metadata = c("stage", "scHelper_cell_type")
-antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content <- GeneModuleOrder(seurat_obj = seurat_data, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content,
-                                                                                   metadata_1 = "stage", 
-                                                                                   order_1 = c("HH4", "HH5", "HH6", "HH7", "ss4", "ss8"),
-                                                                                   metadata_2 = "scHelper_cell_type", 
-                                                                                   order_2 = c("PPR", "aPPR", "pPPR", "aNPB", "pNPB", "NC", "delaminating_NC"),
-                                                                                   plot_path = "scHelper_log/GM_classification/unbiasedGMs_DE_batchfilt/")
+seurat_data@meta.data$scHelper_cell_type <- factor(seurat_data@meta.data$scHelper_cell_type, levels = scHelper_cell_type_order)
 
-png(paste0(plot_path, 'unbiasedGMs_DE_batchfilt.png'), height = min(c(150, ifelse(round(ngene/8) < 20, 20, round(ngene/8)))), width = 60, units = 'cm', res = 400)
-GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content,
-                   show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
+gms <- antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content
+
+PPR_gms <- c("GM12", "GM14", "GM13")
+NC_gms <- c("GM40", "GM42", "GM44", "GM43")
+
+gms_sub <- gms[unlist(c(PPR_gms, NC_gms))]
+
+# Get plot data from GeneModulePheatmap to plot with Complex Heatmap for extra functionality
+plot_data <- GeneModulePheatmap(seurat_obj = seurat_data,  metadata = c('stage', 'scHelper_cell_type'), gene_modules = gms_sub,
+                                col_order = c('stage', 'scHelper_cell_type'), col_ann_order = c('stage', 'scHelper_cell_type'), return = 'plot_data')
+
+goi <- which(rownames(plot_data$row_ann) %in% c('FAM184B', 'TSPAN13', 'GATA2', 'GATA3',
+                                                'DLX5', 'DLX6', 'SIX3', 'PAX6', 'NFKB1', 
+                                                'SIX1', 'EYA2', 'ASS1',
+                                                'MSX1', 'Z-ENC1',
+                                                'PAX7', 'SNAI2',
+                                                'OLFML3', 'WNT1',
+                                                'SOX10', 'RFTN2'
+                                                ))
+
+png(paste0(plot_path, 'subsetGMs.png'), width = 100, height = 60, res = 800, units = 'cm')
+Heatmap(t(plot_data$plot_data), col = PurpleAndYellow(), cluster_columns = FALSE, cluster_rows = FALSE,
+        show_column_names = FALSE, column_title = NULL, show_row_names = FALSE, row_title_gp = gpar(fontsize = 45), row_title_rot = 0,
+        row_split = plot_data$row_ann$`Gene Modules`, column_split = plot_data$col_ann$stage, 
+        heatmap_legend_param = list(
+          title = "Scaled expression", at = c(-2, 0, 2), 
+          labels = c(-2, 0, 2),
+          legend_height = unit(11, "cm"),
+          grid_width = unit(1.5, "cm"),
+          title_gp = gpar(fontsize = 35, fontface = 'bold'),
+          labels_gp = gpar(fontsize = 30, fontface = 'bold'),
+          title_position = 'lefttop-rot',
+          x = unit(13, "npc")
+        ),
+        
+        top_annotation = HeatmapAnnotation(stage = anno_block(gp = gpar(fill = plot_data$ann_colours$stage),
+                                                              labels = levels(plot_data$col_ann$stage),
+                                                              labels_gp = gpar(col = "white", fontsize = 50, fontface='bold'))),
+        
+        bottom_annotation = HeatmapAnnotation(scHelper_cell_type = anno_simple(x = as.character(plot_data$col_ann$scHelper_cell_type),
+                                                                               col = plot_data$ann_colours$scHelper_cell_type, height = unit(1, "cm")), show_annotation_name = FALSE,
+                                              labels = anno_mark(at = cumsum(rle(as.character(plot_data$col_ann$scHelper_cell_type))$lengths) - floor(rle(as.character(plot_data$col_ann$scHelper_cell_type))$lengths/2),
+                                                                 labels = rle(as.character(plot_data$col_ann$scHelper_cell_type))$values,
+                                                                 which = "column", side = 'bottom',
+                                                                 labels_gp = gpar(fontsize = 40), lines_gp = gpar(lwd=8))),
+        
+        right_annotation = rowAnnotation(foo = anno_mark(at = goi,
+                                                         labels = rownames(plot_data$row_ann)[goi],
+                                                         labels_gp = gpar(fontsize = 35), lines_gp = gpar(lwd=8))),
+        
+        raster_quality = 8
+)
 graphics.off()
 
-# Plot heatmap without gene names of just PPR and NC gene modules -- NEED TO DEBUG
-gene_modules <- antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content[c(NC_gms, PPR_gms)]
 
-png(paste0(plot_path, 'PPR_NC_gms.png'), height = min(c(150, ifelse(round(ngene/8) < 20, 20, round(ngene/8)))), width = 60, units = 'cm', res = 400)
-GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = gene_modules,
-                   show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
-graphics.off()
 
-#### need to maybe change colours and make annotations clearer
+# Iteratively get expression data for each gene module and bind to tidy dataframe
+plot_data <- data.frame()
+for(module in names(gms)){
+  temp <- GetAssayData(seurat_data, assay = 'RNA', slot = 'scale.data')[gms[[module]],]
+  
+  # temp <- t(scale(t(temp)))
+  
+  temp <- merge(t(temp), seurat_data@meta.data[,c('latent_time', 'lineage_NC_probability', 'lineage_placodal_probability'), drop=FALSE], by=0)
+  plot_data <- temp %>%
+    column_to_rownames('Row.names') %>%
+    pivot_longer(!c(latent_time, lineage_NC_probability, lineage_placodal_probability)) %>%
+    rename(scaled_expression = value) %>%
+    rename(gene = name) %>%
+    pivot_longer(cols = !c(latent_time, gene, scaled_expression)) %>%
+    mutate(module = module) %>%
+    rename(lineage_probability = value) %>%
+    rename(lineage = name) %>%
+    group_by(lineage) %>%
+    mutate(lineage = unlist(strsplit(lineage, '_'))[2]) %>%
+    bind_rows(plot_data) %>%
+    ungroup()
+}
+
+
+# Generate gams for each group (lineage, module)
+gams <- plot_data %>%
+  group_by(module, lineage) %>%
+  do(gams = gam(scaled_expression ~ s(latent_time, bs = "cs"), weights = lineage_probability, data = .))
+
+# Generate latent time values to predict gams on
+pdat <- tibble(latent_time = seq(0, 0.75, length = 1000))
+
+# Generate predicted values in long format
+plot_data <- data.frame()
+for(row in 1:nrow(gams)){
+  plot_data <- rbind(plot_data, data.frame(module = gams[[row, 'module']],
+                                           lineage = gams[[row, 'lineage']],
+                                           scaled_expression = predict.gam(gams[[row,'gams']][[1]], newdata = pdat),
+                                           pdat))
+}
+
+for(module in unique(plot_data$module)){
+  plot <- ggplot(filter(plot_data, module == !!module), aes(x = latent_time, y = scaled_expression, colour = lineage)) +
+    geom_point(size = 0.25) +
+    geom_line() +
+    scale_colour_manual(values=lineage_colours) +
+    theme_classic()
+  
+  png(paste0(plot_path, module, '_lineage_dynamics.png'), width = 15, height = 10, units='cm', res=200)
+  print(plot)
+  graphics.off()
+}
+
+# Calculate average module expression for plotting feature plots
+for(module in names(gms)){
+  seurat_data@meta.data[[module]] <-  colMeans(GetAssayData(seurat_data, assay = 'RNA', slot = 'scale.data')[gms[[module]],])
+  
+  png(paste0(plot_path, module, '_feature_plot.png'), width = 15, height = 15, units='cm', res=200)
+  print(FeaturePlot(seurat_data, features = module, pt.size = 1) +
+          theme_void() +
+          theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 20))) 
+  graphics.off()
+}
+
+
+
+
+
 
 #####################################################################################################
 #                    plot latent time heatmaps using GAM data for GMs of interest                  #
 #####################################################################################################
 
-##################    NC GMs on NC lineage - rename GMs to match next plots?
-NC_gms_GAM <- multi_gam(expression_data, variable = "module", values = NC_gms, lineage = 'NC', max_latent_time = 1)
 
-## OLD - pheatmap
-#gaps_row <- c(1, 2, 3)
-#png(paste0(plot_path, 'NC_latent_hm.png'), width = 30, height = 10, res = 200, units = 'cm')
-#pheatmap(t(NC_gms_GAM), cluster_cols = FALSE, color = viridis(n=100), border_color = NA, show_colnames = FALSE, treeheight_row = FALSE, cluster_rows = FALSE,
-#         cellwidth = 0.6, gaps_row = gaps_row, show_rownames = T, main = "NC gene module expression in the NC lineage")
-#grid.text("Latent time", x=0.45, y=0.02)
-#graphics.off()
+# Are they properly row scaled?
+# Gene modules need to be arranged by specific order
+# Latent time value not derived from plot data -> max(latent_time) is not always 1!
 
+for(module in unique(plot_data$module)){
+  plot <- ggplot(filter(plot_data, module == !!module), aes(x = latent_time, y = scaled_expression, colour = lineage)) +
+    geom_point(size = 0.25) +
+    geom_line() +
+    scale_colour_manual(values=lineage_colours) +
+    theme_classic()
+  
+  png(paste0(plot_path, module, '_lineage_dynamics.png'), width = 15, height = 10, units='cm', res=200)
+  print(plot)
+  graphics.off()
+}
+
+# Filter NC modules for plotting heatmap
+NC_latent_time <- filter(plot_data, lineage == 'NC') %>%
+  filter(module %in% NC_gms) %>%
+  pivot_wider(values_from = scaled_expression, names_from = module) %>%
+  dplyr::select(!c(lineage, latent_time))
+
+# NC_latent_time = t(scale(t(NC_latent_time)))
+
+library(circlize)
 col_fun = colorRamp2(c(0, 1000), c("purple", "yellow"))
 column_ha = HeatmapAnnotation(labels = anno_mark(at = c(2, 500, 999), labels = c("0", "Latent Time", "1"), which = "column", side = "top", 
                                                  labels_gp = gpar(fontsize = 22), 
                                                  labels_rot = 0, link_gp = gpar(lty = 0),
                                                  link_height = unit(0.5, "mm")),
-                              Latent_time = 1:(ncol(t(NC_gms_GAM))), col = list(Latent_time = col_fun), show_legend = FALSE, 
+                              Latent_time = 1:(ncol(t(NC_latent_time))), col = list(Latent_time = col_fun), show_legend = FALSE, 
                               annotation_label = "Latent time", show_annotation_name = FALSE)
 
-Heatmap(t(NC_gms_GAM), cluster_rows = FALSE, cluster_columns = FALSE,
+library(viridis)
+Heatmap(t(NC_latent_time), cluster_rows = FALSE, cluster_columns = FALSE,
         show_column_names = FALSE, show_row_names = FALSE,
-        col = viridis(n=100), row_split = colnames(NC_gms_GAM),
+        col = viridis(n=100), row_split = colnames(NC_latent_time),
         row_title_gp = gpar(fontsize = 22),
         top_annotation = column_ha,
         heatmap_legend_param = list(
@@ -220,26 +387,25 @@ Heatmap(t(NC_gms_GAM), cluster_rows = FALSE, cluster_columns = FALSE,
 
 
 ##################    PPR GMs on PPR lineage
-PPR_gms_GAM <- multi_gam(expression_data, variable = "module", values = PPR_gms, lineage = 'placodal', max_latent_time = 0.887)
-
-## OLD
-# gaps_row <- c(1, 2, 3)
-# png(paste0(plot_path, 'PPR_latent_hm.png'), width = 30, height = 10, res = 200, units = 'cm')
-# pheatmap(t(PPR_gms_GAM), cluster_cols = FALSE, color = viridis(n=100), border_color = NA, show_colnames = FALSE, treeheight_row = FALSE, cluster_rows = FALSE,
-#          cellwidth = 0.6, gaps_row = gaps_row, show_rownames = T)
-# graphics.off()
+# Filter NC modules for plotting heatmap
+PPR_latent_time <- filter(plot_data, lineage == 'placodal') %>%
+  filter(module %in% PPR_gms) %>%
+  pivot_wider(values_from = scaled_expression, names_from = module) %>%
+  dplyr::select(!c(lineage, latent_time))
 
 col_fun = colorRamp2(c(0, 1000), c("purple", "yellow"))
 column_ha = HeatmapAnnotation(labels = anno_mark(at = c(2, 500, 999), labels = c("0", "Latent Time", "1"), which = "column", side = "top", 
                                                  labels_gp = gpar(fontsize = 22), 
                                                  labels_rot = 0, link_gp = gpar(lty = 0),
                                                  link_height = unit(0.5, "mm")),
-                              Latent_time = 1:(ncol(t(PPR_gms_GAM))), col = list(Latent_time = col_fun), show_legend = FALSE, 
+                              Latent_time = 1:(ncol(t(PPR_latent_time))), col = list(Latent_time = col_fun), show_legend = FALSE, 
                               annotation_label = "Latent time", show_annotation_name = FALSE)
 
-Heatmap(t(PPR_gms_GAM), cluster_rows = FALSE, cluster_columns = FALSE,
+# PPR_latent_time = scale(PPR_latent_time)
+
+Heatmap(t(PPR_latent_time), cluster_rows = FALSE, cluster_columns = FALSE,
         show_column_names = FALSE, show_row_names = FALSE,
-        col = viridis(n=100), row_split = colnames(NC_gms_GAM),
+        col = viridis(n=100), row_split = colnames(PPR_latent_time),
         row_title_gp = gpar(fontsize = 22),
         top_annotation = column_ha,
         heatmap_legend_param = list(
@@ -252,6 +418,13 @@ Heatmap(t(PPR_gms_GAM), cluster_rows = FALSE, cluster_columns = FALSE,
         raster_quality = 4)
 
 
+
+
+
+
+
+
+
 #####################################################################################################
 #                plot latent time line graphs using GAM data for genes of interest                  #
 #####################################################################################################
@@ -259,7 +432,7 @@ Heatmap(t(PPR_gms_GAM), cluster_rows = FALSE, cluster_columns = FALSE,
 ##################    NC genes on NC lineage
 annotations <- list(GM1 = c('MSX1', 'GADD45A', 'AGTRAP', 'SOX11'),
                     GM2 = c('PAX7', 'ZNF423', 'Z-ENC1'),
-                    GM3 = c('SOX5', 'OLFML3', 'GLIPR2'),
+                    GM3 = c('OLFML3'),
                     GM4 = c('SOX10', 'Z-MEF2C', 'RFTN2', 'ETS1', 'PPP1R1C'))
 
 annotations <- list(GM1 = c('MSX1', 'GADD45A', 'AGTRAP', 'SOX11'))

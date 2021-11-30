@@ -134,6 +134,7 @@ library(scHelper)
 library(gridExtra)
 library(grid)
 library(devtools)
+library(mgcv)
 library(ComplexHeatmap) # Gu, Z. (2016) Complex heatmaps reveal patterns and correlations in multidimensional genomic data. DOI: 10.1093/bioinformatics/btw313
 
 spec = matrix(c(
@@ -203,7 +204,7 @@ seurat_data@meta.data$scHelper_cell_type <- factor(seurat_data@meta.data$scHelpe
 
 
 gms <- antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content
-gms_sub <- gms[paste0('GM', c(24, 21, 23, 13, 9, 7, 11))]
+gms_sub <- gms[gms[paste0('GM', c(24, 21, 23, 13, 9, 7, 11))]]
 
 # Get plot data from GeneModulePheatmap to plot with Complex Heatmap for extra functionality
 plot_data <- GeneModulePheatmap(seurat_obj = seurat_data,  metadata = c('stage', 'scHelper_cell_type'), gene_modules = gms_sub,
