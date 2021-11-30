@@ -191,12 +191,8 @@ seurat_data@meta.data <- metadata
 
 ####### Select modules of interest and plot new heatmap #######
 
-
 # Set RNA to default assay for plotting expression data
 DefaultAssay(seurat_data) <- "RNA"
-
-
-debug(GeneModulePheatmap)
 
 scHelper_cell_type_order <- c('EE', 'NNE', 'pEpi', 'PPR', 'aPPR', 'pPPR', 'eNPB', 'NPB',
                               'aNPB', 'pNPB', 'NC', 'dNC', 'eN', 'eCN', 'NP', 'pNP',
