@@ -73,10 +73,10 @@ stage_order <- c("HH4", "HH5", "HH6", "HH7", "ss4", "ss8")
 label <- sub('_.*', '', list.files(data_path, pattern = '*.RDS'))
 
 seurat_data <- readRDS(list.files(data_path, full.names = TRUE, pattern = '*.RDS'))
-# seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/hh4_splitstage_data/seurat/stage_cluster/rds_files/hh4_clustered_data.RDS')
-# seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/hh5_splitstage_data/seurat/stage_cluster/rds_files/hh5_clustered_data.RDS')
-# seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/hh6_splitstage_data/seurat/stage_cluster/rds_files/hh6_clustered_data.RDS')
-# seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/hh7_splitstage_data/seurat/stage_cluster/rds_files/hh7_clustered_data.RDS')
+# seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/HH4_splitstage_data/seurat/stage_cluster/rds_files/hh4_clustered_data.RDS')
+# seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/HH5_splitstage_data/seurat/stage_cluster/rds_files/hh5_clustered_data.RDS')
+# seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/HH6_splitstage_data/seurat/stage_cluster/rds_files/hh6_clustered_data.RDS')
+# seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/HH7_splitstage_data/seurat/stage_cluster/rds_files/hh7_clustered_data.RDS')
 # seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss4_splitstage_data/seurat/stage_cluster/rds_files/ss4_clustered_data.RDS')
 # seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss8_splitstage_data/seurat/stage_cluster/rds_files/ss8_clustered_data.RDS')
 
@@ -186,7 +186,7 @@ scHelper_cols <- scHelper_cell_type_colours[levels(droplevels(seurat_data@meta.d
 # UMAP for cell state
 png(paste0(plot_path, "scHelper_celltype_umap.png"), width=12, height=12, units = 'cm', res = 200)
 DimPlot(seurat_data, group.by = 'scHelper_cell_type', label = TRUE, 
-        label.size = ifelse(length(unique(seurat_data$stage)) == 1, 5, 3),
+        label.size = ifelse(length(unique(seurat_data$stage)) == 1, 9, 3),
         label.box = TRUE, repel = TRUE,
         pt.size = ifelse(length(unique(seurat_data$stage)) == 1, 1.2, 1), 
         cols = scHelper_cols, shuffle = TRUE) +

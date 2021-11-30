@@ -13,7 +13,8 @@ library(grid)
 set.seed(100)
 library(mgcv)
 library(viridis)
-library(circlize)
+library(ggnewscale)
+library(patchwork)
 
 ########################       CELL STATE COLOURS    ########################################
 scHelper_cell_type_order <- c('EE', 'NNE', 'pEpi', 'PPR', 'aPPR', 'pPPR',
@@ -70,11 +71,12 @@ coexpression_highlight_cells = function(seurat_object, gm_1, gm_2, bin_number = 
   return(grid.arrange(grobs = plots))
 }
 
-coexpression = function(seurat_object, gms, order_1 = 1, order_2 = length(gms), meta_col='scHelper_cell_type', show_bins = FALSE, bin_number = 10, extract_bins = NULL, bin_colour = 'Set2', save_bins = NULL){
+coexpression = function(seurat_object, gms, order_1 = 1, order_2 = length(gms), meta_col='scHelper_cell_type', meta_col_colours = NULL,
+                        show_bins = FALSE, bin_number = 10, extract_bins = NULL, bin_colour = 'Set2', save_bins = NULL){
   
   meta_data = seurat_object@meta.data[,meta_col,drop=FALSE]
   
-  gm_means = lapply(gms, function(x) t(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'data'))[,x] %>% rowMeans(.))
+  gm_means = lapply(gms, function(x) t(as.matrix(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'data')))[,x] %>% rowMeans(.))
   
   if(is.null(names(gm_means))){names(gm_means) <- paste0('GM:', 1:length(gm_means), ' average')}
   
@@ -124,12 +126,14 @@ coexpression = function(seurat_object, gms, order_1 = 1, order_2 = length(gms), 
       dplyr::select(-c(order_1, order_2, ratio)) %>%
       pivot_longer(cols = -c(meta_col, cell_order, cell_name), names_to = 'gms', values_to = 'expression_magnitude')
     
+    if (is.null(meta_col_colours)){
+      cols = ggPlotColours(length(unique((plot_data[[meta_col]]))))
+    } else {cols = meta_col_colours}
     
     p1 = ggplot(plot_data, aes(x = cell_order, y = expression_magnitude)) +
       theme_classic() +
       geom_point(aes(colour = as.factor(scHelper_cell_type)), alpha = 0.5, size = 0.5) +
-      scale_colour_manual(values = ggPlotColours(length(unique((plot_data[[meta_col]])))), guide = guide_legend(override.aes = list(size=3),
-                                                                                                                title = '')) +
+      scale_colour_manual(values = cols, guide = guide_legend(override.aes = list(size=6), title = '')) +
       geom_smooth(method = "gam", se = FALSE, colour="purple", size=1.5) +
       facet_wrap(~gms, dir = "v", scales = "free", ncol=1) +
       xlab("Cells") + ylab("Expression level") +
@@ -146,7 +150,7 @@ coexpression = function(seurat_object, gms, order_1 = 1, order_2 = length(gms), 
       scale_fill_manual(values = alpha(c("gray20", "gray80"), alpha = 0.07)) +
       new_scale_color() +
       geom_rect(data = bin_plot_data, inherit.aes = FALSE, aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf, colour = as.factor(bin)), fill=NA, show.legend = F) +
-      viridis::scale_color_viridis(discrete=TRUE)
+      scale_colour_manual(values = c("red", "blue", "yellow"))
   }
   
   return(p1)
@@ -181,8 +185,8 @@ extract_bin <- function(seurat_object, gm_1, gm_2, meta_data='scHelper_cell_type
   }
   # calculate expression aggregates and products per cell and use that to order them
   x = seurat_object@meta.data[,'scHelper_cell_type']
-  gm_1_sum <- t(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'data'))[,gm_1] %>% rowSums(.)
-  gm_2_sum <- t(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'data'))[,gm_2] %>% rowSums(.)
+  gm_1_sum <- t(as.matrix(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'data')))[,gm_1] %>% rowSums(.)
+  gm_2_sum <- t(as.matrix(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'data')))[,gm_2] %>% rowSums(.)
   plot_data <- data.frame(gm_1_sum = gm_1_sum, gm_2_sum = gm_2_sum, x = x)
   plot_data <- plot_data %>% mutate(ratio = gm_1_sum/(gm_1_sum + gm_2_sum)) %>% arrange(ratio)
   ordered_cells <- rownames(plot_data)
@@ -194,7 +198,8 @@ extract_bin <- function(seurat_object, gm_1, gm_2, meta_data='scHelper_cell_type
   return(ordered_cells[start:end])
 }
 
-plot_umap_gm_coexpression <- function(seurat_object, gm_1, gm_2, col.threshold = 0.25, two.colors = c('#FF0000', '#00ff00'), negative.color = 'gray80', limit = 0, highlight_cell_size = 1, module_names = c('Gene module 1', 'Gene module 2')){
+plot_umap_gm_coexpression <- function(seurat_object, gm_1, gm_2, col.threshold = 0.25, two.colors = c('#FF0000', '#00ff00'), negative.color = 'gray80', limit = 0, 
+                                      highlight_cell_size = 1, module_names = c('Gene module 1', 'Gene module 2'), show_legend = TRUE){
   start = 1
   end = 100
   width = end - start
@@ -231,17 +236,21 @@ plot_umap_gm_coexpression <- function(seurat_object, gm_1, gm_2, col.threshold =
   plot_data <- merge(plot_data, as.data.frame(cell_cols), by=0) %>% column_to_rownames('Row.names')
   
   umap_plot <- ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2, colour = cell_cols)) +
-    geom_point(colour = negative.color, size = 1) +
+    geom_point(colour = negative.color, size = 2) +
     geom_point(data = plot_data %>% filter(cell_cols != negative.color), size = highlight_cell_size) +
     scale_colour_manual(values=plot_data %>% filter(cell_cols != negative.color) %>% dplyr::pull(cell_cols))+
     theme_void() +
     NoLegend()
   
-  layout <- '
+  if (show_legend == FALSE){
+    print(umap_plot)
+  } else {
+    layout <- '
     BA
     B#
     '
-  wrap_plots(A = key_plot, B = umap_plot, design = layout, widths = c(4,1), heights = c(1,3))
+    wrap_plots(A = key_plot, B = umap_plot, design = layout, widths = c(4,1), heights = c(1,3))
+  }
 }
 #######################################################################################################
 
@@ -271,12 +280,12 @@ subset <- readRDS(list.files(data_path, pattern = "^transfer_ppr_nc_subset", ful
 # seurat_data <- readRDS(list.files(data_path, pattern = "*.RDS", full.names = TRUE)[!list.files(data_path, pattern = "*.RDS") %>% grepl('antler', .)])
 # seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/transfer_labels/seurat/rds_files/seurat_label_transfer.RDS')
 # subset <- readRDS('./output/NF-downstream_analysis_stacas/transfer_subset/transfer_ppr_nc_subset/seurat/transfer_cluster/rds_files/transfer_clustered_data.RDS')
-#HH5 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/HH5_splitstage_data/seurat/stage_state_classification/rds_files/HH5_cell_state_classification.RDS')
-#HH6 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/HH6_splitstage_data/seurat/stage_state_classification/rds_files/HH6_cell_state_classification.RDS')
-#HH7 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/HH7_splitstage_data/seurat/stage_state_classification/rds_files/HH7_cell_state_classification.RDS')
-#ss4 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss4_splitstage_data/seurat/stage_state_classification/rds_files/ss4_cell_state_classification.RDS')
-#ss8 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss8_splitstage_data/seurat/stage_state_classification/rds_files/ss8_cell_state_classification.RDS')
-#antler_data <- readRDS("~/output/NF-downstream_analysis_stacas/stage_split/ss8_splitstage_data/antler/stage_gene_modules/rds_files/antler_out.RDS")
+# HH5 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/HH5_splitstage_data/seurat/stage_state_classification/rds_files/HH5_cell_state_classification.RDS')
+# HH6 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/HH6_splitstage_data/seurat/stage_state_classification/rds_files/HH6_cell_state_classification.RDS')
+# HH7 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/HH7_splitstage_data/seurat/stage_state_classification/rds_files/HH7_cell_state_classification.RDS')
+# ss4 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss4_splitstage_data/seurat/stage_state_classification/rds_files/ss4_cell_state_classification.RDS')
+# ss8 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss8_splitstage_data/seurat/stage_state_classification/rds_files/ss8_cell_state_classification.RDS')
+# antler_data <- readRDS("~/output/NF-downstream_analysis_stacas/stage_split/ss8_splitstage_data/antler/stage_gene_modules/rds_files/antler_out.RDS")
 
 ####################################################################################################
 # Run coexpression using PPR and NC gene modules from ss8
@@ -285,9 +294,10 @@ nc_gm <- unlist(antler_data$gene_modules$lists$unbiasedGMs_DE$content[c('GM2')])
 bin_number = 10
 
 # Plot module coexpression dynamics
+scHelper_cols_subset <- scHelper_cell_type_colours[levels(droplevels(subset@meta.data$scHelper_cell_type))]
 extract_bins = c(1, 3, 10)
 
-coexpression_plot = coexpression(subset, gms = list('PPR GM' = ppr_gm, 'NC GM' = nc_gm), meta_col = c('scHelper_cell_type'),
+coexpression_plot = coexpression(subset, gms = list('PPR GM' = ppr_gm, 'NC GM' = nc_gm), meta_col = c('scHelper_cell_type'), meta_col_colours = scHelper_cols_subset,
                     order_1 = 1, order_2 = c(2), show_bins = TRUE, bin_number = bin_number, extract_bins = extract_bins,
                     save_bins = paste0(plot_path, 'bins.png'))
 
@@ -298,34 +308,49 @@ graphics.off()
 # Plot bins on UMAP
 for(i in 1:length(extract_bins)){
   png(paste0(plot_path, 'bin_', extract_bins[[i]], '.png'), width = 10, height = 10, res = 200, units = 'cm')
-  print(DimPlot(object = subset, cells.highlight = extract_bin(subset, gm_1 = ppr_gm, gm_2 = nc_gm, meta_data = c('scHelper_cell_type'), bin_number = bin_number, bin_extract = extract_bins[[i]]), cols.highlight = viridis::viridis(length(extract_bins))[i]) +
+  print(DimPlot(object = subset, cells.highlight = extract_bin(subset, gm_1 = ppr_gm, gm_2 = nc_gm, meta_data = c('scHelper_cell_type'), bin_number = bin_number, bin_extract = extract_bins[[i]]), 
+                cols.highlight = c("red", "blue", "yellow")[i]) +
           theme_void() +
           NoLegend() +
           ggtitle(paste0('Bin ', extract_bins[[i]])) +
-          theme(plot.title = element_text(hjust = 0.5, colour = viridis::viridis(length(extract_bins))[i], face = 'bold', size = 20)))
+          theme(plot.title = element_text(hjust = 0.5, colour = c("red", "blue", "yellow")[i], face = 'bold', size = 20)))
   graphics.off()
 }
-
 
 
 ################ DimPlot of scHelper_cell_types and stage in npb subset
 scHelper_cols_subset <- scHelper_cell_type_colours[levels(droplevels(subset@meta.data$scHelper_cell_type))]
 stage_cols <- stage_colours[levels(droplevels(subset@meta.data$stage))]
 
-png(paste0(plot_path, "npb_subset_scHelper_celltype_umap.png"), width=26, height=20, units = 'cm', res = 200)
-DimPlot(subset, group.by = 'scHelper_cell_type', label = TRUE, 
+png(paste0(plot_path, "npb_subset_scHelper_celltype_umap.png"), width=29, height=20, units = 'cm', res = 200)
+DimPlot(subset, group.by = 'scHelper_cell_type', label = FALSE, 
         label.size = 10,
         label.box = TRUE, repel = TRUE,
         pt.size = 1.2, 
         cols = scHelper_cols_subset, shuffle = TRUE) +
   ggplot2::theme_void() +
-  ggplot2::theme(legend.position = "none", 
-                 plot.title = element_blank())
+  ggplot2::theme(plot.title = element_blank(),
+                 legend.key.size = unit(10, 'cm'), #change legend key size
+                 legend.key.height = unit(1, 'cm'), #change legend key height
+                 legend.key.width = unit(1, 'cm'), #change legend key width
+                 legend.text = element_text(size=20)) +
+  guides(color = guide_legend(override.aes = list(size = 8)))
+graphics.off()
+
+png(paste0(plot_path, "npb_subset_scHelper_celltype_umap_no_legend.png"), width=26, height=20, units = 'cm', res = 200)
+DimPlot(subset, group.by = 'scHelper_cell_type', label = FALSE, 
+        label.size = 10,
+        label.box = TRUE, repel = TRUE,
+        pt.size = 1.2, 
+        cols = scHelper_cols_subset, shuffle = TRUE) +
+  ggplot2::theme_void() +
+  ggplot2::theme(plot.title = element_blank(),
+                 legend.position = "NULL")
 graphics.off()
 
 png(paste0(plot_path, "npb_subset_stage_umap.png"), width=26, height=20, units = 'cm', res = 200)
 DimPlot(subset, group.by = 'stage', label = TRUE, 
-        label.size = 10,
+        label.size = 15,
         label.box = TRUE, repel = TRUE,
         pt.size = 1.2, 
         cols = stage_cols, shuffle = TRUE) +
@@ -334,9 +359,8 @@ DimPlot(subset, group.by = 'stage', label = TRUE,
                  plot.title = element_blank())
 graphics.off()
 
-###########
-# Stage subsets
-
+#############################################################################
+############################# Stage subsets #################################
 bin_extract = 3
 bin_sub <- lapply(extract_bins, function(x) extract_bin(subset, gm_1 = ppr_gm, gm_2 = nc_gm, meta_data = c('scHelper_cell_type'), bin_number = bin_number, bin_extract = bin_extract))
 
@@ -344,7 +368,7 @@ bin_sub <- lapply(extract_bins, function(x) extract_bin(subset, gm_1 = ppr_gm, g
 # HH5
 ############################################
 plot_data = merge(as.data.frame(HH5[["umap"]]@cell.embeddings), HH5@meta.data, by = 0) %>% column_to_rownames('Row.names')
-plot_data <- plot_data %>% mutate(scHelper_cols = ifelse(scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'), scHelper_cell_type_colours[scHelper_cell_type], "gray90"))
+plot_data <- plot_data %>% mutate(scHelper_cols = ifelse(scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'), scHelper_cell_type_colours[as.vector(scHelper_cell_type)], "gray90"))
 
 # subset all one colour on full UMAP
 png(paste0(plot_path, "HH5_subset_full_UMAP.png"), width=12, height=12, units = 'cm', res = 200)
@@ -375,35 +399,39 @@ ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
   theme(legend.position = "none")
 graphics.off()
 
-# Highlight bin 3 on stage subset
+# Highlight bin 3
 plot_data$bin_class <- apply(plot_data %>% rownames_to_column, 1, function(x) if(x["rowname"] %in% bin_sub[[1]]){"a"} else if(x["rowname"] %in% bin_sub[[2]]){"b"} else if(x["rowname"] %in% bin_sub[[3]]){"c"} else {NA})
 
-png(paste0(plot_path, 'HH5_highlight_bins.png'), width = 9, height = 9, res = 200, units = 'cm')
+png(paste0(plot_path, 'HH5_highlight_bin.png'), width = 12, height = 12, res = 200, units = 'cm')
 ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
-  geom_point(colour = 'gray90', size = 1) +
-  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2), colour = viridis::viridis(length(extract_bins))[2]) +
+  geom_point(colour = 'gray90', size = 2) +
+  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2), colour = "blue") +
   theme_void() +
-  NoLegend() +
-  ggtitle('HH5; Bin 3') +
-  theme(plot.title = element_text(hjust = 0.5, colour = viridis::viridis(length(extract_bins))[2], face = 'bold', size = 20))
+  NoLegend()
 graphics.off()
 
-# Plot co-expression
-# subset cells from bins
-HH5_coexpression <- subset(HH5, cells = rownames(plot_data))
+# Plot co-expression with legend
+coexpression <- subset(HH5, cells = rownames(plot_data))
 
 png(paste0(plot_path, 'HH5_UMAP_coexpression.png'), width = 14, height = 10, res = 400, units = 'cm')
-plot_umap_gm_coexpression(HH5_coexpression, gm_1 = ppr_gm, gm_2 = nc_gm, col.threshold = 0, two.colors = c("red", "blue"),
-                          negative.color = 'gray90', limit = 30, module_names = c('PPR module', 'NC module'), highlight_cell_size = 1.5)
+plot_umap_gm_coexpression(coexpression, gm_1 = ppr_gm, gm_2 = nc_gm, col.threshold = 0, two.colors = c("red", "blue"),
+                          negative.color = 'gray90', limit = 30, module_names = c('PPR module', 'NC module'), highlight_cell_size = 2,
+                          show_legend = TRUE)
 graphics.off()
 
+# Plot co-expression no legend
+png(paste0(plot_path, 'HH5_UMAP_coexpression_no_legend.png'), width = 12, height = 12, res = 200, units = 'cm')
+plot_umap_gm_coexpression(coexpression, gm_1 = ppr_gm, gm_2 = nc_gm, col.threshold = 0, two.colors = c("red", "blue"),
+                          negative.color = 'gray90', limit = 30, module_names = c('PPR module', 'NC module'), highlight_cell_size = 2,
+                          show_legend = FALSE)
+graphics.off()
 
 
 
 # HH6
 ############################################
 plot_data = merge(as.data.frame(HH6[["umap"]]@cell.embeddings), HH6@meta.data, by = 0) %>% column_to_rownames('Row.names')
-plot_data <- plot_data %>% mutate(scHelper_cols = ifelse(scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'), scHelper_cell_type_colours[scHelper_cell_type], "gray90"))
+plot_data <- plot_data %>% mutate(scHelper_cols = ifelse(scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'), scHelper_cell_type_colours[as.vector(scHelper_cell_type)], "gray90"))
 
 # subset all one colour on full UMAP
 png(paste0(plot_path, "HH6_subset_full_UMAP.png"), width=12, height=12, units = 'cm', res = 200)
@@ -434,39 +462,39 @@ ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
   theme(legend.position = "none")
 graphics.off()
 
-# Highlight bin 3 on stage subset
-plot_data = subset(plot_data, scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'))
-
+# Highlight bin 3
 plot_data$bin_class <- apply(plot_data %>% rownames_to_column, 1, function(x) if(x["rowname"] %in% bin_sub[[1]]){"a"} else if(x["rowname"] %in% bin_sub[[2]]){"b"} else if(x["rowname"] %in% bin_sub[[3]]){"c"} else {NA})
 
-png(paste0(plot_path, 'HH6_highlight_bins.png'), width = 9, height = 9, res = 200, units = 'cm')
+png(paste0(plot_path, 'HH6_highlight_bin.png'), width = 12, height = 12, res = 200, units = 'cm')
 ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
-  geom_point(colour = 'gray90', size = 1) +
-  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2), colour = viridis::viridis(length(extract_bins))[2]) +
+  geom_point(colour = 'gray90', size = 2) +
+  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2), colour = "blue") +
   theme_void() +
-  NoLegend() +
-  ggtitle('HH6; Bin 3') +
-  theme(plot.title = element_text(hjust = 0.5, colour = viridis::viridis(length(extract_bins))[2], face = 'bold', size = 20))
+  NoLegend()
 graphics.off()
 
-
-# Plot co-expression
-# subset cells from bins
-HH6_coexpression <- subset(HH6, cells = rownames(plot_data))
+# Plot co-expression with legend
+coexpression <- subset(HH6, cells = rownames(plot_data))
 
 png(paste0(plot_path, 'HH6_UMAP_coexpression.png'), width = 14, height = 10, res = 400, units = 'cm')
-plot_umap_gm_coexpression(HH6_coexpression, gm_1 = ppr_gm, gm_2 = nc_gm, col.threshold = 0, two.colors = c("red", "blue"),
-                          negative.color = 'gray90', limit = 30, module_names = c('PPR module', 'NC module'), highlight_cell_size = 1.5)
+plot_umap_gm_coexpression(coexpression, gm_1 = ppr_gm, gm_2 = nc_gm, col.threshold = 0, two.colors = c("red", "blue"),
+                          negative.color = 'gray90', limit = 30, module_names = c('PPR module', 'NC module'), highlight_cell_size = 2,
+                          show_legend = TRUE)
 graphics.off()
 
-
+# Plot co-expression no legend
+png(paste0(plot_path, 'HH6_UMAP_coexpression_no_legend.png'), width = 12, height = 12, res = 200, units = 'cm')
+plot_umap_gm_coexpression(coexpression, gm_1 = ppr_gm, gm_2 = nc_gm, col.threshold = 0, two.colors = c("red", "blue"),
+                          negative.color = 'gray90', limit = 30, module_names = c('PPR module', 'NC module'), highlight_cell_size = 2,
+                          show_legend = FALSE)
+graphics.off()
 
 
 
 # HH7
 ############################################
 plot_data = merge(as.data.frame(HH7[["umap"]]@cell.embeddings), HH7@meta.data, by = 0) %>% column_to_rownames('Row.names')
-plot_data <- plot_data %>% mutate(scHelper_cols = ifelse(scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'), scHelper_cell_type_colours[scHelper_cell_type], "gray90"))
+plot_data <- plot_data %>% mutate(scHelper_cols = ifelse(scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'), scHelper_cell_type_colours[as.vector(scHelper_cell_type)], "gray90"))
 
 # subset all one colour on full UMAP
 png(paste0(plot_path, "HH7_subset_full_UMAP.png"), width=12, height=12, units = 'cm', res = 200)
@@ -498,41 +526,38 @@ ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
 graphics.off()
 
 
-# Highlight bin 3 on stage subset
-plot_data = subset(plot_data, scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'))
-
+# Highlight bin 3
 plot_data$bin_class <- apply(plot_data %>% rownames_to_column, 1, function(x) if(x["rowname"] %in% bin_sub[[1]]){"a"} else if(x["rowname"] %in% bin_sub[[2]]){"b"} else if(x["rowname"] %in% bin_sub[[3]]){"c"} else {NA})
 
-png(paste0(plot_path, 'HH7_highlight_bins.png'), width = 9, height = 9, res = 200, units = 'cm')
+png(paste0(plot_path, 'HH7_highlight_bin.png'), width = 12, height = 12, res = 200, units = 'cm')
 ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
-  geom_point(colour = 'gray90', size = 1) +
-  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2), colour = viridis::viridis(length(extract_bins))[2]) +
+  geom_point(colour = 'gray90', size = 2) +
+  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2), colour = "blue") +
   theme_void() +
-  NoLegend() +
-  ggtitle('HH7; Bin 3') +
-  theme(plot.title = element_text(hjust = 0.5, colour = viridis::viridis(length(extract_bins))[2], face = 'bold', size = 20))
+  NoLegend()
 graphics.off()
 
-
-# Plot co-expression
-# subset cells from bins
-HH7_coexpression <- subset(HH7, cells = rownames(plot_data))
+# Plot co-expression with legend
+coexpression <- subset(HH7, cells = rownames(plot_data))
 
 png(paste0(plot_path, 'HH7_UMAP_coexpression.png'), width = 14, height = 10, res = 400, units = 'cm')
-plot_umap_gm_coexpression(HH7_coexpression, gm_1 = ppr_gm, gm_2 = nc_gm, col.threshold = 0, two.colors = c("red", "blue"),
-                          negative.color = 'gray90', limit = 30, module_names = c('PPR module', 'NC module'), highlight_cell_size = 1.5)
+plot_umap_gm_coexpression(coexpression, gm_1 = ppr_gm, gm_2 = nc_gm, col.threshold = 0, two.colors = c("red", "blue"),
+                          negative.color = 'gray90', limit = 30, module_names = c('PPR module', 'NC module'), highlight_cell_size = 2,
+                          show_legend = TRUE)
 graphics.off()
 
-
-
-
-
+# Plot co-expression no legend
+png(paste0(plot_path, 'HH7_UMAP_coexpression_no_legend.png'), width = 12, height = 12, res = 200, units = 'cm')
+plot_umap_gm_coexpression(coexpression, gm_1 = ppr_gm, gm_2 = nc_gm, col.threshold = 0, two.colors = c("red", "blue"),
+                          negative.color = 'gray90', limit = 30, module_names = c('PPR module', 'NC module'), highlight_cell_size = 2,
+                          show_legend = FALSE)
+graphics.off()
 
 
 # SS4
 ############################################
 plot_data = merge(as.data.frame(ss4[["umap"]]@cell.embeddings), ss4@meta.data, by = 0) %>% column_to_rownames('Row.names')
-plot_data <- plot_data %>% mutate(scHelper_cols = ifelse(scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'), scHelper_cell_type_colours[scHelper_cell_type], "gray90"))
+plot_data <- plot_data %>% mutate(scHelper_cols = ifelse(scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'), scHelper_cell_type_colours[as.vector(scHelper_cell_type)], "gray90"))
 
 # subset all one colour on full UMAP
 png(paste0(plot_path, "ss4_subset_full_UMAP.png"), width=12, height=12, units = 'cm', res = 200)
@@ -564,38 +589,38 @@ ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
 graphics.off()
 
 
-# Highlight bin 3 on stage subset
-plot_data = subset(plot_data, scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'))
-
+# Highlight bin 3
 plot_data$bin_class <- apply(plot_data %>% rownames_to_column, 1, function(x) if(x["rowname"] %in% bin_sub[[1]]){"a"} else if(x["rowname"] %in% bin_sub[[2]]){"b"} else if(x["rowname"] %in% bin_sub[[3]]){"c"} else {NA})
 
-png(paste0(plot_path, 'ss4_highlight_bins.png'), width = 9, height = 9, res = 200, units = 'cm')
+png(paste0(plot_path, 'ss4_highlight_bin.png'), width = 12, height = 12, res = 200, units = 'cm')
 ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
-  geom_point(colour = 'gray90', size = 1) +
-  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2), colour = viridis::viridis(length(extract_bins))[2]) +
+  geom_point(colour = 'gray90', size = 2) +
+  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2), colour = "blue") +
   theme_void() +
-  NoLegend() +
-  ggtitle('SS4; Bin 3') +
-  theme(plot.title = element_text(hjust = 0.5, colour = viridis::viridis(length(extract_bins))[2], face = 'bold', size = 20))
+  NoLegend()
 graphics.off()
 
-
-# Plot co-expression
-# subset cells from bins
-ss4_coexpression <- subset(ss4, cells = rownames(plot_data))
+# Plot co-expression with legend
+coexpression <- subset(ss4, cells = rownames(plot_data))
 
 png(paste0(plot_path, 'ss4_UMAP_coexpression.png'), width = 14, height = 10, res = 400, units = 'cm')
-plot_umap_gm_coexpression(ss4_coexpression, gm_1 = ppr_gm, gm_2 = nc_gm, col.threshold = 0, two.colors = c("red", "blue"),
-                          negative.color = 'gray90', limit = 30, module_names = c('PPR module', 'NC module'), highlight_cell_size = 1.5)
+plot_umap_gm_coexpression(coexpression, gm_1 = ppr_gm, gm_2 = nc_gm, col.threshold = 0, two.colors = c("red", "blue"),
+                          negative.color = 'gray90', limit = 30, module_names = c('PPR module', 'NC module'), highlight_cell_size = 2,
+                          show_legend = TRUE)
 graphics.off()
 
-
+# Plot co-expression no legend
+png(paste0(plot_path, 'ss4_UMAP_coexpression_no_legend.png'), width = 12, height = 12, res = 200, units = 'cm')
+plot_umap_gm_coexpression(coexpression, gm_1 = ppr_gm, gm_2 = nc_gm, col.threshold = 0, two.colors = c("red", "blue"),
+                          negative.color = 'gray90', limit = 30, module_names = c('PPR module', 'NC module'), highlight_cell_size = 2,
+                          show_legend = FALSE)
+graphics.off()
 
 
 # SS8
 ############################################
 plot_data = merge(as.data.frame(ss8[["umap"]]@cell.embeddings), ss8@meta.data, by = 0) %>% column_to_rownames('Row.names')
-plot_data <- plot_data %>% mutate(scHelper_cols = ifelse(scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'), scHelper_cell_type_colours[scHelper_cell_type], "gray90"))
+plot_data <- plot_data %>% mutate(scHelper_cols = ifelse(scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'), scHelper_cell_type_colours[as.vector(scHelper_cell_type)], "gray90"))
 
 # subset all one colour on full UMAP
 png(paste0(plot_path, "ss8_subset_full_UMAP.png"), width=12, height=12, units = 'cm', res = 200)
@@ -627,30 +652,30 @@ ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
 graphics.off()
 
 
-
-# Highlight bin 3 on stage subset
-plot_data = subset(plot_data, scHelper_cell_type %in% c('dNC', 'NC', 'pNPB', 'aNPB', 'aPPR', 'PPR', 'pPPR'))
-
+# Highlight bin 3
 plot_data$bin_class <- apply(plot_data %>% rownames_to_column, 1, function(x) if(x["rowname"] %in% bin_sub[[1]]){"a"} else if(x["rowname"] %in% bin_sub[[2]]){"b"} else if(x["rowname"] %in% bin_sub[[3]]){"c"} else {NA})
 
-png(paste0(plot_path, 'ss8_highlight_bins.png'), width = 9, height = 9, res = 200, units = 'cm')
+png(paste0(plot_path, 'ss8_highlight_bin.png'), width = 12, height = 12, res = 200, units = 'cm')
 ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
-  geom_point(colour = 'gray90', size = 1) +
-  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2), colour = viridis::viridis(length(extract_bins))[2]) +
+  geom_point(colour = 'gray90', size = 2) +
+  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2), colour = "blue") +
   theme_void() +
-  NoLegend() +
-  ggtitle('SS8; Bin 3') +
-  theme(plot.title = element_text(hjust = 0.5, colour = viridis::viridis(length(extract_bins))[2], face = 'bold', size = 20))
+  NoLegend()
 graphics.off()
 
-
-# Plot co-expression
-# subset cells from bins
-ss8_coexpression <- subset(ss8, cells = rownames(plot_data))
+# Plot co-expression with legend
+coexpression <- subset(ss8, cells = rownames(plot_data))
 
 png(paste0(plot_path, 'ss8_UMAP_coexpression.png'), width = 14, height = 10, res = 400, units = 'cm')
-plot_umap_gm_coexpression(ss8_coexpression, gm_1 = ppr_gm, gm_2 = nc_gm, col.threshold = 0, two.colors = c("red", "blue"),
-                          negative.color = 'gray90', limit = 30, module_names = c('PPR module', 'NC module'), highlight_cell_size = 1.5)
+plot_umap_gm_coexpression(coexpression, gm_1 = ppr_gm, gm_2 = nc_gm, col.threshold = 0, two.colors = c("red", "blue"),
+                          negative.color = 'gray90', limit = 30, module_names = c('PPR module', 'NC module'), highlight_cell_size = 2,
+                          show_legend = TRUE)
 graphics.off()
 
+# Plot co-expression no legend
+png(paste0(plot_path, 'ss8_UMAP_coexpression_no_legend.png'), width = 12, height = 12, res = 200, units = 'cm')
+plot_umap_gm_coexpression(coexpression, gm_1 = ppr_gm, gm_2 = nc_gm, col.threshold = 0, two.colors = c("red", "blue"),
+                          negative.color = 'gray90', limit = 30, module_names = c('PPR module', 'NC module'), highlight_cell_size = 2,
+                          show_legend = FALSE)
+graphics.off()
 
