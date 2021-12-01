@@ -150,7 +150,7 @@ coexpression = function(seurat_object, gms, order_1 = 1, order_2 = length(gms), 
       scale_fill_manual(values = alpha(c("gray20", "gray80"), alpha = 0.07)) +
       new_scale_color() +
       geom_rect(data = bin_plot_data, inherit.aes = FALSE, aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf, colour = as.factor(bin)), fill=NA, show.legend = F) +
-      scale_colour_manual(values = c("red", "blue", "yellow"))
+      scale_colour_manual(values = c("#FDE725FF", "#440154FF", "#21908CFF"))
   }
   
   return(p1)
@@ -309,11 +309,11 @@ graphics.off()
 for(i in 1:length(extract_bins)){
   png(paste0(plot_path, 'bin_', extract_bins[[i]], '.png'), width = 10, height = 10, res = 200, units = 'cm')
   print(DimPlot(object = subset, cells.highlight = extract_bin(subset, gm_1 = ppr_gm, gm_2 = nc_gm, meta_data = c('scHelper_cell_type'), bin_number = bin_number, bin_extract = extract_bins[[i]]), 
-                cols.highlight = c("red", "blue", "yellow")[i]) +
+                cols.highlight = c("#FDE725FF", "#440154FF", "#21908CFF")[i]) +
           theme_void() +
           NoLegend() +
           ggtitle(paste0('Bin ', extract_bins[[i]])) +
-          theme(plot.title = element_text(hjust = 0.5, colour = c("red", "blue", "yellow")[i], face = 'bold', size = 20)))
+          theme(plot.title = element_text(hjust = 0.5, colour = c("#FDE725FF", "#440154FF", "#21908CFF")[i], face = 'bold', size = 20)))
   graphics.off()
 }
 
@@ -405,7 +405,7 @@ plot_data$bin_class <- apply(plot_data %>% rownames_to_column, 1, function(x) if
 png(paste0(plot_path, 'HH5_highlight_bin.png'), width = 12, height = 12, res = 200, units = 'cm')
 ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
   geom_point(colour = 'gray90', size = 2) +
-  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2), colour = "blue") +
+  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2), colour = "440154FF") +
   theme_void() +
   NoLegend()
 graphics.off()
@@ -468,7 +468,7 @@ plot_data$bin_class <- apply(plot_data %>% rownames_to_column, 1, function(x) if
 png(paste0(plot_path, 'HH6_highlight_bin.png'), width = 12, height = 12, res = 200, units = 'cm')
 ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
   geom_point(colour = 'gray90', size = 2) +
-  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2), colour = "blue") +
+  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2), colour = "440154FF") +
   theme_void() +
   NoLegend()
 graphics.off()
@@ -532,7 +532,7 @@ plot_data$bin_class <- apply(plot_data %>% rownames_to_column, 1, function(x) if
 png(paste0(plot_path, 'HH7_highlight_bin.png'), width = 12, height = 12, res = 200, units = 'cm')
 ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
   geom_point(colour = 'gray90', size = 2) +
-  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2), colour = "blue") +
+  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2), colour = "440154FF") +
   theme_void() +
   NoLegend()
 graphics.off()
@@ -595,7 +595,7 @@ plot_data$bin_class <- apply(plot_data %>% rownames_to_column, 1, function(x) if
 png(paste0(plot_path, 'ss4_highlight_bin.png'), width = 12, height = 12, res = 200, units = 'cm')
 ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
   geom_point(colour = 'gray90', size = 2) +
-  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2), colour = "blue") +
+  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2), colour = "440154FF") +
   theme_void() +
   NoLegend()
 graphics.off()
@@ -658,7 +658,7 @@ plot_data$bin_class <- apply(plot_data %>% rownames_to_column, 1, function(x) if
 png(paste0(plot_path, 'ss8_highlight_bin.png'), width = 12, height = 12, res = 200, units = 'cm')
 ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
   geom_point(colour = 'gray90', size = 2) +
-  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2), colour = "blue") +
+  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2), colour = "440154FF") +
   theme_void() +
   NoLegend()
 graphics.off()
