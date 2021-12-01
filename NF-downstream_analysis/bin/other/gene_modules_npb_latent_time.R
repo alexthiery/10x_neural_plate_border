@@ -121,6 +121,42 @@ GeneModulePheatmap <- function (seurat_obj, metadata, col_order = metadata[1], c
   
 }
 
+calc_latent_time_cutoff <- function(latent_time, lineage_probability, top_frac = 0.2, return = 'intercept'){
+  data = data.frame(latent_time, lineage_probability)
+  
+  model_data <- data %>%
+    filter(lineage_probability > 0 & lineage_probability < 1) %>%
+    filter(lineage_probability > quantile(lineage_probability, 1-top_frac)) %>%
+    # If cells remaining in top frac have less than 0.5 probability of giving rise to the lineage then remove (required for short lineages)
+    filter(lineage_probability > 0.5)
+  
+  # Fit model to top frac of data
+  fit = lm(lineage_probability ~ latent_time, data = model_data)
+  
+  # Inverse equation to find X for Y = 1
+  x <- (1-coef(fit)[1])/coef(fit)[2]
+  
+  # Identify max latent time value based on cells which have reached lineage probability == 1
+  max_latent_time <- data %>% filter(lineage_probability == 1) %>% filter(latent_time == max(latent_time)) %>% dplyr::pull(latent_time)
+  
+  if(return == 'plot'){
+    p = ggplot(data, aes(latent_time, lineage_probability)) + 
+      geom_point(size = 0.1) +
+      geom_abline(intercept = coef(fit)[1], slope = coef(fit)[2])
+    
+    return(p)
+  }else if(return == 'intercept'){
+    if(x > max_latent_time){
+      cat('Predicted latent time is later than any cell observed that has reached full lineage absorbtion. Max latent time is set based on oldest cell at lineage_probability == 1')
+      return(max_latent_time)
+    }else{
+      return(unname(x))
+    }
+}else{
+    stop('return must be one of intercept or plot')
+  }
+}
+
 
 # Define arguments for Rscript
 library(getopt)
@@ -265,41 +301,7 @@ graphics.off()
 
 
 
-
-
-
-
-
-
-
-
 ################## Calculate maximum latent time values ################## 
-calc_latent_time_cutoff <- function(latent_time, lineage_probability, top_frac = 0.3, return = 'intercept'){
-  data = data.frame(latent_time, lineage_probability)
-  
-  model_data <- data %>%
-    filter(lineage_probability > 0 & lineage_probability < 1) %>%
-    filter(lineage_probability > quantile(lineage_probability, 1-top_frac))
-  
-  # Fit model to top 20% of data
-  fit = lm(lineage_probability ~ latent_time, data = model_data)
-  
-  # Inverse equation to find X for Y = 1
-  x <- (1-coef(fit)[1])/coef(fit)[2]
-  
-  if(return == 'plot'){
-    p = ggplot(data, aes(latent_time, lineage_probability)) + 
-      geom_point(size = 0.1) +
-      geom_abline(intercept = coef(fit)[1], slope = coef(fit)[2])
-    
-    return(p)
-  }else if(return == 'intercept'){
-    return(unname(x))
-  }else{
-    stop('return must be one of intercept or plot')
-  }
-}
-
 png(paste0(plot_path, 'max_NC_latent_time.png'), width = 15, height = 10, res = 200, units = 'cm')
 calc_latent_time_cutoff(latent_time = seurat_data@meta.data[['latent_time']],
                         lineage_probability = seurat_data@meta.data[['lineage_NC_probability']],
@@ -321,8 +323,6 @@ max_placodal <- calc_latent_time_cutoff(latent_time = seurat_data@meta.data[['la
 lineage_expression_data <- data.frame()
 for(module in names(gms)){
   temp <- GetAssayData(seurat_data, assay = 'RNA', slot = 'scale.data')[gms[[module]],]
-  
-  # temp <- t(scale(t(temp)))
   
   temp <- merge(t(temp), seurat_data@meta.data[,c('latent_time', 'lineage_NC_probability', 'lineage_placodal_probability'), drop=FALSE], by=0)
   lineage_expression_data <- temp %>%
