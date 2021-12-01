@@ -273,12 +273,13 @@ graphics.off()
 
 
 
-calc_latent_time_cutoff <- function(latent_time, lineage_probability, return = 'intercept'){
+################## Calculate maximum latent time values ################## 
+calc_latent_time_cutoff <- function(latent_time, lineage_probability, top_frac = 0.3, return = 'intercept'){
   data = data.frame(latent_time, lineage_probability)
   
   model_data <- data %>%
     filter(lineage_probability > 0 & lineage_probability < 1) %>%
-    filter(lineage_probability > quantile(lineage_probability, .8))
+    filter(lineage_probability > quantile(lineage_probability, 1-top_frac))
   
   # Fit model to top 20% of data
   fit = lm(lineage_probability ~ latent_time, data = model_data)
@@ -299,11 +300,21 @@ calc_latent_time_cutoff <- function(latent_time, lineage_probability, return = '
   }
 }
 
+png(paste0(plot_path, 'max_NC_latent_time.png'), width = 15, height = 10, res = 200, units = 'cm')
+calc_latent_time_cutoff(latent_time = seurat_data@meta.data[['latent_time']],
+                        lineage_probability = seurat_data@meta.data[['lineage_NC_probability']],
+                        return = 'plot')
+graphics.off()
 
+png(paste0(plot_path, 'max_placodal_latent_time.png'), width = 15, height = 10, res = 200, units = 'cm')
+calc_latent_time_cutoff(latent_time = seurat_data@meta.data[['latent_time']],
+                        lineage_probability = seurat_data@meta.data[['lineage_placodal_probability']],
+                        return = 'plot')
+graphics.off()
 
-# Calculate maximum latent time values
 max_NC <- calc_latent_time_cutoff(latent_time = seurat_data@meta.data[['latent_time']], lineage_probability = seurat_data@meta.data[['lineage_NC_probability']])
 max_placodal <- calc_latent_time_cutoff(latent_time = seurat_data@meta.data[['latent_time']], lineage_probability = seurat_data@meta.data[['lineage_placodal_probability']])
+
 
 
 # Iteratively get expression data for each gene module and bind to tidy dataframe
