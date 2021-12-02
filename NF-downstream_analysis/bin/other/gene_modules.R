@@ -383,12 +383,6 @@ if (!is.null(metadata_1)){
                                                                    plot_path = "scHelper_log/GM_classification/unbiasedGMs/")
 }
 
-# OLD
-# png(paste0(plot_path, 'unbiasedGMs.png'), height = 150, width = 75, units = 'cm', res = 400)
-# GeneModulePheatmap(seurat_obj = seurat_data, metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs$content,
-#                    show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15)
-# graphics.off()
-
 # if stage not present in metadata, add it here so all heatmaps have the stage annotation
 if (!("stage" %in% metadata)){
   metadata <- c("stage", metadata)}
@@ -400,7 +394,7 @@ plot_data <- GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, 
 plot_data$ann_colours$scHelper_cell_type <- scHelper_cell_type_colours[names(plot_data$ann_colours$scHelper_cell_type)]
 plot_data$ann_colours$stage <- stage_colours[names(plot_data$ann_colours$stage)]
 
-# plot complex heatmap
+# Set annotations for heatmap
 if (!is.null(plot_data$ann_colours$run)){
   if(length(plot_data$ann_colours$stage) > 1){
     top_annotation <- HeatmapAnnotation(stage = anno_block(gp = gpar(fill = plot_data$ann_colours$stage),
@@ -469,23 +463,6 @@ plot_data <- GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, 
 plot_data$ann_colours$scHelper_cell_type <- scHelper_cell_type_colours[names(plot_data$ann_colours$scHelper_cell_type)]
 plot_data$ann_colours$stage <- stage_colours[names(plot_data$ann_colours$stage)]
 
-# plot complex heatmap
-if (!is.null(plot_data$ann_colours$run)){
-  if(length(plot_data$ann_colours$stage) > 1){
-    top_annotation <- HeatmapAnnotation(stage = anno_block(gp = gpar(fill = plot_data$ann_colours$stage),
-                                                           labels = levels(plot_data$col_ann$stage),
-                                                           labels_gp = gpar(col = "white", fontsize = 50, fontface='bold')),
-                                        run = anno_simple(x = as.character(plot_data$col_ann$run),
-                                                          col = plot_data$ann_colours$run, height = unit(1, "cm")),
-                                        simple_anno_size = unit(1, "cm"),
-                                        annotation_label = "Run", gp = gpar(fontsize = 35))}
-  else {top_annotation <- HeatmapAnnotation(run = anno_simple(x = as.character(plot_data$col_ann$run),
-                                                              col = plot_data$ann_colours$run, height = unit(1, "cm")),
-                                            simple_anno_size = unit(1, "cm"),
-                                            annotation_label = "Run", gp = gpar(fontsize = 35))}}else{
-  top_annotation = NULL
-}
-
 png(paste0(plot_path, 'unbiasedGMs_DE.png'), height = 150, width = 100, units = 'cm', res = 400)
 Heatmap(t(plot_data$plot_data), col = PurpleAndYellow(), cluster_columns = FALSE, cluster_rows = FALSE,
               show_column_names = FALSE, column_title = NULL, show_row_names = FALSE, row_title_gp = gpar(fontsize = 45), row_title_rot = 0,
@@ -546,20 +523,7 @@ if(length(unique(seurat_data$run)) > 1){
   plot_data$ann_colours$scHelper_cell_type <- scHelper_cell_type_colours[names(plot_data$ann_colours$scHelper_cell_type)]
   plot_data$ann_colours$stage <- stage_colours[names(plot_data$ann_colours$stage)]
   
-  # plot complex heatmap
-  if(length(plot_data$ann_colours$stage) > 1){
-      top_annotation <- HeatmapAnnotation(stage = anno_block(gp = gpar(fill = plot_data$ann_colours$stage),
-                                                             labels = levels(plot_data$col_ann$stage),
-                                                             labels_gp = gpar(col = "white", fontsize = 50, fontface='bold')),
-                                          run = anno_simple(x = as.character(plot_data$col_ann$run),
-                                                            col = plot_data$ann_colours$run, height = unit(1, "cm")),
-                                          simple_anno_size = unit(1, "cm"),
-                                          annotation_label = "Run", gp = gpar(fontsize = 35))}
-    else {top_annotation <- HeatmapAnnotation(run = anno_simple(x = as.character(plot_data$col_ann$run),
-                                                                col = plot_data$ann_colours$run, height = unit(1, "cm")),
-                                              simple_anno_size = unit(1, "cm"),
-                                              annotation_label = "Run", gp = gpar(fontsize = 35))}}
-  
+  # plot complex heatmap  
   png(paste0(plot_path, 'unbiasedGMs_DE_batchfilt.png'), height = 150, width = 100, units = 'cm', res = 400)
   print(Heatmap(t(plot_data$plot_data), col = PurpleAndYellow(), cluster_columns = FALSE, cluster_rows = FALSE,
           show_column_names = FALSE, column_title = NULL, show_row_names = FALSE, row_title_gp = gpar(fontsize = 45), row_title_rot = 0,
@@ -609,19 +573,6 @@ if(length(unique(seurat_data$run)) > 1){
           raster_quality = 8
   ))
   graphics.off()
-  
-  # # Plot heatmaps
-  # png(paste0(plot_path, 'unbiasedGMs_DE_batchfilt_rownames.png'), height = min(c(150, round(ngene/3))), width = 75, units = 'cm', res = 400)
-  # GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content,
-  #                    show_rownames = TRUE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
-  # graphics.off()
-  # 
-  # png(paste0(plot_path, 'unbiasedGMs_DE_batchfilt.png'), height = min(c(150, ifelse(round(ngene/8) < 20, 20, round(ngene/8)))), width = 60, units = 'cm', res = 400)
-  # GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content,
-  #                    show_rownames = FALSE, col_order = metadata, col_ann_order = metadata, gaps_col = ifelse('stage' %in% metadata, 'stage', meta_col), fontsize = 15, fontsize_row = 10)
-  # graphics.off()
-}
-
 
 ########## Write GMs ##############
 export_antler_modules <- function(antler_object, publish_dir, names_list){
