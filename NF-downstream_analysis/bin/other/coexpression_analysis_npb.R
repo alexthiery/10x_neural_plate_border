@@ -275,7 +275,7 @@ HH6 <- readRDS(list.files(data_path, pattern = "^HH6", full.names = TRUE))
 HH7 <- readRDS(list.files(data_path, pattern = "^HH7", full.names = TRUE))
 ss4 <- readRDS(list.files(data_path, pattern = "^ss4", full.names = TRUE))
 ss8 <- readRDS(list.files(data_path, pattern = "^ss8", full.names = TRUE))
-subset <- readRDS(list.files(data_path, pattern = "^transfer_ppr_nc_subset", full.names = TRUE))
+subset <- readRDS(list.files(data_path, pattern = "^transfer_clustered_data", full.names = TRUE))
 
 # seurat_data <- readRDS(list.files(data_path, pattern = "*.RDS", full.names = TRUE)[!list.files(data_path, pattern = "*.RDS") %>% grepl('antler', .)])
 # seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/transfer_labels/seurat/rds_files/seurat_label_transfer.RDS')
