@@ -197,6 +197,7 @@ workflow {
     
     ch_ss8_gms                      = SEURAT_STAGE_PROCESS.out
                                         .gene_modules_out
+                                        .view()
                                         .filter{ it[0].sample_id == 'ss8' }
                                         .map{it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]}
 
