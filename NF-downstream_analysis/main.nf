@@ -192,12 +192,13 @@ workflow {
     // Set up channels for running co-expression analysis on npb subset //[[meta], ['HH5.rds', 'HH6.rds' … 'ss8.rds', 'npb_subset.rds', 'ss8_antler.rds']]
     ch_stage_data                   = SEURAT_STAGE_PROCESS.out
                                         .state_classification_out
-                                        .map{it[1].findAll{it =~ /rds/}} // it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]
+                                        .map{it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]} // it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]
                                         .collect()
                                         .view()
     
     ch_ss8_gms                      = SEURAT_TRANSFER_FULL_PROCESS.out
                                         .gene_modules_out
+                                        .view()
                                         .filter{ it[0].sample_id == 'ss8' }
                                         .map{it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]}
                                         .view()
