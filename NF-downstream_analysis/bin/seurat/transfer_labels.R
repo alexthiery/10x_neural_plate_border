@@ -60,10 +60,6 @@ seurat_data <- readRDS(full_data)
 
 seurat_data@meta.data[[opt$group_by]] <- cell_states[match(rownames(seurat_data@meta.data), rownames(cell_states)), ]
 
-# Plot QC for each cluster
-png(paste0(plot_path, "scHelper_celltype_umap2.png"), width=20, height=20, units = 'cm', res = 200)
-DimPlot(seurat_data, group.by = opt$group_by, label = TRUE, label.size = 3, label.box = TRUE) + ggplot2::theme(legend.position = "none")
-graphics.off()
 
 #####################   Set levels
 seurat_data@meta.data$scHelper_cell_type <- factor(seurat_data@meta.data$scHelper_cell_type, levels = scHelper_cell_type_order)
@@ -79,15 +75,16 @@ DimPlot(seurat_data, group.by = 'scHelper_cell_type', label = FALSE,
         pt.size = 0.9, cols = scHelper_cols, shuffle = TRUE) +
     ggplot2::theme_void() +
     ggplot2::theme(plot.title = element_blank(),
-                   legend.key.size = unit(1.5, 'cm'), #change legend key size
+                   legend.key.size = unit(3,"line"), #change legend key size
                    legend.key.height = unit(1, 'cm'), #change legend key height
                    legend.key.width = unit(1, 'cm'), #change legend key width
-                   legend.text = element_text(size=20))
+                   legend.text = element_text(size=24)) +  
+    guides(color = guide_legend(override.aes = list(size=8)))
 graphics.off()
 
 ################ DimPlot of stages
 png(paste0(plot_path, "stage_umap.png"), width=20, height=20, units = 'cm', res = 200)
-DimPlot(seurat_data, group.by = 'stage', label = TRUE, label.size = 8, 
+DimPlot(seurat_data, group.by = 'stage', label = TRUE, label.size = 12, 
         label.box = TRUE, repel = TRUE,
         pt.size = 0.9, cols = stage_cols, shuffle = TRUE) +
     ggplot2::theme_void() +
