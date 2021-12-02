@@ -194,15 +194,18 @@ workflow {
                                         .state_classification_out
                                         .map{it[1].findAll{it =~ /rds/}} // it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]
                                         .collect()
+                                        .view()
     
     ch_ss8_gms                      = SEURAT_TRANSFER_FULL_PROCESS.out
                                         .gene_modules_out
                                         .filter{ it[0].sample_id == 'ss8' }
                                         .map{it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]}
+                                        .view()
 
     ch_coexpression_analysis_npb    = ch_ss8_gms
                                         .combine(ch_stage_data)
                                         .combine(ch_seurat_npb_subset)
+                                        .view()
                                         .map{[[sample_id:'coexpression_analysis_npb'], it]}
 
 
