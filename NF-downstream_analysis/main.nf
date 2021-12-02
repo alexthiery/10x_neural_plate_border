@@ -203,7 +203,6 @@ workflow {
     ch_coexpression_analysis_npb    = ch_ss8_gms
                                         .combine(ch_stage_data)
                                         .combine(ch_seurat_npb_subset)
-                                        .view()
                                         .map{[[sample_id:'coexpression_analysis_npb'], it]}
 
 
