@@ -337,6 +337,65 @@ for(module in names(gms)){
     ungroup()
 }
 
+
+########## Generate a GAM per lineage per gene for plotting ##########
+
+# GAMs
+gams <- lineage_expression_data %>%
+  group_by(gene, lineage) %>%
+  do(gams = gam(scaled_expression ~ s(latent_time, bs = "cs", k=5), weights = lineage_probability, data = .))
+
+
+# Add module column and max latent time to gam data
+extra_dat <- lineage_expression_data %>%
+  mutate(max_latent_time = ifelse(lineage == 'NC', max_NC, ifelse(lineage == 'placodal', max_placodal, max_neural))) %>%
+  group_by(lineage) %>%
+  filter(latent_time < max_latent_time) %>%
+  ungroup() %>%
+  dplyr::select(gene, lineage, module, max_latent_time) %>%
+  distinct() %>%
+  arrange(gene) 
+
+
+gams <- inner_join(gams, extra_dat)
+
+# Generate predicted values for each gam in tidy df -> output in long format
+plot_data <- data.frame()
+for(row in 1:nrow(gams)){
+  # Generate latent time values to predict gams on -> use max latent_time calculated per lineage
+  pdat <- tibble(latent_time = seq(0, gams[[row, 'max_latent_time']], length = 100))
+  new_data <- predict.gam(gams[[row,'gams']][[1]], newdata = pdat, se=TRUE)
+  plot_data <- rbind(plot_data, data.frame(gene = gams[[row, 'gene']],
+                                           lineage = gams[[row, 'lineage']],
+                                           module = gams[[row, 'module']],
+                                           scaled_expression = new_data[['fit']],
+                                           se = new_data[['se.fit']],
+                                           pdat))
+}
+
+# Generate a split list per gene for plotting
+plot_data <- plot_data %>% group_split(gene)
+
+# Plot module dynamics for every gene in every module
+for(gene in plot_data){
+  gene_id <- unique(gene$gene)
+  module <- unique(gene$module)
+  
+  curr_plot_path <- paste0(plot_path, 'gene_lineage_dynamics/', module, '/')
+  dir.create(curr_plot_path, recursive = TRUE, showWarnings = FALSE)
+  
+  p = ggplot(gene, aes(x = latent_time, y = scaled_expression, colour = lineage, fill = lineage)) +
+    geom_line(size = 1) +
+    geom_ribbon(aes(ymin=scaled_expression-se, ymax=scaled_expression+se), alpha = .3, colour = NA) +
+    scale_colour_manual(values=lineage_colours) +
+    scale_fill_manual(values=lineage_colours) +
+    theme_classic()
+  
+  png(paste0(curr_plot_path, gene_id, '.png'), width = 18, height = 12, res = 200, units = 'cm')
+  print(p)
+  graphics.off()
+}
+
 ########## Generate a GAM per lineage per module for plotting ##########
 
 # GAMs
@@ -371,7 +430,6 @@ for(row in 1:nrow(gams)){
 
 # Plot module dynamics for every module
 curr_plot_path <- paste0(plot_path, 'gm_lineage_dynamics/')
-dir.create(curr_plot_path)
 
 for(gene in plot_data %>% group_split(module)){
   module <- unique(gene$module)
