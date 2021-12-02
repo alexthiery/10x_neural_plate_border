@@ -401,7 +401,6 @@ plot_data$ann_colours$scHelper_cell_type <- scHelper_cell_type_colours[names(plo
 plot_data$ann_colours$stage <- stage_colours[names(plot_data$ann_colours$stage)]
 
 # plot complex heatmap
-# plot complex heatmap
 if (!is.null(plot_data$ann_colours$run)){
   if(length(plot_data$ann_colours$stage) > 1){
     top_annotation <- HeatmapAnnotation(stage = anno_block(gp = gpar(fill = plot_data$ann_colours$stage),
@@ -410,18 +409,25 @@ if (!is.null(plot_data$ann_colours$run)){
                                         run = anno_simple(x = as.character(plot_data$col_ann$run),
                                                           col = plot_data$ann_colours$run, height = unit(1, "cm")),
                                         simple_anno_size = unit(1, "cm"),
-                                        annotation_label = "Run", gp = gpar(fontsize = 35))}
-  else {top_annotation <- HeatmapAnnotation(run = anno_simple(x = as.character(plot_data$col_ann$run),
-                                                              col = plot_data$ann_colours$run, height = unit(1, "cm")),
-                                            simple_anno_size = unit(1, "cm"),
-                                            annotation_label = "Run", gp = gpar(fontsize = 35))}}else{
-                                              top_annotation = NULL
-                                            }
+                                        annotation_label = "Run", gp = gpar(fontsize = 35))
+  } else {
+    top_annotation <- HeatmapAnnotation(run = anno_simple(x = as.character(plot_data$col_ann$run),
+                                        col = plot_data$ann_colours$run, height = unit(1, "cm")),
+                                        simple_anno_size = unit(1, "cm"),
+                                        annotation_label = "Run", gp = gpar(fontsize = 35))
+  }
+} else {
+  top_annotation = NULL
+}
 
 png(paste0(plot_path, 'unbiasedGMs.png'), height = 150, width = 100, units = 'cm', res = 400)
 Heatmap(t(plot_data$plot_data), col = PurpleAndYellow(), cluster_columns = FALSE, cluster_rows = FALSE,
         show_column_names = FALSE, column_title = NULL, show_row_names = FALSE, row_title_gp = gpar(fontsize = 45), row_title_rot = 0,
-        row_split = plot_data$row_ann$`Gene Modules`, column_split = if(length(plot_data$ann_colours$stage) > 1){plot_data$col_ann$stage}else{plot_data$col_ann$scHelper_cell_type},
+        row_split = plot_data$row_ann$`Gene Modules`, column_split = if(length(plot_data$ann_colours$stage) > 1){
+          plot_data$col_ann$stage
+          }else{
+            plot_data$col_ann$scHelper_cell_type
+            },
         heatmap_legend_param = list(
           title = "Scaled expression", at = c(-2, 0, 2), 
           labels = c(-2, 0, 2),
