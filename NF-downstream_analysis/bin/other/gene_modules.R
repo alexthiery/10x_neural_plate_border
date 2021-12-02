@@ -573,6 +573,7 @@ if(length(unique(seurat_data$run)) > 1){
           raster_quality = 8
   ))
   graphics.off()
+}
 
 ########## Write GMs ##############
 export_antler_modules <- function(antler_object, publish_dir, names_list){
