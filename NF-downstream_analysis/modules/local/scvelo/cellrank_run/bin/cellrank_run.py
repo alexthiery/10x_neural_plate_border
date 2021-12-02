@@ -67,16 +67,16 @@ def allDataTerminalStates(adata, estimator):
     cr.pl.terminal_states(adata, save='terminal_states.pdf')
     return(estimator)
 
-def transferLabelTerminalStates(adata, estimator):
-    estimator.set_terminal_states({"neural": adata[adata.obs["scHelper_cell_type"].isin(['HB', 'MB', "FB"]) & adata.obs["stage"].isin(['ss8', 'ss4'])].obs_names,
-                  "NC": adata[adata.obs["scHelper_cell_type"].isin(['dNC', 'NC']) & adata.obs["stage"].isin(['ss8', 'ss4'])].obs_names,
-                  "placodal": adata[adata.obs["scHelper_cell_type"].isin(['aPPR', 'pPPR', 'PPR']) & adata.obs["stage"].isin(['ss8', 'ss4'])].obs_names})
-    cr.pl.terminal_states(adata, save='terminal_states.pdf')
-    return(estimator)
+# def transferLabelTerminalStates(adata, estimator):
+#     estimator.set_terminal_states({"neural": adata[adata.obs["scHelper_cell_type"].isin(['HB', 'MB', "FB"]) & adata.obs["stage"].isin(['ss8', 'ss4'])].obs_names,
+#                   "NC": adata[adata.obs["scHelper_cell_type"].isin(['dNC', 'NC']) & adata.obs["stage"].isin(['ss8', 'ss4'])].obs_names,
+#                   "placodal": adata[adata.obs["scHelper_cell_type"].isin(['aPPR', 'pPPR', 'PPR']) & adata.obs["stage"].isin(['ss8', 'ss4'])].obs_names})
+#     cr.pl.terminal_states(adata, save='terminal_states.pdf')
+#     return(estimator)
 
-def transferLabelTerminalStates2(adata, estimator):
+def transferLabelTerminalStates(adata, estimator):
     estimator.set_terminal_states({"neural": adata[adata.obs["scHelper_cell_type"].isin(['HB', 'MB', "FB"]) & adata.obs["stage"].isin(['ss8'])].obs_names,
-                  "NC": adata[adata.obs["scHelper_cell_type"].isin(['dNC']) & adata.obs["stage"].isin(['ss8', 'ss4'])].obs_names,
+                  "NC": adata[adata.obs["scHelper_cell_type"].isin(['dNC']) & adata.obs["stage"].isin(['ss8'])].obs_names,
                   "placodal": adata[adata.obs["scHelper_cell_type"].isin(['aPPR', 'pPPR', 'PPR']) & adata.obs["stage"].isin(['ss8'])].obs_names})
     cr.pl.terminal_states(adata, save='terminal_states.pdf')
     return(estimator)
@@ -131,10 +131,6 @@ def main(args=None):
         g = allDataTerminalStates(adata, g)
     elif args.dataType == 'labelTransfer':
         g = transferLabelTerminalStates(adata, g)
-    elif args.dataType == 'labelTransfer2':
-        g = transferLabelTerminalStates2(adata, g)
-    elif args.dataType == 'refined':
-        g = refinedTerminalStates(adata, g)
     elif args.dataType == 'ppr_nc':
         g = terminalStates_ppr_nc(adata, g)
         
