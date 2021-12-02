@@ -385,11 +385,19 @@ for(gene in plot_data){
   dir.create(curr_plot_path, recursive = TRUE, showWarnings = FALSE)
   
   p = ggplot(gene, aes(x = latent_time, y = scaled_expression, colour = lineage, fill = lineage)) +
-    geom_line(size = 1) +
+    geom_line(size = 2) +
     geom_ribbon(aes(ymin=scaled_expression-se, ymax=scaled_expression+se), alpha = .3, colour = NA) +
     scale_colour_manual(values=lineage_colours) +
     scale_fill_manual(values=lineage_colours) +
-    theme_classic()
+  labs(x = "Latent time", y = "Scaled Expression") +
+    theme_classic() +
+    theme(legend.key.size = unit(1,"cm"), 
+          legend.title = element_blank(),
+          axis.text.x = element_text(size = 20),
+          axis.text.y = element_text(size = 20),  
+          axis.title.x = element_text(size = 24),
+          axis.title.y = element_text(size = 24),
+          legend.text=element_text(size=20))
   
   png(paste0(curr_plot_path, gene_id, '.png'), width = 18, height = 12, res = 200, units = 'cm')
   print(p)
@@ -434,11 +442,19 @@ curr_plot_path <- paste0(plot_path, 'gm_lineage_dynamics/')
 for(gene in plot_data %>% group_split(module)){
   module <- unique(gene$module)
   p = ggplot(gene, aes(x = latent_time, y = scaled_expression, colour = lineage, fill = lineage)) +
-    geom_line(size = 1) +
+    geom_line(size = 2) +
     geom_ribbon(aes(ymin=scaled_expression-se, ymax=scaled_expression+se), alpha = .3, colour = NA) +
     scale_colour_manual(values=lineage_colours) +
     scale_fill_manual(values=lineage_colours) +
-    theme_classic()
+  labs(x = "Latent time", y = "Scaled Expression") +
+    theme_classic() +
+    theme(legend.key.size = unit(1,"cm"), 
+          legend.title = element_blank(),
+          axis.text.x = element_text(size = 20),
+          axis.text.y = element_text(size = 20),  
+          axis.title.x = element_text(size = 24),
+          axis.title.y = element_text(size = 24),
+          legend.text=element_text(size=20))
   
   png(paste0(curr_plot_path, module, '.png'), width = 18, height = 12, res = 200, units = 'cm')
   print(p)
