@@ -453,9 +453,13 @@ for(module in names(gms)){
   seurat_data@meta.data[[module]] <-  colMeans(GetAssayData(seurat_data, assay = 'RNA', slot = 'scale.data')[gms[[module]],])
   
   png(paste0(curr_plot_path, module, '_feature_plot.png'), width = 15, height = 15, units='cm', res=200)
-  print(FeaturePlot(seurat_data, features = module, pt.size = 1) +
-          theme_void() +
-          theme(plot.title = element_text(hjust = 0.5, face = 'bold', size = 20))) 
+  print(
+    FeaturePlot(seurat_data, features = module, pt.size = 1.4) +
+      theme_void() +
+      theme(plot.title = element_blank(),
+        legend.text = element_text(size=16),
+        legend.key.size = unit(1.5, 'cm'))
+          ) 
   graphics.off()
 }
 
