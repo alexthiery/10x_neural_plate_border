@@ -114,7 +114,7 @@ def plot_velocity(adata, clusterColumn, threshold=.1, arrow_length=5, arrow_size
     scv.settings.figdir = scv.settings.figdir+plot_dir
     scv.pl.velocity_embedding(adata, color=clusterColumn, arrow_length=arrow_length, arrow_size=arrow_size, save=prefix+'velocity_embedding.png', dpi=dpi)
     scv.pl.velocity_embedding_grid(adata, color=clusterColumn, arrow_length=arrow_length, arrow_size=arrow_size, basis='umap', save=prefix+'velocity_embedding_grid.png', dpi=dpi)
-    scv.pl.velocity_embedding_stream(adata, color=clusterColumn, basis='umap', save=prefix+'velocity_embedding_stream.png', dpi=dpi)
+    scv.pl.velocity_embedding_stream(adata, color=clusterColumn, basis='umap', save=prefix+'velocity_embedding_stream.png', figsize=[12,12], legend_loc='none', dpi=dpi)
     scv.pl.velocity_graph(adata, threshold=threshold, color=clusterColumn, basis='umap', save=prefix+'velocity_graph.png', dpi=dpi)
     scv.settings.figdir = keep_figdir
     
