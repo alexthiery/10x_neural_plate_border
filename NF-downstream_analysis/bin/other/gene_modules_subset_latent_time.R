@@ -192,7 +192,7 @@ dir.create(rds_path, recursive = T)
 
 
 # Params
-lineage_colours = c('placodal' = '#DE4D00', 'NC' = '#10E0E8', 'neural' = '#8000FF')
+lineage_colours = c('placodal' = '#3F918C', 'NC' = '#DE4D0', 'neural' = '#8000FF')
 
 metadata <- read.csv(list.files(data_path, pattern = "*.csv", full.names = TRUE))
 # metadata <- read.csv('./output/NF-downstream_analysis_stacas/transfer_labels/cellrank1/all_stages_filtered_metadata.csv')

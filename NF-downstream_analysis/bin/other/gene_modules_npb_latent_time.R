@@ -192,7 +192,7 @@ dir.create(rds_path, recursive = T)
 
 
 # Params
-lineage_colours = c('placodal' = '#DE4D00', 'NC' = '#10E0E8')
+lineage_colours = c('placodal' = '#3F918C', 'NC' = '#DE4D00')
 
 #####################################################################################################
 #                           Read in data and combine into seurat object                  #
