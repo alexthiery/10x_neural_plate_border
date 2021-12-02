@@ -176,7 +176,7 @@ workflow {
     
     GENE_MODULES_SUBSET_LATENT_TIME( ch_full_latent_time )
 
-    ch_seurat_npb_subset            = SEURAT_TRANSFER_PPR_NC_PROCESS.out.cluster_out.map{it[1]}
+    ch_seurat_npb_subset            = SEURAT_TRANSFER_PPR_NC_PROCESS.out.cluster_out.map{it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]}
 
     ch_npb_cellrank                = SEURAT_TRANSFER_PPR_NC_PROCESS.out.cellrank_run_out_metadata.map{it[1]}
 
