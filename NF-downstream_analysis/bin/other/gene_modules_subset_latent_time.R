@@ -438,6 +438,7 @@ for(row in 1:nrow(gams)){
 
 # Plot module dynamics for every module
 curr_plot_path <- paste0(plot_path, 'gm_lineage_dynamics/')
+dir.create(curr_plot_path, recursive = TRUE, showWarnings = FALSE)
 
 for(gene in plot_data %>% group_split(module)){
   module <- unique(gene$module)
