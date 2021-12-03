@@ -405,7 +405,7 @@ plot_data$bin_class <- apply(plot_data %>% rownames_to_column, 1, function(x) if
 png(paste0(plot_path, 'HH5_highlight_bin.png'), width = 12, height = 12, res = 200, units = 'cm')
 ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
   geom_point(colour = 'gray90', size = 2) +
-  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2), colour = "440154FF") +
+  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2), colour = "#440154FF") +
   theme_void() +
   NoLegend()
 graphics.off()
@@ -468,7 +468,7 @@ plot_data$bin_class <- apply(plot_data %>% rownames_to_column, 1, function(x) if
 png(paste0(plot_path, 'HH6_highlight_bin.png'), width = 12, height = 12, res = 200, units = 'cm')
 ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
   geom_point(colour = 'gray90', size = 2) +
-  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2), colour = "440154FF") +
+  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2), colour = "#440154FF") +
   theme_void() +
   NoLegend()
 graphics.off()
@@ -532,7 +532,7 @@ plot_data$bin_class <- apply(plot_data %>% rownames_to_column, 1, function(x) if
 png(paste0(plot_path, 'HH7_highlight_bin.png'), width = 12, height = 12, res = 200, units = 'cm')
 ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
   geom_point(colour = 'gray90', size = 2) +
-  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2), colour = "440154FF") +
+  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2), colour = "#440154FF") +
   theme_void() +
   NoLegend()
 graphics.off()
@@ -595,7 +595,7 @@ plot_data$bin_class <- apply(plot_data %>% rownames_to_column, 1, function(x) if
 png(paste0(plot_path, 'ss4_highlight_bin.png'), width = 12, height = 12, res = 200, units = 'cm')
 ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
   geom_point(colour = 'gray90', size = 2) +
-  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2), colour = "440154FF") +
+  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2), colour = "#440154FF") +
   theme_void() +
   NoLegend()
 graphics.off()
@@ -658,7 +658,7 @@ plot_data$bin_class <- apply(plot_data %>% rownames_to_column, 1, function(x) if
 png(paste0(plot_path, 'ss8_highlight_bin.png'), width = 12, height = 12, res = 200, units = 'cm')
 ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2)) +
   geom_point(colour = 'gray90', size = 2) +
-  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2), colour = "440154FF") +
+  geom_point(data = plot_data %>% filter(!is.na(bin_class)), inherit.aes = FALSE, aes(x = UMAP_1, y = UMAP_2), colour = "#440154FF") +
   theme_void() +
   NoLegend()
 graphics.off()
