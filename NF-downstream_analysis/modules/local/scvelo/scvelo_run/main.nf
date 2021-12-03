@@ -25,7 +25,6 @@ process SCVELO_RUN {
         path "figures", emit: plots
 
     script:
-    
         def software = getSoftwareName(task.process)
         def prefix   = options.prefix ? "${options.prefix}" : "${meta.sample_id}"
 
