@@ -145,7 +145,7 @@ for(i in seurat_data@assays$RNA@var.features){
             theme_void() +
             theme(plot.title = element_blank(),
                 legend.text = element_text(size=16),
-                legend.key.size = unit(1.5, 'cm'))
+                legend.key.size = unit(1, 'cm'))
         )
     graphics.off()
 }
