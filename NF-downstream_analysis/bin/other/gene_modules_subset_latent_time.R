@@ -263,7 +263,46 @@ lineages <- plyr::mapvalues(ss8@meta.data$scHelper_cell_type, c("HB", "MB", "aNP
 ss8 <- AddMetaData(ss8, metadata = lineages, col.name = "lineage")
 gms_sub <- DEGeneModules(ss8, gene_modules = gms, active_ident = "lineage", logfc = 0.25)
 
-# Get plot data from GeneModulePheatmap to plot with Complex Heatmap for extra functionality
+# Plot unbiasedly selected GMs
+plot_data <- GeneModulePheatmap(seurat_obj = seurat_data,  metadata = c('stage', 'scHelper_cell_type'), gene_modules = gms_sub,
+                                col_order = c('stage', 'scHelper_cell_type'), col_ann_order = c('stage', 'scHelper_cell_type'), return = 'plot_data')
+
+plot_data$ann_colours$scHelper_cell_type <- scHelper_cell_type_colours[names(plot_data$ann_colours$scHelper_cell_type)]
+plot_data$ann_colours$stage <- stage_colours[names(plot_data$ann_colours$stage)]
+
+png(paste0(plot_path, 'subsetGMs.png'), width = 100, height = 60, res = 800, units = 'cm')
+Heatmap(t(plot_data$plot_data), col = PurpleAndYellow(), cluster_columns = FALSE, cluster_rows = FALSE,
+        show_column_names = FALSE, column_title = NULL, show_row_names = FALSE, row_title_gp = gpar(fontsize = 45), row_title_rot = 0,
+        row_split = plot_data$row_ann$`Gene Modules`, column_split = plot_data$col_ann$stage, 
+        heatmap_legend_param = list(
+          title = "Scaled expression", at = c(-2, 0, 2), 
+          labels = c(-2, 0, 2),
+          legend_height = unit(11, "cm"),
+          grid_width = unit(1.5, "cm"),
+          title_gp = gpar(fontsize = 35, fontface = 'bold'),
+          labels_gp = gpar(fontsize = 30, fontface = 'bold'),
+          title_position = 'lefttop-rot',
+          x = unit(13, "npc")
+        ),
+        
+        top_annotation = HeatmapAnnotation(stage = anno_block(gp = gpar(fill = plot_data$ann_colours$stage),
+                                                              labels = levels(plot_data$col_ann$stage),
+                                                              labels_gp = gpar(col = "white", fontsize = 50, fontface='bold'))),
+        
+        bottom_annotation = HeatmapAnnotation(scHelper_cell_type = anno_simple(x = as.character(plot_data$col_ann$scHelper_cell_type),
+                                                                               col = plot_data$ann_colours$scHelper_cell_type, height = unit(1, "cm")), show_annotation_name = FALSE,
+                                              labels = anno_mark(at = cumsum(rle(as.character(plot_data$col_ann$scHelper_cell_type))$lengths) - floor(rle(as.character(plot_data$col_ann$scHelper_cell_type))$lengths/2),
+                                                                 labels = rle(as.character(plot_data$col_ann$scHelper_cell_type))$values,
+                                                                 which = "column", side = 'bottom',
+                                                                 labels_gp = gpar(fontsize = 40), lines_gp = gpar(lwd=8))),
+        
+        raster_quality = 8
+)
+graphics.off()
+
+# Plot unbiasedly selected GMs
+gms_sub <- gms[c("GM21", "GM24", "GM23", "GM9", "GM13")]
+
 plot_data <- GeneModulePheatmap(seurat_obj = seurat_data,  metadata = c('stage', 'scHelper_cell_type'), gene_modules = gms_sub,
                                 col_order = c('stage', 'scHelper_cell_type'), col_ann_order = c('stage', 'scHelper_cell_type'), return = 'plot_data')
 
@@ -274,11 +313,9 @@ goi <- which(rownames(plot_data$row_ann) %in% c('EPCAM', 'SALL4', 'TSPAN13',
                                                 'HOMER2', 'TFAP2C', 'BAMBI', 'CITED4',
                                                 'SIX1', 'EYA2', 'DLX5', 'DLX6', 'GATA2', 'GATA3',
                                                 'PAX7', 'SNAI2', 'SOX10',
-                                                'LMO1', 'SOX21',
-                                                'SIX3', 'PAX6',
-                                                'OTX2', 'PAX2', 'WNT4'))
+                                                'LMO1', 'SOX21'))
 
-png(paste0(plot_path, 'subsetGMs.png'), width = 100, height = 60, res = 800, units = 'cm')
+png(paste0(plot_path, 'subsetGMs_manual.png'), width = 100, height = 60, res = 800, units = 'cm')
 Heatmap(t(plot_data$plot_data), col = PurpleAndYellow(), cluster_columns = FALSE, cluster_rows = FALSE,
         show_column_names = FALSE, column_title = NULL, show_row_names = FALSE, row_title_gp = gpar(fontsize = 45), row_title_rot = 0,
         row_split = plot_data$row_ann$`Gene Modules`, column_split = plot_data$col_ann$stage, 
