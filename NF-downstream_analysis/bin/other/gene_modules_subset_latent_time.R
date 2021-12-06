@@ -239,10 +239,13 @@ scHelper_cell_type_order <- c('EE', 'NNE', 'pEpi', 'PPR', 'aPPR', 'pPPR', 'eNPB'
 
 seurat_data@meta.data$scHelper_cell_type <- factor(seurat_data@meta.data$scHelper_cell_type, levels = scHelper_cell_type_order)
 
-
-
+# Subset gms of interest 
 gms <- antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content
-gms_sub <- gms[paste0('GM', c(24, 21, 23, 13, 9, 7, 11))]
+ss8 <- subset(x = seurat_data, subset = stage == "ss8")
+lineages <- mapvalues(ss8@meta.data$scHelper_cell_type, c("HB", "MB", "aNP", "FB", "vFB", "aPPR", "pPPR", "dNC"), 
+                      c(rep("neural", 5), "PPR", "PPR", "NC"))
+ss8 <- AddMetaData(ss8, metadata = lineages, col.name = "lineage")
+gms_sub <- DEGeneModules(ss8, gene_modules = gms, active_ident = "lineage", logfc = 0.25)
 
 # Get plot data from GeneModulePheatmap to plot with Complex Heatmap for extra functionality
 plot_data <- GeneModulePheatmap(seurat_obj = seurat_data,  metadata = c('stage', 'scHelper_cell_type'), gene_modules = gms_sub,
