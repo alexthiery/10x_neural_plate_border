@@ -91,6 +91,8 @@ GeneModulePheatmap <- function (seurat_obj, metadata, col_order = metadata[1], c
       GMs_ordered_genes[[i]] <- ordered_genes
     }
     selected_GM <- GMs_ordered_genes
+    # re-order row annotations according to hclust output
+    row_ann[match(unlist(selected_GM), rownames(row_ann)),,drop=FALSE]
   }
   plot_data <- t(as.matrix(x = GetAssayData(object = seurat_obj, 
                                             assay = assay, slot = slot)[unlist(selected_GM), rownames(col_ann), 

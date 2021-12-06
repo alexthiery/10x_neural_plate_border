@@ -167,6 +167,8 @@ GeneModulePheatmap <- function (seurat_obj, metadata, col_order = metadata[1], c
       GMs_ordered_genes[[i]] <- ordered_genes
     }
     selected_GM <- GMs_ordered_genes
+    # re-order row annotations according to hclust output
+    row_ann[match(unlist(selected_GM), rownames(row_ann)),,drop=FALSE]
   }
   plot_data <- t(as.matrix(x = GetAssayData(object = seurat_obj, 
                                             assay = assay, slot = slot)[unlist(selected_GM), rownames(col_ann), 
@@ -184,7 +186,8 @@ GeneModulePheatmap <- function (seurat_obj, metadata, col_order = metadata[1], c
                     annotation_row = row_ann, annotation_colors = ann_colours, 
                     cluster_rows = cluster_rows, cluster_cols = cluster_cols, 
                     show_colnames = show_colnames, show_rownames = show_rownames, 
-                    gaps_col = gaps_col, gaps_row = gaps_row, annotation_names_row = annotation_names_row))
+                    gaps_col = gaps_col, gaps_row = gaps_row, annotation_names_row = annotation_names_row, 
+                    ...))
   } else if (return == 'plot_data'){
     return(list(plot_data = plot_data,
                 row_ann = row_ann,
