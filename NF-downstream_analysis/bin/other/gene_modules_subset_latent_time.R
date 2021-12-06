@@ -208,7 +208,7 @@ dir.create(rds_path, recursive = T)
 lineage_colours = c('placodal' = '#3F918C', 'NC' = '#DE4D00', 'neural' = '#8000FF')
 
 metadata <- read.csv(list.files(data_path, pattern = "*.csv", full.names = TRUE))
-# metadata <- read.csv('./output/NF-downstream_analysis_stacas/transfer_labels/cellrank1/all_stages_filtered_metadata.csv')
+# metadata <- read.csv('./output/NF-downstream_analysis_stacas/transfer_labels/cellrank/all_stages_filtered_metadata.csv')
 
 seurat_data <- readRDS(list.files(data_path, pattern = "*.RDS", full.names = TRUE)[!list.files(data_path, pattern = "*.RDS") %>% grepl('antler', .)])
 # seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/transfer_labels/seurat/rds_files/seurat_label_transfer.RDS')
@@ -255,14 +255,16 @@ seurat_data@meta.data$scHelper_cell_type <- factor(seurat_data@meta.data$scHelpe
 # Subset gms of interest 
 gms <- antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content
 ss8 <- subset(x = seurat_data, subset = stage == "ss8")
-lineages <- mapvalues(ss8@meta.data$scHelper_cell_type, c("HB", "MB", "aNP", "FB", "vFB", "aPPR", "pPPR", "dNC"), 
+lineages <- plyr::mapvalues(ss8@meta.data$scHelper_cell_type, c("HB", "MB", "aNP", "FB", "vFB", "aPPR", "pPPR", "dNC"), 
                       c(rep("neural", 5), "PPR", "PPR", "NC"))
+
 ss8 <- AddMetaData(ss8, metadata = lineages, col.name = "lineage")
 gms_sub <- DEGeneModules(ss8, gene_modules = gms, active_ident = "lineage", logfc = 0.25)
 
 # Get plot data from GeneModulePheatmap to plot with Complex Heatmap for extra functionality
 plot_data <- GeneModulePheatmap(seurat_obj = seurat_data,  metadata = c('stage', 'scHelper_cell_type'), gene_modules = gms_sub,
                                 col_order = c('stage', 'scHelper_cell_type'), col_ann_order = c('stage', 'scHelper_cell_type'), return = 'plot_data')
+
 plot_data$ann_colours$scHelper_cell_type <- scHelper_cell_type_colours[names(plot_data$ann_colours$scHelper_cell_type)]
 plot_data$ann_colours$stage <- stage_colours[names(plot_data$ann_colours$stage)]
 
