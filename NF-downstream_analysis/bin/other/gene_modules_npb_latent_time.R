@@ -506,11 +506,14 @@ column_ha = HeatmapAnnotation(labels = anno_mark(at = c(2, 50, 99), labels = c("
 hm_data <- dplyr::select(hm_data, !latent_time)
 hm_data[hm_data> 1] <- 1
 
+# order gms so in original order when they were selected
+NC_gms <- factor(NC_gms, levels = NC_gms)
+
 # Plot NC heatmap
 png(paste0(plot_path, 'NC_modules_heatmap.png'), width = 22, height = 12, units='cm', res=200)
 Heatmap(t(hm_data), cluster_rows = FALSE, cluster_columns = FALSE,
         show_column_names = FALSE, show_row_names = FALSE,
-        col = viridis(n=100), row_split = colnames(hm_data),
+        col = viridis(n=100), row_split = NC_gms,
         row_title_gp = gpar(fontsize = 22),
         top_annotation = column_ha,
         heatmap_legend_param = list(
@@ -545,11 +548,14 @@ column_ha = HeatmapAnnotation(labels = anno_mark(at = c(2, 50, 99), labels = c("
 hm_data <- dplyr::select(hm_data, !latent_time)
 hm_data[hm_data> 1] <- 1
 
+# order gms so in original order when they were selected
+PPR_gms <- factor(PPR_gms, levels = PPR_gms)
+
 # Plot placodal heatmap
 png(paste0(plot_path, 'placodal_modules_heatmap.png'), width = 22, height = 12, units='cm', res=200)
 Heatmap(t(hm_data), cluster_rows = FALSE, cluster_columns = FALSE,
         show_column_names = FALSE, show_row_names = FALSE,
-        col = viridis(n=100), row_split = colnames(hm_data),
+        col = viridis(n=100), row_split = PPR_gms,
         row_title_gp = gpar(fontsize = 22),
         top_annotation = column_ha,
         heatmap_legend_param = list(
