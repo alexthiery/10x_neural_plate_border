@@ -1,5 +1,28 @@
 #!/usr/bin/env Rscript
 
+# Edit DEGeneModules function to allow for pairwise DE tests
+DEGeneModules <- function (seurat_data, gene_modules, logfc = 0.25, pval = 0.001, 
+          selected_gene_proportion = 0.5, active_ident = NULL, ident_1 = NULL, ident_2 = NULL) 
+{
+  if (!is.null(active_ident)) {
+    Idents(object = seurat_data) <- active_ident
+  }
+  if (!is.null(ident_1) | !is.null(ident_2)){
+    if (is.null(ident_1) | is.null(ident_2)){
+      stop('both ident_1 and ident_2 must be specified for pairwise comparisons')
+    }
+    DE_genes <- FindMarkers(seurat_data, ident.1 = ident_1, ident.2 = ident_2, logfc.threshold = logfc) %>% 
+      filter(p_val_adj < pval)
+  } else {
+    DE_genes <- FindAllMarkers(seurat_data, only.pos = T, logfc.threshold = logfc) %>% 
+      filter(p_val_adj < pval)
+  }  
+  gms <- SubsetGeneModules(gene_modules, selected_genes = rownames(DE_genes), 
+                           keep_mod_ID = T, selected_gene_proportion = selected_gene_proportion)
+  return(gms)
+}
+
+
 # Define arguments for Rscript
 library(optparse)
 library(future)
