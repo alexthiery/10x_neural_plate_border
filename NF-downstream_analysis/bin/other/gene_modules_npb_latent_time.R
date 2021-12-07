@@ -177,6 +177,19 @@ library(ComplexHeatmap) # Gu, Z. (2016) Complex heatmaps reveal patterns and cor
 library(viridis)
 set.seed(100)
 
+########################       CELL STATE COLOURS    ########################################
+scHelper_cell_type_colours <- c("#ed5e5f", "#A73C52", "#6B5F88", "#3780B3", "#3F918C", "#47A266", "#53A651", "#6D8470",
+                                "#87638F", "#A5548D", "#C96555", "#ED761C", "#FF9508", "#FFC11A", "#FFEE2C", "#EBDA30",
+                                "#CC9F2C", "#AD6428", "#BB614F", "#D77083", "#F37FB8", "#DA88B3", "#B990A6", "#b3b3b3")
+names(scHelper_cell_type_colours) <- c('NNE', 'HB', 'eNPB', 'PPR', 'aPPR', 'streak',
+                                       'pPPR', 'NPB', 'aNPB', 'pNPB','eCN', 'dNC',
+                                       'eN', 'NC', 'NP', 'pNP', 'EE', 'iNP', 'MB', 
+                                       'vFB', 'aNP', 'node', 'FB', 'pEpi')
+########################       STAGE COLOURS     ###########################################
+stage_colours = c("#E78AC3", "#8DA0CB", "#66C2A5", "#A6D854", "#FFD92F", "#FC8D62")
+names(stage_colours) <- c("HH4", "HH5", "HH6", "HH7", "ss4", "ss8")
+############################################################################################
+
 spec = matrix(c(
   'runtype', 'l', 2, "character",
   'cores'   , 'c', 2, "integer"
@@ -257,6 +270,8 @@ gms_sub <- gms[unlist(c(PPR_gms, NC_gms))]
 # Get plot data from GeneModulePheatmap to plot with Complex Heatmap for extra functionality
 plot_data <- GeneModulePheatmap(seurat_obj = seurat_data,  metadata = c('stage', 'scHelper_cell_type'), gene_modules = gms_sub,
                                 col_order = c('stage', 'scHelper_cell_type'), col_ann_order = c('stage', 'scHelper_cell_type'), return = 'plot_data')
+plot_data$ann_colours$scHelper_cell_type <- scHelper_cell_type_colours[names(plot_data$ann_colours$scHelper_cell_type)]
+plot_data$ann_colours$stage <- stage_colours[names(plot_data$ann_colours$stage)]
 
 goi <- which(rownames(plot_data$row_ann) %in% c('FAM184B', 'TSPAN13', 'GATA2', 'GATA3',
                                                 'DLX5', 'DLX6', 'SIX3', 'PAX6', 'NFKB1', 
@@ -267,7 +282,7 @@ goi <- which(rownames(plot_data$row_ann) %in% c('FAM184B', 'TSPAN13', 'GATA2', '
                                                 'SOX10', 'RFTN2'
 ))
 
-png(paste0(plot_path, 'subsetGMs.png'), width = 100, height = 60, res = 800, units = 'cm')
+png(paste0(plot_path, 'subsetGMs_recoloured.png'), width = 100, height = 60, res = 800, units = 'cm')
 Heatmap(t(plot_data$plot_data), col = PurpleAndYellow(), cluster_columns = FALSE, cluster_rows = FALSE,
         show_column_names = FALSE, column_title = NULL, show_row_names = FALSE, row_title_gp = gpar(fontsize = 45), row_title_rot = 0,
         row_split = plot_data$row_ann$`Gene Modules`, column_split = plot_data$col_ann$stage, 
