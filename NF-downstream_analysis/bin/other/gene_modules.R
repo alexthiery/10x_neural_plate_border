@@ -419,7 +419,7 @@ if (!is.null(plot_data$ann_colours$run)){
 
 png(paste0(plot_path, 'unbiasedGMs.png'), height = 150, width = 100, units = 'cm', res = 400)
 Heatmap(t(plot_data$plot_data), col = PurpleAndYellow(), cluster_columns = FALSE, cluster_rows = FALSE,
-        show_column_names = FALSE, column_title = NULL, show_row_names = FALSE, row_title_gp = gpar(fontsize = 45), row_title_rot = 0,
+        show_column_names = FALSE, column_title = NULL, show_row_names = FALSE, row_title_gp = gpar(fontsize = 45), row_title_rot = 90,
         row_split = plot_data$row_ann$`Gene Modules`, column_split = if(length(plot_data$ann_colours$stage) > 1){
           plot_data$col_ann$stage
           }else{
@@ -468,7 +468,7 @@ plot_data$ann_colours$stage <- stage_colours[names(plot_data$ann_colours$stage)]
 
 png(paste0(plot_path, 'unbiasedGMs_DE.png'), height = 150, width = 100, units = 'cm', res = 400)
 Heatmap(t(plot_data$plot_data), col = PurpleAndYellow(), cluster_columns = FALSE, cluster_rows = FALSE,
-              show_column_names = FALSE, column_title = NULL, show_row_names = FALSE, row_title_gp = gpar(fontsize = 45), row_title_rot = 0,
+              show_column_names = FALSE, column_title = NULL, show_row_names = FALSE, row_title_gp = gpar(fontsize = 45), row_title_rot = 90,
               row_split = plot_data$row_ann$`Gene Modules`, column_split = if(length(plot_data$ann_colours$stage) > 1){plot_data$col_ann$stage}else{plot_data$col_ann$scHelper_cell_type},
               heatmap_legend_param = list(
                 title = "Scaled expression", at = c(-2, 0, 2), 
@@ -529,7 +529,7 @@ if(length(unique(seurat_data$run)) > 1){
   # plot complex heatmap  
   png(paste0(plot_path, 'unbiasedGMs_DE_batchfilt.png'), height = 150, width = 100, units = 'cm', res = 400)
   print(Heatmap(t(plot_data$plot_data), col = PurpleAndYellow(), cluster_columns = FALSE, cluster_rows = FALSE,
-          show_column_names = FALSE, column_title = NULL, show_row_names = FALSE, row_title_gp = gpar(fontsize = 45), row_title_rot = 0,
+          show_column_names = FALSE, column_title = NULL, show_row_names = FALSE, row_title_gp = gpar(fontsize = 45), row_title_rot = 90,
           row_split = plot_data$row_ann$`Gene Modules`, column_split = if(length(plot_data$ann_colours$stage) > 1){plot_data$col_ann$stage}else{plot_data$col_ann$scHelper_cell_type},
           heatmap_legend_param = list(
             title = "Scaled expression", at = c(-2, 0, 2), 
@@ -554,7 +554,7 @@ if(length(unique(seurat_data$run)) > 1){
   
   png(paste0(plot_path, 'unbiasedGMs_DE_batchfilt_rownames.png'), height = min(c(150, round(ngene/2))), width = 75, units = 'cm', res = 400)
   print(Heatmap(t(plot_data$plot_data), col = PurpleAndYellow(), cluster_columns = FALSE, cluster_rows = FALSE,
-          show_column_names = FALSE, column_title = NULL, show_row_names = TRUE, row_title_gp = gpar(fontsize = 30), row_title_rot = 0,
+          show_column_names = FALSE, column_title = NULL, show_row_names = TRUE, row_title_gp = gpar(fontsize = 30), row_title_rot = 90,
           row_split = plot_data$row_ann$`Gene Modules`, column_split = if(length(plot_data$ann_colours$stage) > 1){plot_data$col_ann$stage}else{plot_data$col_ann$scHelper_cell_type}, 
           heatmap_legend_param = list(
             title = "Scaled expression", at = c(-2, 0, 2), 
