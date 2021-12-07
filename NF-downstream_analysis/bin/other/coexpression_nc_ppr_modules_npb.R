@@ -18,7 +18,7 @@ plot_umap_gm_coexpression <- function(seurat_object, gm_1, gm_2, col.threshold =
   # col.mat <- within(col.mat, mix <- rgb(green = a, red = a, blue = 0, maxColorValue = 100))
   col_mat = Seurat:::BlendMatrix(n = 100, col.threshold = col.threshold, two.colors =  two.colors, negative.color = negative.color)
   col_mat <- as.data.frame.table(col_mat, responseName = "value") %>% mutate_if(is.factor, as.integer)
-  col_mat[!(col_mat$Var1 > limit & col_mat$Var2 > limit), 'value'] <- negative.color
+  col_mat[!(col_mat$Var1 > limit*100 & col_mat$Var2 > limit*100), 'value'] <- negative.color
   colnames(col_mat) <- c('a', 'b', 'mix')
   
   cell_cols <- unlist(apply(dat, 1, function(x){filter(col_mat, a == x[[1]] & b == x[[2]])[[3]]}))
@@ -28,8 +28,8 @@ plot_umap_gm_coexpression <- function(seurat_object, gm_1, gm_2, col.threshold =
     ylab(module_names[2]) +
     geom_tile(aes(fill = mix)) +
     scale_fill_identity() +
-    scale_x_continuous(breaks = c(limit/100, 1), expand = c(0.01, 0.01)) +
-    scale_y_continuous(breaks = c(limit/100, 1), expand = c(0.01, 0.01)) +
+    scale_x_continuous(breaks = c(limit, 1), expand = c(0.01, 0.01)) +
+    scale_y_continuous(breaks = c(limit, 1), expand = c(0.01, 0.01)) +
     theme(legend.position = "none",
           panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(),
@@ -107,7 +107,7 @@ for(gm in c('GM40', 'GM42', 'GM44', 'GM43')){
   nc_gm <- unlist(antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content[c(gm)])
   
   plot = plot_umap_gm_coexpression(subset, gm_1 = ppr_gm, gm_2 = nc_gm, col.threshold = 0, two.colors = c("red", "blue"),
-                                   negative.color = 'gray90', limit = 30, module_names = c('PPR module', 'NC module'), highlight_cell_size = 2,
+                                   negative.color = 'gray90', limit = 0.3, module_names = c('PPR module', 'NC module'), highlight_cell_size = 2,
                                    show_legend = TRUE, axes_label_size = 16, axes_title_size = 14, axes_tick_size = 0.25)
   
   png(paste0(plot_path, 'NPB_UMAP_coexpression_', gm, '.png'), width = 20, height = 14, res = 600, units = 'cm')
@@ -116,10 +116,10 @@ for(gm in c('GM40', 'GM42', 'GM44', 'GM43')){
   
   # Plot co-expression no legend
   plot = plot_umap_gm_coexpression(subset, gm_1 = ppr_gm, gm_2 = nc_gm, col.threshold = 0, two.colors = c("red", "blue"),
-                                   negative.color = 'gray90', limit = 30, module_names = c('PPR module', 'NC module'), highlight_cell_size = 2,
-                                   show_legend = TRUE, axes_label_size = 16, axes_title_size = 14, axes_tick_size = 0.25, show_legend = FALSE)
+                                   negative.color = 'gray90', limit = 0.3, module_names = c('PPR module', 'NC module'), highlight_cell_size = 2,
+                                   show_legend = FALSE, axes_label_size = 16, axes_title_size = 14, axes_tick_size = 0.25)
   
-  png(paste0(plot_path, 'NPB_UMAP_coexpression_no_legend_', gm, '.png'), width = 20, height = 14, res = 600, units = 'cm')
+  png(paste0(plot_path, 'NPB_UMAP_coexpression_no_legend_', gm, '.png'), width = 14, height = 14, res = 600, units = 'cm')
   print(plot)
   graphics.off()
 }
