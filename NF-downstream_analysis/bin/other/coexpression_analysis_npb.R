@@ -305,8 +305,6 @@ goi <- which(rownames(plot_data$row_ann) %in% c("OLIG2", "PAX6", "SIX3", "PAX2",
                                                 "HOMER2", "ZNF385C", "DLX6", "OTX2", "SOX21"))
 
 png(paste0(plot_path, 'ss8_GMs.png'), width = 100, height = 60, res = 800, units = 'cm')
-
-png(paste0(plot_path, 'ss8_GMs.png'), width = 100, height = 75, res = 100, units = 'cm')
 Heatmap(t(plot_data$plot_data), col = PurpleAndYellow(), cluster_columns = FALSE, cluster_rows = FALSE,
         show_column_names = FALSE, column_title = NULL, show_row_names = FALSE, row_title_gp = gpar(fontsize = 45), row_title_rot = 0,
         row_split = plot_data$row_ann$`Gene Modules`, column_split = plot_data$col_ann$scHelper_cell_type, 
