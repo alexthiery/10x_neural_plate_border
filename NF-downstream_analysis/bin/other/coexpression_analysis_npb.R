@@ -15,6 +15,7 @@ library(mgcv)
 library(viridis)
 library(ggnewscale)
 library(patchwork)
+library(ComplexHeatmap)
 
 ########################       CELL STATE COLOURS    ########################################
 scHelper_cell_type_order <- c('EE', 'NNE', 'pEpi', 'PPR', 'aPPR', 'pPPR',
