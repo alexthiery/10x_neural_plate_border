@@ -507,6 +507,7 @@ hm_data <- dplyr::select(hm_data, !latent_time)
 hm_data[hm_data> 1] <- 1
 
 # order gms so in original order when they were selected
+hm_data <- hm_data[NC_gms]
 NC_gms <- factor(NC_gms, levels = NC_gms)
 
 # Plot NC heatmap
@@ -550,6 +551,7 @@ hm_data[hm_data> 1] <- 1
 
 # order gms so in original order when they were selected
 PPR_gms <- factor(PPR_gms, levels = PPR_gms)
+hm_data <- hm_data[PPR_gms]
 
 # Plot placodal heatmap
 png(paste0(plot_path, 'placodal_modules_heatmap.png'), width = 22, height = 12, units='cm', res=200)
