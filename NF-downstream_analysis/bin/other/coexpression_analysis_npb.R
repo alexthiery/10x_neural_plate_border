@@ -294,6 +294,49 @@ subset <- readRDS(list.files(data_path, pattern = "^transfer_clustered_data", fu
 # antler_data <- readRDS("~/output/NF-downstream_analysis_stacas/stage_split/ss8_splitstage_data/antler/stage_gene_modules/rds_files/antler_out.RDS")
 
 ####################################################################################################
+# Plot heatmap of ss8 gene modules with genes and gms highlighted
+plot_data <- GeneModulePheatmap(seurat_obj = ss8,  metadata = c('scHelper_cell_type'), gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE$content,
+                                col_order = 'scHelper_cell_type', col_ann_order = 'scHelper_cell_type', return = 'plot_data')
+
+plot_data$ann_colours$scHelper_cell_type <- scHelper_cell_type_colours[names(plot_data$ann_colours$scHelper_cell_type)]
+
+goi <- which(rownames(plot_data$row_ann) %in% c("OLIG2", "PAX6", "SIX3", "PAX2", "WNT4", "HOXB1", "HOXB2", "SOX10", "LMO4", "TFAP2B", 
+                                                "ETS1", "PAX7", "SNAI2", "FOXD3", "MSX1", "DRAXIN", "BMP4", "DLX5", "SIX1", "EYA2", 
+                                                "HOMER2", "ZNF385C", "DLX6", "OTX2", "SOX21"))
+
+png(paste0(plot_path, 'ss8_GMs.png'), width = 100, height = 60, res = 800, units = 'cm')
+
+png(paste0(plot_path, 'ss8_GMs.png'), width = 100, height = 75, res = 100, units = 'cm')
+Heatmap(t(plot_data$plot_data), col = PurpleAndYellow(), cluster_columns = FALSE, cluster_rows = FALSE,
+        show_column_names = FALSE, column_title = NULL, show_row_names = FALSE, row_title_gp = gpar(fontsize = 45), row_title_rot = 0,
+        row_split = plot_data$row_ann$`Gene Modules`, column_split = plot_data$col_ann$scHelper_cell_type, 
+        heatmap_legend_param = list(
+          title = "Scaled expression", at = c(-2, 0, 2), 
+          labels = c(-2, 0, 2),
+          legend_height = unit(11, "cm"),
+          grid_width = unit(1.5, "cm"),
+          title_gp = gpar(fontsize = 35, fontface = 'bold'),
+          labels_gp = gpar(fontsize = 30, fontface = 'bold'),
+          title_position = 'lefttop-rot',
+          x = unit(13, "npc")
+        ),
+        bottom_annotation = HeatmapAnnotation(scHelper_cell_type = anno_simple(x = as.character(plot_data$col_ann$scHelper_cell_type),
+                                                                               col = plot_data$ann_colours$scHelper_cell_type, height = unit(1, "cm")), show_annotation_name = FALSE,
+                                              labels = anno_mark(at = cumsum(rle(as.character(plot_data$col_ann$scHelper_cell_type))$lengths) - floor(rle(as.character(plot_data$col_ann$scHelper_cell_type))$lengths/2),
+                                                                 labels = rle(as.character(plot_data$col_ann$scHelper_cell_type))$values,
+                                                                 which = "column", side = 'bottom',
+                                                                 labels_gp = gpar(fontsize = 40), lines_gp = gpar(lwd=8))),
+        
+        right_annotation = rowAnnotation(foo = anno_mark(at = goi, padding = 0.7, link_width = unit(12, "mm"),
+                                                         labels = rownames(plot_data$row_ann)[goi],
+                                                         labels_gp = gpar(fontsize = 35), lines_gp = gpar(lwd=7))),
+        
+        raster_quality = 8
+)
+graphics.off()
+
+####################################################################################################
+
 # Run coexpression using PPR and NC gene modules from ss8
 ppr_gm <- unlist(antler_data$gene_modules$lists$unbiasedGMs_DE$content[c('GM5')])
 nc_gm <- unlist(antler_data$gene_modules$lists$unbiasedGMs_DE$content[c('GM2')])
