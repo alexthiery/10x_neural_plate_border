@@ -1,5 +1,28 @@
 #!/usr/bin/env Rscript
 
+# Edit DEGeneModules function to allow for pairwise DE tests
+DEGeneModules <- function (seurat_data, gene_modules, logfc = 0.25, pval = 0.001, 
+          selected_gene_proportion = 0.5, active_ident = NULL, ident_1 = NULL, ident_2 = NULL) 
+{
+  if (!is.null(active_ident)) {
+    Idents(object = seurat_data) <- active_ident
+  }
+  if (!is.null(ident_1) | !is.null(ident_2)){
+    if (is.null(ident_1) | is.null(ident_2)){
+      stop('both ident_1 and ident_2 must be specified for pairwise comparisons')
+    }
+    DE_genes <- FindMarkers(seurat_data, ident.1 = ident_1, ident.2 = ident_2, logfc.threshold = logfc) %>% 
+      filter(p_val_adj < pval)
+  } else {
+    DE_genes <- FindAllMarkers(seurat_data, only.pos = T, logfc.threshold = logfc) %>% 
+      filter(p_val_adj < pval)
+  }  
+  gms <- SubsetGeneModules(gene_modules, selected_genes = rownames(DE_genes), 
+                           keep_mod_ID = T, selected_gene_proportion = selected_gene_proportion)
+  return(gms)
+}
+
+
 # Define arguments for Rscript
 library(optparse)
 library(future)
@@ -449,9 +472,34 @@ plot_data <- GeneModulePheatmap(seurat_obj = seurat_data,  metadata = metadata, 
 plot_data$ann_colours$scHelper_cell_type <- scHelper_cell_type_colours[names(plot_data$ann_colours$scHelper_cell_type)]
 plot_data$ann_colours$stage <- stage_colours[names(plot_data$ann_colours$stage)]
 
-png(paste0(plot_path, 'unbiasedGMs_DE.png'), height = 150, width = 100, units = 'cm', res = 400)
+png(paste0(plot_path, 'unbiasedGMs_DE.png'), height = min(c(150, round(ngene/3))), width = 100, units = 'cm', res = 400)
 Heatmap(t(plot_data$plot_data), col = PurpleAndYellow(), cluster_columns = FALSE, cluster_rows = FALSE,
-              show_column_names = FALSE, column_title = NULL, show_row_names = FALSE, row_title_gp = gpar(fontsize = 45), row_title_rot = 90,
+              show_column_names = FALSE, column_title = NULL, show_row_names = FALSE, row_title_gp = gpar(fontsize = 45), row_title_rot = 0,
+              row_split = plot_data$row_ann$`Gene Modules`, column_split = if(length(plot_data$ann_colours$stage) > 1){plot_data$col_ann$stage}else{plot_data$col_ann$scHelper_cell_type},
+              heatmap_legend_param = list(
+                title = "Scaled expression", at = c(-2, 0, 2), 
+                labels = c(-2, 0, 2),
+                legend_height = unit(11, "cm"),
+                grid_width = unit(1.5, "cm"),
+                title_gp = gpar(fontsize = 35, fontface = 'bold'),
+                labels_gp = gpar(fontsize = 30, fontface = 'bold'),
+                title_position = 'lefttop-rot',
+                x = unit(13, "npc")
+              ),
+              top_annotation = top_annotation,
+              bottom_annotation = HeatmapAnnotation(scHelper_cell_type = anno_simple(x = as.character(plot_data$col_ann$scHelper_cell_type),
+                                                                                     col = plot_data$ann_colours$scHelper_cell_type, height = unit(1, "cm")), show_annotation_name = FALSE,
+                                                    labels = anno_mark(at = cumsum(rle(as.character(plot_data$col_ann$scHelper_cell_type))$lengths) - floor(rle(as.character(plot_data$col_ann$scHelper_cell_type))$lengths/2),
+                                                                       labels = rle(as.character(plot_data$col_ann$scHelper_cell_type))$values,
+                                                                       which = "column", side = 'bottom',
+                                                                       labels_gp = gpar(fontsize = 40), lines_gp = gpar(lwd=8))),
+              raster_quality = 8
+)
+graphics.off()
+
+png(paste0(plot_path, 'unbiasedGMs_DE_rownames.png'), height = min(c(150, round(ngene/2))), width = 100, units = 'cm', res = 400)
+Heatmap(t(plot_data$plot_data), col = PurpleAndYellow(), cluster_columns = FALSE, cluster_rows = FALSE,
+              show_column_names = FALSE, column_title = NULL, show_row_names = TRUE, row_title_gp = gpar(fontsize = 45), row_title_rot = 90,
               row_split = plot_data$row_ann$`Gene Modules`, column_split = if(length(plot_data$ann_colours$stage) > 1){plot_data$col_ann$stage}else{plot_data$col_ann$scHelper_cell_type},
               heatmap_legend_param = list(
                 title = "Scaled expression", at = c(-2, 0, 2), 
@@ -497,9 +545,9 @@ if(length(unique(seurat_data$run)) > 1){
   plot_data$ann_colours$stage <- stage_colours[names(plot_data$ann_colours$stage)]
   
   # plot complex heatmap  
-  png(paste0(plot_path, 'unbiasedGMs_DE_batchfilt.png'), height = 150, width = 100, units = 'cm', res = 400)
+  png(paste0(plot_path, 'unbiasedGMs_DE_batchfilt.png'), height = min(c(150, round(ngene/3))), width = 100, units = 'cm', res = 400)
   print(Heatmap(t(plot_data$plot_data), col = PurpleAndYellow(), cluster_columns = FALSE, cluster_rows = FALSE,
-          show_column_names = FALSE, column_title = NULL, show_row_names = FALSE, row_title_gp = gpar(fontsize = 45), row_title_rot = 90,
+          show_column_names = FALSE, column_title = NULL, show_row_names = FALSE, row_title_gp = gpar(fontsize = 45), row_title_rot = 0,
           row_split = plot_data$row_ann$`Gene Modules`, column_split = if(length(plot_data$ann_colours$stage) > 1){plot_data$col_ann$stage}else{plot_data$col_ann$scHelper_cell_type},
           heatmap_legend_param = list(
             title = "Scaled expression", at = c(-2, 0, 2), 
