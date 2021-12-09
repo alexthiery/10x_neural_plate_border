@@ -40,6 +40,129 @@ names(stage_colours) <- stage_order
 
 #######################################################################################################
 #########################################   FUNCTIONS   ###############################################
+GeneModulePheatmap <- function (seurat_obj, metadata, col_order = metadata[1], custom_order = NULL, 
+                                custom_order_column = NULL, assay = "RNA", slot = "scale.data", 
+                                gene_modules, selected_genes = NULL, hide_annotation = NULL, 
+                                gaps_row = TRUE, gaps_col = NULL, gm_row_annotation = TRUE, 
+                                cell_subset = NULL, use_seurat_colours = TRUE, colour_scheme = c("PRGn", 
+                                                                                                 "RdYlBu", "Greys"), col_ann_order = rev(metadata), show_colnames = FALSE, 
+                                show_rownames = TRUE, cluster_rows = FALSE, cluster_cols = FALSE, 
+                                order_genes = TRUE, annotation_names_row = FALSE, ..., return = 'plot') 
+{
+  if (!is.null(cell_subset)) {
+    seurat_obj <- subset(seurat_obj, cells = cell_subset)
+  }
+  seurat_obj@meta.data <- seurat_obj@meta.data[, metadata, 
+                                               drop = FALSE] %>% mutate_if(is.character, as.factor)
+  seurat_obj@meta.data[] <- lapply(seurat_obj@meta.data, function(x) if (is.factor(x)) 
+    factor(x)
+    else x)
+  col_ann <- seurat_obj@meta.data
+  col_ann <- col_ann[do.call("order", c(col_ann[col_order], 
+                                        list(decreasing = FALSE))), , drop = FALSE]
+  if (!is.null(custom_order)) {
+    if (is.null(custom_order_column)) {
+      "custom_order column must be specified \n"
+    }
+    if (!setequal(custom_order, unique(col_ann[[custom_order_column]]))) {
+      stop("custom_order factors missing from custom_order_column \n\n")
+    }
+    levels(col_ann[[custom_order_column]]) <- custom_order
+    col_ann <- col_ann[order(col_ann[[custom_order_column]]), 
+                       , drop = FALSE]
+  }
+  if (!is.null(gaps_col)) {
+    ifelse(class(gaps_col) != "character", stop("gaps_col must be a metadata column name"), 
+           gaps_col <- cumsum(rle(as.vector(col_ann[[gaps_col]]))[["lengths"]]))
+  }
+  if (!is.null(hide_annotation)) {
+    col_ann[, hide_annotation] <- NULL
+  }
+  if (use_seurat_colours == FALSE) {
+    ann_colours <- lapply(1:ncol(col_ann), function(x) setNames(colorRampPalette(brewer.pal(9, 
+                                                                                            colour_scheme[x])[2:9])(length(unique(col_ann[, x]))), 
+                                                                unique(col_ann[, x])))
+  }
+  else {
+    ann_colours <- lapply(colnames(col_ann), function(x) {
+      temp <- setNames(ggPlotColours(n = length(levels(col_ann[, 
+                                                               x]))), levels(col_ann[, x]))
+      temp[match(levels(col_ann[[x]]), names(temp))]
+    })
+  }
+  names(ann_colours) <- colnames(col_ann)
+  if (!is.null(selected_genes)) {
+    selected_GM <- SubsetGeneModules(gm = gene_modules, selected_genes = selected_genes)
+  }
+  else {
+    if (is.null(names(gene_modules))) {
+      names(gene_modules) <- paste0("GM: ", 1:length(gene_modules))
+    }
+    selected_GM <- gene_modules
+  }
+  if (gm_row_annotation == TRUE) {
+    row_ann <- stack(selected_GM) %>% rename(`Gene Modules` = ind) %>% 
+      column_to_rownames("values")
+  }
+  else {
+    row_ann <- NA
+  }
+  if (gaps_row == TRUE) {
+    row_ann <- droplevels(row_ann)
+    gaps_row = cumsum(summary(row_ann[["Gene Modules"]], 
+                              maxsum = max(lengths(lapply(row_ann, unique)))))
+  }
+  else {
+    gaps_row = NULL
+  }
+  ann_colours[["Gene Modules"]] <- setNames(colorRampPalette(brewer.pal(9, 
+                                                                        "Paired"))(length(unique(row_ann[["Gene Modules"]]))), 
+                                            unique(row_ann[["Gene Modules"]]))
+  if (order_genes == TRUE) {
+    dir.create("scHelper_log/gene_hclustering/", recursive = TRUE, 
+               showWarnings = FALSE)
+    GMs_ordered_genes <- c()
+    for (i in names(selected_GM)) {
+      mat <- GetAssayData(object = seurat_obj, assay = assay, 
+                          slot = slot)
+      dist_mat <- dist(mat[selected_GM[[i]], ], method = "euclidean")
+      hclust_avg <- hclust(dist_mat, method = "average")
+      ordered_genes <- hclust_avg$labels[c(hclust_avg$order)]
+      GMs_ordered_genes[[i]] <- ordered_genes
+    }
+    selected_GM <- GMs_ordered_genes
+    # re-order row annotations according to hclust output
+    row_ann <- row_ann[match(unlist(selected_GM), rownames(row_ann)),,drop=FALSE]
+  }
+  plot_data <- t(as.matrix(x = GetAssayData(object = seurat_obj, 
+                                            assay = assay, slot = slot)[unlist(selected_GM), rownames(col_ann), 
+                                                                        drop = FALSE]))
+  if (!is.null(cell_subset)) {
+    cat("rescaling data as cells have been subset \n")
+    plot_data <- t(scale(t(plot_data)))
+  }
+  plot_data <- replace(plot_data, plot_data >= 2, 2)
+  plot_data <- replace(plot_data, plot_data <= -2, -2)
+  
+  if(return == 'plot'){
+    return(pheatmap(t(plot_data), color = PurpleAndYellow(), 
+                    annotation_col = col_ann[, rev(col_ann_order), drop = FALSE], 
+                    annotation_row = row_ann, annotation_colors = ann_colours, 
+                    cluster_rows = cluster_rows, cluster_cols = cluster_cols, 
+                    show_colnames = show_colnames, show_rownames = show_rownames, 
+                    gaps_col = gaps_col, gaps_row = gaps_row, annotation_names_row = annotation_names_row, 
+                    ...))
+  } else if (return == 'plot_data'){
+    return(list(plot_data = plot_data,
+                row_ann = row_ann,
+                col_ann = col_ann,
+                ann_colours = ann_colours))
+  } else {
+    stop('return must be either "plot" or "plot_data"')
+  }
+  
+}
+
 named_list_to_vector <- function(list){
   if(is.null(names(list))){stop('list must be named')}
   unlist(lapply(lapply(names(list), function(x) rep(x, length(list[[x]]))), function(y) names(y) <- x))
