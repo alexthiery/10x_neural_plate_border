@@ -189,6 +189,7 @@ workflow {
                                         .map{it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]}
                                         .combine(ch_seurat_npb_subset)
                                         .combine(ch_npb_cellrank)
+                                        .combine(ch_binary_knowledge_matrix)
                                         .map{[[sample_id:'npb_gm_latent_time'], it]}
 
     GENE_MODULES_NPB_LATENT_TIME( ch_npb_latent_time )
