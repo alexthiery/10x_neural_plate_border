@@ -213,7 +213,7 @@ lineage_colours = c('placodal' = '#3F918C', 'NC' = '#DE4D00')
 #                           Read in data and combine into seurat object                  #
 #####################################################################################################
 
-cell_state_markers <- read.csv(list.files(data_path, full.names = TRUE, pattern = '*binary_knowledge_matrix.csv'), row.names = 1) %>% select(!c(evidence))
+cell_state_markers <- read.csv(list.files(data_path, full.names = TRUE, pattern = '*binary_knowledge_matrix.csv'), row.names = 1) %>% dplyr::select(!c(evidence))
 #cell_state_markers <- read.csv('./NF-downstream_analysis/binary_knowledge_matrix.csv', row.names = 1) %>% dplyr::select(!c(evidence))
 
 metadata <- read.csv(list.files(data_path, pattern = "*metadata.csv", full.names = TRUE))
