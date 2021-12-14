@@ -8,9 +8,9 @@ plot_umap_gm_coexpression <- function(seurat_object, gm_1, gm_2, col.threshold =
   start = 1
   end = 100
   width = end - start
-  gm_1_means <- t(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'data'))[,gm_1] %>% rowMeans(.)
+  gm_1_means <- t(as.matrix(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'data')))[,gm_1] %>% rowMeans(.)
   gm_1_scaled <- (gm_1_means - min(gm_1_means))/(max(gm_1_means) - min(gm_1_means)) * width + start
-  gm_2_means <- t(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'data'))[,gm_2] %>% rowMeans(.)
+  gm_2_means <- t(as.matrix(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'data')))[,gm_2] %>% rowMeans(.)
   gm_2_scaled <- (gm_2_means - min(gm_2_means))/(max(gm_2_means) - min(gm_2_means)) * width + start
   dat <- data.frame(gm_1_scaled, gm_2_scaled, row.names = names(gm_1_scaled))
   dat <-  round(dat, 0)
