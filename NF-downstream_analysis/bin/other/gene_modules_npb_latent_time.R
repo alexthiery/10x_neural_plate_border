@@ -213,7 +213,10 @@ lineage_colours = c('placodal' = '#3F918C', 'NC' = '#DE4D00')
 #                           Read in data and combine into seurat object                  #
 #####################################################################################################
 
-metadata <- read.csv(list.files(data_path, pattern = "*.csv", full.names = TRUE))
+cell_state_markers <- read.csv(list.files(data_path, full.names = TRUE, pattern = '*binary_knowledge_matrix.csv'), row.names = 1) %>% select(!c(evidence))
+#cell_state_markers <- read.csv('./NF-downstream_analysis/binary_knowledge_matrix.csv', row.names = 1) %>% dplyr::select(!c(evidence))
+
+metadata <- read.csv(list.files(data_path, pattern = "*metadata.csv", full.names = TRUE))
 # metadata <- read.csv('./output/NF-downstream_analysis_stacas/transfer_subset/transfer_ppr_nc_subset/cellrank/transfer_ppr_nc_subset_metadata.csv')
 
 seurat_data <- readRDS(list.files(data_path, pattern = "*.RDS", full.names = TRUE)[!list.files(data_path, pattern = "*.RDS") %>% grepl('antler', .)])
@@ -262,10 +265,14 @@ seurat_data@meta.data$scHelper_cell_type <- factor(seurat_data@meta.data$scHelpe
 
 gms <- antler_data$gene_modules$lists$unbiasedGMs_DE_batchfilt$content
 
+PPR_genes <- rownames(cell_state_markers %>% filter(PPR == 1))
+NC_genes <- rownames(cell_state_markers %>% filter(NC == 1 | dNC == 1))
+
+gms_sub <- gms[unlist(lapply(gms, function(x) any(PPR_genes %in% x) | any(NC_genes %in% x)))]
+
+# now that gms have been selected, need to manually specify their order:
 PPR_gms <- c("GM12", "GM14", "GM13")
 NC_gms <- c("GM40", "GM42", "GM44", "GM43")
-
-gms_sub <- gms[unlist(c(PPR_gms, NC_gms))]
 
 # Get plot data from GeneModulePheatmap to plot with Complex Heatmap for extra functionality
 plot_data <- GeneModulePheatmap(seurat_obj = seurat_data,  metadata = c('stage', 'scHelper_cell_type'), gene_modules = gms_sub,
