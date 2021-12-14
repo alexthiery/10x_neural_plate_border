@@ -324,7 +324,8 @@ if (is.null(names(antler_data$gene_modules$lists$unbiasedGMs$content))) {
 
 ########## DE GMs ##############
 # Plot gene modules with at least 50% of genes DE > 0.25 logFC & FDR < 0.001
-gms <- DEGeneModules(seurat_data, antler_data$gene_modules$get("unbiasedGMs"), logfc = 0.25, pval = 0.001, selected_gene_proportion = 0.5, active_ident = meta_col,
+temp_seurat <- subset(seurat_data, cells = seurat_data@meta.data %>% filter(stage %in% c('HH7', 'ss4', 'ss8')) %>% rownames())
+gms <- DEGeneModules(temp_seurat, antler_data$gene_modules$get("unbiasedGMs"), logfc = 0.25, pval = 0.001, selected_gene_proportion = 0.5, active_ident = meta_col,
                      ident_1 = c('aPPR', 'pPPR', 'PPR'), ident_2 = c('NC', 'dNC'))
 
 # save unbiasedGMs_DE in antler object
