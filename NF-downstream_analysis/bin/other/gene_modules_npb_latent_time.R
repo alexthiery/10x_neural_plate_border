@@ -280,13 +280,13 @@ plot_data <- GeneModulePheatmap(seurat_obj = seurat_data,  metadata = c('stage',
 plot_data$ann_colours$scHelper_cell_type <- scHelper_cell_type_colours[names(plot_data$ann_colours$scHelper_cell_type)]
 plot_data$ann_colours$stage <- stage_colours[names(plot_data$ann_colours$stage)]
 
-goi <- which(rownames(plot_data$row_ann) %in% c('FAM184B', 'TSPAN13', 'GATA2', 'GATA3',
-                                                'DLX5', 'DLX6', 'SIX3', 'PAX6', 'NFKB1', 
+goi <- which(rownames(plot_data$row_ann) %in% c('TSPAN13', 'GATA2', 'GATA3',
+                                                'DLX5', 'DLX6', 'SIX3', 'PAX6', 
                                                 'SIX1', 'EYA2', 'ASS1',
-                                                'MSX1', 'Z-ENC1',
-                                                'PAX7', 'SNAI2',
-                                                'OLFML3', 'WNT1',
-                                                'SOX10', 'RFTN2'
+                                                'MSX1', 'ZIC1', 'ZEB2', 'LMX1B',
+                                                'PAX7', 'SNAI2', 'CSRNP1', 'FOXD3', 'TFAP2B', 'SOX9',
+                                                'WNT1', 'SOX5', 'ID1', 'ID2',
+                                                'SOX10', 'ETS1', 'LMO4', 'SOX8'
 ))
 
 png(paste0(plot_path, 'subsetGMs.png'), width = 100, height = 60, res = 800, units = 'cm')
