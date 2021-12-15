@@ -315,9 +315,9 @@ Heatmap(t(plot_data$plot_data), col = PurpleAndYellow(), cluster_columns = FALSE
                                                                  which = "column", side = 'bottom',
                                                                  labels_gp = gpar(fontsize = 40), lines_gp = gpar(lwd=8))),
         
-        right_annotation = rowAnnotation(foo = anno_mark(at = goi,
+        right_annotation = rowAnnotation(foo = anno_mark(at = goi, padding = 0.4, link_width = unit(10, "mm"),
                                                          labels = rownames(plot_data$row_ann)[goi],
-                                                         labels_gp = gpar(fontsize = 35), lines_gp = gpar(lwd=8))),
+                                                         labels_gp = gpar(fontsize = 35), lines_gp = gpar(lwd=7))),
         
         raster_quality = 8
 )
