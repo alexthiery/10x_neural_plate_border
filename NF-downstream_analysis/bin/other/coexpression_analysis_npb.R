@@ -610,10 +610,12 @@ for(stage in names(plot_data)){
   dat <- data.frame(gm_1_means, gm_1_means, row.names = names(gm_1_means))
   dat <- dat %>% mutate(coexpression = gm_1_means * gm_2_means)
   
-  png(paste0(plot_path, stage, '_coexpression_hist.png'), height = 5, width = 7, units = 'cm', res = 400)
+  png(paste0(plot_path, stage, '_coexpression_hist.png'), height = 4.5, width = 6, units = 'cm', res = 400)
   print(ggplot(dat, aes(x = coexpression)) +
           geom_histogram(binwidth = 0.001, colour = stage_colours[[stage]]) +
-          theme_classic())
+          theme_classic()) +
+          xlab('cell count') +
+          ylab('PPR/NC GM co-expression')
   graphics.off()
   
   
