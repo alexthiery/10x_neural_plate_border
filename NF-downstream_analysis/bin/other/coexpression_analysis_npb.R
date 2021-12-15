@@ -614,8 +614,8 @@ for(stage in names(plot_data)){
   print(ggplot(dat, aes(x = coexpression)) +
           geom_histogram(binwidth = 0.001, colour = stage_colours[[stage]]) +
           theme_classic() +
-          xlab('cell count') +
-          ylab('PPR/NC GM co-expression'))
+          xlab('GM2/GM5 co-expression') +
+          ylab('cell count'))
   graphics.off()
   
   
