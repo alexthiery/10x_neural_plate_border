@@ -275,7 +275,7 @@ PPR_gms <- c("GM12", "GM14", "GM13")
 NC_gms <- c("GM40", "GM42", "GM44", "GM43")
 
 # Get plot data from GeneModulePheatmap to plot with Complex Heatmap for extra functionality
-plot_data <- GeneModulePheatmap(seurat_obj = seurat_data,  metadata = c('stage', 'scHelper_cell_type'), gene_modules = gms_sub,
+plot_data <- GeneModulePheatmap(seurat_obj = seurat_data,  metadata = c('stage', 'scHelper_cell_type'), gene_modules = gms_sub[c(PPR_gms, NC_gms)], # reorder gms manually
                                 col_order = c('stage', 'scHelper_cell_type'), col_ann_order = c('stage', 'scHelper_cell_type'), return = 'plot_data')
 plot_data$ann_colours$scHelper_cell_type <- scHelper_cell_type_colours[names(plot_data$ann_colours$scHelper_cell_type)]
 plot_data$ann_colours$stage <- stage_colours[names(plot_data$ann_colours$stage)]
