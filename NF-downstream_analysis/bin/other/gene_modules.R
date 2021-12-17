@@ -318,7 +318,7 @@ if (is.null(names(antler_data$gene_modules$lists$unbiasedGMs$content))) {
 }
 
 ########## DE GMs ##############
-# Plot gene modules with at least 50% of genes DE > 0.25 logFC & FDR < 0.001
+# Plot gene modules with at least 50% of genes DE > 0.5 logFC & FDR < 0.001
 gms <- DEGeneModules(seurat_data, antler_data$gene_modules$get("unbiasedGMs"), logfc = 0.5, pval = 0.001, selected_gene_proportion = 0.5, active_ident = meta_col)
 
 # save unbiasedGMs_DE in antler object
