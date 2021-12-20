@@ -105,7 +105,7 @@ cell_type_order <- c('EE', 'NNE', 'pEpi', 'PPR', 'aPPR', 'pPPR', 'eNPB', 'NPB',
                      'HB', 'iNP', 'MB', 'aNP', 'FB', 'vFB', 'node', 'streak')
 
 
-genes <- rev(c('EPAS1', 'GATA3', 'SIX1', 'EYA2', 'DLX5', 'BMP4', 'MSX1', 'TFAP2A', 'TFAP2B', 'PAX7', 'SOX2', 'OTX2', 'YEATS4', 'SOX21', 'HOXB1', 'GBX2', 'Z-RAX', 'SIX3', 'ADMP', 'EOMES'))
+genes <- rev(c('EPAS1', 'GATA3', 'SIX1', 'EYA2', 'DLX5', 'BMP4', 'MSX1', 'TFAP2A', 'TFAP2B', 'PAX7', 'SOX2', 'OTX2', 'YEATS4', 'SOX11', 'SOX3', 'SOX21', 'HOXB1', 'GBX2', 'Z-RAX', 'SIX3', 'ADMP', 'EOMES'))
 
 cells <- rownames(filter(seurat_data@meta.data, stage %in% c('HH4', 'HH5', 'HH6')))
 
