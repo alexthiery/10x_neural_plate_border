@@ -311,8 +311,8 @@ plot_data$ann_colours$stage <- stage_colours[names(plot_data$ann_colours$stage)]
 
 goi <- which(rownames(plot_data$row_ann) %in% c('EPCAM', 'SALL4', 'TSPAN13',
                                                 'HOMER2', 'TFAP2C', 'BAMBI', 'CITED4',
-                                                'SIX1', 'EYA2', 'DLX5', 'DLX6', 'GATA2', 'GATA3',
-                                                'PAX7', 'SNAI2', 'SOX10',
+                                                'SIX1', 'EYA2', 'DLX5', 'DLX6', 'GATA2', 'GATA3', 'TFAP2A',
+                                                'PAX7', 'SNAI2', 'SOX10', 'TFAP2B',
                                                 'LMO1', 'SOX21'))
 
 png(paste0(plot_path, 'subsetGMs_manual.png'), width = 100, height = 60, res = 800, units = 'cm')
