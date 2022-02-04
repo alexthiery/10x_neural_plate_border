@@ -37,6 +37,7 @@ def parse_args(args=None):
     parser.add_argument('-el', '--endLatest', type=str, help='Space separated array specifying temporal arrangement of stages (i.e. HH4,HH5,HH6)', nargs='+', default=None)
     parser.add_argument('-ec', '--endCol', type=str, help='Name of end metadata column', default=None)
     parser.add_argument('-w', '--weightDiffusion', type=float, help='Weight applied to couple latent time with diffusion-based velocity pseudotime', default=None)
+    parser.add_argument('-v', '--verbose', type=bool, help='Print log information for debugging', default=True)
     return parser.parse_args(args)
 
 def check_args(args, adata):
@@ -277,6 +278,11 @@ def main(args=None):
     
     check_args(args, adata)
     
+    # For debugging
+    if args.verbose == True:
+        print(args)
+        print(adata)
+
     # Set plotting colours if available
     if args.coloursColumn is not None:
         print('Setting cluster colours using ' + args.coloursColumn + ' column')
@@ -308,8 +314,5 @@ if __name__ == '__main__':
 
 
 
-# args = ['-i', '../output/NF-downstream_analysis_stacas/scvelo/NF-scRNAseq_alignment_out/seurat_intersect_loom/NF-scRNAseq_alignment_out_seurat_intersect.loom', '-o', 'out.h5ad', '-m', 'dynamical', '-c',
-#         'scHelper_cell_type', '-s', 'stage', '-b', 'run', '--ncores', '32', '--coloursColumn', 'cell_colours', '--npcs', '20', '--nneighbours', '20', '--root', 'HH4', '--rootCol', 'stage',
-#         '--weightDiffusion', '0.2', '--diffKinetics', 'True']
-
+# args = ['--input', '../output/NF-downstream_analysis_stacas/transfer_labels/scvelo/seurat_intersect_loom/all_stages_filtered_seurat_intersect.loom', '--output', 'all_stages_filtered', '--ncores', '48', '-m', 'dynamical', '-c', 'scHelper_cell_type', '-s', 'stage', '-b', 'run', '--coloursColumn', 'cell_colours', '--npcs', '20', '--nneighbours', '20', '--rootEarliest', 'HH4', 'HH5', 'HH6', 'HH7', 'ss4', 'ss8', '--rootCol', 'stage', '--weightDiffusion', '0.2', '--diffKinetics', 'True']
 # args, adata = main(args)
