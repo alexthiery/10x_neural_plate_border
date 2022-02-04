@@ -294,7 +294,7 @@ def main(args=None):
     adata = preprocess_anndata(adata=adata)
     # calculate means and uncentered variances across NN in PCA space
     scv.pp.moments(data=adata,  n_pcs=args.npcs, n_neighbors=args.nneighbours)
-    adata = calc_velocity(adata=adata, velocityMode=args.velocityMode, ncores=args.ncores)
+    adata = calc_velocity(adata=adata, velocityMode=args.velocityMode, groupby=args.clusterColumn, ncores=args.ncores)
     plot_velocity(adata=adata, clusterColumn=args.clusterColumn, dpi=args.dpi)
 
     # Run dynamical or deterministic models and plot genes
