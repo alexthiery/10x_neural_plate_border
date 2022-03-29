@@ -105,10 +105,11 @@ cell_type_order <- c('EE', 'NNE', 'pEpi', 'PPR', 'aPPR', 'pPPR', 'eNPB', 'NPB',
                      'HB', 'iNP', 'MB', 'aNP', 'FB', 'vFB', 'node', 'streak')
 
 
-genes <- rev(c('EPAS1', 'GATA3', 'SIX1', 'EYA2', 'DLX5', 'BMP4', 'MSX1', 'TFAP2A', 'TFAP2B', 'PAX7', 'SOX2', 'OTX2', 'YEATS4', 'SOX21', 'GBX2', 'SIX3', 'ADMP', 'EOMES'))
+genes <- rev(c('EPAS1', 'GATA3', 'SIX1', 'EYA2', 'DLX5', 'BMP4', 'MSX1', 'TFAP2A', 'TFAP2B', 'Pax3', 'PAX7', 'SOX2', 'OTX2', 'YEATS4', 'SOX11', 'SOX3', 'SOX21', 'HOXB1', 'GBX2', 'Z-RAX', 'SIX3', 'ADMP', 'EOMES'))
+
 cells <- rownames(filter(seurat_data@meta.data, stage %in% c('HH4', 'HH5', 'HH6')))
 
-png(paste0(plot_path, 'HH4-HH6_dotplot.png'), width = 23, height = 13, units = 'cm', res = 400)
+png(paste0(plot_path, 'HH4-HH6_dotplot.png'), width = 23, height = 14, units = 'cm', res = 400)
 dotplot(seurat_data, cells, genes, group_by = 'scHelper_cell_type', facet = 'stage', group_by_levels = cell_type_order, limits = c(5, NA), range = c(0,6)) +
   guides(size=guide_legend(title="Percent cells\nexpressing"), colour = guide_colourbar(title="Average\nexpression")) +
   theme(strip.text.x = element_text(size=15),

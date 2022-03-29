@@ -9,7 +9,6 @@
 def analysis_scripts                                = [:]
 analysis_scripts.gene_modules                       = file("$baseDir/bin/other/gene_modules.R", checkIfExists: true)
 analysis_scripts.state_classification               = file("$baseDir/bin/seurat/state_classification.R", checkIfExists: true)
-analysis_scripts.gene_modules_latent_time           = file("$baseDir/bin/other/gene_modules_latent_time.R", checkIfExists: true)
 
 params.gene_module_options                          = [:]
 params.state_classification_options                 = [:]

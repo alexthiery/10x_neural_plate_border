@@ -151,7 +151,7 @@ png(paste0(plot_path,"sex_kmeans_log2FC_boxplot.png"), height = 18, width = 18, 
 boxplot(c(FC$Z, FC$auto),  ylab = "male - female log2 FC (mean normalised UMI +1)", names = c("Z chromosome genes", "autosomal genes"))
 graphics.off()
 
-# Z genes are upregulated within male genes relative to female genes whereas autosomal genes have a normal distribution of logFCs
+# Z genes are upregulated within male cells relative to female cells whereas autosomal genes have a normal distribution of logFCs
 
 #####################################################################################################
 #                                     Regress sex effect                                            #

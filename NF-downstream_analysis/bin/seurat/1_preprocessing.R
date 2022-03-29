@@ -239,7 +239,7 @@ for(run in names(seurat_split)){
   graphics.off()
 }
 
-# Use clustering resolution = 1 for filtering
+
 seurat_split <- lapply(names(pc_cutoff), function(x) RunUMAP(seurat_split[[x]], dims = 1:pc_cutoff[[x]], verbose = FALSE))
 names(seurat_split) <- names(pc_cutoff)
 

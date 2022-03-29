@@ -26,8 +26,8 @@ data_path = "./input/rds_files/"
 # opt <- list()
 # opt$assay = 'integrated'
 # opt$outfile = 'seurat'
-# opt$group_by = 'seurat_clusters'
-# seurat_object <- readRDS("~/output/NF-downstream_analysis_stacas/seurat/6_contamination_filt/rds_files/contamination_filt_data.RDS")
+# opt$group_by = 'scHelper_cell_type'
+# seurat_object <- readRDS("./output/NF-downstream_analysis_stacas/transfer_labels/seurat/rds_files/seurat_label_transfer.RDS")
 
 seurat_object <- readRDS(list.files(data_path, full.names = TRUE, recursive = TRUE))
 
@@ -37,25 +37,40 @@ seurat_object <- DietSeurat(seurat_object, counts = TRUE, assays = opt$assay, di
 # remove anything from misc slot as depending on the contents this can cause recursion errors
 seurat_object@misc <- list()
 
-# if --group_by is specified, generate cell colours gor group_by column
-if(opt[['group_by']] %in% colnames(seurat_object@meta.data)){
+# generate cell colours for group_by column
+if(!opt[['group_by']] %in% colnames(seurat_object@meta.data)){
+  stop('--group_by missing from seurat@meta.data')
+}
+
+if(opt$group_by == 'scHelper_cell_type'){
+  colours <- c("#ed5e5f", "#A73C52", "#6B5F88", "#3780B3", "#3F918C", "#47A266", "#53A651", "#6D8470",
+                                  "#87638F", "#A5548D", "#C96555", "#ED761C", "#FF9508", "#FFC11A", "#FFEE2C", "#EBDA30",
+                                  "#CC9F2C", "#AD6428", "#BB614F", "#D77083", "#F37FB8", "#DA88B3", "#B990A6", "#b3b3b3")
+  
+  cell_state <- factor(seurat_object@meta.data[['scHelper_cell_type']], levels = c('NNE', 'HB', 'eNPB', 'PPR', 'aPPR', 'streak',
+                                                                        'pPPR', 'NPB', 'aNPB', 'pNPB','eCN', 'dNC',
+                                                                        'eN', 'NC', 'NP', 'pNP', 'EE', 'iNP', 'MB', 
+                                                                        'vFB', 'aNP', 'node', 'FB', 'pEpi'))
+  names(colours) <- levels(cell_state)
+  
+} else {
+  
   # Get ggcolours for cell states
   colours = ggPlotColours(length(unique(seurat_object@meta.data[[opt$group_by]])))
+  
   if(class(seurat_object@meta.data[[opt$group_by]]) == 'factor'){
     cell_state <- droplevels(seurat_object@meta.data[[opt$group_by]])
   } else {
     cell_state <- as.factor(seurat_object@meta.data[[opt$group_by]])
   }
   names(colours) <- levels(cell_state)
-  
-  # Add colours to new metadata colummn
-  seurat_object@meta.data[['cell_colours']] <- unname(colours[cell_state])
-  # If any na values are present in seurat identities, set colour to grey
-  seurat_object@meta.data[['cell_colours']][is.na(seurat_object@meta.data[['cell_colours']])] <- '#AAAAAA'
-  
-}else{
-  stop('--group_by missing from seurat@meta.data')
 }
+
+# Add colours to new metadata colummn
+seurat_object@meta.data[['cell_colours']] <- unname(colours[cell_state])
+# If any na values are present in seurat identities, set colour to grey
+seurat_object@meta.data[['cell_colours']][is.na(seurat_object@meta.data[['cell_colours']])] <- '#AAAAAA'
+
 
 # Convert factor columns to character before converting to h5ad
 i <- sapply(seurat_object@meta.data, is.factor)

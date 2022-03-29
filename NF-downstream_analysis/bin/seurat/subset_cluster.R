@@ -140,7 +140,13 @@ DefaultAssay(seurat_data) <- "RNA"
 dir.create(paste0(plot_path, 'feature_plots/'))
 for(i in seurat_data@assays$RNA@var.features){
     png(paste0(plot_path, 'feature_plots/', i, '.png'), height = 12, width = 12, units = 'cm', res = 100)
-    print(FeaturePlot(seurat_data, i))
+    print(
+        FeaturePlot(seurat_data, features = i, pt.size = 1.4) +
+            theme_void() +
+            theme(plot.title = element_blank(),
+                legend.text = element_text(size=16),
+                legend.key.size = unit(1, 'cm'))
+        )
     graphics.off()
 }
 

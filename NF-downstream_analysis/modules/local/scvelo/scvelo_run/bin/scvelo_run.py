@@ -28,8 +28,8 @@ def parse_args(args=None):
     parser.add_argument('-k', '--diffKinetics', type=bool, help='Whether to run diff kinetics.', default=False)
     parser.add_argument('-f', '--forceCol', type=bool, help='Force plotting color bars.', default=False)
     parser.add_argument('-cc', '--coloursColumn', type=str, help='Name of cell colours column.', default=None)
-    parser.add_argument('-np', '--npcs', type=int, help='Number of PCs to use for calculating moments', default=30)
-    parser.add_argument('-nn', '--nneighbours', type=int, help='Number of neighbours to use for calculating moments', default=30)
+    parser.add_argument('-np', '--npcs', type=int, help='Number of PCs to use for calculating moments', default=20)
+    parser.add_argument('-nn', '--nneighbours', type=int, help='Number of neighbours to use for calculating moments', default=20)
     parser.add_argument('-r', '--root', type=str, help='Name of root', default=None)
     parser.add_argument('-re', '--rootEarliest', type=str, help='Space separated array specifying temporal arrangement of stages (i.e. HH4,HH5,HH6)', nargs='+', default=None)
     parser.add_argument('-rc', '--rootCol', type=str, help='Name of root metadata column', default=None)
@@ -37,6 +37,7 @@ def parse_args(args=None):
     parser.add_argument('-el', '--endLatest', type=str, help='Space separated array specifying temporal arrangement of stages (i.e. HH4,HH5,HH6)', nargs='+', default=None)
     parser.add_argument('-ec', '--endCol', type=str, help='Name of end metadata column', default=None)
     parser.add_argument('-w', '--weightDiffusion', type=float, help='Weight applied to couple latent time with diffusion-based velocity pseudotime', default=None)
+    parser.add_argument('-v', '--verbose', type=bool, help='Print log information for debugging', default=True)
     return parser.parse_args(args)
 
 def check_args(args, adata):
@@ -114,7 +115,7 @@ def plot_velocity(adata, clusterColumn, threshold=.1, arrow_length=5, arrow_size
     scv.settings.figdir = scv.settings.figdir+plot_dir
     scv.pl.velocity_embedding(adata, color=clusterColumn, arrow_length=arrow_length, arrow_size=arrow_size, save=prefix+'velocity_embedding.png', dpi=dpi)
     scv.pl.velocity_embedding_grid(adata, color=clusterColumn, arrow_length=arrow_length, arrow_size=arrow_size, basis='umap', save=prefix+'velocity_embedding_grid.png', dpi=dpi)
-    scv.pl.velocity_embedding_stream(adata, color=clusterColumn, basis='umap', save=prefix+'velocity_embedding_stream.png', dpi=dpi)
+    scv.pl.velocity_embedding_stream(adata, color=clusterColumn, basis='umap', save=prefix+'velocity_embedding_stream.png', legend_loc='none', linewidth=2.5, arrow_size=1.5, alpha=0.5, figsize=[11,11], dpi=dpi)
     scv.pl.velocity_graph(adata, threshold=threshold, color=clusterColumn, basis='umap', save=prefix+'velocity_graph.png', dpi=dpi)
     scv.settings.figdir = keep_figdir
     
@@ -277,6 +278,11 @@ def main(args=None):
     
     check_args(args, adata)
     
+    # For debugging
+    if args.verbose == True:
+        print(args)
+        print(adata)
+
     # Set plotting colours if available
     if args.coloursColumn is not None:
         print('Setting cluster colours using ' + args.coloursColumn + ' column')
@@ -288,7 +294,7 @@ def main(args=None):
     adata = preprocess_anndata(adata=adata)
     # calculate means and uncentered variances across NN in PCA space
     scv.pp.moments(data=adata,  n_pcs=args.npcs, n_neighbors=args.nneighbours)
-    adata = calc_velocity(adata=adata, velocityMode=args.velocityMode, ncores=args.ncores)
+    adata = calc_velocity(adata=adata, velocityMode=args.velocityMode, groupby=args.clusterColumn, ncores=args.ncores)
     plot_velocity(adata=adata, clusterColumn=args.clusterColumn, dpi=args.dpi)
 
     # Run dynamical or deterministic models and plot genes
@@ -308,8 +314,5 @@ if __name__ == '__main__':
 
 
 
-# args = ['-i', '../output/NF-downstream_analysis_stacas/scvelo/NF-scRNAseq_alignment_out/seurat_intersect_loom/NF-scRNAseq_alignment_out_seurat_intersect.loom', '-o', 'out.h5ad', '-m', 'dynamical', '-c',
-#         'scHelper_cell_type', '-s', 'stage', '-b', 'run', '--ncores', '32', '--coloursColumn', 'cell_colours', '--npcs', '20', '--nneighbours', '20', '--root', 'HH4', '--rootCol', 'stage',
-#         '--weightDiffusion', '0.2', '--diffKinetics', 'True']
-
+# args = ['--input', '../output/NF-downstream_analysis_stacas/transfer_labels/scvelo/seurat_intersect_loom/all_stages_filtered_seurat_intersect.loom', '--output', 'all_stages_filtered', '--ncores', '48', '-m', 'dynamical', '-c', 'scHelper_cell_type', '-s', 'stage', '-b', 'run', '--coloursColumn', 'cell_colours', '--npcs', '20', '--nneighbours', '20', '--rootEarliest', 'HH4', 'HH5', 'HH6', 'HH7', 'ss4', 'ss8', '--rootCol', 'stage', '--weightDiffusion', '0.2', '--diffKinetics', 'True']
 # args, adata = main(args)

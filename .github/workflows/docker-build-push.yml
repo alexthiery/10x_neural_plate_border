@@ -16,7 +16,7 @@ jobs:
       matrix:
         tag: ["base"]
         docker-file: ["Dockerfile"]
-        module-name: ["palantir", "schelper", "phate", "scvelo", "scatterplot3d", "monocle3"]
+        module-name: ["palantir", "schelper", "schelper_shiny", "phate", "scvelo", "scatterplot3d", "monocle3"]
 
     steps:
       - uses: actions/checkout@v2
