@@ -245,6 +245,8 @@ metadata <- metadata[ order(match(rownames(metadata), rownames(seurat_data@meta.
 # replace seurat metadata with scvelo metadata
 seurat_data@meta.data <- metadata
 
+# Save seurat object with latent time labels added to metadata
+saveRDS(seurat_data, paste0(rds_path, "seurat_npb_subset_latent_time.RDS"), compress = FALSE)
 
 #############################################################################
 #                           NC Plac Neural gm subset                        #
