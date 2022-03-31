@@ -157,20 +157,23 @@ server <- function(input, output, session){
     
   })
   
-
-  output$scvelo_umaps <- renderPlot(FeaturePlot(subset_dataset(), features = input$feature_lineage_dynamics, pt.size = 1, order = FALSE) +
-                                      scale_colour_viridis(option="viridis"))
-
-  FeaturePlot(dat_list$`Full data`, features = 'latent_time', pt.size = 2) +
-    scale_colour_viridis(option="plasma")
+  output$scvelo_umaps <- renderPlot(
+    if(input$feature_lineage_dynamics == 'latent_time'){
+      FeaturePlot(subset_dataset(), features = input$feature_lineage_dynamics, pt.size = 1, order = FALSE) +
+        scale_colour_viridis(option="magma")
+    } else {
+      FeaturePlot(subset_dataset(), features = input$feature_lineage_dynamics, pt.size = 1, order = FALSE) +
+        scale_colour_viridis(option="viridis")
+      }
+    )
 
 
   ####################################################################
   # Generate lineage dynamics plots
-  
+
   # Set lineage options based on dataset selected
   observe({
-    
+
     if(input$select_lineage_dataset == 'Full data'){
       lineages = c('Neural crest', 'Neural', 'Placodal')
     } else if (input$select_lineage_dataset == 'NPB subset'){
@@ -184,7 +187,7 @@ server <- function(input, output, session){
                              selected = 'Neural crest'
     )
   })
-  
+
   plot_data <- reactive({prepare_dynamics(input$gene_id_lineage_dynamics, subset_dataset(), lineages = input$select_lineage)})
 
   output$lineage_dynamics <- renderPlot(ggplot(plot_data(), aes(x = latent_time, y = scaled_expression, colour = lineage)) +
@@ -194,10 +197,3 @@ server <- function(input, output, session){
 }
 
 shinyApp(ui, server)
-
-# library(viridis)
-# 
-# 
-# subset_lineage_probabilities <- c('Neural' = 'lineage_neural_probability', 'Neural crest' = 'lineage_NC_probability', 'Placodal' = 'lineage_placodal_probability')
-# 
-
