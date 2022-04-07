@@ -3,14 +3,16 @@ server <- function(input, output, session){
   
   ####################################################################
   # Generate seurat umaps (cell state, stage, clusters)
-  output$dimplot <- renderPlot(DimPlot(dat_list[[input$subset_featureplots]], group.by = input$group),
+  output$dimplot <- renderPlot(DimPlot(dat_list[[input$subset_featureplots]], group.by = input$group) +
+                                 my_theme,
                                height = function() {session$clientData$output_dimplot_width * 0.8})
   
   
   subset_dataset <- reactive({dat_list[[input$select_lineage_dataset]]})
   ####################################################################
   # Generate gene feature plots
-  output$featureplot <- renderPlot(FeaturePlot(dat_list[[input$subset_featureplots]], features = input$gene_id),
+  output$featureplot <- renderPlot(FeaturePlot(dat_list[[input$subset_featureplots]], features = input$gene_id)+
+                                     my_theme,
                                    height = function() {session$clientData$output_featureplot_width * 0.8})
 
   
@@ -36,13 +38,10 @@ server <- function(input, output, session){
   })
   
   output$scvelo_umaps <- renderPlot(
-    if(input$feature_lineage_dynamics == 'latent_time'){
       FeaturePlot(subset_dataset(), features = input$feature_lineage_dynamics, pt.size = 1, order = FALSE) +
-        scale_colour_viridis(option="magma")
-    } else {
-      FeaturePlot(subset_dataset(), features = input$feature_lineage_dynamics, pt.size = 1, order = FALSE) +
-        scale_colour_viridis(option="viridis")
-      }
+        scale_colour_viridis(option=ifelse(input$feature_lineage_dynamics == 'latent_time', 'magma', 'viridis')) +
+        my_theme,
+      height = function() {session$clientData$output_scvelo_umaps_width * 0.7}
     )
 
 
@@ -96,29 +95,39 @@ server <- function(input, output, session){
           axis.text.y = element_text(size = 20),  
           axis.title.x = element_text(size = 24),
           axis.title.y = element_text(size = 24),
-          legend.text=element_text(size=20))
+          legend.text=element_text(size=20)),
+    height = function() {session$clientData$output_lineage_dynamics_width * 0.5}
   )
   
 
   ####################################################################
   # Co-expression feature plots
+  
+  # Edit co-expression header based on genes selected
+  output$coexpression_header <- renderUI({
+    h4(paste('Co-expression of', input$coexpression_gene_id_1, 'and', input$coexpression_gene_id_2))
+  })
+  
   output$coexpression_featureplot_1 <- renderPlot(FeaturePlot(dat_list[[input$coexpression_subset_featureplots]],
                                                               features = input$coexpression_gene_id_1,
                                                               pt.size = 0.75) +
-                                                    scale_colour_gradientn(colours = colorRampPalette(c("gray85", input$gene_1_col))(5)),
+                                                    scale_colour_gradientn(colours = colorRampPalette(c("gray85", input$gene_1_col))(5)) +
+                                                    my_theme,
                                                   height = function() {session$clientData$output_coexpression_featureplot_1_width * 0.75}
   )
 
   output$coexpression_featureplot_2 <- renderPlot(FeaturePlot(dat_list[[input$coexpression_subset_featureplots]],
                                                               features = input$coexpression_gene_id_2,
                                                               pt.size = 0.75) +
-                                                    scale_colour_gradientn(colours = colorRampPalette(c("gray85", input$gene_2_col))(5)),
+                                                    scale_colour_gradientn(colours = colorRampPalette(c("gray85", input$gene_2_col))(5)) +
+                                                    my_theme,
                                                   height = function() {session$clientData$output_coexpression_featureplot_2_width * 0.75}
   )
   
   output$coexpression_umap <- renderPlot(coexpression_umap(dat_list[[input$coexpression_subset_featureplots]], gene_1 = input$coexpression_gene_id_1,
                                                                    gene_2 = input$coexpression_gene_id_2, col.threshold = input$threshold, two.colors = c(input$gene_1_col, input$gene_2_col),
-                                                                   negative.color = 'gray90', limit = 1, highlight_cell_size = 2),
+                                                                   negative.color = 'gray90', limit = 1, highlight_cell_size = 2) +
+                                           my_theme,
                                          height = function() {session$clientData$output_coexpression_umap_width * 0.7}
                                          )  
 

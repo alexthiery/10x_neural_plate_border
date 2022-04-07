@@ -1,5 +1,5 @@
 library(shiny)
-library(shinydashboard)
+library(bs4Dash)
 library(Seurat)
 library(tidyverse)
 library(viridis)
@@ -23,3 +23,6 @@ gene_ids <- lapply(dat_list, VariableFeatures) %>% Reduce(c, .) %>% unique()
 
 # Set options for viewing DimPlots
 group_options = c('Stage', 'Cell state', 'Clusters')
+
+my_theme <- theme(axis.text=element_text(size=14),
+                  axis.title=element_text(size=16))

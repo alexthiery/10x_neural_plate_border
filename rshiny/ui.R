@@ -1,11 +1,21 @@
+library(shinythemes)
+
+
+
+
+
 tab_home          <- tabItem(tabName = "home",
-                             h2("Home page <TO FILL>")
+                             fluidRow(
+                               column(8, offset = 2,
+                                      includeMarkdown("home.md")
+                               )
+                             )
 )
 
 tab_feature_plots <- tabItem(tabName = "featureplots",
                              fluidRow(
                                column(12,
-                                      radioButtons("subset_featureplots", "Select dataset to visualise", names(dat_list), inline = TRUE, selected = 'Full data', width = '500')
+                                      radioButtons("subset_featureplots", "Select dataset to visualise", names(dat_list), inline = TRUE, selected = 'Full data', width = '800')
                                )
                              ),
                              fluidRow(
@@ -35,17 +45,36 @@ tab_lineage_dynamics <- tabItem(tabName = "lineage_dynamics",
                                   ),
                                   column(6,
                                          box(
-                                           selectInput("feature_lineage_dynamics", "Select Feature", choices = scvelo_features),
+                                           fluidRow(
+                                             column(5,
+                                             selectInput("feature_lineage_dynamics", "Select Feature", choices = scvelo_features)
+                                             )
+                                           ),
                                            plotOutput("scvelo_umaps"),
-                                           width = 12
+                                           width = 12,
+                                           style='height:35vw'
                                          )
                                   ),
                                   column(6,
                                          box(
-                                           checkboxGroupInput("select_lineage", "Select lineages of interest", inline = TRUE),
-                                           selectInput("gene_id_lineage_dynamics", "Select Gene", gene_ids, width = "200", selected = 'PAX7'),
-                                           plotOutput("lineage_dynamics"),
-                                           width = 12
+                                           fluidRow(
+                                             column(4,
+                                                    selectInput("gene_id_lineage_dynamics", "Select Gene", gene_ids, width = "200", selected = 'PAX7'),
+                                                    ),
+                                             column(6,
+                                                    offset = 2,
+                                                    checkboxGroupInput("select_lineage", "Select lineages of interest", inline = TRUE),
+                                                    )
+                                           ),
+                                           br(),
+                                           br(),
+                                           fluidRow(
+                                             column(12,
+                                                    plotOutput("lineage_dynamics")
+                                             )
+                                           ),
+                                           width = 12,
+                                           style='height:35vw'
                                          )
                                   )
                                 )
@@ -75,7 +104,7 @@ tab_coexpression_umaps <- tabItem(tabName = "coexpression_umaps",
                                      fluidRow(
                                        column(12,
                                               # offset = 1,
-                                         plotOutput("coexpression_featureplot_1"),
+                                         plotOutput("coexpression_featureplot_1", width = '90%', height = '90%')
                                          )
                                        ),
                                      
@@ -97,25 +126,26 @@ tab_coexpression_umaps <- tabItem(tabName = "coexpression_umaps",
                                      fluidRow(
                                        column(12,
                                               # offset = 1,
-                                              plotOutput("coexpression_featureplot_2", width = '80%')
-                                              ),
-                                       tags$style(
-                                         "coexpression_featureplot_2 {border-color: red;}")
-                                       ),
+                                              plotOutput("coexpression_featureplot_2", width = '90%', height = '90%')
+                                       )
+                                     ),
+                                     
                                      width = 12, style='height:23vw'
-                                     )
+                                   )
                                    )
                                  ),
                                
                                column(
                                  6,
+                                 offset = 1,
                                   box(
                                     fluidRow(
                                       column(
-                                        6, offset = 3,
-                                        h3('Co-expression of gene 1 and gene 2')
+                                        8, offset = 2,
+                                        uiOutput('coexpression_header')
                                       )
                                     ),
+                                    br(),
                                     br(),
                                     fluidRow(
                                       column(
@@ -124,9 +154,11 @@ tab_coexpression_umaps <- tabItem(tabName = "coexpression_umaps",
                                       )
                                     ),
                                     br(),
+                                    br(),
                                     fluidRow(
                                       column(
-                                        10, offset = 1,
+                                        12,
+                                        # offset = 1,
                                         plotOutput("coexpression_umap")
                                       )
                                     ),
@@ -137,21 +169,37 @@ tab_coexpression_umaps <- tabItem(tabName = "coexpression_umaps",
 )
 
 
+
 ui <- dashboardPage(
-  dashboardHeader(title = "Custom font"),
+  fullscreen = TRUE,
+  header = dashboardHeader(
+    title = dashboardBrand(
+      title = "10x Neural Plate Border",
+      href = "https://github.com/alexthiery/10x_neural_plate_border"
+    )
+    # skin = "light",
+    # status = "white",
+    # border = TRUE,
+    # sidebarIcon = icon("bars"),
+
+  ),
+  
+  
   
   dashboardSidebar(
+    # tags$style("@import url(https://use.fontawesome.com/releases/v5.7.2/css/all.css);"),
+    
     sidebarMenu(
-      menuItem("Home", tabName = "home"),
-      menuItem("Feature Plots", tabName = "featureplots"),
-      menuItem("Lineage Dynamics", tabName = "lineage_dynamics"),
-      menuItem("UMAP co-expression", tabName = "coexpression_umaps")
+      menuItem("Home", tabName = "home", icon = icon('home')),
+      menuItem("Feature Plots", tabName = "featureplots", icon = icon("border-none")),
+      menuItem("Lineage Dynamics", tabName = "lineage_dynamics", icon = icon('chart-line')),
+      menuItem("UMAP co-expression", tabName = "coexpression_umaps", icon = icon("braille"))
     )
   ),
   
   dashboardBody(
     tags$head(
-      tags$link(rel = "stylesheet", type = "text/css", href = "www/custom.css")
+      tags$link(rel = "stylesheet", type = "text/css", href = "custom.css")
     ),
     tabItems(
       tab_home,

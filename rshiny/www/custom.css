@@ -1,0 +1,54 @@
+.brand-link {
+  text-align: center;
+
+}
+
+.font-weight-light {
+  font-weight: 500!important;
+}
+
+.shiny-option-group {
+  font-weight: 400;
+}
+
+div > label > span {
+  font-weight: 500;
+}
+
+.radio-in-line {
+  margin-right: 100px;
+}
+
+
+button, input, optgroup, select, textarea {
+    margin-left: 10px;
+}
+
+.control-label {
+    font-size: 18px;
+
+}
+
+#coexpression_header > h4 {
+  font-weight: 700;
+}
+
+
+
+/* Home markdown page edits */
+#shiny-tab-home > div > div > h2 {
+  text-align: center;
+}
+
+blockquote {
+    background-color: #f4f6f9;
+    border-left: .2rem solid #bebebe;
+    margin: 1.5em .7rem;
+    padding: .5em .7rem;
+    border-radius: 5px;
+}
+
+blockquote h1, blockquote h2, blockquote h3, blockquote h4, blockquote h5, blockquote h6 {
+    font-size: 1.25rem;
+    font-weight: 500;
+}
