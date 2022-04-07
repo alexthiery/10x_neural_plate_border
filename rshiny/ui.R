@@ -1,18 +1,3 @@
-library(shiny)
-library(shinydashboard)
-
-
-# Set parameters
-scvelo_features = c('latent_time', 'lineage_neural_probability', 'lineage_NC_probability', 'lineage_placodal_probability')
-
-
-
-# Get shared var features for optional input
-gene_ids <- lapply(dat_list, VariableFeatures) %>% Reduce(c, .) %>% unique()
-
-# Set options for viewing DimPlots
-group_options = c('Stage', 'Cell state', 'Clusters')
-
 tab_home          <- tabItem(tabName = "home",
                              h2("Home page <TO FILL>")
 )
@@ -176,11 +161,4 @@ ui <- dashboardPage(
     )
   )
 )
-
-
-
-
-
-
-
 

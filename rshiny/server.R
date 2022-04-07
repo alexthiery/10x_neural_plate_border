@@ -1,19 +1,3 @@
-library(shiny)
-library(shinydashboard)
-library(Seurat)
-library(tidyverse)
-library(viridis)
-library(mgcv)
-
-source('./custom_functions.R')
-
-# dat <- readRDS('../shiny_test.RDS')
-dat_list <- readRDS('../output/rshiny_input.RDS')
-
-
-# Set parameters
-lineage_map = c('Neural' = 'lineage_neural_probability', 'Neural crest' = 'lineage_NC_probability', 'Placodal' = 'lineage_placodal_probability')
-
 
 server <- function(input, output, session){
   
@@ -139,14 +123,3 @@ server <- function(input, output, session){
                                          )  
 
 }
-
-shinyApp(ui, server)
-
-
-
-
-
-
-
-
-
