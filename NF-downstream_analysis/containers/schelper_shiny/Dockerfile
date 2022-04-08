@@ -22,4 +22,5 @@ RUN   R -e "install.packages('tidyverse')" && \
       R -e "install.packages('Seurat')" && \
       R -e "install.packages('mgcv')" && \
       R -e "install.packages('viridis')" && \
+      R -e "install.packages('devtools')" && \
       R -e "devtools::install_github('alexthiery/scHelper@v0.2.4', dependencies = TRUE)"
