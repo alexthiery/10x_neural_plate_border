@@ -365,10 +365,12 @@ plot_umap_gm_coexpression <- function(seurat_object, gm_1, gm_2, col.threshold =
   # add cell colours to plot_data
   plot_data <- merge(plot_data, as.data.frame(cell_cols), by=0) %>% column_to_rownames('Row.names')
   
-  umap_plot <- ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2, colour = cell_cols)) +
+  positive_cells = filter(plot_data, cell_cols != negative.color)
+  
+  umap_plot <- ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2, colour = rownames(positive_cells))) +
     geom_point(colour = negative.color, size = 2) +
-    geom_point(data = plot_data %>% filter(cell_cols != negative.color), size = highlight_cell_size) +
-    scale_colour_manual(values=plot_data %>% filter(cell_cols != negative.color) %>% dplyr::pull(cell_cols))+
+    geom_point(data = positive_cells, size = highlight_cell_size) +
+    scale_colour_manual(breaks = rownames(positive_cells), values=positive_cells$cell_cols) +
     theme_void() +
     NoLegend()
   
