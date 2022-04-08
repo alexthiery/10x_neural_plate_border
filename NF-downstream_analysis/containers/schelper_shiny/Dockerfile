@@ -12,9 +12,9 @@ RUN apt-get update \
       libboost-filesystem1.67-dev \
       libxtst6 \
       libxt-dev \
-      libfontconfig1-dev \
-      libfribidi-dev \
-      libxml2.so.2
+      # libfontconfig1-dev \
+      # libfribidi-dev \
+      libxml2
 
 # Install scHelper
 RUN   R -e "install.packages('tidyverse')" && \
