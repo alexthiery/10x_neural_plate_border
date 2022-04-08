@@ -1,4 +1,4 @@
-FROM  rocker/rstudio:4.0.4
+FROM  rocker/tidyverse:4.0.4
 
 LABEL authors="alex.thiery@crick.ac.uk" \
       description="Docker image containing all requirements to run 10x downstream analysis in Seurat"
@@ -11,10 +11,10 @@ RUN apt-get update \
       libhdf5-dev \
       libboost-filesystem1.67-dev \
       libxtst6 \
-      libxt-dev \
+      libxt-dev
       # libfontconfig1-dev \
       # libfribidi-dev \
-      libxml2
+      # libxml2
 
 # Install scHelper
 RUN   R -e "install.packages('tidyverse')" && \
