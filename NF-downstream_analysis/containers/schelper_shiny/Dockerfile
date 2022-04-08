@@ -13,7 +13,8 @@ RUN apt-get update \
       libxtst6 \
       libxt-dev \
       libfontconfig1-dev \
-      libfribidi-dev
+      libfribidi-dev \
+      libxml2.so.2
 
 # Install scHelper
 RUN   R -e "install.packages('tidyverse')" && \
