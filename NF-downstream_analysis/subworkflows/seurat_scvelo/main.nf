@@ -2,11 +2,8 @@
 run scVelo
  */
 
-params.seurat_intersect_loom_options    = [:]
-params.scvelo_run_options                   = [:]
-
-include { SEURAT_INTERSECT_LOOM } from '../../modules/local/scvelo/seurat_intersect_loom/main'  addParams( options: params.seurat_intersect_loom_options ) 
-include { SCVELO_RUN } from '../../modules/local/scvelo/scvelo_run/main'                                addParams( options: params.scvelo_run_options ) 
+include { SEURAT_INTERSECT_LOOM } from '../../modules/local/scvelo/seurat_intersect_loom/main'
+include { SCVELO_RUN } from '../../modules/local/scvelo/scvelo_run/main'
 
 workflow SEURAT_SCVELO {
     take:
