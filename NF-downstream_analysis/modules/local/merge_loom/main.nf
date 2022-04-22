@@ -11,7 +11,6 @@ process MERGE_LOOM {
     tuple val(meta), path("*.loom"), emit: loom
 
     script:
-    def software = getSoftwareName(task.process)
     def prefix = task.ext.prefix ?: "merged"
 
     """

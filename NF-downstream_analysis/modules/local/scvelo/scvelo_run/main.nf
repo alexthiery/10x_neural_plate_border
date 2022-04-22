@@ -17,7 +17,6 @@ process SCVELO_RUN {
 
     script:
     def args = task.ext.args  ?: ''
-    def software = getSoftwareName(task.process)
     def prefix   = task.ext.prefix ?: "${meta.sample_id}"
 
     """
