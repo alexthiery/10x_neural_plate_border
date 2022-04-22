@@ -2,11 +2,6 @@
 
 nextflow.enable.dsl=2
 
-include { initOptions; saveFiles; getSoftwareName } from './functions'
-
-params.options = [:]
-def options    = initOptions(params.options)
-
 process SCVELO_RUN {
     tag "$meta.sample_id"
     label 'process_high'
