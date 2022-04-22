@@ -20,7 +20,7 @@ opt = getopt(spec)
 
     plot_path = "./output/NF-downstream_analysis_stacas/seurat/2_integration/plots/"
     rds_path = "./output/NF-downstream_analysis_stacas/seurat/2_integration/rds_files/"
-    data_path = "./output/NF-downstream_analysis/seurat/1_preprocessing/rds_files/"
+    data_path = "./output/NF-downstream_analysis/seurat/1_preprocess/rds_files/"
     ncores = 8
 
   } else if (opt$runtype == "nextflow"){

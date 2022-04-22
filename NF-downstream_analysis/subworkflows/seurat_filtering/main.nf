@@ -7,7 +7,7 @@
 --------------------------------------------------------------------------------------*/
 
 def analysis_scripts = [:]
-analysis_scripts.preprocessing     = file("$baseDir/bin/seurat/1_preprocessing.R", checkIfExists: true)
+analysis_scripts.preprocess     = file("$baseDir/bin/seurat/1_preprocess.R", checkIfExists: true)
 analysis_scripts.integration        = file("$baseDir/bin/seurat/2_integration.R", checkIfExists: true)
 analysis_scripts.integration_qc     = file("$baseDir/bin/seurat/3_integration_qc.R", checkIfExists: true)
 analysis_scripts.sex_filt           = file("$baseDir/bin/seurat/4_sex_filt.R", checkIfExists: true)
@@ -15,7 +15,7 @@ analysis_scripts.cell_cycle         = file("$baseDir/bin/seurat/5_cell_cycle.R",
 analysis_scripts.contamination_filt = file("$baseDir/bin/seurat/6_contamination_filt.R", checkIfExists: true)
 
 // Include Seurat R processes
-include {R as PREPROCESSING} from "$baseDir/modules/local/r/main"             addParams( script: analysis_scripts.preprocessing )
+include {R as PREPROCESS} from "$baseDir/modules/local/r/main"             addParams( script: analysis_scripts.preprocess )
 
 include {R as INTEGRATION} from "$baseDir/modules/local/r/main"               addParams( script: analysis_scripts.integration )
 
@@ -45,8 +45,8 @@ workflow SEURAT_FILTERING {
 
     main:
     // Run Seurat pipeline
-    PREPROCESSING( cellranger_filtered_feature_bc_matrix )
-    INTEGRATION( PREPROCESSING.out )
+    PREPROCESS( cellranger_filtered_feature_bc_matrix )
+    INTEGRATION( PREPROCESS.out )
     INTEGRATION_QC( INTEGRATION.out )
     SEX_FILT( INTEGRATION_QC.out )
     CELL_CYCLE( SEX_FILT.out )
@@ -54,8 +54,8 @@ workflow SEURAT_FILTERING {
 
     
     emit:
-    preprocessing_out           = PREPROCESSING.out //Channel: [[meta], [output]]
-    annotations                 = PREPROCESSING.out.map{[it[0], it[1].findAll{it =~ /seurat_annotations.csv/}[0]]} //Channel: [[meta], annotations]
+    preprocess_out              = PREPROCESS.out //Channel: [[meta], [output]]
+    annotations                 = PREPROCESS.out.map{[it[0], it[1].findAll{it =~ /seurat_annotations.csv/}[0]]} //Channel: [[meta], annotations]
     integration_out             = INTEGRATION.out //Channel: [[meta], [output]]
     integration_qc_out          = INTEGRATION_QC.out //Channel: [[meta], [output]]
     sex_filt_out                = SEX_FILT.out //Channel: [[meta], [output]]
