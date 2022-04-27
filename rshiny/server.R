@@ -126,9 +126,9 @@ server <- function(input, output, session){
   
   output$coexpression_umap <- renderPlot(coexpression_umap(dat_list[[input$coexpression_subset_featureplots]], gene_1 = input$coexpression_gene_id_1,
                                                                    gene_2 = input$coexpression_gene_id_2, col.threshold = input$threshold, two.colors = c(input$gene_1_col, input$gene_2_col),
-                                                                   negative.color = 'gray90', limit = 1, highlight_cell_size = 2) +
+                                                                   negative.color = 'gray90', highlight_cell_size = 2) +
                                            my_theme,
                                          height = function() {session$clientData$output_coexpression_umap_width * 0.7}
-                                         )  
+                                         )
 
 }
