@@ -173,7 +173,7 @@ def paga(adata, clusterColumn, time_prior, dpi=240):
     scv.tl.paga(adata, groups=clusterColumn)
     paga_df = scv.get_df(adata, 'paga/transitions_confidence', precision=2).T
     paga_df.style.background_gradient(cmap='Blues').format('{:.2g}')
-    scv.pl.paga(adata, basis='umap', size=50, alpha=.1, min_edge_width=2, node_size_scale=1.5, use_time_prior='latent_time', save='paga.png', dpi=dpi)
+    scv.pl.paga(adata, basis='umap', size=50, alpha=.1, min_edge_width=2, node_size_scale=1.5, use_time_prior=time_prior, save='paga.png', dpi=dpi)
     return(adata, paga_df)
 
 def latent_time(adata, args):
@@ -314,5 +314,5 @@ if __name__ == '__main__':
 
 
 
-# args = ['--input', '../output/NF-downstream_analysis_stacas/transfer_labels/scvelo/seurat_intersect_loom/all_stages_filtered_seurat_intersect.loom', '--output', 'all_stages_filtered', '--ncores', '48', '-m', 'dynamical', '-c', 'scHelper_cell_type', '-s', 'stage', '-b', 'run', '--coloursColumn', 'cell_colours', '--npcs', '20', '--nneighbours', '20', '--rootEarliest', 'HH4', 'HH5', 'HH6', 'HH7', 'ss4', 'ss8', '--rootCol', 'stage', '--weightDiffusion', '0.2', '--diffKinetics', 'True']
+# args = ['--input', '../output/NF-downstream_analysis/transfer_labels/scvelo/seurat_intersect_loom/all_stages_filtered_seurat_intersect.loom', '--output', 'all_stages_filtered', '--ncores', '48', '-m', 'dynamical', '-c', 'scHelper_cell_type', '-s', 'stage', '-b', 'run', '--coloursColumn', 'cell_colours', '--npcs', '20', '--nneighbours', '20', '--rootEarliest', 'HH4', 'HH5', 'HH6', 'HH7', 'ss4', 'ss8', '--rootCol', 'stage', '--weightDiffusion', '0.2', '--diffKinetics', 'True']
 # args, adata = main(args)
