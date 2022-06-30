@@ -166,15 +166,15 @@ def plot_differentiation(adata, clusterColumn, dpi=240):
 #     return(adata)
 
 
-def paga(adata, clusterColumn, time_prior, dpi=240):
-    adata.uns['neighbors']['distances'] = adata.obsp['distances']
-    adata.uns['neighbors']['connectivities'] = adata.obsp['connectivities']
+# def paga(adata, clusterColumn, time_prior, dpi=240):
+#     adata.uns['neighbors']['distances'] = adata.obsp['distances']
+#     adata.uns['neighbors']['connectivities'] = adata.obsp['connectivities']
 
-    scv.tl.paga(adata, groups=clusterColumn)
-    paga_df = scv.get_df(adata, 'paga/transitions_confidence', precision=2).T
-    paga_df.style.background_gradient(cmap='Blues').format('{:.2g}')
-    scv.pl.paga(adata, basis='umap', size=50, alpha=.1, min_edge_width=2, node_size_scale=1.5, use_time_prior=time_prior, save='paga.png', dpi=dpi)
-    return(adata, paga_df)
+#     scv.tl.paga(adata, groups=clusterColumn)
+#     paga_df = scv.get_df(adata, 'paga/transitions_confidence', precision=2).T
+#     paga_df.style.background_gradient(cmap='Blues').format('{:.2g}')
+#     scv.pl.paga(adata, basis='umap', size=50, alpha=.1, min_edge_width=2, node_size_scale=1.5, use_time_prior=time_prior, save='paga.png', dpi=dpi)
+#     return(adata, paga_df)
 
 def latent_time(adata, args):
     if args.end is not None:
@@ -300,11 +300,11 @@ def main(args=None):
     # Run dynamical or deterministic models and plot genes
     if args.velocityMode in ['deterministic', 'stochastic']:
         adata = run_scvelo_deterministic(adata, args)
-        adata, paga_df = paga(adata, clusterColumn=args.clusterColumn, time_prior='velocity_pseudotime', dpi=args.dpi)
+        # adata, paga_df = paga(adata, clusterColumn=args.clusterColumn, time_prior='velocity_pseudotime', dpi=args.dpi)
     
     if args.velocityMode == 'dynamical':
         adata = run_scvelo_dynamical(adata, args)
-        adata, paga_df = paga(adata, clusterColumn=args.clusterColumn, time_prior='latent_time', dpi=args.dpi)
+        # adata, paga_df = paga(adata, clusterColumn=args.clusterColumn, time_prior='latent_time', dpi=args.dpi)
 
     adata.write(args.output + '_scvelo.h5ad')
     # return(args, adata)
