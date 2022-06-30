@@ -38,12 +38,24 @@ include {R as GENE_MODULES_NPB_LATENT_TIME} from "$baseDir/modules/local/r/main"
 include {R as COEXPRESSION_ANALYSIS_NPB} from "$baseDir/modules/local/r/main"                                                  addParams( script: analysis_scripts.coexpression_analysis_npb )
 include {R as COEXPRESSION_NC_PPR_MODULES_NPB} from "$baseDir/modules/local/r/main"                                            addParams( script: analysis_scripts.coexpression_nc_ppr_modules_npb )                                                                                                                             
 
+/*-----------------------------------------------------------------------------------------------------------------------------
+Log
+-------------------------------------------------------------------------------------------------------------------------------*/
 
+if(params.debug) {log.info Headers.build_debug_scripts_summary(analysis_scripts, params.monochrome_logs)}
+
+/*------------------------------------------------------------------------------------
+Set channels
+--------------------------------------------------------------------------------------*/
 
 // Set channel for binary knowledge matrix for cell state classification
 Channel
     .value("$baseDir/binary_knowledge_matrix.csv")
     .set{ch_binary_knowledge_matrix}
+
+/*------------------------------------------------------------------------------------
+Workflow
+--------------------------------------------------------------------------------------*/
 
 workflow {
     METADATA( params.input )
