@@ -29,15 +29,14 @@ include {SEURAT_FILTERED_PROCESS} from "$baseDir/subworkflows/seurat_filtered_pr
 // Subworkflows for split stage and run and run downstream analysis
 include {SEURAT_SPLIT_PROCESS as SEURAT_STAGE_PROCESS} from "$baseDir/subworkflows/seurat_split_process/main"
 
-// Subworkflows for label transfer and subsequent cluster subsets and run downstream analysis
-include {R as TRANSFER_LABELS} from "$baseDir/modules/local/r/main" addParams( script:                                 analysis_scripts.transfer_labels )
+// Subworkflows and modules for label transfer and subsequent cluster subsets and run downstream analysis
+include {R as TRANSFER_LABELS} from "$baseDir/modules/local/r/main"                                                            addParams( script: analysis_scripts.transfer_labels )
 include {SEURAT_TRANSFER_FULL_PROCESS} from "$baseDir/subworkflows/seurat_transfer_full_process/main"
 include {SEURAT_TRANSFER_PROCESS as SEURAT_TRANSFER_PPR_NC_PROCESS} from "$baseDir/subworkflows/seurat_transfer_process/main"
-
-include {R as GENE_MODULES_SUBSET_LATENT_TIME} from "$baseDir/modules/local/r/main"
-include {R as GENE_MODULES_NPB_LATENT_TIME} from "$baseDir/modules/local/r/main"
-include {R as COEXPRESSION_ANALYSIS_NPB} from "$baseDir/modules/local/r/main"
-include {R as COEXPRESSION_NC_PPR_MODULES_NPB} from "$baseDir/modules/local/r/main"                                                                                                                                   
+include {R as GENE_MODULES_SUBSET_LATENT_TIME} from "$baseDir/modules/local/r/main"                                            addParams( script: analysis_scripts.gene_modules_subset_latent_time )
+include {R as GENE_MODULES_NPB_LATENT_TIME} from "$baseDir/modules/local/r/main"                                               addParams( script: analysis_scripts.gene_modules_npb_latent_time )
+include {R as COEXPRESSION_ANALYSIS_NPB} from "$baseDir/modules/local/r/main"                                                  addParams( script: analysis_scripts.coexpression_analysis_npb )
+include {R as COEXPRESSION_NC_PPR_MODULES_NPB} from "$baseDir/modules/local/r/main"                                            addParams( script: analysis_scripts.coexpression_nc_ppr_modules_npb )                                                                                                                             
 
 
 
