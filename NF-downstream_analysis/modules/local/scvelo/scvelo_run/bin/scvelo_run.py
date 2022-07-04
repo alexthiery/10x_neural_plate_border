@@ -37,6 +37,9 @@ def parse_args(args=None):
     parser.add_argument('-el', '--endLatest', type=str, help='Space separated array specifying temporal arrangement of stages (i.e. HH4,HH5,HH6)', nargs='+', default=None)
     parser.add_argument('-ec', '--endCol', type=str, help='Name of end metadata column', default=None)
     parser.add_argument('-w', '--weightDiffusion', type=float, help='Weight applied to couple latent time with diffusion-based velocity pseudotime', default=None)
+    parser.add_argument('-lw', '--linewidth', type=int, help='Linewidth specified for stream plot', default=2.5)
+    parser.add_argument('-ld', '--linedensity', type=int, help='Line density specified for stream plot', default=2)
+    parser.add_argument('-as', '--arrow_size', type=int, help='Arrow size specified for stream plot', default=2)
     parser.add_argument('-v', '--verbose', type=bool, help='Print log information for debugging', default=True)
     return parser.parse_args(args)
 
@@ -110,12 +113,12 @@ def calc_velocity(adata, velocityMode, ncores, groupby=None, diffKinetics=False)
     scv.tl.velocity_graph(adata, n_jobs=ncores)
     return(adata)
 
-def plot_velocity(adata, clusterColumn, threshold=.1, arrow_length=5, arrow_size=2, plot_dir="", prefix="", dpi=240):
+def plot_velocity(adata, clusterColumn, threshold=.1, arrow_length=5, arrow_size=2, density=2, linewidth=2.5, plot_dir="", prefix="", dpi=240):
     keep_figdir = scv.settings.figdir # Save original plot path
     scv.settings.figdir = scv.settings.figdir+plot_dir
     scv.pl.velocity_embedding(adata, color=clusterColumn, arrow_length=arrow_length, arrow_size=arrow_size, save=prefix+'velocity_embedding.png', dpi=dpi)
     scv.pl.velocity_embedding_grid(adata, color=clusterColumn, arrow_length=arrow_length, arrow_size=arrow_size, basis='umap', save=prefix+'velocity_embedding_grid.png', dpi=dpi)
-    scv.pl.velocity_embedding_stream(adata, color=clusterColumn, basis='umap', save=prefix+'velocity_embedding_stream.png', legend_loc='none', linewidth=2.5, arrow_size=1.5, alpha=0.5, figsize=[11,11], dpi=dpi)
+    scv.pl.velocity_embedding_stream(adata, color=clusterColumn, basis='umap', save=prefix+'velocity_embedding_stream.png', legend_loc='none', linewidth=linewidth, arrow_size=arrow_size, alpha=0.5, density=density, figsize=[11,11], dpi=dpi)
     scv.pl.velocity_graph(adata, threshold=threshold, color=clusterColumn, basis='umap', save=prefix+'velocity_graph.png', dpi=dpi)
     scv.settings.figdir = keep_figdir
     
@@ -262,7 +265,7 @@ def run_scvelo_dynamical(adata, args):
     print('Calculating differential kinetics and recomputing velocity')
     adata = calc_diff_kinetics(adata=adata, clusterColumn=args.clusterColumn, plot_dir="")
     adata = calc_velocity(adata=adata, velocityMode=args.velocityMode, ncores=args.ncores, diffKinetics=True, groupby=args.clusterColumn)
-    plot_velocity(adata=adata, clusterColumn=args.clusterColumn, plot_dir="diff_kinetics/", dpi=args.dpi)
+    plot_velocity(adata=adata, clusterColumn=args.clusterColumn, plot_dir="diff_kinetics/", linewidth=args.linewidth, density=args.linedensity, arrow_size=args.arrowsize, dpi=args.dpi)
     return(adata)
 
 def main(args=None):
@@ -295,7 +298,7 @@ def main(args=None):
     # calculate means and uncentered variances across NN in PCA space
     scv.pp.moments(data=adata,  n_pcs=args.npcs, n_neighbors=args.nneighbours)
     adata = calc_velocity(adata=adata, velocityMode=args.velocityMode, groupby=args.clusterColumn, ncores=args.ncores)
-    plot_velocity(adata=adata, clusterColumn=args.clusterColumn, dpi=args.dpi)
+    plot_velocity(adata=adata, clusterColumn=args.clusterColumn, linewidth=args.linewidth, density=args.linedensity, arrow_size=args.arrowsize, dpi=args.dpi)
 
     # Run dynamical or deterministic models and plot genes
     if args.velocityMode in ['deterministic', 'stochastic']:
@@ -305,8 +308,6 @@ def main(args=None):
     if args.velocityMode == 'dynamical':
         adata = run_scvelo_dynamical(adata, args)
         # adata, paga_df = paga(adata, clusterColumn=args.clusterColumn, time_prior='latent_time', dpi=args.dpi)
-
-    adata.write(args.output + '_scvelo.h5ad')
     # return(args, adata)
 
 if __name__ == '__main__':
