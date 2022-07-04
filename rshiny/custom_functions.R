@@ -100,3 +100,64 @@ lineage_gam <- function(gene, seurat_object, assay = 'RNA', slot = 'scale.data',
   
   return(out_data)
 }
+
+coexpression_umap <- function(seurat_object, gene_1, gene_2, col.threshold = 0, two.colors = c('#FF0000', '#00ff00'), negative.color = 'gray80',
+                                      highlight_cell_size = 1, show_legend = TRUE,
+                                      axes_label_size = 12, axes_title_size = 10, axes_tick_size = 0.15){
+
+  dat <- t(as.matrix(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'data')[c(gene_1, gene_2),]))
+  dat <- apply(dat, 2, function(x) ifelse(!x, 0, as.integer((x - min(x)) / (max(x) - min(x)) * 100)))
+  
+  
+  col_mat = Seurat:::BlendMatrix(n = 101, col.threshold = col.threshold, two.colors =  two.colors, negative.color = negative.color)
+  col_mat <- as.data.frame.table(col_mat, responseName = "value") %>% mutate_if(is.factor, as.numeric)
+  # Set base col values to 0
+  col_mat[1:2] <- col_mat[1:2] - 1
+  col_mat[!(col_mat$Var1 > col.threshold*100 & col_mat$Var2 > col.threshold*100), 'value'] <- negative.color
+  
+  colnames(col_mat) <- c('a', 'b', 'mix')
+  
+  # Vectorised subset of col mat based on expression values
+  cell_cols <- set_names(col_mat[[3]], paste(col_mat[[1]], col_mat[[2]], sep = '_'))
+  cell_cols <- data.frame(cell_cols = unname(cell_cols[paste(dat[,1], dat[,2], sep = '_')]), row.names = rownames(dat))
+  
+  col_mat[,1:2] <- col_mat[,1:2]/100
+  key_plot <- ggplot(col_mat, aes(x = a, y = b)) +
+    xlab(gene_1) +
+    ylab(gene_2) +
+    geom_tile(aes(fill = mix)) +
+    scale_fill_identity() +
+    scale_x_continuous(breaks = c(0, 1), expand = c(0.01, 0.01)) +
+    scale_y_continuous(breaks = c(0, 1), expand = c(0.01, 0.01)) +
+    theme(legend.position = "none",
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.background = element_blank(),
+          axis.title.x = element_text(size = axes_title_size),
+          axis.text.x = element_text(size = axes_label_size),
+          axis.title.y = element_text(size = axes_title_size),
+          axis.text.y = element_text(size = axes_label_size),
+          axis.ticks.length=unit(axes_tick_size,"cm"))
+
+  plot_data <- as.data.frame(seurat_object[["umap"]]@cell.embeddings)
+  
+  plot_data$cell_cols = cell_cols$cell_cols[match(rownames(plot_data), rownames(cell_cols))]
+
+  positive_cells = filter(plot_data, cell_cols != negative.color)
+
+  umap_plot <- ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2, colour = rownames(positive_cells))) +
+    geom_point(colour = negative.color, size = 2) +
+    geom_point(data = positive_cells, size = highlight_cell_size) +
+    scale_colour_manual(breaks = rownames(positive_cells), values=positive_cells$cell_cols) +
+    theme_classic() +
+    NoLegend()
+
+
+  layout <- '
+    BA
+    B#
+    '
+    return(wrap_plots(A = key_plot, B = umap_plot, design = layout, widths = c(4,1), heights = c(1,3)))
+}
+
+

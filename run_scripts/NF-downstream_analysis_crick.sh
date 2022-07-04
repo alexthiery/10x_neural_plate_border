@@ -8,16 +8,16 @@ export TERM=xterm
 
 ## LOAD REQUIRED MODULES
 ml purge
-ml Nextflow/20.07.1
+ml Nextflow/21.10.6
 ml Singularity/3.4.2
 ml Graphviz
 
-export NXF_VER=20.07.1
+export NXF_VER=21.10.6
+export NXF_SINGULARITY_CACHEDIR=/camp/home/thierya/working/NF_singularity
 
 nextflow run ./NF-downstream_analysis/main.nf \
 --input ./NF-downstream_analysis/samplesheet.csv \
---outdir ./output/NF-downstream_analysis_seurat \
+--outdir ./output/NF-downstream_analysis \
 --debug \
---integration Seurat \
 -profile crick \
 -resume

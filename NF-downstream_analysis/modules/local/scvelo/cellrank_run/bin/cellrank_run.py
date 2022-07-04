@@ -53,24 +53,24 @@ def write_lineage_probs(adata):
     adata.obs = adata.obs.reindex(copy=False)
     return(adata)
 
-def allDataTerminalStates(adata, estimator):
+def allDataTerminalStates(adata, estimator, dpi):
     estimator.set_terminal_states({"neural": adata[adata.obs["scHelper_cell_type"].isin(['HB', 'MB', "FB"]) & adata.obs["stage"].isin(['ss8', 'ss4'])].obs_names,
                   "NC": adata[adata.obs["scHelper_cell_type"].isin(['dNC', 'NC']) & adata.obs["stage"].isin(['ss8', 'ss4'])].obs_names,
                   "placodal": adata[adata.obs["scHelper_cell_type"].isin(['aPPR', 'pPPR', 'PPR']) & adata.obs["stage"].isin(['ss8', 'ss4'])].obs_names})
-    cr.pl.terminal_states(adata, save='terminal_states.pdf')
+    cr.pl.terminal_states(adata, save='terminal_states.pdf', dpi=dpi)
     return(estimator)
 
-def transferLabelTerminalStates(adata, estimator):
+def transferLabelTerminalStates(adata, estimator, dpi):
     estimator.set_terminal_states({"neural": adata[adata.obs["scHelper_cell_type"].isin(['HB', 'MB', "FB"]) & adata.obs["stage"].isin(['ss8', 'ss4'])].obs_names,
                   "NC": adata[adata.obs["scHelper_cell_type"].isin(['dNC', 'NC']) & adata.obs["stage"].isin(['ss8', 'ss4'])].obs_names,
                   "placodal": adata[adata.obs["scHelper_cell_type"].isin(['aPPR', 'pPPR', 'PPR']) & adata.obs["stage"].isin(['ss8', 'ss4'])].obs_names})
-    cr.pl.terminal_states(adata, save='terminal_states.pdf')
+    cr.pl.terminal_states(adata, save='terminal_states.pdf', dpi=dpi)
     return(estimator)
 
-def terminalStates_ppr_nc(adata, estimator):
+def terminalStates_ppr_nc(adata, estimator, dpi):
     estimator.set_terminal_states({"NC": adata[adata.obs["scHelper_cell_type"].isin(['dNC', 'NC']) & adata.obs["stage"].isin(['ss8'])].obs_names,
                   "placodal": adata[adata.obs["scHelper_cell_type"].isin(['aPPR', 'pPPR', 'PPR']) & adata.obs["stage"].isin(['ss8'])].obs_names})
-    cr.pl.terminal_states(adata, save='terminal_states.pdf')
+    cr.pl.terminal_states(adata, save='terminal_states.pdf', dpi=dpi)
     return(estimator)
 
 def write_lineage_probs(adata):
@@ -104,14 +104,14 @@ def main(args=None):
         g = cr.tl.estimators.GPCCA(combined_kernel)
 
     if args.dataType == 'full':
-        g = allDataTerminalStates(adata, g)
+        g = allDataTerminalStates(adata, g, dpi=args.dpi)
     elif args.dataType == 'labelTransfer':
-        g = transferLabelTerminalStates(adata, g)
+        g = transferLabelTerminalStates(adata, g, dpi = args.dpi)
     elif args.dataType == 'ppr_nc':
-        g = terminalStates_ppr_nc(adata, g)
+        g = terminalStates_ppr_nc(adata, g, dpi=args.dpi)
         
     g.compute_absorption_probabilities()
-    cr.pl.lineages(adata, same_plot=False, save='absorption_probabilities.pdf')
+    cr.pl.lineages(adata, same_plot=False, save='absorption_probabilities.pdf', dpi = args.dpi)
     
     if all(value is None for value in adata.obs['terminal_states_probs']):
         adata.obs = adata.obs.drop(['terminal_states_probs'], axis=1)

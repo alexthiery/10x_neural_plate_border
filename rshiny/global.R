@@ -4,6 +4,7 @@ library(Seurat)
 library(tidyverse)
 library(viridis)
 library(mgcv)
+library(patchwork)
 
 source('./custom_functions.R')
 

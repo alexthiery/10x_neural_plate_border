@@ -13,29 +13,14 @@ analysis_scripts.gene_modules                       = file("$baseDir/bin/other/g
 analysis_scripts.state_classification               = file("$baseDir/bin/seurat/state_classification.R", checkIfExists: true)
 analysis_scripts.phate                              = file("$baseDir/bin/other/phateR.R", checkIfExists: true)
 
-params.subset_options                               = [:]
-params.cluster_options                              = [:]
-params.gene_modules_options                         = [:]
-params.state_classification_options                 = [:]
-params.phate_options                                = [:]
-params.seurat_h5ad_options                          = [:]
-params.seurat_intersect_loom_options                = [:]
-params.scvelo_run_options                           = [:]
-
 // Include Seurat R processes
-include {R as SUBSET} from "$baseDir/modules/local/r/main"                          addParams(  options:                        params.subset_options,
-                                                                                                script:                         analysis_scripts.subset )
+include {R as SUBSET} from "$baseDir/modules/local/r/main"                          addParams( script:                         analysis_scripts.subset )
+include {R as CLUSTER} from "$baseDir/modules/local/r/main"                         addParams( script:                         analysis_scripts.cluster )
+include {R as GENE_MODULES} from "$baseDir/modules/local/r/main"                    addParams( script:                         analysis_scripts.gene_modules )
 
-include {R as CLUSTER} from "$baseDir/modules/local/r/main"                         addParams(  options:                        params.cluster_options,
-                                                                                                script:                         analysis_scripts.cluster )
+include {SEURAT_H5AD} from "$baseDir/modules/local/seurat_h5ad/main"
+include {SEURAT_SCVELO} from "$baseDir/subworkflows/seurat_scvelo/main"
 
-include {R as GENE_MODULES} from "$baseDir/modules/local/r/main"                    addParams(  options:                        params.gene_modules_options,
-                                                                                                script:                         analysis_scripts.gene_modules )
-
-include {SEURAT_H5AD} from "$baseDir/modules/local/seurat_h5ad/main"                addParams(  options:                        params.seurat_h5ad_options)
-
-include {SEURAT_SCVELO} from "$baseDir/subworkflows/seurat_scvelo/main"             addParams(  seurat_intersect_loom_options:  params.seurat_intersect_loom_options,
-                                                                                                scvelo_run_options:             params.scvelo_run_options )
 
 /*-----------------------------------------------------------------------------------------------------------------------------
 Log
