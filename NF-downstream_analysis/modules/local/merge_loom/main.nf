@@ -2,7 +2,7 @@ process MERGE_LOOM {
     tag "$meta.sample_id"
     label 'process_low'
 
-    container "alexthiery/10x-npb-scvelo:base-2.0.0"
+    container "alexthiery/10x-npb-scvelo:base-2.0.1"
 
     input:
     tuple val(meta), path(loom_dir)
