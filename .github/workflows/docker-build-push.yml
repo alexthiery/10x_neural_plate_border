@@ -16,7 +16,7 @@ jobs:
       matrix:
         tag: ["base"]
         docker-file: ["Dockerfile"]
-        module-name: ["schelper", "schelper_shiny", "phate", "scvelo", "monocle3"]
+        module-name: ["scvelo", "schelper", "schelper_shiny", "monocle3"]
 
     steps:
       - uses: actions/checkout@v2
