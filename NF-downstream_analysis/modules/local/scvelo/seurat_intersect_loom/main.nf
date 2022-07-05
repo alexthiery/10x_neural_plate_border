@@ -3,7 +3,7 @@ process SEURAT_INTERSECT_LOOM {
     label 'process_medium'
     // maxForks 1
 
-    container "alexthiery/10x-npb-scvelo:base-2.0.1"
+    container "quay.io/biocontainers/scvelo:0.2.4--pyhdfd78af_0"
 
     input:
     tuple val(meta), path(seurat), path(loom), path(annotations)
