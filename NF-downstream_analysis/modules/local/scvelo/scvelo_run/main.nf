@@ -6,7 +6,7 @@ process SCVELO_RUN {
     tag "$meta.sample_id"
     label 'process_high'
 
-    container "alexthiery/10x-npb-scvelo:base-2.0.1"
+    container "quay.io/biocontainers/scvelo:0.2.4--pyhdfd78af_0"
 
     input:
     tuple val(meta), path(loom)

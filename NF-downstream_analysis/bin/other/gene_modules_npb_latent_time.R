@@ -287,7 +287,7 @@ goi <- which(rownames(plot_data$row_ann) %in% c('TSPAN13', 'GATA2', 'GATA3',
                                                 'SIX1', 'EYA2', 'ASS1',
                                                 'MSX1', 'ZIC1', 'ZEB2', 'LMX1B',
                                                 'PAX7', 'SNAI2', 'CSRNP1', 'FOXD3', 'TFAP2B', 'SOX9',
-                                                'WNT1', 'SOX5', 'ID1', 'ID2',
+                                                'WNT1', 'SOX5', 'ID1', 'ID2', 'OLFML3',
                                                 'SOX10', 'ETS1', 'LMO4', 'SOX8'
 ))
 
