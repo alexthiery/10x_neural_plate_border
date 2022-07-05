@@ -308,6 +308,8 @@ def main(args=None):
     if args.velocityMode == 'dynamical':
         adata = run_scvelo_dynamical(adata, args)
         # adata, paga_df = paga(adata, clusterColumn=args.clusterColumn, time_prior='latent_time', dpi=args.dpi)
+    
+    adata.write(args.output + '_scvelo.h5ad')
     # return(args, adata)
 
 if __name__ == '__main__':
