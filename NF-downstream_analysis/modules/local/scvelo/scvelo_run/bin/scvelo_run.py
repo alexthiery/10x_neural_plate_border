@@ -1,4 +1,4 @@
-#!/opt/conda/envs/scvelo/bin/python
+#!/usr/local/bin/python
 
 import os
 import sys

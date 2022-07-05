@@ -1,12 +1,9 @@
-#!/opt/conda/envs/scvelo/bin/python
+#!/usr/local/bin/python
 
-import os
 import sys
 import argparse
 import scvelo as scv
-import scanpy as sc
 import cellrank as cr
-import numpy as np
 import warnings
 
 scv.settings.verbosity = 3
