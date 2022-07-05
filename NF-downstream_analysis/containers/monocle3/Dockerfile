@@ -11,7 +11,9 @@ RUN   apt-get update \
       libudunits2-dev \
       libgdal-dev \
       libgeos-dev \
-      libproj-dev
+      libproj-dev \
+      libharfbuzz-dev \
+      libfribidi-dev
 
 
 RUN   conda install -c anaconda pip && \
