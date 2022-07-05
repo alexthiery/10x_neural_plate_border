@@ -4,7 +4,7 @@ import os
 import sys
 import argparse
 import scvelo as scv
-import cellrank as cr
+# import cellrank as cr
 import numpy as np
 import warnings
 import scanpy as sc
@@ -222,16 +222,16 @@ def calc_diff_kinetics(adata, clusterColumn, plot_dir=""):
     return(adata)
 
 
-def directed_paga(adata, clusterColumn, plot_dir="", prefix="", dpi=240, weight_connectivities=0.2):
-    keep_figdir = scv.settings.figdir # Save original plot path
-    scv.settings.figdir = scv.settings.figdir+plot_dir
-    scv.tl.paga(adata, groups=clusterColumn, root_key="initial_states_probs", end_key="terminal_states_probs",
-                use_time_prior="velocity_pseudotime")
-    cr.pl.cluster_fates(adata, mode="paga_pie", cluster_key=clusterColumn, basis="umap",
-                        legend_kwargs={"loc": "top right out"}, legend_loc="top left out", node_size_scale=5,
-                        edge_width_scale=1, max_edge_width=4, title="directed PAGA",
-                        save=prefix+'directed_paga.png', dpi=dpi)
-    scv.settings.figdir = keep_figdir
+# def directed_paga(adata, clusterColumn, plot_dir="", prefix="", dpi=240, weight_connectivities=0.2):
+#     keep_figdir = scv.settings.figdir # Save original plot path
+#     scv.settings.figdir = scv.settings.figdir+plot_dir
+#     scv.tl.paga(adata, groups=clusterColumn, root_key="initial_states_probs", end_key="terminal_states_probs",
+#                 use_time_prior="velocity_pseudotime")
+#     cr.pl.cluster_fates(adata, mode="paga_pie", cluster_key=clusterColumn, basis="umap",
+#                         legend_kwargs={"loc": "top right out"}, legend_loc="top left out", node_size_scale=5,
+#                         edge_width_scale=1, max_edge_width=4, title="directed PAGA",
+#                         save=prefix+'directed_paga.png', dpi=dpi)
+#     scv.settings.figdir = keep_figdir
 
     
 # functions for running scvelo/cellrank subworkflows
