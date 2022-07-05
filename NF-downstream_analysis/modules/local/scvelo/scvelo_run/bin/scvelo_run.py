@@ -39,7 +39,7 @@ def parse_args(args=None):
     parser.add_argument('-w', '--weightDiffusion', type=float, help='Weight applied to couple latent time with diffusion-based velocity pseudotime', default=None)
     parser.add_argument('-lw', '--linewidth', type=int, help='Linewidth specified for stream plot', default=2.5)
     parser.add_argument('-ld', '--linedensity', type=int, help='Line density specified for stream plot', default=2)
-    parser.add_argument('-as', '--arrow_size', type=int, help='Arrow size specified for stream plot', default=2)
+    parser.add_argument('-as', '--arrowsize', type=int, help='Arrow size specified for stream plot', default=2)
     parser.add_argument('-v', '--verbose', type=bool, help='Print log information for debugging', default=True)
     return parser.parse_args(args)
 
