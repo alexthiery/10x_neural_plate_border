@@ -50,21 +50,21 @@ def write_lineage_probs(adata):
     adata.obs = adata.obs.reindex(copy=False)
     return(adata)
 
-def allDataTerminalStates(adata, estimator, dpi):
+def allDataTerminalStates(adata, estimator):
     estimator.set_terminal_states({"neural": adata[adata.obs["scHelper_cell_type"].isin(['HB', 'MB', "FB"]) & adata.obs["stage"].isin(['ss8', 'ss4'])].obs_names,
                   "NC": adata[adata.obs["scHelper_cell_type"].isin(['dNC', 'NC']) & adata.obs["stage"].isin(['ss8', 'ss4'])].obs_names,
                   "placodal": adata[adata.obs["scHelper_cell_type"].isin(['aPPR', 'pPPR', 'PPR']) & adata.obs["stage"].isin(['ss8', 'ss4'])].obs_names})
     scv.pl.umap(adata, color='terminal_states', legend_loc='on data', save='_terminal_states.pdf')
     return(estimator)
 
-def transferLabelTerminalStates(adata, estimator, dpi):
+def transferLabelTerminalStates(adata, estimator):
     estimator.set_terminal_states({"neural": adata[adata.obs["scHelper_cell_type"].isin(['HB', 'MB', "FB"]) & adata.obs["stage"].isin(['ss8', 'ss4'])].obs_names,
                   "NC": adata[adata.obs["scHelper_cell_type"].isin(['dNC', 'NC']) & adata.obs["stage"].isin(['ss8', 'ss4'])].obs_names,
                   "placodal": adata[adata.obs["scHelper_cell_type"].isin(['aPPR', 'pPPR', 'PPR']) & adata.obs["stage"].isin(['ss8', 'ss4'])].obs_names})
     scv.pl.umap(adata, color='terminal_states', legend_loc='on data', save='_terminal_states.pdf')
     return(estimator)
 
-def terminalStates_ppr_nc(adata, estimator, dpi):
+def terminalStates_ppr_nc(adata, estimator):
     estimator.set_terminal_states({"NC": adata[adata.obs["scHelper_cell_type"].isin(['dNC', 'NC']) & adata.obs["stage"].isin(['ss8'])].obs_names,
                   "placodal": adata[adata.obs["scHelper_cell_type"].isin(['aPPR', 'pPPR', 'PPR']) & adata.obs["stage"].isin(['ss8'])].obs_names})
     scv.pl.umap(adata, color='terminal_states', legend_loc='on data', save='_terminal_states.pdf')
@@ -101,11 +101,11 @@ def main(args=None):
         g = cr.tl.estimators.GPCCA(combined_kernel)
 
     if args.dataType == 'full':
-        g = allDataTerminalStates(adata, g, dpi=args.dpi)
+        g = allDataTerminalStates(adata, g)
     elif args.dataType == 'labelTransfer':
-        g = transferLabelTerminalStates(adata, g, dpi = args.dpi)
+        g = transferLabelTerminalStates(adata, g)
     elif args.dataType == 'ppr_nc':
-        g = terminalStates_ppr_nc(adata, g, dpi=args.dpi)
+        g = terminalStates_ppr_nc(adata, g)
         
     g.compute_absorption_probabilities()
     g.plot_absorption_probabilities(same_plot=False, save='absorption_probabilities.pdf')
@@ -120,4 +120,4 @@ if __name__ == '__main__':
 
 # # set args for interactive testing
 # args = ['-i', '../output/NF-downstream_analysis/filtered_seurat/scvelo/scvelo_run/NF-scRNAseq_alignment_out_scvelo.h5ad', '-o', 'out.h5ad', '-c',
-#         'seurat_clusters', '--ncores', '8', '-ck', 'True', '-kp', '0.8'
+#         'scHelper_cell_type', '--ncores', '8', '-ck', 'True', '-kp', '0.2', '-sm', '4', '--dataType', 'labelTransfer', '--dpi', '720']
