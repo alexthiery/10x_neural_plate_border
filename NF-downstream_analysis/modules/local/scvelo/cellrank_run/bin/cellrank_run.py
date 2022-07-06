@@ -108,7 +108,7 @@ def main(args=None):
         g = terminalStates_ppr_nc(adata, g)
         
     g.compute_absorption_probabilities()
-    g.plot_absorption_probabilities(same_plot=False, save='absorption_probabilities.pdf')
+    g.plot_absorption_probabilities(same_plot=False, save='absorption_probabilities.pdf', dpi=args.dpi)
     
     adata = write_lineage_probs(adata)
     adata.write(args.output + '_cellrank.h5ad')
