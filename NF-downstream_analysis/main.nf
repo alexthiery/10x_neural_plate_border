@@ -152,8 +152,11 @@ workflow {
 
 
     // Set up channels for running co-expression analysis on npb subset with gms from ss8 //[[meta], ['HH5.rds', 'HH6.rds' … 'ss8.rds', 'npb_subset.rds', 'ss8_antler.rds']]
-    ch_stage_data                   = SEURAT_STAGE_PROCESS.out
-                                        .state_classification_out
+
+    // Duplicate stage out channel to pass to two downstream processes
+    SEURAT_STAGE_PROCESS.out.state_classification_out.into{ ch_stage_coexpression; ch_stage_hcr }
+
+    ch_stage_data                   = ch_stage_coexpression
                                         .map{it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]} // it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]
                                         .collect()
     
@@ -174,8 +177,7 @@ workflow {
     /* Run HCR intensity subworkflow
     --------------------------------------------------------------------------------------*/
 
-    hh7_seurat                      = SEURAT_STAGE_PROCESS.out
-                                        .state_classification_out
+    hh7_seurat                      = ch_stage_hcr
                                         .filter{ it[0].sample_id == 'hh7_splitstage_data' }
                                         .map{it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]}
 
