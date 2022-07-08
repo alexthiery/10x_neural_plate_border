@@ -179,6 +179,7 @@ workflow {
                                         .filter{ it[0].sample_id == 'hh7_splitstage_data' }
                                         .map{it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]}
 
+    hh7_seurat.view()
 
     HCR(hcr_intensity_samplesheet, hh7_seurat)
 }
