@@ -177,7 +177,7 @@ workflow {
     hh7_seurat                      = SEURAT_STAGE_PROCESS.out
                                         .state_classification_out
                                         .filter{ it[0].sample_id == 'HH7_splitstage_data' }
-                                        .map{it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]}
+                                        .map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]}
 
     HCR(hcr_intensity_samplesheet, hh7_seurat)
 }
