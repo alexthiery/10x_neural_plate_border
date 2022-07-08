@@ -51,7 +51,7 @@ hcr_combination <- str_match(file_path, "^.+/(.*)\\s*_intensity")[2]
 goi <- combinations[[hcr_combination]]
 
 # Read in intensity data
-intensity_data <- read.csv(file = data_path, row.names = NULL)
+intensity_data <- read.csv(file = file_path, row.names = NULL)
 
 # Z-score intensity score for each gene across all A-P regions
 intensity_data[,3:5] <- apply(intensity_data[,3:5], 2, scale)
