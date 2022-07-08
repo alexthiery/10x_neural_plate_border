@@ -22,7 +22,7 @@ if(opt$verbose) print(opt)
     
     ncores = 8
     plot_path = "./plots/"
-    data_path = "./work/a6/c40b4f85b5397a6ca3bcc6f1f634af/input"
+    data_path = "./work/77/81a9e2a039bf09a187fe75bf317ac2/input"
     
   } else if (opt$runtype == "nextflow"){
     cat('pipeline running through Nextflow\n')
@@ -51,11 +51,7 @@ hcr_combination <- str_match(file_path, "^.+/(.*)\\s*_intensity")[2]
 goi <- combinations[[hcr_combination]]
 
 # Read in intensity data
-intensity_data <- read.csv(file_path, col.names = c("M.L.position", names(goi)))
-names(intensity_data) <- hcr_combination
-
-# Bind intensity data from different axial levels
-intensity_data <- bind_rows(intensity_data, .id = "A.P.position")
+intensity_data <- read.csv(file = data_path, row.names = NULL)
 
 # Z-score intensity score for each gene across all A-P regions
 intensity_data[,3:5] <- apply(intensity_data[,3:5], 2, scale)
