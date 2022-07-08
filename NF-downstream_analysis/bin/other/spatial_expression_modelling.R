@@ -1,7 +1,46 @@
+library(optparse)
 library(tidyverse)
+library(ggplot2)
 
-plot_path = "./temp/"
-dir.create(plot_path)
+# Read in command line opts
+option_list <- list(
+  make_option(c("-r", "--runtype"), action = "store", type = "character", help = "Specify whether running through through 'nextflow' in order to switch paths"),
+  make_option(c("-c", "--cores"), action = "store", type = "integer", help = "Number of CPUs"),
+  make_option(c("-m", "--meta_col"), action = "store", type = "character", help = "Name of metadata column containing grouping information", default = 'scHelper_cell_type'),
+  make_option(c("-f", "--force_order"), action = "store", type = "character", help = "Comma separated values specifying metadata columns used for GeneModuleOrdering", default = NULL),
+  make_option(c("", "--verbose"), action = "store_true", type = "logical", help = "Verbose", default = FALSE)
+)
+
+opt_parser = OptionParser(option_list = option_list)
+opt <- parse_args(opt_parser)
+if(opt$verbose) print(opt)
+
+# Set paths and load data
+{
+  if(length(commandArgs(trailingOnly = TRUE)) == 0){
+    cat('No command line arguments provided, paths are set for running interactively in Rstudio server\n')
+    
+    ncores = 8
+    plot_path = "./plots/"
+    data_path = "./work/77/81a9e2a039bf09a187fe75bf317ac2/input"
+    
+  } else if (opt$runtype == "nextflow"){
+    cat('pipeline running through Nextflow\n')
+    
+    plot_path = "./plots/"
+    data_path = "./input"
+    ncores = opt$cores
+    
+  } else {
+    stop("--runtype must be set to 'nextflow'")
+  }
+  
+  cat(paste0("script ran with ", ncores, " cores\n"))
+  dir.create(plot_path, recursive = T)
+}
+
+# Read in seurat stage data
+seurat_data <- readRDS(list.files(data_path, full.names = TRUE))
 
 # Select PC of interest for visualisation
 pc_oi = 'PC_1'
@@ -11,10 +50,7 @@ goi = list(
   c("PAX7"="#ffd700", "TFAP2A"="#83f52c", "SIX1"="magenta"),
   c("PAX7"="#ffd700", "SIX1"="#83f52c", "MSX1"="magenta"),
   c("PAX7"="#ffd700", "SIX1"="#83f52c", "DLX6"="magenta")
-  )
-
-# Read in seurat stage data
-seurat_data <- readRDS('./output/NF-downstream_analysis/stage_split/HH7_splitstage_data/seurat/stage_state_classification/rds_files/HH7_cell_state_classification.RDS')
+)
 
 # Group cell states into parent cell states to visualise association of M-L patterning along PCs
 parent_cell_states <- c('EE'='EE', 'NNE'='NNE', 'pEpi'='NNE', 'PPR'='PPR', 'aPPR'='PPR', 'pPPR'='PPR',
