@@ -22,13 +22,13 @@ if(opt$verbose) print(opt)
     
     ncores = 8
     plot_path = "./plots/"
-    data_path = "./input/"
+    data_path = "./work/a6/c40b4f85b5397a6ca3bcc6f1f634af/input"
     
   } else if (opt$runtype == "nextflow"){
     cat('pipeline running through Nextflow\n')
     
     plot_path = "./plots/"
-    data_path = "./input/"
+    data_path = "./input"
     ncores = opt$cores
     
   } else {
@@ -44,18 +44,15 @@ combinations = list("SIX1_TFAP2A_PAX7" = c("SIX1"="magenta", "TFAP2A"="#83f52c",
                     "MSX1_SIX1_PAX7" = c("MSX1"="magenta", "SIX1"="#83f52c", "PAX7"="#ffd700"),
                     "DLX6_SIX1_PAX7" = c("DLX6"="magenta", "SIX1"="#83f52c", "PAX7"="#ffd700"))
 
-file_paths <- list.files(data_path, pattern = "*.csv", full.names = TRUE)
+file_path <- list.files(data_path, pattern = "*.csv", full.names = TRUE)
 
 # Get HCR combination and genes of interest from path names
-hcr_combination <- sub(".*/", "", file_paths[1])
+hcr_combination <- str_match(file_path, "^.+/(.*)\\s*_intensity")[2]
 goi <- combinations[[hcr_combination]]
 
-files <- data.frame(name = str_match(file_paths, paste0(hcr_combination, "/\\s*(.*?)\\s*_intensity"))[,2],
-                    path = file_paths)
-
 # Read in intensity data
-intensity_data <- lapply(files$path, function(x) read.csv(x, col.names = c("M.L.position", names(goi))))
-names(intensity_data) <- files$name
+intensity_data <- read.csv(file_path, col.names = c("M.L.position", names(goi)))
+names(intensity_data) <- hcr_combination
 
 # Bind intensity data from different axial levels
 intensity_data <- bind_rows(intensity_data, .id = "A.P.position")
