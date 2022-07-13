@@ -85,7 +85,7 @@ for(combination in goi){
     pivot_longer(cols = !c(cell_type, pc_embeddings), names_to = "Gene", values_to = "Scaled Expression")
   
   plot <- ggplot(expression_subset, aes(x = pc_embeddings, y = `Scaled Expression`, group = Gene, colour = Gene)) +
-    geom_smooth(se = FALSE) +
+    geom_smooth(se = FALSE, method='gam') +
     scale_color_manual(values=combination) +
     theme_classic() +
     xlab(sub('_', ' ', pc_oi)) +

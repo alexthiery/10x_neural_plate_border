@@ -63,7 +63,7 @@ plot <- ggplot(intensity_data, aes(y = `Scaled Intensity`, x = `M.L.position`, c
   geom_line(alpha = 0.4) +
   scale_color_manual(values=goi) +
   facet_wrap(~`A.P.position`, ncol = 1) +
-  geom_smooth(span=0.3, se = FALSE) +
+  geom_smooth(span=0.3, se = FALSE, method='gam') +
   theme_classic() +
   xlab(paste0("M-L position (um)"))
 
