@@ -105,7 +105,7 @@ cell_type_order <- c('EE', 'NNE', 'pEpi', 'PPR', 'aPPR', 'pPPR', 'eNPB', 'NPB',
                      'HB', 'iNP', 'MB', 'aNP', 'FB', 'vFB', 'node', 'streak')
 
 
-genes <- rev(c('EPAS1', 'GATA3', 'SIX1', 'EYA2', 'DLX5', 'BMP4', 'MSX1', 'TFAP2A', 'TFAP2B', 'Pax3', 'PAX7', 'SOX2', 'OTX2', 'YEATS4', 'SOX11', 'SOX3', 'SOX21', 'HOXB1', 'GBX2', 'Z-RAX', 'SIX3', 'ADMP', 'EOMES'))
+genes <- rev(c('EPAS1', 'GATA3', 'SIX1', 'EYA2', 'DLX5', 'DLX6', 'BMP4', 'MSX1', 'TFAP2A', 'TFAP2B', 'Pax3', 'PAX7', 'SOX2', 'OTX2', 'YEATS4', 'SOX11', 'SOX3', 'SOX21', 'HOXB1', 'GBX2', 'Z-RAX', 'SIX3', 'ADMP', 'EOMES'))
 
 cells <- rownames(filter(seurat_data@meta.data, stage %in% c('HH4', 'HH5', 'HH6')))
 
@@ -118,7 +118,7 @@ dotplot(seurat_data, cells, genes, group_by = 'scHelper_cell_type', facet = 'sta
 graphics.off()
 
 
-genes <- rev(c('GATA3', 'DLX5', 'SIX1', 'EYA2', 'MSX1', 'TFAP2A', 'TFAP2B', 'Pax3', 'PAX7', 'CSRNP1', 'SNAI2', 'SOX10', 'SOX2', 'SOX21', 'GBX2', 'PAX2', 'WNT4', 'SIX3', 'SHH'))
+genes <- rev(c('GATA3', 'DLX5', 'DLX6', 'SIX1', 'EYA2', 'MSX1', 'TFAP2A', 'TFAP2B', 'Pax3', 'PAX7', 'CSRNP1', 'SNAI2', 'SOX10', 'SOX2', 'SOX21', 'GBX2', 'PAX2', 'WNT4', 'SIX3', 'SHH'))
 cells <- rownames(filter(seurat_data@meta.data, stage %in% c('HH7', 'ss4', 'ss8')))
 
 png(paste0(plot_path, 'HH7-ss8_dotplot.png'), width = 23, height = 13, units = 'cm', res = 400)
