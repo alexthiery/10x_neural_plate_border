@@ -3,7 +3,7 @@ library(Seurat)
 library(tidyverse)
 
 # Get RDS objects for all different data subsets - Full data and NPB subset are taken from cellrank output to enable running dynamics plots
-data_paths = data.frame(paths = list.files('./output/NF-downstream_analysis_stacas/stage_split/', recursive = TRUE, pattern = 'cell_state_classification.RDS', full.names = TRUE),
+data_paths = data.frame(paths = list.files('./output/NF-downstream_analysis/stage_split/', recursive = TRUE, pattern = 'cell_state_classification.RDS', full.names = TRUE),
                         row.names = c('HH4', 'HH5', 'HH6', 'HH7', 'ss4', 'ss8'))
 
 seurat_stage_list <- lapply(data_paths$paths, function(x) readRDS(x))
@@ -15,8 +15,8 @@ seurat_stage_list <- lapply(seurat_stage_list, function(x) DietSeurat(x, counts 
 
 # Get RDS objects for Full data and NPB subset
 data_paths = data.frame(paths = c(
-  './output/NF-downstream_analysis_stacas/transfer_labels/gene_modules_subset_latent_time/rds_files/seurat_label_transfer_latent_time.RDS',
-  './output/NF-downstream_analysis_stacas/transfer_subset/transfer_ppr_nc_subset/gene_modules_npb_latent_time/rds_files/seurat_npb_subset_latent_time.RDS'
+  './output/NF-downstream_analysis/transfer_labels/gene_modules_subset_latent_time/rds_files/seurat_label_transfer_latent_time.RDS',
+  './output/NF-downstream_analysis/transfer_subset/transfer_ppr_nc_subset/gene_modules_npb_latent_time/rds_files/seurat_npb_subset_latent_time.RDS'
 ),
 row.names = c('Full data', 'NPB subset'))
 

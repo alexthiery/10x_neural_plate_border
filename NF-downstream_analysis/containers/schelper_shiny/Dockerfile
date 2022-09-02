@@ -5,4 +5,5 @@ LABEL authors="alex.thiery@crick.ac.uk" \
 
 # Install scHelper
 RUN   R -e "install.packages('shiny')" && \
-      R -e "install.packages('shinydashboard')"
+      R -e "install.packages('shinydashboard')" && \
+      R -e "install.packages('bs4Dash')"
