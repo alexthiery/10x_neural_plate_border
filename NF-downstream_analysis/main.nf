@@ -36,7 +36,10 @@ include {SEURAT_TRANSFER_PROCESS as SEURAT_TRANSFER_PPR_NC_PROCESS} from "$baseD
 include {R as GENE_MODULES_SUBSET_LATENT_TIME} from "$baseDir/modules/local/r/main"                                            addParams( script: analysis_scripts.gene_modules_subset_latent_time )
 include {R as GENE_MODULES_NPB_LATENT_TIME} from "$baseDir/modules/local/r/main"                                               addParams( script: analysis_scripts.gene_modules_npb_latent_time )
 include {R as COEXPRESSION_ANALYSIS_NPB} from "$baseDir/modules/local/r/main"                                                  addParams( script: analysis_scripts.coexpression_analysis_npb )
-include {R as COEXPRESSION_NC_PPR_MODULES_NPB} from "$baseDir/modules/local/r/main"                                            addParams( script: analysis_scripts.coexpression_nc_ppr_modules_npb )                                                                                                                             
+include {R as COEXPRESSION_NC_PPR_MODULES_NPB} from "$baseDir/modules/local/r/main"                                            addParams( script: analysis_scripts.coexpression_nc_ppr_modules_npb )
+
+// HCR intensity subworkflow
+include {HCR} from "$baseDir/subworkflows/hcr/main"
 
 /*-----------------------------------------------------------------------------------------------------------------------------
 Log
@@ -52,6 +55,8 @@ Set channels
 Channel
     .value("$baseDir/binary_knowledge_matrix.csv")
     .set{ch_binary_knowledge_matrix}
+
+hcr_intensity_samplesheet = "$baseDir/hcr_data/samplesheet.csv"
 
 /*------------------------------------------------------------------------------------
 Workflow
@@ -164,4 +169,15 @@ workflow {
 
 
     COEXPRESSION_ANALYSIS_NPB(ch_coexpression_analysis_npb)
+
+    /*------------------------------------------------------------------------------------*/
+    /* Run HCR intensity subworkflow
+    --------------------------------------------------------------------------------------*/
+
+    hh7_seurat                      = SEURAT_STAGE_PROCESS.out
+                                        .state_classification_out
+                                        .filter{ it[0].sample_id == 'HH7_splitstage_data' }
+                                        .map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]}
+
+    HCR(hcr_intensity_samplesheet, hh7_seurat)
 }

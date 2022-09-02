@@ -1,9 +1,7 @@
-#!/opt/conda/envs/scvelo/bin/python
+#!/usr/local/bin/python
 
-import os
 import sys
 import argparse
-import loompy
 import scvelo as scv
 import pandas as pd
 

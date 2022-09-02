@@ -1,12 +1,9 @@
-#!/opt/conda/envs/scvelo/bin/python
+#!/usr/local/bin/python
 
-import os
 import sys
 import argparse
 import scvelo as scv
-import scanpy as sc
 import cellrank as cr
-import numpy as np
 import warnings
 
 scv.settings.verbosity = 3
@@ -53,24 +50,24 @@ def write_lineage_probs(adata):
     adata.obs = adata.obs.reindex(copy=False)
     return(adata)
 
-def allDataTerminalStates(adata, estimator, dpi):
+def allDataTerminalStates(adata, estimator):
     estimator.set_terminal_states({"neural": adata[adata.obs["scHelper_cell_type"].isin(['HB', 'MB', "FB"]) & adata.obs["stage"].isin(['ss8', 'ss4'])].obs_names,
                   "NC": adata[adata.obs["scHelper_cell_type"].isin(['dNC', 'NC']) & adata.obs["stage"].isin(['ss8', 'ss4'])].obs_names,
                   "placodal": adata[adata.obs["scHelper_cell_type"].isin(['aPPR', 'pPPR', 'PPR']) & adata.obs["stage"].isin(['ss8', 'ss4'])].obs_names})
-    cr.pl.terminal_states(adata, save='terminal_states.pdf', dpi=dpi)
+    scv.pl.umap(adata, color='terminal_states', legend_loc='on data', save='_terminal_states.pdf')
     return(estimator)
 
-def transferLabelTerminalStates(adata, estimator, dpi):
+def transferLabelTerminalStates(adata, estimator):
     estimator.set_terminal_states({"neural": adata[adata.obs["scHelper_cell_type"].isin(['HB', 'MB', "FB"]) & adata.obs["stage"].isin(['ss8', 'ss4'])].obs_names,
                   "NC": adata[adata.obs["scHelper_cell_type"].isin(['dNC', 'NC']) & adata.obs["stage"].isin(['ss8', 'ss4'])].obs_names,
                   "placodal": adata[adata.obs["scHelper_cell_type"].isin(['aPPR', 'pPPR', 'PPR']) & adata.obs["stage"].isin(['ss8', 'ss4'])].obs_names})
-    cr.pl.terminal_states(adata, save='terminal_states.pdf', dpi=dpi)
+    scv.pl.umap(adata, color='terminal_states', legend_loc='on data', save='_terminal_states.pdf')
     return(estimator)
 
-def terminalStates_ppr_nc(adata, estimator, dpi):
+def terminalStates_ppr_nc(adata, estimator):
     estimator.set_terminal_states({"NC": adata[adata.obs["scHelper_cell_type"].isin(['dNC', 'NC']) & adata.obs["stage"].isin(['ss8'])].obs_names,
                   "placodal": adata[adata.obs["scHelper_cell_type"].isin(['aPPR', 'pPPR', 'PPR']) & adata.obs["stage"].isin(['ss8'])].obs_names})
-    cr.pl.terminal_states(adata, save='terminal_states.pdf', dpi=dpi)
+    scv.pl.umap(adata, color='terminal_states', legend_loc='on data', save='_terminal_states.pdf')
     return(estimator)
 
 def write_lineage_probs(adata):
@@ -90,12 +87,12 @@ def write_lineage_probs(adata):
 def main(args=None):
     args = parse_args(args)
     # check_args(args)
-
-
+    
     # Set global settings
     scv.logging.print_version()
     scv.settings.plot_prefix = "" # remove plot prefix
     scv.settings.n_jobs = args.ncores  # set max width size for presenter view
+    scv.set_figure_params(frameon=False, dpi_save=args.dpi)
 
     adata = read_h5ad(h5ad_path=args.input)
 
@@ -104,18 +101,15 @@ def main(args=None):
         g = cr.tl.estimators.GPCCA(combined_kernel)
 
     if args.dataType == 'full':
-        g = allDataTerminalStates(adata, g, dpi=args.dpi)
+        g = allDataTerminalStates(adata, g)
     elif args.dataType == 'labelTransfer':
-        g = transferLabelTerminalStates(adata, g, dpi = args.dpi)
+        g = transferLabelTerminalStates(adata, g)
     elif args.dataType == 'ppr_nc':
-        g = terminalStates_ppr_nc(adata, g, dpi=args.dpi)
+        g = terminalStates_ppr_nc(adata, g)
         
     g.compute_absorption_probabilities()
-    cr.pl.lineages(adata, same_plot=False, save='absorption_probabilities.pdf', dpi = args.dpi)
+    g.plot_absorption_probabilities(same_plot=False, save='absorption_probabilities.pdf', dpi=args.dpi)
     
-    if all(value is None for value in adata.obs['terminal_states_probs']):
-        adata.obs = adata.obs.drop(['terminal_states_probs'], axis=1)
-
     adata = write_lineage_probs(adata)
     adata.write(args.output + '_cellrank.h5ad')
     adata.obs.to_csv(args.output + '_metadata.csv')
@@ -125,5 +119,5 @@ if __name__ == '__main__':
     sys.exit(main())
 
 # # set args for interactive testing
-# args = ['-i', '../output/NF-downstream_analysis_stacas/scvelo/NF-scRNAseq_alignment_out/scvelo_run/NF-scRNAseq_alignment_out_scvelo.h5ad', '-o', 'out.h5ad', '-c',
-#         'seurat_clusters', '--ncores', '8', '-ck', 'True', '-kp', '0.8']
+# args = ['-i', '../output/NF-downstream_analysis/filtered_seurat/scvelo/scvelo_run/NF-scRNAseq_alignment_out_scvelo.h5ad', '-o', 'out.h5ad', '-c',
+#         'scHelper_cell_type', '--ncores', '8', '-ck', 'True', '-kp', '0.2', '-sm', '4', '--dataType', 'labelTransfer', '--dpi', '720']

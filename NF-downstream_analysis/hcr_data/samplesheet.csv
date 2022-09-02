@@ -1,0 +1,4 @@
+sample_id,data
+MSX1_SIX1_PAX7,./NF-downstream_analysis/hcr_data/intensity_measurements/MSX1_SIX1_PAX7_intensity.csv
+DLX6_SIX1_PAX7,./NF-downstream_analysis/hcr_data/intensity_measurements/DLX6_SIX1_PAX7_intensity.csv
+SIX1_TFAP2A_PAX7,./NF-downstream_analysis/hcr_data/intensity_measurements/SIX1_TFAP2A_PAX7_intensity.csv
