@@ -168,7 +168,20 @@ tab_coexpression_umaps <- tabItem(tabName = "coexpression_umaps",
                                )
 )
 
-
+tab_dea <- tabItem(tabName = "dea",
+                   fluidRow(
+                     column(5,
+                            radioButtons("subset_dea", "Select dataset to visualise", names(dat_list), inline = TRUE, selected = 'Full data', width = '800')
+                     ),
+                     column(2, selectInput("group_dea", "Group by", group_options, width = "250", selected = 'Cell state')
+                     ),
+                     
+                     column(2, selectInput('select_a', label = 'Select A', choices = NULL, multiple = TRUE, width = "250")
+                     ),
+                     column(2, selectInput("select_b", "Select B", group_options, multiple = TRUE, width = "250")
+                     )
+                   )
+)
 
 ui <- dashboardPage(
   fullscreen = TRUE,
@@ -193,7 +206,8 @@ ui <- dashboardPage(
       menuItem("Home", tabName = "home", icon = icon('home')),
       menuItem("Feature Plots", tabName = "featureplots", icon = icon("border-none")),
       menuItem("Lineage Dynamics", tabName = "lineage_dynamics", icon = icon('chart-line')),
-      menuItem("UMAP co-expression", tabName = "coexpression_umaps", icon = icon("braille"))
+      menuItem("UMAP co-expression", tabName = "coexpression_umaps", icon = icon("braille")),
+      menuItem("Differential expression", tabName = "dea", icon = icon("arrows"))
     )
   ),
   
@@ -205,7 +219,8 @@ ui <- dashboardPage(
       tab_home,
       tab_feature_plots,
       tab_lineage_dynamics,
-      tab_coexpression_umaps
+      tab_coexpression_umaps,
+      tab_dea
     )
   )
 )
