@@ -183,8 +183,12 @@ server <- function(input, output, session){
   })
   
   
-  
+  observeEvent(input$run_dea, {
+    table <- FindMarkers(dat_list[[input$subset_dea]], ident.1 = input$select_a, ident.2 = input$select_b, group.by = input$group_dea)
+    
+    table <- table %>% rownames_to_column('Gene') %>% arrange(Gene) %>% mutate_if(is.numeric, signif, 3)
+    
+    output$dea_table <- DT::renderDataTable(table, rownames = FALSE, options = list(scrollX = TRUE))
+  })
+ 
 }
-
-
-

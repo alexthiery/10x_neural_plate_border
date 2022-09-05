@@ -1,9 +1,5 @@
 library(shinythemes)
 
-
-
-
-
 tab_home          <- tabItem(tabName = "home",
                              fluidRow(
                                column(8, offset = 2,
@@ -172,15 +168,23 @@ tab_dea <- tabItem(tabName = "dea",
                    fluidRow(
                      column(5,
                             radioButtons("subset_dea", "Select dataset to visualise", names(dat_list), inline = TRUE, selected = 'Full data', width = '800')
-                     ),
-                     column(2, selectInput("group_dea", "Group by", group_options, width = "250", selected = 'Cell state')
-                     ),
-                     
-                     column(2, selectInput('select_a', label = 'Select A', choices = NULL, multiple = TRUE, width = "250")
-                     ),
-                     column(2, selectInput("select_b", "Select B", group_options, multiple = TRUE, width = "250")
                      )
-                   )
+                   ),
+                   br(),
+                   fluidRow(
+                     column(2,
+                            selectInput("group_dea", "Group by", group_options, width = "250", selected = 'Cell state'),
+                            selectInput('select_a', label = 'Select A', choices = NULL, multiple = TRUE, width = "250"),
+                            selectInput("select_b", "Select B", group_options, multiple = TRUE, width = "250"),
+                            textInput("padj_threshold", "Adjusted p-value threshold", value = '0.01'),
+                            textInput("fc_threshold", "log2 FC threshold", value = '0.25'),
+                            actionButton("run_dea", "Run DEA"),
+                            align = 'left'
+                            ),
+                     column(4, offset = 1,
+                            div(DT::dataTableOutput("dea_table"), style = "font-size: 90%; width: 90%")
+                            )
+                     ),
 )
 
 ui <- dashboardPage(
