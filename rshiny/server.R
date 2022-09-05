@@ -132,6 +132,20 @@ server <- function(input, output, session){
   )
   
   ####################################################################
+  # DEA
+  
+  # Filter group_by choices based on dataset selected and reset selected cells
+  observeEvent(input$subset_dea, {
+    if(input$subset_dea %in% c('Full data', 'NPB subset')){
+      updateSelectInput(session, "group_dea", choices = group_options, selected = "Cell state")
+    }else{
+      updateSelectInput(session, "group_dea", choices = group_options[group_options != "Stage"], selected = "Cell state")
+    }
+    
+    updateSelectInput(session, "select_a", selected = "")
+    updateSelectInput(session, "select_b", selected = "")
+  })
+  
   # Observe inputs into select a and select b, then remove those selected from the input options for the other
   # (this is to prevent the same cells being selected for both sides of the DEA)
   values <- reactiveValues(group_values = "",
@@ -167,6 +181,8 @@ server <- function(input, output, session){
     
     updateSelectInput(session, "select_a", choices = a_choices, selected = values$a_selected)
   })
+  
+  
   
 }
 
