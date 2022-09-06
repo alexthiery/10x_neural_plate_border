@@ -11,6 +11,8 @@ server <- function(input, output, session){
   subset_dataset <- reactive({dat_list[[input$select_lineage_dataset]]})
   ####################################################################
   # Generate gene feature plots
+  updateSelectizeInput(session, "gene_id", choices = gene_ids, selected = "PAX7", options= list(maxOptions = length(gene_ids)), server = TRUE)
+  
   output$featureplot <- renderPlot(FeaturePlot(dat_list[[input$subset_featureplots]], features = input$gene_id)+
                                      my_theme,
                                    height = function() {session$clientData$output_featureplot_width * 0.8})
@@ -30,10 +32,7 @@ server <- function(input, output, session){
       features = character(0)
     }
     
-    updateSelectInput(session, "feature_lineage_dynamics",
-                      choices = features,
-                      selected = 'latent_time'
-    )
+    updateSelectizeInput(session, "feature_lineage_dynamics", choices = features, selected = 'latent_time', server = TRUE)
     
   })
   
@@ -50,7 +49,6 @@ server <- function(input, output, session){
   
   # Set lineage options based on dataset selected
   observe({
-    
     if(input$select_lineage_dataset == 'Full data'){
       lineages = c('Neural crest', 'Neural', 'Placodal')
     } else if (input$select_lineage_dataset == 'NPB subset'){
@@ -58,12 +56,11 @@ server <- function(input, output, session){
     } else {
       lineages = character(0)
     }
-    
-    updateCheckboxGroupInput(session, "select_lineage",
-                             choices = lineages,
-                             selected = 'Neural crest'
-    )
+    updateCheckboxGroupInput(session, "select_lineage", choices = lineages, selected = 'Neural crest')
   })
+  
+  # Set lineage dynamic feature options from server side 
+  updateSelectizeInput(session, "feature_lineage_dynamics", choices = scvelo_features, server = TRUE)
   
   
   subset_lineage_map <- reactive({lineage_map[input$select_lineage]})
@@ -81,6 +78,9 @@ server <- function(input, output, session){
       )
     )
   })
+  
+  # Set lineage dynamic gene options from server side 
+  updateSelectizeInput(session, "gene_id_lineage_dynamics", choices = gene_ids, selected = "PAX7", options= list(maxOptions = length(gene_ids)), server = TRUE)
   
   plot_data <- reactive(lineage_gam(input$gene_id_lineage_dynamics, subset_dataset(), slot = 'scale.data', lineages = input$select_lineage, lineage_cutoffs = max_cutoffs()))
   
@@ -102,6 +102,10 @@ server <- function(input, output, session){
   
   ####################################################################
   # Co-expression feature plots
+  
+  # Set coexpression gene options from server side 
+  updateSelectizeInput(session, "coexpression_gene_id_1", choices = gene_ids, selected = "PAX7", options= list(maxOptions = length(gene_ids)), server = TRUE)
+  updateSelectizeInput(session, "coexpression_gene_id_2", choices = gene_ids, selected = "SIX1", options= list(maxOptions = length(gene_ids)), server = TRUE)
   
   # Edit co-expression header based on genes selected
   output$coexpression_header <- renderUI({
@@ -133,7 +137,7 @@ server <- function(input, output, session){
   
   ####################################################################
   # DEA
-
+  
   # Observe inputs into select a and select b, then remove those selected from the input options for the other
   # (this is to prevent the same cells being selected for both sides of the DEA)
   values <- reactiveValues(group_values = "",
@@ -161,7 +165,7 @@ server <- function(input, output, session){
     
   })
   
-
+  
   
   observeEvent(input$group_dea, {
     values$group_values <- dat_list[[input$subset_dea]]@meta.data %>%
@@ -201,12 +205,12 @@ server <- function(input, output, session){
     req(input$select_a, input$select_b, input$padj_threshold, input$fc_threshold)
     output$dea_table <- DT::renderDataTable(
       {isolate(FindMarkers(dat_list[[input$subset_dea]], ident.1 = input$select_a, ident.2 = input$select_b,
-                   group.by = input$group_dea, logfc.threshold = input$fc_threshold, base = 2) %>%
-          rownames_to_column('Gene') %>%
-          filter(p_val_adj < input$padj_threshold) %>%
-          rename("p-val" = p_val, "log2FC" = avg_log2FC, "Percent A" = pct.1, "Percent B" = pct.2, "Adj p-val" = p_val_adj) %>%
-          mutate_if(is.numeric, signif, 3) %>%
-            arrange(-log2FC))},
+                           group.by = input$group_dea, logfc.threshold = input$fc_threshold, base = 2) %>%
+                 rownames_to_column('Gene') %>%
+                 filter(p_val_adj < input$padj_threshold) %>%
+                 rename("p-val" = p_val, "log2FC" = avg_log2FC, "Percent A" = pct.1, "Percent B" = pct.2, "Adj p-val" = p_val_adj) %>%
+                 mutate_if(is.numeric, signif, 3) %>%
+                 arrange(-log2FC))},
       rownames = FALSE, options = list(scrollX = TRUE)
     )
   })
@@ -219,13 +223,13 @@ server <- function(input, output, session){
   
   output$download_csv <- downloadHandler("Thiery_et_al_dea.csv", content = function(file) {
     output_data <- isolate(FindMarkers(dat_list[[input$subset_dea]], ident.1 = input$select_a, ident.2 = input$select_b,
-                         group.by = input$group_dea, logfc.threshold = input$fc_threshold, base = 2) %>%
-               rownames_to_column('Gene') %>%
-               filter(p_val_adj < input$padj_threshold) %>%
-               rename("p-val" = p_val, "log2FC" = avg_log2FC, "Percent A" = pct.1, "Percent B" = pct.2, "Adj p-val" = p_val_adj) %>%
-               mutate_if(is.numeric, signif, 3) %>%
-               arrange(-log2FC))
+                                       group.by = input$group_dea, logfc.threshold = input$fc_threshold, base = 2) %>%
+                             rownames_to_column('Gene') %>%
+                             filter(p_val_adj < input$padj_threshold) %>%
+                             rename("p-val" = p_val, "log2FC" = avg_log2FC, "Percent A" = pct.1, "Percent B" = pct.2, "Adj p-val" = p_val_adj) %>%
+                             mutate_if(is.numeric, signif, 3) %>%
+                             arrange(-log2FC))
     write.table(output_data, file  ,sep=",",row.names = F)
-    }
+  }
   )
 }
