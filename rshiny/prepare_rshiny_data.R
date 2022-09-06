@@ -43,9 +43,15 @@ seurat_list <- lapply(seurat_list, function(x) {x@meta.data <- x@meta.data %>%
 return(x)
 })
 
-# filter for variable features
+# keep only var features in scaled data
 seurat_list_var_features <- lapply(seurat_list, VariableFeatures) %>% Reduce(c, .) %>% unique()
 
-seurat_list <- lapply(seurat_list, function(x) subset(x, features = seurat_list_var_features))
+for(i in c('Full data', 'NPB subset')){
+  scale_data_rownames <- rownames(slot(object = seurat_list[[i]][['RNA']], name = "scale.data"))
+  slot(object = seurat_list[[i]][['RNA']], name = "scale.data") <- slot(object = seurat_list[[i]][['RNA']], name = "scale.data")[scale_data_rownames %in% seurat_list_var_features,]
+}
+
+# !Deprecated: filter var features for all data slots
+# seurat_list <- lapply(seurat_list, function(x) subset(x, features = seurat_list_var_features))
 
 saveRDS(seurat_list, './output/rshiny_input.RDS', compress = FALSE)
