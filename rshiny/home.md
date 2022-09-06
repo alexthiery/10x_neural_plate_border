@@ -29,13 +29,13 @@ In this Shiny app, we are providing you with full access to our data which you c
 
 >[scVelo](https://scvelo.readthedocs.io/) and [CellRank](https://cellrank.readthedocs.io/en/stable/index.html) were used to predict the directionality of transcriptional change over time. In doing so we obtained measurements of a given cells latent time and the probability that a cell will differentiate into each of the main ectodermal lineages.
 
->To model transcriptional dynamics during lineage segregation, we generate generalised additive models (GAMs) of a given genes expression over latent time, weighted by our predicted lineage probabilities. In this section you can visualise the expression of genes of interest across our full dataset, or across our neural plate border subset if you prefer a higher resolution view of placodal/neural crest segregation.
+>To model transcriptional dynamics during lineage segregation, we generate generalised additive models (GAMs) of a given genes expression over latent time, weighted by our predicted lineage probabilities. In this section you can visualise the expression of variable genes across our dataset. If you prefer a higher resolution view of placodal/neural crest segregation you can view expression dynamics across our neural plate border subset.
 
 </br>
 
 >##### Co-expression analysis
 
->One of the key features of the neural plate border is that it does not exclusively express any given set of genes. Instead, we find that previously termed 'neural plate border specifiers' are biased towards either placodal or neural crest lineages. Instead we suggest that the neural plate border is in an unstable state which is better classified based on the co-expression of markers that are later restricted towards alternative fates.
+>One of the key features of the neural plate border is that it does not exclusively express any given set of genes. Instead, we find that previously termed 'neural plate border specifiers' are biased towards either placodal or neural crest lineages. We suggest that the neural plate border is in an unstable state which is better classified based on the co-expression of markers that are later restricted towards alternative fates.
 
 >Here you can visualise the co-expression of any two genes of interest in individual cells. Given that pairs of genes are co-expressed at different levels, we have added the option to threshold out cells with low co-expression of your genes of interest. This allows you to easily see which are the cells that co-expressing genes at the highest levels.
 
