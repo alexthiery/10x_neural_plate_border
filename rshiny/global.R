@@ -5,8 +5,12 @@ library(tidyverse)
 library(viridis)
 library(mgcv)
 library(patchwork)
+library(shinycssloaders)
 
 source('./custom_functions.R')
+
+options(scipen = 1)
+options(digits = 2)
 
 # dat <- readRDS('../shiny_test.RDS')
 dat_list <- readRDS('../output/rshiny_input.RDS')

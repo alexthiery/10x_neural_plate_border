@@ -133,6 +133,12 @@ server <- function(input, output, session){
   
   ####################################################################
   # DEA
+
+  # Observe inputs into select a and select b, then remove those selected from the input options for the other
+  # (this is to prevent the same cells being selected for both sides of the DEA)
+  values <- reactiveValues(group_values = "",
+                           a_selected = "",
+                           b_selected = "")
   
   # Filter group_by choices based on dataset selected and reset selected cells
   observeEvent(input$subset_dea, {
@@ -142,16 +148,21 @@ server <- function(input, output, session){
       updateSelectInput(session, "group_dea", choices = group_options[group_options != "Stage"], selected = "Cell state")
     }
     
-    updateSelectInput(session, "select_a", selected = "")
-    updateSelectInput(session, "select_b", selected = "")
+    # updateSelectInput(session, "select_a", selected = "")
+    # updateSelectInput(session, "select_b", selected = "")
+    # 
+    values$group_values <- dat_list[[input$subset_dea]]@meta.data %>%
+      pull(input$group_dea) %>%
+      unique() %>%
+      sort()
+    
+    updateSelectInput(session, "select_a", choices = values$group_values, selected = "")
+    updateSelectInput(session, "select_b", choices = values$group_values, selected = "")
+    
   })
   
-  # Observe inputs into select a and select b, then remove those selected from the input options for the other
-  # (this is to prevent the same cells being selected for both sides of the DEA)
-  values <- reactiveValues(group_values = "",
-                           a_selected = "",
-                           b_selected = "")
 
+  
   observeEvent(input$group_dea, {
     values$group_values <- dat_list[[input$subset_dea]]@meta.data %>%
       pull(input$group_dea) %>%
@@ -183,12 +194,38 @@ server <- function(input, output, session){
   })
   
   
+  # Render empty data table to hide spinning wheel
+  output$dea_table <- DT::renderDT(NULL)
+  # isolate execution to prevent updating reactive variables from updating DEA output
   observeEvent(input$run_dea, {
-    table <- FindMarkers(dat_list[[input$subset_dea]], ident.1 = input$select_a, ident.2 = input$select_b, group.by = input$group_dea)
-    
-    table <- table %>% rownames_to_column('Gene') %>% arrange(Gene) %>% mutate_if(is.numeric, signif, 3)
-    
-    output$dea_table <- DT::renderDataTable(table, rownames = FALSE, options = list(scrollX = TRUE))
+    req(input$select_a, input$select_b, input$padj_threshold, input$fc_threshold)
+    output$dea_table <- DT::renderDataTable(
+      {isolate(FindMarkers(dat_list[[input$subset_dea]], ident.1 = input$select_a, ident.2 = input$select_b,
+                   group.by = input$group_dea, logfc.threshold = input$fc_threshold, base = 2) %>%
+          rownames_to_column('Gene') %>%
+          filter(p_val_adj < input$padj_threshold) %>%
+          rename("p-val" = p_val, "log2FC" = avg_log2FC, "Percent A" = pct.1, "Percent B" = pct.2, "Adj p-val" = p_val_adj) %>%
+          mutate_if(is.numeric, signif, 3) %>%
+            arrange(-log2FC))},
+      rownames = FALSE, options = list(scrollX = TRUE)
+    )
   })
- 
+  
+  # Add download button (hide button if options for DEA are not selected)
+  output$download <- renderUI({
+    req(input$select_a, input$select_b, input$padj_threshold, input$fc_threshold)
+    downloadButton('download_csv', 'Download DEA')
+  })
+  
+  output$download_csv <- downloadHandler("Thiery_et_al_dea.csv", content = function(file) {
+    output_data <- isolate(FindMarkers(dat_list[[input$subset_dea]], ident.1 = input$select_a, ident.2 = input$select_b,
+                         group.by = input$group_dea, logfc.threshold = input$fc_threshold, base = 2) %>%
+               rownames_to_column('Gene') %>%
+               filter(p_val_adj < input$padj_threshold) %>%
+               rename("p-val" = p_val, "log2FC" = avg_log2FC, "Percent A" = pct.1, "Percent B" = pct.2, "Adj p-val" = p_val_adj) %>%
+               mutate_if(is.numeric, signif, 3) %>%
+               arrange(-log2FC))
+    write.table(output_data, file  ,sep=",",row.names = F)
+    }
+  )
 }
