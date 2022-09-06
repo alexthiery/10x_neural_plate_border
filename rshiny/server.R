@@ -211,7 +211,7 @@ server <- function(input, output, session){
                  rename("p-val" = p_val, "log2FC" = avg_log2FC, "Percent A" = pct.1, "Percent B" = pct.2, "Adj p-val" = p_val_adj) %>%
                  mutate_if(is.numeric, signif, 3) %>%
                  arrange(-log2FC))},
-      rownames = FALSE, options = list(scrollX = TRUE)
+      rownames = FALSE, options = list(scrollX = TRUE), selection = 'none'
     )
   })
   
@@ -230,6 +230,5 @@ server <- function(input, output, session){
                              mutate_if(is.numeric, signif, 3) %>%
                              arrange(-log2FC))
     write.table(output_data, file  ,sep=",",row.names = F)
-  }
-  )
+  })
 }
