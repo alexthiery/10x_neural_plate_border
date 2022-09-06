@@ -24,7 +24,7 @@ scvelo_features = c('latent_time', 'lineage_neural_probability', 'lineage_NC_pro
 
 
 # Get shared var features for optional input
-gene_ids <- lapply(dat_list, VariableFeatures) %>% Reduce(c, .) %>% unique()
+gene_ids <- lapply(dat_list, VariableFeatures) %>% Reduce(c, .) %>% unique() %>% sort()
 
 # Set options for viewing DimPlots
 group_options = c('Stage', 'Cell state', 'Clusters')
