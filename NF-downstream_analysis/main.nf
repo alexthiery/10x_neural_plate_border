@@ -14,6 +14,7 @@ analysis_scripts.gene_modules_subset_latent_time    = file("$baseDir/bin/other/g
 analysis_scripts.gene_modules_npb_latent_time       = file("$baseDir/bin/other/gene_modules_npb_latent_time.R", checkIfExists: true)
 analysis_scripts.coexpression_analysis_npb          = file("$baseDir/bin/other/coexpression_analysis_npb.R", checkIfExists: true)
 analysis_scripts.coexpression_nc_ppr_modules_npb    = file("$baseDir/bin/other/coexpression_nc_ppr_modules_npb.R", checkIfExists: true)
+analysis_scripts.identify_lineage_drivers           = file("$baseDir/bin/other/identify_lineage_drivers.R", checkIfExists: true)
 
 /*------------------------------------------------------------------------------------*/
 /* Workflow inclusions
@@ -37,6 +38,8 @@ include {R as GENE_MODULES_SUBSET_LATENT_TIME} from "$baseDir/modules/local/r/ma
 include {R as GENE_MODULES_NPB_LATENT_TIME} from "$baseDir/modules/local/r/main"                                               addParams( script: analysis_scripts.gene_modules_npb_latent_time )
 include {R as COEXPRESSION_ANALYSIS_NPB} from "$baseDir/modules/local/r/main"                                                  addParams( script: analysis_scripts.coexpression_analysis_npb )
 include {R as COEXPRESSION_NC_PPR_MODULES_NPB} from "$baseDir/modules/local/r/main"                                            addParams( script: analysis_scripts.coexpression_nc_ppr_modules_npb )
+include {R as IDENTIFY_LINEAGE_DRIVERS_FULL} from  "$baseDir/modules/local/r/main"                                             addParams( script: analysis_scripts.coexpression_nc_ppr_modules_npb )
+include {R as IDENTIFY_LINEAGE_DRIVERS_NPB} from  "$baseDir/modules/local/r/main"                                              addParams( script: analysis_scripts.coexpression_nc_ppr_modules_npb )
 
 // HCR intensity subworkflow
 include {HCR} from "$baseDir/subworkflows/hcr/main"
@@ -180,4 +183,11 @@ workflow {
                                         .map{[it[0], it[1].findAll{it =~ /rds_files/}[0].listFiles()[0]]}
 
     HCR(hcr_intensity_samplesheet, hh7_seurat)
+
+    /*------------------------------------------------------------------------------------*/
+    /* Identify lineage drivers
+    --------------------------------------------------------------------------------------*/
+
+    IDENTIFY_LINEAGE_DRIVERS_FULL( GENE_MODULES_SUBSET_LATENT_TIME.out.map{meta, output -> [meta, output.findAll{it =~ /rds_files/}[0].listFiles()[0]]} )
+    IDENTIFY_LINEAGE_DRIVERS_NPB( GENE_MODULES_SUBSET_LATENT_TIME.out.map{meta, output -> [meta, output.findAll{it =~ /rds_files/}[0].listFiles()[0]]} )
 }
