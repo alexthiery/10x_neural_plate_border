@@ -113,7 +113,7 @@ lineages <- grep('lineage_', colnames(seurat_data@meta.data), value = TRUE)
 
 for(lineage in lineages){
   lineage_drivers <- ModelMultiLatentExpression(seurat_data, goi = var_genes[1:10], latent_col = 'latent_time', lineage_col = lineage)
-  goi = model_out %>% filter(!grepl('ENS', gene)) %>% arrange(abs(padj_lineage)) %>% head(10) %>% pull(gene)
+  goi = lineage_drivers %>% filter(!grepl('ENS', gene)) %>% arrange(abs(padj_lineage)) %>% head(10) %>% pull(gene)
   
   write.csv(dplyr::select(lineage_drivers, !model), paste0('./', lineage, '_drivers.csv'))
   
