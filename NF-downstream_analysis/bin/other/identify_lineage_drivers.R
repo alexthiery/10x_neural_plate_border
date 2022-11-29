@@ -23,10 +23,6 @@ if(opt$verbose) print(opt)
 
 ncores = opt$cores
 
-# Multi-core when running from command line
-plan("multiprocess", workers = ncores)
-options(future.globals.maxSize = 32* 1024^3, future.seed=TRUE) # 32gb
-
 # Set paths and load data
 plot_path = "./plots/"
 rds_path = "./rds_files/"
