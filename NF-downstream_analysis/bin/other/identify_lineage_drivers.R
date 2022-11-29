@@ -120,4 +120,6 @@ for(lineage in lineages){
   png(paste0(plot_path, lineage, '_temp.png'), width = 20, height = 13, units = 'cm', res = 400)
   print(PlotLineageVolcano(model_out = lineage_drivers, ymax = 20, xmin = -20, xmax = 20, goi_label = goi, padj_time_cutoff = 0.05))
   graphics.off()
+
+  saveRDS(lineage_drivers, paste0(rds_path, lineage, "_model_out.RDS"), compress = FALSE)
 }
