@@ -116,12 +116,19 @@ lineages <- grep('lineage_', colnames(seurat_data@meta.data), value = TRUE)
 
 for(lineage in lineages){
   lineage_drivers <- ModelMultiLatentExpression(seurat_data, goi = var_genes, latent_col = 'latent_time', lineage_col = lineage)
-  goi = lineage_drivers %>% filter(!grepl('ENS', gene)) %>% arrange(abs(padj_lineage)) %>% head(10) %>% pull(gene)
-  
   write.csv(dplyr::select(lineage_drivers, !model), paste0('./', lineage, '_drivers.csv'))
   
+  # Pull top 10 down and top 20 upregulated
+  goi = lineage_drivers %>% filter(!grepl('ENS', gene))
+  goi = rbind(filter(goi, slope < 0) %>% arrange(abs(padj_lineage)) %>% head(10), 
+        filter(goi, slope > 0) %>% arrange(abs(padj_lineage)) %>% head(20)) %>% pull(gene)
+  
+  ymax = sort(-log10(lineage_drivers$padj_lineage), decreasing = TRUE)[5]
+  xmax = ceiling(min(quantile(lineage_drivers$slope, probs = 0.99), abs(quantile(lineage_drivers$slope, probs = 0.01))))
+  xmin = -xmax
+  
   png(paste0(plot_path, lineage, '_volcano.png'), width = 20, height = 13, units = 'cm', res = 400)
-  print(PlotLineageVolcano(model_out = lineage_drivers, ymax = 20, xmin = -20, xmax = 20, goi_label = goi, padj_time_cutoff = 0.05))
+  print(PlotLineageVolcano(model_out = lineage_drivers, ymax = Inf, xmin = xmin, xmax = xmax, goi_label = goi, padj_time_cutoff = 0.05))
   graphics.off()
   
   saveRDS(lineage_drivers, paste0(rds_path, lineage, "_model_out.RDS"), compress = FALSE)
@@ -143,5 +150,11 @@ for(lineage in lineages){
     xlab(gsub("_", " ", lineage))
   graphics.off()
 }
+
+
+
+
+
+
 
 
