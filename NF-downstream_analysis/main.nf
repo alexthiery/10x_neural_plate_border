@@ -38,8 +38,8 @@ include {R as GENE_MODULES_SUBSET_LATENT_TIME} from "$baseDir/modules/local/r/ma
 include {R as GENE_MODULES_NPB_LATENT_TIME} from "$baseDir/modules/local/r/main"                                               addParams( script: analysis_scripts.gene_modules_npb_latent_time )
 include {R as COEXPRESSION_ANALYSIS_NPB} from "$baseDir/modules/local/r/main"                                                  addParams( script: analysis_scripts.coexpression_analysis_npb )
 include {R as COEXPRESSION_NC_PPR_MODULES_NPB} from "$baseDir/modules/local/r/main"                                            addParams( script: analysis_scripts.coexpression_nc_ppr_modules_npb )
-include {R as IDENTIFY_LINEAGE_DRIVERS_FULL} from  "$baseDir/modules/local/r/main"                                             addParams( script: analysis_scripts.coexpression_nc_ppr_modules_npb )
-include {R as IDENTIFY_LINEAGE_DRIVERS_NPB} from  "$baseDir/modules/local/r/main"                                              addParams( script: analysis_scripts.coexpression_nc_ppr_modules_npb )
+include {R as IDENTIFY_LINEAGE_DRIVERS_FULL} from  "$baseDir/modules/local/r/main"                                             addParams( script: analysis_scripts.identify_lineage_drivers )
+include {R as IDENTIFY_LINEAGE_DRIVERS_NPB} from  "$baseDir/modules/local/r/main"                                              addParams( script: analysis_scripts.identify_lineage_drivers )
 
 // HCR intensity subworkflow
 include {HCR} from "$baseDir/subworkflows/hcr/main"
