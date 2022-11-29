@@ -9,6 +9,9 @@ library(tidyverse)
 library(ggplot2)
 library(ggrepel)
 
+install.packages('tidymv')
+library(tidymv)
+
 # Read in command line opts
 option_list <- list(
     make_option(c("-r", "--runtype"), action = "store", type = "character", help = "Specify whether running through through 'nextflow' in order to switch paths"),
@@ -117,9 +120,28 @@ for(lineage in lineages){
   
   write.csv(dplyr::select(lineage_drivers, !model), paste0('./', lineage, '_drivers.csv'))
   
-  png(paste0(plot_path, lineage, '_temp.png'), width = 20, height = 13, units = 'cm', res = 400)
+  png(paste0(plot_path, lineage, '_volcano.png'), width = 20, height = 13, units = 'cm', res = 400)
   print(PlotLineageVolcano(model_out = lineage_drivers, ymax = 20, xmin = -20, xmax = 20, goi_label = goi, padj_time_cutoff = 0.05))
   graphics.off()
-
+  
   saveRDS(lineage_drivers, paste0(rds_path, lineage, "_model_out.RDS"), compress = FALSE)
+  
+  # Filter top lineage drivers based on slope
+  lineage_drivers <- lineage_drivers %>% filter(!grepl('ENS', gene)) %>% arrange(abs(padj_lineage)) %>% arrange(-slope)
+  lineage_drivers <- rbind(head(lineage_drivers, n = 3), tail(lineage_drivers, n = 3))
+  
+  # Predict expression at constant latent time value (0.5)
+  model_predict <- lapply(lineage_drivers$model, function(x) predict_gam(x, values = list(latent_time = 0.5)))
+  names(model_predict) <- lineage_drivers$gene
+  model_predict <- bind_rows(model_predict, .id = "gene")
+  
+  png(paste0(plot_path, lineage, '_predict_top_drivers.png'), width = 16, height = 10, units = 'cm', res = 400)
+  ggplot(model_predict, aes(y = exp(fit), x = !!sym(lineage), colour = gene)) +
+    geom_line() +
+    theme_classic() +
+    ylab("Predicted expression") +
+    xlab(gsub("_", " ", lineage))
+  graphics.off()
 }
+
+
