@@ -132,24 +132,29 @@ for(lineage in lineages){
   graphics.off()
   
   saveRDS(lineage_drivers, paste0(rds_path, lineage, "_model_out.RDS"), compress = FALSE)
-  
-  # Filter top lineage drivers based on slope
-  lineage_drivers <- lineage_drivers %>% filter(!grepl('ENS', gene)) %>% arrange(abs(padj_lineage)) %>% arrange(-slope)
-  lineage_drivers <- rbind(head(lineage_drivers, n = 3), tail(lineage_drivers, n = 3))
-  
-  # Predict expression at constant latent time value (0.5)
-  model_predict <- lapply(lineage_drivers$model, function(x) predict_gam(x, values = list(latent_time = 0.5)))
-  names(model_predict) <- lineage_drivers$gene
-  model_predict <- bind_rows(model_predict, .id = "gene")
-  
-  png(paste0(plot_path, lineage, '_predict_top_drivers.png'), width = 16, height = 10, units = 'cm', res = 400)
-  ggplot(model_predict, aes(y = exp(fit), x = !!sym(lineage), colour = gene)) +
-    geom_line() +
-    theme_classic() +
-    ylab("Predicted expression") +
-    xlab(gsub("_", " ", lineage))
-  graphics.off()
 }
+
+# 
+# goi = list(NC = c('PAX7', 'TFAP2B', 'OLFML3', 'NKX6-2', 'KRT18'))
+# 
+# # # Filter top lineage drivers based on slope
+# # lineage_drivers <- lineage_drivers %>% filter(!grepl('ENS', gene)) %>% arrange(abs(padj_lineage)) %>% arrange(-slope)
+# # lineage_drivers <- rbind(head(lineage_drivers, n = 3), tail(lineage_drivers, n = 3))
+# 
+# lineage_drivers <- filter(lineage_drivers, gene %in% goi$NC)
+# 
+# # Predict expression at constant latent time value (0.5)
+# model_predict <- lapply(lineage_drivers$model, function(x) predict_gam(x, values = list(latent_time = 0.5)))
+# names(model_predict) <- lineage_drivers$gene
+# model_predict <- bind_rows(model_predict, .id = "gene")
+# 
+# png(paste0(plot_path, lineage, '_predict_top_drivers.png'), width = 16, height = 10, units = 'cm', res = 400)
+# ggplot(model_predict, aes(y = exp(fit), x = !!sym(lineage), colour = gene)) +
+#   geom_line() +
+#   theme_classic() +
+#   ylab("Predicted expression") +
+#   xlab(gsub("_", " ", lineage))
+# graphics.off()
 
 
 
