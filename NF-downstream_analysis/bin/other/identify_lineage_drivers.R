@@ -9,8 +9,8 @@ library(tidyverse)
 library(ggplot2)
 library(ggrepel)
 
-install.packages('tidymv')
-library(tidymv)
+# install.packages('tidymv')
+# library(tidymv)
 
 # Read in command line opts
 option_list <- list(
