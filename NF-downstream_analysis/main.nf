@@ -189,5 +189,5 @@ workflow {
     --------------------------------------------------------------------------------------*/
 
     IDENTIFY_LINEAGE_DRIVERS_FULL( GENE_MODULES_SUBSET_LATENT_TIME.out.map{meta, output -> [meta, output.findAll{it =~ /rds_files/}[0].listFiles()[0]]} )
-    IDENTIFY_LINEAGE_DRIVERS_NPB( GENE_MODULES_SUBSET_LATENT_TIME.out.map{meta, output -> [meta, output.findAll{it =~ /rds_files/}[0].listFiles()[0]]} )
+    IDENTIFY_LINEAGE_DRIVERS_NPB( GENE_MODULES_NPB_LATENT_TIME.out.map{meta, output -> [meta, output.findAll{it =~ /rds_files/}[0].listFiles()[0]]} )
 }
