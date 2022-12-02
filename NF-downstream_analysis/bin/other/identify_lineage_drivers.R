@@ -8,6 +8,7 @@ library(Seurat)
 library(tidyverse)
 library(ggplot2)
 library(ggrepel)
+library(biomaRt)
 
 # install.packages('tidymv')
 # library(tidymv)
@@ -44,6 +45,17 @@ if(!is.null(opt$label)){
 
 # Load seurat data
 seurat_data <- readRDS(list.files(data_path, pattern = "*.RDS", full.names = TRUE))
+
+annotations <- read.csv(list.files(data_path, pattern = "*.csv", full.names = TRUE))
+
+# Get biomart GO annotations for TFs
+ensembl <- useEnsembl(biomart = 'genes', 
+                      dataset = 'ggallus_gene_ensembl',
+                      version = 106)
+
+var_genes <- seurat_data@assays$RNA@var.features
+lineages <- grep('lineage_', colnames(seurat_data@meta.data), value = TRUE)
+
 
 ModelMultiLatentExpression <- function(object, goi, latent_col, lineage_col, assay = 'RNA', slot = 'data', cell_sub = colnames(object), padj_method = 'BH'){
   # Get metadata
@@ -104,19 +116,22 @@ PlotLineageVolcano <- function(model_out, ymax = max(-log10(model_out$padj_linea
     xlab('Coefficient')
   
   if(!is.null(goi_label)){
-    plot <- plot + geom_text_repel(data = subset(model_out, gene %in% goi_label), min.segment.length = 0, segment.size  = 0.6, segment.color = "black")
+    plot <- plot + geom_text_repel(data = subset(model_out, gene %in% goi_label), min.segment.length = 0, segment.size  = 0.6, segment.color = "black", max.overlaps = Inf)
   }
   
   return(plot)
 }
 
-# Calculate lineage markers and plot volcanos
-var_genes <- seurat_data@assays$RNA@var.features
-lineages <- grep('lineage_', colnames(seurat_data@meta.data), value = TRUE)
 
+
+# Run analysis
+# Calculate lineage markers and plot volcanos
 for(lineage in lineages){
   lineage_drivers <- ModelMultiLatentExpression(seurat_data, goi = var_genes, latent_col = 'latent_time', lineage_col = lineage)
-  write.csv(dplyr::select(lineage_drivers, !model), paste0('./', lineage, '_drivers.csv'))
+  # Add gene id from annotations file
+  lineage_drivers$gene_id <- annotations[match(lineage_drivers$gene, annotations$Gene), 'Accession']
+  
+  write.csv(dplyr::select(lineage_drivers, !model), paste0('./', lineage, '_drivers.csv'), quote = FALSE, row.names = FALSE)
   
   # Pull top 10 down and top 20 upregulated
   goi = lineage_drivers %>% filter(!grepl('ENS', gene))
@@ -128,7 +143,31 @@ for(lineage in lineages){
   xmin = -xmax
   
   png(paste0(plot_path, lineage, '_volcano.png'), width = 20, height = 13, units = 'cm', res = 400)
-  print(PlotLineageVolcano(model_out = lineage_drivers, ymax = Inf, xmin = xmin, xmax = xmax, goi_label = goi, padj_time_cutoff = 0.05))
+  print(PlotLineageVolcano(model_out = lineage_drivers, ymax = Inf, xmin = xmin, xmax = xmax, goi_label = c(goi, 'SIX1', 'EYA2', 'ASS1', 'IRF6'), padj_time_cutoff = 0.05))
+  graphics.off()
+  
+  # Filter TFs and make volcano
+  TF_subset <- getBM(attributes=c("ensembl_gene_id", "go_id", "name_1006", "namespace_1003"),
+                     filters = 'ensembl_gene_id',
+                     values = lineage_drivers$gene_id,
+                     mart = ensembl)
+  
+  # subset genes based on transcription factor GO terms
+  TF_subset <- TF_subset$ensembl_gene_id[TF_subset$go_id %in% c('GO:0003700', 'GO:0043565', 'GO:0000981', 'GO:0003677', 'GO:0001228')]
+  lineage_drivers_TFs <- dplyr::filter(lineage_drivers, gene_id %in% TF_subset)
+  
+  write.csv(dplyr::select(lineage_drivers_TFs, !model), paste0('./', lineage, '_drivers_TFs.csv'), quote = FALSE, row.names = FALSE)
+  
+  ymax = sort(-log10(lineage_drivers_TFs$padj_lineage), decreasing = TRUE)[5]
+  xmax = ceiling(min(quantile(lineage_drivers_TFs$slope, probs = 0.99), abs(quantile(lineage_drivers_TFs$slope, probs = 0.01))))
+  xmin = -xmax
+  
+  # Pull top 10 down and top 20 upregulated
+  goi = lineage_drivers_TFs %>% filter(!grepl('ENS', gene))
+  goi = filter(goi, padj_lineage < 0.01 & abs(slope) > 1)
+  
+  png(paste0(plot_path, lineage, '_volcano_TFs.png'), width = 20, height = 13, units = 'cm', res = 400)
+  print(PlotLineageVolcano(model_out = lineage_drivers_TFs, ymax = Inf, xmin = xmin, xmax = xmax, goi_label = goi$gene, padj_time_cutoff = 0.05))
   graphics.off()
   
   saveRDS(lineage_drivers, paste0(rds_path, lineage, "_model_out.RDS"), compress = FALSE)
@@ -155,11 +194,3 @@ for(lineage in lineages){
 #   ylab("Predicted expression") +
 #   xlab(gsub("_", " ", lineage))
 # graphics.off()
-
-
-
-
-
-
-
-
