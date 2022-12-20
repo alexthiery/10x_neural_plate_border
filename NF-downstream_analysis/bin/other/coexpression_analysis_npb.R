@@ -410,14 +410,14 @@ ss8 <- readRDS(list.files(data_path, pattern = "^ss8", full.names = TRUE))
 subset <- readRDS(list.files(data_path, pattern = "^transfer_clustered_data", full.names = TRUE))
 
 # seurat_data <- readRDS(list.files(data_path, pattern = "*.RDS", full.names = TRUE)[!list.files(data_path, pattern = "*.RDS") %>% grepl('antler', .)])
-# seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/transfer_labels/seurat/rds_files/seurat_label_transfer.RDS')
-# subset <- readRDS('./output/NF-downstream_analysis_stacas/transfer_subset/transfer_ppr_nc_subset/seurat/transfer_cluster/rds_files/transfer_clustered_data.RDS')
-# HH5 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/HH5_splitstage_data/seurat/stage_state_classification/rds_files/HH5_cell_state_classification.RDS')
-# HH6 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/HH6_splitstage_data/seurat/stage_state_classification/rds_files/HH6_cell_state_classification.RDS')
-# HH7 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/HH7_splitstage_data/seurat/stage_state_classification/rds_files/HH7_cell_state_classification.RDS')
-# ss4 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss4_splitstage_data/seurat/stage_state_classification/rds_files/ss4_cell_state_classification.RDS')
-# ss8 <- readRDS('./output/NF-downstream_analysis_stacas/stage_split/ss8_splitstage_data/seurat/stage_state_classification/rds_files/ss8_cell_state_classification.RDS')
-# antler_data <- readRDS("~/output/NF-downstream_analysis_stacas/stage_split/ss8_splitstage_data/antler/stage_gene_modules/rds_files/antler_out.RDS")
+# seurat_data <- readRDS('./output/NF-downstream_analysis/transfer_labels/seurat/rds_files/seurat_label_transfer.RDS')
+# subset <- readRDS('./output/NF-downstream_analysis/transfer_subset/transfer_ppr_nc_subset/seurat/transfer_cluster/rds_files/transfer_clustered_data.RDS')
+# HH5 <- readRDS('./output/NF-downstream_analysis/stage_split/HH5_splitstage_data/seurat/stage_state_classification/rds_files/HH5_cell_state_classification.RDS')
+# HH6 <- readRDS('./output/NF-downstream_analysis/stage_split/HH6_splitstage_data/seurat/stage_state_classification/rds_files/HH6_cell_state_classification.RDS')
+# HH7 <- readRDS('./output/NF-downstream_analysis/stage_split/HH7_splitstage_data/seurat/stage_state_classification/rds_files/HH7_cell_state_classification.RDS')
+# ss4 <- readRDS('./output/NF-downstream_analysis/stage_split/ss4_splitstage_data/seurat/stage_state_classification/rds_files/ss4_cell_state_classification.RDS')
+# ss8 <- readRDS('./output/NF-downstream_analysis/stage_split/ss8_splitstage_data/seurat/stage_state_classification/rds_files/ss8_cell_state_classification.RDS')
+# antler_data <- readRDS("~/output/NF-downstream_analysis/stage_split/ss8_splitstage_data/antler/stage_gene_modules/rds_files/antler_out.RDS")
 
 
 # create a list from seurat stages
@@ -651,3 +651,132 @@ for(stage in names(plot_data)){
   ) 
   graphics.off()
 }
+
+
+######################################################################################################################################################################################################
+######### GM analysis between all 3 lineages #########
+
+####################################################################################################
+# Plot heatmap of ss8 gene modules expressed in FB, MB, NC and Plac for supp fig
+
+plot_data <- GeneModulePheatmap(seurat_obj = ss8,  metadata = c('scHelper_cell_type'), gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE$content[c('GM5', 'GM2', 'GM16', 'GM10')],
+                                col_order = 'scHelper_cell_type', col_ann_order = 'scHelper_cell_type', return = 'plot_data')
+
+plot_data$ann_colours$scHelper_cell_type <- scHelper_cell_type_colours[names(plot_data$ann_colours$scHelper_cell_type)]
+
+goi <- which(rownames(plot_data$row_ann) %in% c("SIX3", "PAX7", "SNAI2", "FOXD3", "MSX1", "DRAXIN", "SIX1", 
+                                                "HOMER2", "ZNF385C", "NKX6-2", "SP5", "LFNG", "HES5", "FOXG1", "Z-RAX", "SIX3", "HESX1"))
+
+png(paste0(plot_path, 'plac_nc_fb_mb_hm.png'), width = 100, height = 60, res = 800, units = 'cm')
+Heatmap(t(plot_data$plot_data), col = PurpleAndYellow(), cluster_columns = FALSE, cluster_rows = FALSE,
+        show_column_names = FALSE, column_title = NULL, show_row_names = FALSE, row_title_gp = gpar(fontsize = 45), row_title_rot = 0,
+        row_split = plot_data$row_ann$`Gene Modules`, column_split = plot_data$col_ann$scHelper_cell_type, 
+        heatmap_legend_param = list(
+          title = "Scaled expression", at = c(-2, 0, 2), 
+          labels = c(-2, 0, 2),
+          legend_height = unit(11, "cm"),
+          grid_width = unit(1.5, "cm"),
+          title_gp = gpar(fontsize = 35, fontface = 'bold'),
+          labels_gp = gpar(fontsize = 30, fontface = 'bold'),
+          title_position = 'lefttop-rot',
+          x = unit(13, "npc")
+        ),
+        bottom_annotation = HeatmapAnnotation(scHelper_cell_type = anno_simple(x = as.character(plot_data$col_ann$scHelper_cell_type),
+                                                                               col = plot_data$ann_colours$scHelper_cell_type, height = unit(1, "cm")), show_annotation_name = FALSE,
+                                              labels = anno_mark(at = cumsum(rle(as.character(plot_data$col_ann$scHelper_cell_type))$lengths) - floor(rle(as.character(plot_data$col_ann$scHelper_cell_type))$lengths/2),
+                                                                 labels = rle(as.character(plot_data$col_ann$scHelper_cell_type))$values,
+                                                                 which = "column", side = 'bottom',
+                                                                 labels_gp = gpar(fontsize = 40), lines_gp = gpar(lwd=8))),
+        
+        right_annotation = rowAnnotation(foo = anno_mark(at = goi, padding = 0.7, link_width = unit(12, "mm"),
+                                                         labels = rownames(plot_data$row_ann)[goi],
+                                                         labels_gp = gpar(fontsize = 35), lines_gp = gpar(lwd=7))),
+        
+        raster_quality = 8
+)
+graphics.off()
+
+# Plot co-expression for plac/fb and nc/mbhb
+fb_gm <- unlist(antler_data$gene_modules$lists$unbiasedGMs_DE$content[c('GM10')])
+mbhb_gm <- unlist(antler_data$gene_modules$lists$unbiasedGMs_DE$content[c('GM16')])
+
+
+for(stage in names(stage_seurat)){
+  coexpression <- subset(get(stage), cells = rownames(plot_data[[stage]]))
+
+    png(paste0(plot_path, stage, '_UMAP_coexpression_ppr_GM5_fb_GM10.png'), width = 14, height = 10, res = 400, units = 'cm')
+    print(plot_umap_gm_coexpression(coexpression, gm_1 = ppr_gm, gm_2 = fb_gm, col.threshold = 0, two.colors = c("red", "blue"),
+                                    negative.color = 'gray90', limit = 0.3, module_names = c('PPR module', 'Forebrain module'), highlight_cell_size = 2,
+                                    show_legend = TRUE))
+    graphics.off()
+    
+    png(paste0(plot_path, stage, '_UMAP_coexpression_nc_GM2_mbhb_GM16.png'), width = 14, height = 10, res = 400, units = 'cm')
+    print(plot_umap_gm_coexpression(coexpression, gm_1 = nc_gm, gm_2 = mbhb_gm, col.threshold = 0, two.colors = c("red", "blue"),
+                                    negative.color = 'gray90', limit = 0.3, module_names = c('NC module', 'Mid/Hindbrain module'), highlight_cell_size = 2,
+                                    show_legend = TRUE))
+    graphics.off()
+}
+
+
+
+
+####################################################################################################
+# Same as above but with pan-neural modules instead of FB or MB modules
+plot_data <- GeneModulePheatmap(seurat_obj = ss8,  metadata = c('scHelper_cell_type'), gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE$content[c('GM5', 'GM2', 'GM12', 'GM13')],
+                                col_order = 'scHelper_cell_type', col_ann_order = 'scHelper_cell_type', return = 'plot_data')
+
+plot_data$ann_colours$scHelper_cell_type <- scHelper_cell_type_colours[names(plot_data$ann_colours$scHelper_cell_type)]
+
+goi <- which(rownames(plot_data$row_ann) %in% c("SIX3", "PAX7", "SNAI2", "FOXD3", "MSX1", "DRAXIN", "SIX1", 
+                                                "HOMER2", "ZNF385C", "SOX3", "SOX21", "SOX1", "LMO1", "SFRP2"))
+
+png(paste0(plot_path, 'plac_nc_pan_neural_hm.png'), width = 100, height = 60, res = 800, units = 'cm')
+Heatmap(t(plot_data$plot_data), col = PurpleAndYellow(), cluster_columns = FALSE, cluster_rows = FALSE,
+        show_column_names = FALSE, column_title = NULL, show_row_names = FALSE, row_title_gp = gpar(fontsize = 45), row_title_rot = 0,
+        row_split = plot_data$row_ann$`Gene Modules`, column_split = plot_data$col_ann$scHelper_cell_type, 
+        heatmap_legend_param = list(
+          title = "Scaled expression", at = c(-2, 0, 2), 
+          labels = c(-2, 0, 2),
+          legend_height = unit(11, "cm"),
+          grid_width = unit(1.5, "cm"),
+          title_gp = gpar(fontsize = 35, fontface = 'bold'),
+          labels_gp = gpar(fontsize = 30, fontface = 'bold'),
+          title_position = 'lefttop-rot',
+          x = unit(13, "npc")
+        ),
+        bottom_annotation = HeatmapAnnotation(scHelper_cell_type = anno_simple(x = as.character(plot_data$col_ann$scHelper_cell_type),
+                                                                               col = plot_data$ann_colours$scHelper_cell_type, height = unit(1, "cm")), show_annotation_name = FALSE,
+                                              labels = anno_mark(at = cumsum(rle(as.character(plot_data$col_ann$scHelper_cell_type))$lengths) - floor(rle(as.character(plot_data$col_ann$scHelper_cell_type))$lengths/2),
+                                                                 labels = rle(as.character(plot_data$col_ann$scHelper_cell_type))$values,
+                                                                 which = "column", side = 'bottom',
+                                                                 labels_gp = gpar(fontsize = 40), lines_gp = gpar(lwd=8))),
+        
+        right_annotation = rowAnnotation(foo = anno_mark(at = goi, padding = 0.7, link_width = unit(12, "mm"),
+                                                         labels = rownames(plot_data$row_ann)[goi],
+                                                         labels_gp = gpar(fontsize = 35), lines_gp = gpar(lwd=7))),
+        
+        raster_quality = 8
+)
+graphics.off()
+
+
+
+# Plot co-expression for plac/fb and nc/mbhb
+neural_gm <- unlist(antler_data$gene_modules$lists$unbiasedGMs_DE$content[c('GM12', 'GM13')])
+
+for(stage in names(stage_seurat)){
+  coexpression <- subset(get(stage), cells = rownames(plot_data[[stage]]))
+  
+  png(paste0(plot_path, stage, '_UMAP_coexpression_ppr_GM5_panNeural_GM12_GM13.png'), width = 14, height = 10, res = 400, units = 'cm')
+  print(plot_umap_gm_coexpression(coexpression, gm_1 = ppr_gm, gm_2 = neural_gm, col.threshold = 0, two.colors = c("red", "blue"),
+                                  negative.color = 'gray90', limit = 0.3, module_names = c('PPR module', 'Pan-Neural modules'), highlight_cell_size = 2,
+                                  show_legend = TRUE))
+  graphics.off()
+  
+  png(paste0(plot_path, stage, '_UMAP_coexpression_nc_GM2_panNeural_GM12_GM13.png'), width = 14, height = 10, res = 400, units = 'cm')
+  print(plot_umap_gm_coexpression(coexpression, gm_1 = nc_gm, gm_2 = neural_gm, col.threshold = 0, two.colors = c("red", "blue"),
+                                  negative.color = 'gray90', limit = 0.3, module_names = c('NC module', 'Pan-Neural modules'), highlight_cell_size = 2,
+                                  show_legend = TRUE))
+  graphics.off()
+}
+
