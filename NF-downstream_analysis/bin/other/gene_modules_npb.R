@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 
 # Define arguments for Rscript
-library(getopt)
+library(optparse)
 library(future)
 library(Seurat)
 library(pheatmap)
@@ -386,11 +386,18 @@ plot_umap_gm_coexpression <- function(seurat_object, gm_1, gm_2, col.threshold =
 }
 #######################################################################################################
 
-spec = matrix(c(
-  'runtype', 'l', 2, "character",
-  'cores'   , 'c', 2, "integer"
-), byrow=TRUE, ncol=4)
-opt = getopt(spec)
+# Read in command line opts
+option_list <- list(
+  make_option(c("-r", "--runtype"), action = "store", type = "character", help = "Specify whether running through through 'nextflow' in order to switch paths"),
+  make_option(c("-c", "--cores"), action = "store", type = "integer", help = "Number of CPUs"),
+  make_option(c("-m", "--meta_col"), action = "store", type = "character", help = "Name of metadata column containing grouping information", default = 'scHelper_cell_type'),
+  make_option(c("", "--verbose"), action = "store_true", type = "logical", help = "Verbose", default = FALSE)
+)
+
+opt_parser = OptionParser(option_list = option_list)
+opt <- parse_args(opt_parser)
+if(opt$verbose) print(opt)
+
 
 # Set paths and load data
 plot_path = "./plots/"
