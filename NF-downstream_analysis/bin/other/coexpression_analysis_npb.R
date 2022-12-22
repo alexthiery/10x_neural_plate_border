@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 
 # Define arguments for Rscript
-library(getopt)
+library(optparse)
 library(future)
 library(Seurat)
 library(pheatmap)
@@ -386,11 +386,18 @@ plot_umap_gm_coexpression <- function(seurat_object, gm_1, gm_2, col.threshold =
 }
 #######################################################################################################
 
-spec = matrix(c(
-  'runtype', 'l', 2, "character",
-  'cores'   , 'c', 2, "integer"
-), byrow=TRUE, ncol=4)
-opt = getopt(spec)
+# Read in command line opts
+option_list <- list(
+  make_option(c("-r", "--runtype"), action = "store", type = "character", help = "Specify whether running through through 'nextflow' in order to switch paths"),
+  make_option(c("-c", "--cores"), action = "store", type = "integer", help = "Number of CPUs"),
+  make_option(c("-m", "--meta_col"), action = "store", type = "character", help = "Name of metadata column containing grouping information", default = 'scHelper_cell_type'),
+  make_option(c("", "--verbose"), action = "store_true", type = "logical", help = "Verbose", default = FALSE)
+)
+
+opt_parser = OptionParser(option_list = option_list)
+opt <- parse_args(opt_parser)
+if(opt$verbose) print(opt)
+
 
 # Set paths and load data
 plot_path = "./plots/"
@@ -654,129 +661,26 @@ for(stage in names(plot_data)){
 
 
 ######################################################################################################################################################################################################
-######### GM analysis between all 3 lineages #########
-
-####################################################################################################
-# Plot heatmap of ss8 gene modules expressed in FB, MB, NC and Plac for supp fig
-
-plot_data <- GeneModulePheatmap(seurat_obj = ss8,  metadata = c('scHelper_cell_type'), gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE$content[c('GM5', 'GM2', 'GM16', 'GM10')],
-                                col_order = 'scHelper_cell_type', col_ann_order = 'scHelper_cell_type', return = 'plot_data')
-
-plot_data$ann_colours$scHelper_cell_type <- scHelper_cell_type_colours[names(plot_data$ann_colours$scHelper_cell_type)]
-
-goi <- which(rownames(plot_data$row_ann) %in% c("SIX3", "PAX7", "SNAI2", "FOXD3", "MSX1", "DRAXIN", "SIX1", 
-                                                "HOMER2", "ZNF385C", "NKX6-2", "SP5", "LFNG", "HES5", "FOXG1", "Z-RAX", "SIX3", "HESX1"))
-
-png(paste0(plot_path, 'plac_nc_fb_mb_hm.png'), width = 100, height = 60, res = 800, units = 'cm')
-Heatmap(t(plot_data$plot_data), col = PurpleAndYellow(), cluster_columns = FALSE, cluster_rows = FALSE,
-        show_column_names = FALSE, column_title = NULL, show_row_names = FALSE, row_title_gp = gpar(fontsize = 45), row_title_rot = 0,
-        row_split = plot_data$row_ann$`Gene Modules`, column_split = plot_data$col_ann$scHelper_cell_type, 
-        heatmap_legend_param = list(
-          title = "Scaled expression", at = c(-2, 0, 2), 
-          labels = c(-2, 0, 2),
-          legend_height = unit(11, "cm"),
-          grid_width = unit(1.5, "cm"),
-          title_gp = gpar(fontsize = 35, fontface = 'bold'),
-          labels_gp = gpar(fontsize = 30, fontface = 'bold'),
-          title_position = 'lefttop-rot',
-          x = unit(13, "npc")
-        ),
-        bottom_annotation = HeatmapAnnotation(scHelper_cell_type = anno_simple(x = as.character(plot_data$col_ann$scHelper_cell_type),
-                                                                               col = plot_data$ann_colours$scHelper_cell_type, height = unit(1, "cm")), show_annotation_name = FALSE,
-                                              labels = anno_mark(at = cumsum(rle(as.character(plot_data$col_ann$scHelper_cell_type))$lengths) - floor(rle(as.character(plot_data$col_ann$scHelper_cell_type))$lengths/2),
-                                                                 labels = rle(as.character(plot_data$col_ann$scHelper_cell_type))$values,
-                                                                 which = "column", side = 'bottom',
-                                                                 labels_gp = gpar(fontsize = 40), lines_gp = gpar(lwd=8))),
-        
-        right_annotation = rowAnnotation(foo = anno_mark(at = goi, padding = 0.7, link_width = unit(12, "mm"),
-                                                         labels = rownames(plot_data$row_ann)[goi],
-                                                         labels_gp = gpar(fontsize = 35), lines_gp = gpar(lwd=7))),
-        
-        raster_quality = 8
-)
-graphics.off()
-
-# Plot co-expression for plac/fb and nc/mbhb
-fb_gm <- unlist(antler_data$gene_modules$lists$unbiasedGMs_DE$content[c('GM10')])
-mbhb_gm <- unlist(antler_data$gene_modules$lists$unbiasedGMs_DE$content[c('GM16')])
-
+######### GM co-expression between all 3 lineages #########
 
 for(stage in names(stage_seurat)){
   coexpression <- subset(get(stage), cells = rownames(plot_data[[stage]]))
-
-    png(paste0(plot_path, stage, '_UMAP_coexpression_ppr_GM5_fb_GM10.png'), width = 14, height = 10, res = 400, units = 'cm')
-    print(plot_umap_gm_coexpression(coexpression, gm_1 = ppr_gm, gm_2 = fb_gm, col.threshold = 0, two.colors = c("red", "blue"),
-                                    negative.color = 'gray90', limit = 0.3, module_names = c('PPR module', 'Forebrain module'), highlight_cell_size = 2,
+  
+  for(neural_module in c('GM13', 'GM12', 'GM10', 'GM16')){
+    neural_gm <- unlist(antler_data$gene_modules$lists$unbiasedGMs_DE$content[c(neural_module)])
+    
+    png(paste0(plot_path, stage, '_UMAP_coexpression_ppr_GM5_neural_', neural_module, '.png'), width = 14, height = 10, res = 400, units = 'cm')
+    print(plot_umap_gm_coexpression(coexpression, gm_1 = ppr_gm, gm_2 = neural_gm, col.threshold = 0, two.colors = c("red", "blue"),
+                                    negative.color = 'gray90', limit = 0.3, module_names = c('PPR module', 'Neural module'), highlight_cell_size = 2,
                                     show_legend = TRUE))
     graphics.off()
     
-    png(paste0(plot_path, stage, '_UMAP_coexpression_nc_GM2_mbhb_GM16.png'), width = 14, height = 10, res = 400, units = 'cm')
-    print(plot_umap_gm_coexpression(coexpression, gm_1 = nc_gm, gm_2 = mbhb_gm, col.threshold = 0, two.colors = c("red", "blue"),
-                                    negative.color = 'gray90', limit = 0.3, module_names = c('NC module', 'Mid/Hindbrain module'), highlight_cell_size = 2,
+    png(paste0(plot_path, stage, '_UMAP_coexpression_nc_GM2_neural_', neural_module, '.png'), width = 14, height = 10, res = 400, units = 'cm')
+    print(plot_umap_gm_coexpression(coexpression, gm_1 = nc_gm, gm_2 = neural_gm, col.threshold = 0, two.colors = c("red", "blue"),
+                                    negative.color = 'gray90', limit = 0.3, module_names = c('NC module', 'Neural module'), highlight_cell_size = 2,
                                     show_legend = TRUE))
     graphics.off()
-}
-
-
-
-
-####################################################################################################
-# Same as above but with pan-neural modules instead of FB or MB modules
-plot_data <- GeneModulePheatmap(seurat_obj = ss8,  metadata = c('scHelper_cell_type'), gene_modules = antler_data$gene_modules$lists$unbiasedGMs_DE$content[c('GM5', 'GM2', 'GM12', 'GM13')],
-                                col_order = 'scHelper_cell_type', col_ann_order = 'scHelper_cell_type', return = 'plot_data')
-
-plot_data$ann_colours$scHelper_cell_type <- scHelper_cell_type_colours[names(plot_data$ann_colours$scHelper_cell_type)]
-
-goi <- which(rownames(plot_data$row_ann) %in% c("SIX3", "PAX7", "SNAI2", "FOXD3", "MSX1", "DRAXIN", "SIX1", 
-                                                "HOMER2", "ZNF385C", "SOX3", "SOX21", "SOX1", "LMO1", "SFRP2"))
-
-png(paste0(plot_path, 'plac_nc_pan_neural_hm.png'), width = 100, height = 60, res = 800, units = 'cm')
-Heatmap(t(plot_data$plot_data), col = PurpleAndYellow(), cluster_columns = FALSE, cluster_rows = FALSE,
-        show_column_names = FALSE, column_title = NULL, show_row_names = FALSE, row_title_gp = gpar(fontsize = 45), row_title_rot = 0,
-        row_split = plot_data$row_ann$`Gene Modules`, column_split = plot_data$col_ann$scHelper_cell_type, 
-        heatmap_legend_param = list(
-          title = "Scaled expression", at = c(-2, 0, 2), 
-          labels = c(-2, 0, 2),
-          legend_height = unit(11, "cm"),
-          grid_width = unit(1.5, "cm"),
-          title_gp = gpar(fontsize = 35, fontface = 'bold'),
-          labels_gp = gpar(fontsize = 30, fontface = 'bold'),
-          title_position = 'lefttop-rot',
-          x = unit(13, "npc")
-        ),
-        bottom_annotation = HeatmapAnnotation(scHelper_cell_type = anno_simple(x = as.character(plot_data$col_ann$scHelper_cell_type),
-                                                                               col = plot_data$ann_colours$scHelper_cell_type, height = unit(1, "cm")), show_annotation_name = FALSE,
-                                              labels = anno_mark(at = cumsum(rle(as.character(plot_data$col_ann$scHelper_cell_type))$lengths) - floor(rle(as.character(plot_data$col_ann$scHelper_cell_type))$lengths/2),
-                                                                 labels = rle(as.character(plot_data$col_ann$scHelper_cell_type))$values,
-                                                                 which = "column", side = 'bottom',
-                                                                 labels_gp = gpar(fontsize = 40), lines_gp = gpar(lwd=8))),
-        
-        right_annotation = rowAnnotation(foo = anno_mark(at = goi, padding = 0.7, link_width = unit(12, "mm"),
-                                                         labels = rownames(plot_data$row_ann)[goi],
-                                                         labels_gp = gpar(fontsize = 35), lines_gp = gpar(lwd=7))),
-        
-        raster_quality = 8
-)
-graphics.off()
-
-
-
-# Plot co-expression for plac/fb and nc/mbhb
-neural_gm <- unlist(antler_data$gene_modules$lists$unbiasedGMs_DE$content[c('GM12', 'GM13')])
-
-for(stage in names(stage_seurat)){
-  coexpression <- subset(get(stage), cells = rownames(plot_data[[stage]]))
+  }
   
-  png(paste0(plot_path, stage, '_UMAP_coexpression_ppr_GM5_panNeural_GM12_GM13.png'), width = 14, height = 10, res = 400, units = 'cm')
-  print(plot_umap_gm_coexpression(coexpression, gm_1 = ppr_gm, gm_2 = neural_gm, col.threshold = 0, two.colors = c("red", "blue"),
-                                  negative.color = 'gray90', limit = 0.3, module_names = c('PPR module', 'Pan-Neural modules'), highlight_cell_size = 2,
-                                  show_legend = TRUE))
-  graphics.off()
-  
-  png(paste0(plot_path, stage, '_UMAP_coexpression_nc_GM2_panNeural_GM12_GM13.png'), width = 14, height = 10, res = 400, units = 'cm')
-  print(plot_umap_gm_coexpression(coexpression, gm_1 = nc_gm, gm_2 = neural_gm, col.threshold = 0, two.colors = c("red", "blue"),
-                                  negative.color = 'gray90', limit = 0.3, module_names = c('NC module', 'Pan-Neural modules'), highlight_cell_size = 2,
-                                  show_legend = TRUE))
-  graphics.off()
 }
 
