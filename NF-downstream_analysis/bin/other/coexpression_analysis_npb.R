@@ -716,11 +716,40 @@ for(stage in names(stage_seurat)){
                                     negative.color = 'gray90', limit = 0.3, module_names = c('PPR module', 'Forebrain module'), highlight_cell_size = 2,
                                     show_legend = TRUE))
     graphics.off()
-    
+
+    # Plot histogram of module co-expression from normalised counts
+    gm_1_means <- t(as.matrix(GetAssayData(object = get(stage), assay = 'RNA', slot = 'data')))[,ppr_gm] %>% rowMeans(.)
+    gm_2_means <- t(as.matrix(GetAssayData(object = get(stage), assay = 'RNA', slot = 'data')))[,fb_gm] %>% rowMeans(.)
+    dat <- data.frame(gm_1_means, gm_1_means, row.names = names(gm_1_means))
+    dat <- dat %>% mutate(coexpression = gm_1_means * gm_2_means)
+
+    png(paste0(plot_path, stage, 'ppr_fb_coexpression_hist.png'), height = 4.5, width = 6, units = 'cm', res = 400)
+    print(ggplot(dat, aes(x = coexpression)) +
+            geom_histogram(binwidth = 0.001, colour = stage_colours[[stage]]) +
+            theme_classic() +
+            xlab('GM5/GM10 co-expression') +
+            ylab('cell count'))
+    graphics.off()
+
+
     png(paste0(plot_path, stage, '_UMAP_coexpression_nc_GM2_mbhb_GM16.png'), width = 14, height = 10, res = 400, units = 'cm')
     print(plot_umap_gm_coexpression(coexpression, gm_1 = nc_gm, gm_2 = mbhb_gm, col.threshold = 0, two.colors = c("red", "blue"),
                                     negative.color = 'gray90', limit = 0.3, module_names = c('NC module', 'Mid/Hindbrain module'), highlight_cell_size = 2,
                                     show_legend = TRUE))
+    graphics.off()
+
+    # Plot histogram of module co-expression from normalised counts
+    gm_1_means <- t(as.matrix(GetAssayData(object = get(stage), assay = 'RNA', slot = 'data')))[,nc_gm] %>% rowMeans(.)
+    gm_2_means <- t(as.matrix(GetAssayData(object = get(stage), assay = 'RNA', slot = 'data')))[,mbhb_gm] %>% rowMeans(.)
+    dat <- data.frame(gm_1_means, gm_1_means, row.names = names(gm_1_means))
+    dat <- dat %>% mutate(coexpression = gm_1_means * gm_2_means)
+
+    png(paste0(plot_path, stage, 'nc_mbhb_coexpression_hist.png'), height = 4.5, width = 6, units = 'cm', res = 400)
+    print(ggplot(dat, aes(x = coexpression)) +
+            geom_histogram(binwidth = 0.001, colour = stage_colours[[stage]]) +
+            theme_classic() +
+            xlab('GM2/GM16 co-expression') +
+            ylab('cell count'))
     graphics.off()
 }
 
