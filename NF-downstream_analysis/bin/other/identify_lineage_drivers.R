@@ -15,11 +15,11 @@ library(biomaRt)
 
 # Read in command line opts
 option_list <- list(
-    make_option(c("-r", "--runtype"), action = "store", type = "character", help = "Specify whether running through through 'nextflow' in order to switch paths"),
-    make_option(c("-c", "--cores"), action = "store", type = "integer", help = "Number of CPUs"),
-    make_option(c("", "--verbose"), action = "store_true", type = "logical", help = "Verbose", default = FALSE),
-    make_option(c("-t", "--label"), action = "store", type = "character", help = "Label to name output files")
-    )
+  make_option(c("-r", "--runtype"), action = "store", type = "character", help = "Specify whether running through through 'nextflow' in order to switch paths"),
+  make_option(c("-c", "--cores"), action = "store", type = "integer", help = "Number of CPUs"),
+  make_option(c("", "--verbose"), action = "store_true", type = "logical", help = "Verbose", default = FALSE),
+  make_option(c("-t", "--label"), action = "store", type = "character", help = "Label to name output files")
+)
 
 opt_parser = OptionParser(option_list = option_list)
 opt <- parse_args(opt_parser)
@@ -37,15 +37,17 @@ dir.create(rds_path, recursive = T)
 
 # Set output label
 if(!is.null(opt$label)){
-    label <- opt$label
+  label <- opt$label
 } else {
-    # Retrieve seurat object label
-    label <- sub('_.*', '', list.files(data_path, pattern = "*.RDS"))
+  # Retrieve seurat object label
+  label <- sub('_.*', '', list.files(data_path, pattern = "*.RDS"))
 }
 
 # Load seurat data
+# seurat_data <- readRDS('./output/NF-downstream_analysis/transfer_labels/gene_modules_subset_latent_time/rds_files/seurat_label_transfer_latent_time.RDS')
 seurat_data <- readRDS(list.files(data_path, pattern = "*.RDS", full.names = TRUE))
 
+# annotations <- read.csv('./output/NF-downstream_analysis/seurat_filtering/preprocess/seurat_annotations.csv')
 annotations <- read.csv(list.files(data_path, pattern = "*.csv", full.names = TRUE))
 
 # Get biomart GO annotations for TFs
@@ -116,12 +118,11 @@ PlotLineageVolcano <- function(model_out, ymax = max(-log10(model_out$padj_linea
     xlab('Coefficient')
   
   if(!is.null(goi_label)){
-    plot <- plot + geom_text_repel(data = subset(model_out, gene %in% goi_label), min.segment.length = 0, segment.size  = 0.6, segment.color = "black", max.overlaps = Inf)
+    plot <- plot + geom_label_repel(data = subset(model_out, gene %in% goi_label), min.segment.length = 0, segment.size  = 0.6, segment.color = "black", max.overlaps = Inf)
   }
   
   return(plot)
 }
-
 
 
 # Run analysis
