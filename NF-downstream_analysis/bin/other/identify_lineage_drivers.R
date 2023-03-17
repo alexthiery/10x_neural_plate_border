@@ -207,8 +207,8 @@ RunLineageGamConfidence <- function(object, gene, slot = 'data', assay = 'RNA', 
 
 MultiRunLineageGamConfidence <- function(object, gene, slot = 'data', assay = 'RNA', lineage_cols='auto', latent_col = 'latent_time'){
   if(lineage_cols == 'auto'){
-    lineage_cols <- grep('lineage_', colnames(seurat_data@meta.data), value = TRUE)
-  } else if (all(lineage_cols %in% colnames(seurat_data@meta.data))){
+    lineage_cols <- grep('lineage_', colnames(object@meta.data), value = TRUE)
+  } else if (!all(lineage_cols %in% colnames(object@meta.data))){
     stop('lineage_cols missing from object metadata - please check metadata column names and rerun')
   }
   
@@ -219,7 +219,6 @@ MultiRunLineageGamConfidence <- function(object, gene, slot = 'data', assay = 'R
   }
   return(gams)
 }
-
 
 FindMultiGamBreakawayPoint <- function(multi_gam_simulations, latent_time_col = 'latent_time', target_lineage_col, strip_terminal_overlap = TRUE){
   min_latent_time <- lapply(multi_gam_simulations, function(x) max(x[[latent_time_col]])) %>% unlist() %>% min()
