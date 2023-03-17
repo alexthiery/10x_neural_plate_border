@@ -397,7 +397,12 @@ for(lineage in lineages){
     png(paste0(curr_plot_path, gene, ".png"), width = 16, height = 9, units = 'cm', res = 400)
     print(plot)
     graphics.off()
-  }
 
+    # Plot UMAP for cells at breakpoint (+-0.005 latent time)
+    png(paste0(curr_plot_path, gene, "_breakpoint_umap.png"), width = 16, height = 9, units = 'cm', res = 400)
+    DimPlot(seurat_data, cells.highlight = seurat_data@meta.data %>% filter((latent_time < breakpoints[gene] + 0.005) & (latent_time > breakpoints[gene] - 0.005)) %>% rownames(), cols.highlight = 'purple') +
+      theme(legend.position = 'none')
+    graphics.off()
+  }
 }
 
