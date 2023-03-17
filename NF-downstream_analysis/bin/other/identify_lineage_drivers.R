@@ -9,6 +9,7 @@ library(tidyverse)
 library(ggplot2)
 library(ggrepel)
 library(biomaRt)
+library(viridis)
 
 # install.packages('tidymv')
 # library(tidymv)
@@ -43,21 +44,10 @@ if(!is.null(opt$label)){
   label <- sub('_.*', '', list.files(data_path, pattern = "*.RDS"))
 }
 
-# Load seurat data
-# seurat_data <- readRDS('./output/NF-downstream_analysis/transfer_labels/gene_modules_subset_latent_time/rds_files/seurat_label_transfer_latent_time.RDS')
-seurat_data <- readRDS(list.files(data_path, pattern = "*.RDS", full.names = TRUE))
 
-# annotations <- read.csv('./output/NF-downstream_analysis/seurat_filtering/preprocess/seurat_annotations.csv')
-annotations <- read.csv(list.files(data_path, pattern = "*.csv", full.names = TRUE))
-
-# Get biomart GO annotations for TFs
-ensembl <- useEnsembl(biomart = 'genes', 
-                      dataset = 'ggallus_gene_ensembl',
-                      version = 106)
-
-var_genes <- seurat_data@assays$RNA@var.features
-lineages <- grep('lineage_', colnames(seurat_data@meta.data), value = TRUE)
-
+############################################################################################################################################################
+# Functions
+############################################################################################################################################################
 
 ModelMultiLatentExpression <- function(object, goi, latent_col, lineage_col, assay = 'RNA', slot = 'data', cell_sub = colnames(object), padj_method = 'BH'){
   # Get metadata
@@ -125,6 +115,184 @@ PlotLineageVolcano <- function(model_out, ymax = max(-log10(model_out$padj_linea
 }
 
 
+
+CalcLatentTimeCutoff <- function(latent_time, lineage_probability, top_frac = 0.2, return = 'intercept', verbose=FALSE){
+  data = data.frame(latent_time, lineage_probability)
+  
+  model_data <- data %>%
+    filter(lineage_probability > 0 & lineage_probability < 1) %>%
+    filter(lineage_probability > quantile(lineage_probability, 1-top_frac)) %>%
+    # If cells remaining in top frac have less than 0.5 probability of giving rise to the lineage then remove (required for short lineages)
+    filter(lineage_probability > 0.5)
+  
+  # Fit model to top frac of data
+  fit = lm(lineage_probability ~ latent_time, data = model_data)
+  
+  # Inverse equation to find X for Y = 1
+  x <- (1-coef(fit)[1])/coef(fit)[2]
+  
+  # Identify max latent time value based on cells which have reached lineage probability == 1
+  max_latent_time <- data %>% filter(lineage_probability == 1) %>% filter(latent_time == max(latent_time)) %>% dplyr::pull(latent_time)
+  
+  if(return == 'plot'){
+    p = ggplot(data, aes(latent_time, lineage_probability)) + 
+      geom_point(size = 0.1) +
+      geom_abline(intercept = coef(fit)[1], slope = coef(fit)[2])
+    
+    return(p)
+  }else if(return == 'intercept'){
+    if(x > max_latent_time & verbose == TRUE){
+      cat('Predicted latent time is later than any cell observed that has reached full lineage absorbtion. Max latent time is set based on oldest cell at lineage_probability == 1')
+      return(max_latent_time)
+    }else{
+      return(unname(x))
+    }
+  }else{
+    stop('return must be one of intercept or plot')
+  }
+}
+
+
+
+PrepareLineageGamData <- function(object, gene, slot = 'data', assay = 'RNA', lineage, latent_col = 'latent_time'){
+  
+  # Get metadata
+  metadata <- object@meta.data[, c('latent_time', lineage)]
+  colnames(metadata) <- c(latent_col, 'lineage')
+  
+  # Calculate latent_time_cutoff
+  latent_time_cutoff <- CalcLatentTimeCutoff(latent_time = object@meta.data[[latent_col]], lineage_probability = object@meta.data[[lineage]])
+  
+  # Get expression data
+  expression_data <- GetAssayData(object, slot = slot, assay = assay)[gene, rownames(metadata), drop = FALSE] %>% as.matrix() %>% t()
+  
+  # Filter cells below max_latent_time
+  lineage_expression_data <- cbind(metadata, expression_data) %>%
+    as.data.frame() %>%
+    filter(!!sym(latent_col) < latent_time_cutoff)
+  
+  return(lineage_expression_data)
+}
+
+
+LineageGam <- function(lineage_expression_data, gene, latent_col = 'latent_time'){
+  return(mgcv::gam(data = lineage_expression_data, formula = as.formula(paste0(gene, " ~ s(", latent_col,", bs = 'cs', k = 5)")),
+                   weights = lineage, family = nb(link='log'), method = 'REML', control = gam.control(maxit = 10000)))
+}
+
+CalcGamConfidence <- function(gam){
+  # Line of 'best fit'
+  fit_gam <- predict.gam(gam, type = 'response')
+  
+  fit_gam_se <- predict.gam(gam, type = 'response', se.fit = TRUE)
+  
+  # 1.96*se
+  fit_gam_ci <- fit_gam_se %>% as.data.frame() %>%
+    mutate(upper = fit + (1.96*se.fit)) %>%
+    mutate(lower = fit - (1.96*se.fit))
+  
+  return(fit_gam_ci)
+}
+
+
+RunLineageGamConfidence <- function(object, gene, slot = 'data', assay = 'RNA', lineage, latent_col = 'latent_time'){
+  lineage_expression_data <- PrepareLineageGamData(object = object, gene = gene, slot = slot, assay = assay, lineage = lineage, latent_col = latent_col)
+  gam <- LineageGam(lineage_expression_data, gene = gene, latent_col = latent_col)
+  gam_ci <- CalcGamConfidence(gam)
+  gam_ci <- cbind(gam_ci, lineage_expression_data[,latent_col, drop = FALSE])
+  gam_ci <- gam_ci %>% mutate(!!sym(latent_col) := round(!!sym(latent_col), digits = 2))
+  return(gam_ci)
+}
+
+
+MultiRunLineageGamConfidence <- function(object, gene, slot = 'data', assay = 'RNA', lineage_cols='auto', latent_col = 'latent_time'){
+  if(lineage_cols == 'auto'){
+    lineage_cols <- grep('lineage_', colnames(seurat_data@meta.data), value = TRUE)
+  } else if (all(lineage_cols %in% colnames(seurat_data@meta.data))){
+    stop('lineage_cols missing from object metadata - please check metadata column names and rerun')
+  }
+  
+  gams <- list()
+  for(lineage in lineage_cols){
+    gams[[lineage]] <- RunLineageGamConfidence(object = object, gene = gene, lineage = lineage) %>%
+      group_by(!!sym(latent_col)) %>% summarise(upper = max(upper), lower = min(lower), fit = mean(fit))
+  }
+  return(gams)
+}
+
+
+FindMultiGamBreakawayPoint <- function(multi_gam_simulations, latent_time_col = 'latent_time', target_lineage_col, strip_terminal_overlap = TRUE){
+  min_latent_time <- lapply(multi_gam_simulations, function(x) max(x[[latent_time_col]])) %>% unlist() %>% min()
+  
+  multi_gam_simulations <- lapply(multi_gam_simulations, function(x) x %>% filter(!!sym(latent_time_col) <= min_latent_time))
+  
+  # rearrange gam predictions, setting target lineage first
+  multi_gam_simulations <- multi_gam_simulations[c(target_lineage_col, names(multi_gam_simulations)[names(multi_gam_simulations) != target_lineage_col])]
+  
+  max_breakpoint <- 0
+  for(i in 2:length(multi_gam_simulations)){
+    merged_df <- merge(multi_gam_simulations[[1]], multi_gam_simulations[[i]], by = latent_time_col)
+    
+    # Identify which bins of latent time are equivalent are overlapping between two predicted gam CIs
+    merged_df <- mutate(merged_df, xy_overlap = ifelse((upper.x <= upper.y & upper.x >= lower.y) | (lower.x <= upper.y & lower.x >= lower.y), 1, 0))
+    
+    # If there is always an overlap then force to 1
+    if (all(merged_df$xy_overlap == 1)){
+      breakpoint <- max(merged_df[[latent_time_col]])
+    } else if (all(merged_df$xy_overlap == 0)){
+      breakpoint <- 0
+    } else {
+      # Check if lineages overlap again at the end - if they do then the gene is likely involved in secondary process, so strip the trailing 1's
+      if(max(which(merged_df$xy_overlap == 1)) == length(merged_df$xy_overlap) & strip_terminal_overlap){
+        merged_df <- merged_df[1:max(which(merged_df$xy_overlap != 1)),]
+      }
+      
+      # If there is never an overlap then force to 0
+      if(all(merged_df$xy_overlap != 1)){
+        breakpoint <- 0
+        # If there is always an overlap then force to max latent time
+      } else if (all(merged_df$xy_overlap == 1)){
+        breakpoint <- max(merged_df[[latent_time_col]])
+      } else {
+        breakpoint <- which(merged_df$xy_overlap == 1) %>% max()
+        breakpoint <- merged_df[[latent_time_col]][breakpoint]
+      }
+      
+      if(breakpoint > max_breakpoint){
+        max_breakpoint <- breakpoint
+      }
+    }
+  }
+  return(max_breakpoint)
+}
+
+
+###############################################################################################################################################
+# Analysis
+###############################################################################################################################################
+
+
+
+# Load seurat data
+# seurat_data <- readRDS('./output/NF-downstream_analysis/transfer_labels/gene_modules_subset_latent_time/rds_files/seurat_label_transfer_latent_time.RDS')
+seurat_data <- readRDS(list.files(data_path, pattern = "*.RDS", full.names = TRUE))
+
+# annotations <- read.csv('./output/NF-downstream_analysis/seurat_filtering/preprocess/seurat_annotations.csv')
+annotations <- read.csv(list.files(data_path, pattern = "*.csv", full.names = TRUE))
+
+# Get biomart GO annotations for TFs
+ensembl <- useEnsembl(biomart = 'genes', 
+                      dataset = 'ggallus_gene_ensembl',
+                      version = 106)
+
+var_genes <- seurat_data@assays$RNA@var.features
+lineages <- grep('lineage_', colnames(seurat_data@meta.data), value = TRUE)
+
+lineage_colours = c('lineage_NC_probability' = '#FFAE49', 'lineage_neural_probability' = '#44A5C2', 'lineage_placodal_probability' = '#024B7A')
+lineage_names = c('lineage_NC_probability' = 'neural crest', 'lineage_neural_probability' = 'neural', 'lineage_placodal_probability' = 'placodal')
+
+# var_genes <- c('TFAP2B', 'PAX7', 'MSX1', 'CSRNP1', 'EYA2', 'SIX1')
+
 # Run analysis
 # Calculate lineage markers and plot volcanos
 for(lineage in lineages){
@@ -172,26 +340,64 @@ for(lineage in lineages){
   graphics.off()
   
   saveRDS(lineage_drivers, paste0(rds_path, lineage, "_model_out.RDS"), compress = FALSE)
+
+  ###########################################################################################
+  # For each lineage driver, calculate the order  in which they breakaway from other lineages
+  
+  lineage_drivers_TFs <- lineage_drivers_TFs %>% filter(slope > 0)
+  
+  simulated_gam_data <- lapply(lineage_drivers_TFs$gene, function(x) MultiRunLineageGamConfidence(seurat_data, x))
+  
+  names(simulated_gam_data) <- lineage_drivers_TFs$gene
+  
+  breakpoints <- lapply(simulated_gam_data, FindMultiGamBreakawayPoint, target_lineage_col = lineage, strip_terminal_overlap = TRUE) %>% unlist()
+  
+  lineage_drivers_TFs[['breakpoints']] <- breakpoints
+  lineage_drivers_TFs <- lineage_drivers_TFs %>% mutate(`-log10(padj lineage)` = -log10(padj_lineage))
+  
+  # Plot lineage drivers ordered by breakpoint
+  png(paste0(plot_path, lineage, '_ordered_breakpoint_TFs.png'), width = 20, height = 13, units = 'cm', res = 400)
+  ggplot(lineage_drivers_TFs, aes(y = `-log10(padj lineage)`, x = breakpoints, label = gene)) +
+    geom_point() +
+    geom_label_repel(data = lineage_drivers_TFs, min.segment.length = 0, segment.size  = 0.6, segment.color = "black", max.overlaps = Inf) +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.position = "none", legend.title = element_blank()) +
+    ylab(paste0('-log10(p-adjusted lineage')) +
+    xlab('Breakpoint')
+  graphics.off()
+  
+  write.csv(dplyr::select(lineage_drivers_TFs, !model), paste0('./', lineage, '_drivers_TFs_breakpoint.csv'), quote = FALSE, row.names = FALSE)
+
+  
+  plot_data <- lapply(simulated_gam_data, function(x) dplyr::bind_rows(x, .id = 'id'))
+  
+  curr_plot_path <- paste0(plot_path, lineage, "_TF_breakpoints/")
+  dir.create(curr_plot_path, recursive = TRUE)
+  
+  # Plot lineage dynamics with breakpoint for each lineage driver
+  for(gene in names(plot_data)){
+    plot <- ggplot(plot_data[[gene]], aes(latent_time, fit, colour = id, fill = id)) +
+      geom_ribbon(aes(ymax = upper, ymin = lower), alpha=0.4, colour = NA) +
+      geom_line() +
+      geom_vline(xintercept=breakpoints[gene], linetype="dashed", color = "gray50") +
+      theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+            panel.background = element_blank(), axis.line = element_line(colour = "black"),
+            legend.title = element_text(size=7),
+            legend.text = element_text(size=7)) +
+      ylab(paste0('Scaled Expression')) +
+      xlab('Latent Time') +
+      labs(color = "Lineage", 
+           fill = "Lineage") +
+      scale_fill_viridis(discrete = TRUE, end = 0.98,
+                        labels=lineage_names[lineages]) +
+      scale_color_viridis(discrete = TRUE, end = 0.98,
+                          labels=lineage_names[lineages])
+    
+    png(paste0(curr_plot_path, gene, ".png"), width = 16, height = 9, units = 'cm', res = 400)
+    print(plot)
+    graphics.off()
+  }
+
 }
 
-# 
-# goi = list(NC = c('PAX7', 'TFAP2B', 'OLFML3', 'NKX6-2', 'KRT18'))
-# 
-# # # Filter top lineage drivers based on slope
-# # lineage_drivers <- lineage_drivers %>% filter(!grepl('ENS', gene)) %>% arrange(abs(padj_lineage)) %>% arrange(-slope)
-# # lineage_drivers <- rbind(head(lineage_drivers, n = 3), tail(lineage_drivers, n = 3))
-# 
-# lineage_drivers <- filter(lineage_drivers, gene %in% goi$NC)
-# 
-# # Predict expression at constant latent time value (0.5)
-# model_predict <- lapply(lineage_drivers$model, function(x) predict_gam(x, values = list(latent_time = 0.5)))
-# names(model_predict) <- lineage_drivers$gene
-# model_predict <- bind_rows(model_predict, .id = "gene")
-# 
-# png(paste0(plot_path, lineage, '_predict_top_drivers.png'), width = 16, height = 10, units = 'cm', res = 400)
-# ggplot(model_predict, aes(y = exp(fit), x = !!sym(lineage), colour = gene)) +
-#   geom_line() +
-#   theme_classic() +
-#   ylab("Predicted expression") +
-#   xlab(gsub("_", " ", lineage))
-# graphics.off()
