@@ -195,10 +195,10 @@ workflow {
         
     IDENTIFY_LINEAGE_DRIVERS_FULL( ch_identify_lineage_drivers_full )
 
-    GENE_MODULES_NPB_LATENT_TIME.out
-        .combine(SEURAT_FILTERING.out.annotations.map{it[1]})
-        .map{meta, output, annotations_csv -> [meta, [output.findAll{it =~ /rds_files/}[0].listFiles()[0], annotations_csv]]}
-        .set{ch_identify_lineage_drivers_npb}
+    // GENE_MODULES_NPB_LATENT_TIME.out
+    //     .combine(SEURAT_FILTERING.out.annotations.map{it[1]})
+    //     .map{meta, output, annotations_csv -> [meta, [output.findAll{it =~ /rds_files/}[0].listFiles()[0], annotations_csv]]}
+    //     .set{ch_identify_lineage_drivers_npb}
 
-    IDENTIFY_LINEAGE_DRIVERS_NPB( ch_identify_lineage_drivers_npb )
+    // IDENTIFY_LINEAGE_DRIVERS_NPB( ch_identify_lineage_drivers_npb )
 }
