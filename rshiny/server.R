@@ -69,7 +69,7 @@ server <- function(input, output, session){
     unlist(
       setNames(
         lapply(names(subset_lineage_map()), function(x) {
-          calc_latent_time_cutoff(
+          CalcLatentTimeCutoff(
             latent_time = subset_dataset()@meta.data[['latent_time']],
             lineage_probability = subset_dataset()@meta.data[[subset_lineage_map()[[x]]]]
           )
@@ -82,22 +82,48 @@ server <- function(input, output, session){
   # Set lineage dynamic gene options from server side 
   updateSelectizeInput(session, "gene_id_lineage_dynamics", choices = gene_ids, selected = "PAX7", options= list(maxOptions = length(gene_ids)), server = TRUE)
   
-  plot_data <- reactive(lineage_gam(input$gene_id_lineage_dynamics, subset_dataset(), slot = 'scale.data', lineages = input$select_lineage, lineage_cutoffs = max_cutoffs()))
+  plot_data <- reactive(MultiRunLineageGamConfidence(subset_dataset(), gene = input$gene_id_lineage_dynamics, lineage_cols = setNames(names(lineage_names), lineage_names)[input$select_lineage]) %>% dplyr::bind_rows(.id = 'id'))
   
-  output$lineage_dynamics <- renderPlot(ggplot(plot_data(), aes(x = latent_time, y = scaled_expression, colour = lineage, fill = lineage)) +
-                                          geom_line(size = 2) +
-                                          geom_ribbon(aes(ymin=scaled_expression-se, ymax=scaled_expression+se), alpha = .3, colour = NA) +
-                                          labs(x = "Latent time", y = "Scaled Expression") +
-                                          theme_classic() +
-                                          theme(legend.key.size = unit(1,"cm"), 
+  output$lineage_dynamics <- renderPlot(ggplot(plot_data(), aes(latent_time, fit, colour = id, fill = id)) +
+                                          geom_ribbon(aes(ymax = upper, ymin = lower), alpha=0.4, colour = NA) +
+                                          geom_line() +
+                                          theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+                                                panel.background = element_blank(), axis.line = element_line(colour = "black"),
+                                                legend.key.size = unit(1,"cm"), 
                                                 legend.title = element_blank(),
                                                 axis.text.x = element_text(size = 20),
                                                 axis.text.y = element_text(size = 20),  
                                                 axis.title.x = element_text(size = 24),
                                                 axis.title.y = element_text(size = 24),
-                                                legend.text=element_text(size=20)),
+                                                legend.text=element_text(size=20)) +
+                                          ylab(paste0('Scaled Expression')) +
+                                          xlab('Latent Time') +
+                                          labs(color = "Lineage", 
+                                               fill = "Lineage") +
+                                          scale_fill_viridis(discrete = TRUE, end = 0.98,
+                                                             labels=lineage_names) +
+                                          scale_color_viridis(discrete = TRUE, end = 0.98,
+                                                              labels=lineage_names),
                                         height = function() {session$clientData$output_lineage_dynamics_width * 0.5}
   )
+
+  # 
+  # output$lineage_dynamics <- renderPlot(ggplot(plot_data(), aes(x = latent_time, y = scaled_expression, colour = lineage, fill = lineage)) +
+  #                                         geom_line(size = 2) +
+  #                                         geom_ribbon(aes(ymin=scaled_expression-se, ymax=scaled_expression+se), alpha = .3, colour = NA) +
+  #                                         labs(x = "Latent time", y = "Scaled Expression") +
+  #                                         theme_classic() +
+  #                                         theme(legend.key.size = unit(1,"cm"), 
+  #                                               legend.title = element_blank(),
+  #                                               axis.text.x = element_text(size = 20),
+  #                                               axis.text.y = element_text(size = 20),  
+  #                                               axis.title.x = element_text(size = 24),
+  #                                               axis.title.y = element_text(size = 24),
+  #                                               legend.text=element_text(size=20)),
+  #                                       height = function() {session$clientData$output_lineage_dynamics_width * 0.5}
+  # )
+  # 
+  
   
   
   ####################################################################
@@ -128,11 +154,11 @@ server <- function(input, output, session){
                                                   height = function() {session$clientData$output_coexpression_featureplot_2_width * 0.75}
   )
   
-  output$coexpression_umap <- renderPlot(coexpression_umap(dat_list[[input$coexpression_subset_featureplots]], gene_1 = input$coexpression_gene_id_1,
+  output$CoexpressionUMAP <- renderPlot(CoexpressionUMAP(dat_list[[input$coexpression_subset_featureplots]], gene_1 = input$coexpression_gene_id_1,
                                                            gene_2 = input$coexpression_gene_id_2, col.threshold = input$threshold, two.colors = c(input$gene_1_col, input$gene_2_col),
                                                            negative.color = 'gray90', highlight_cell_size = 2) +
                                            my_theme,
-                                         height = function() {session$clientData$output_coexpression_umap_width * 0.7}
+                                         height = function() {session$clientData$output_CoexpressionUMAP_width * 0.7}
   )
   
   ####################################################################

@@ -1,5 +1,4 @@
-
-calc_latent_time_cutoff <- function(latent_time, lineage_probability, top_frac = 0.2, return = 'intercept'){
+CalcLatentTimeCutoff <- function(latent_time, lineage_probability, top_frac = 0.2, return = 'intercept', verbose=FALSE){
   data = data.frame(latent_time, lineage_probability)
   
   model_data <- data %>%
@@ -24,7 +23,7 @@ calc_latent_time_cutoff <- function(latent_time, lineage_probability, top_frac =
     
     return(p)
   }else if(return == 'intercept'){
-    if(x > max_latent_time){
+    if(x > max_latent_time & verbose == TRUE){
       cat('Predicted latent time is later than any cell observed that has reached full lineage absorbtion. Max latent time is set based on oldest cell at lineage_probability == 1')
       return(max_latent_time)
     }else{
@@ -36,75 +35,78 @@ calc_latent_time_cutoff <- function(latent_time, lineage_probability, top_frac =
 }
 
 
-# Function for generating dataframe for gene expression dynamics
-lineage_gam <- function(gene, seurat_object, assay = 'RNA', slot = 'scale.data', lineages, lineage_cutoffs = NULL){
+
+PrepareLineageGamData <- function(object, gene, slot = 'data', assay = 'RNA', lineage, latent_col = 'latent_time'){
   
-  if(!all(names(lineage_cutoffs) %in% lineages)){
-    stop('lineage_cutoffs names do not match selected lineages')
-  }
+  # Get metadata
+  metadata <- object@meta.data[, c('latent_time', lineage)]
+  colnames(metadata) <- c(latent_col, 'lineage')
   
-  assay_dat <- as.data.frame(GetAssayData(seurat_object, assay = assay, slot = slot)[gene,, drop=FALSE])
+  # Calculate latent_time_cutoff
+  latent_time_cutoff <- CalcLatentTimeCutoff(latent_time = object@meta.data[[latent_col]], lineage_probability = object@meta.data[[lineage]])
   
-  subset_lineage_probabilities <- c('Neural' = 'lineage_neural_probability', 'Neural crest' = 'lineage_NC_probability', 'Placodal' = 'lineage_placodal_probability')
+  # Get expression data
+  expression_data <- GetAssayData(object, slot = slot, assay = assay)[gene, rownames(metadata), drop = FALSE] %>% as.matrix() %>% t()
   
-  cols_to_sub <- c('latent_time', unname(subset_lineage_probabilities[lineages]))
+  # Filter cells below max_latent_time
+  lineage_expression_data <- cbind(metadata, expression_data) %>%
+    as.data.frame() %>%
+    filter(!!sym(latent_col) < latent_time_cutoff)
   
-  assay_dat <- seurat_object@meta.data %>%
-    dplyr::select(cols_to_sub) %>%
-    merge(t(assay_dat), ., by = 0)
-  
-  plot_data <- assay_dat %>%
-    column_to_rownames('Row.names') %>%
-    pivot_longer(!all_of(cols_to_sub)) %>%
-    rename(scaled_expression = value) %>%
-    rename(gene = name) %>%
-    pivot_longer(cols = !c(latent_time, gene, scaled_expression)) %>%
-    rename(lineage_probability = value) %>%
-    rename(lineage = name) %>%
-    group_by(lineage) %>%
-    mutate(lineage = names(subset_lineage_probabilities)[subset_lineage_probabilities %in% lineage])
-  
-  # GAMs
-  gams <- plot_data %>%
-    group_by(lineage) %>%
-    do(gams = gam(scaled_expression ~ s(latent_time, bs = "cs", k=5), weights = lineage_probability, data = .))
-  
-  # Filter expression values which are above the predicted lineage cutoffs 
-  if(!is.null(lineage_cutoffs)){
-    plot_data <- plot_data %>%
-      mutate(max_latent_time = lineage_cutoffs[names(lineage_cutoffs) %in% lineage]) %>%
-      filter(latent_time < max_latent_time)
-  }
-  
-  # Add module column and max latent time to gam data
-  plot_data <- plot_data %>%
-    ungroup() %>%
-    dplyr::select(gene, lineage, max_latent_time) %>%
-    distinct()
-  
-  gams <- inner_join(gams, plot_data)
-  
-  # Generate predicted values for each gam in tidy df -> output in long format
-  out_data <- data.frame()
-  for(row in 1:nrow(gams)){
-    # Generate latent time values to predict gams on -> use max latent_time calculated per lineage
-    pdat <- tibble(latent_time = seq(0, gams[[row, 'max_latent_time']], length = 100))
-    new_data <- predict.gam(gams[[row,'gams']][[1]], newdata = pdat, se=TRUE)
-    
-    out_data <- rbind(out_data, data.frame(gene = gams[[row, 'gene']],
-                                             lineage = gams[[row, 'lineage']],
-                                             scaled_expression = new_data[['fit']],
-                                             se = new_data[['se.fit']],
-                                             pdat))
-  }
-  
-  return(out_data)
+  return(lineage_expression_data)
 }
 
-coexpression_umap <- function(seurat_object, gene_1, gene_2, col.threshold = 0, two.colors = c('#FF0000', '#00ff00'), negative.color = 'gray80',
-                                      highlight_cell_size = 1, show_legend = TRUE,
-                                      axes_label_size = 12, axes_title_size = 10, axes_tick_size = 0.15){
 
+LineageGam <- function(lineage_expression_data, gene, latent_col = 'latent_time'){
+  return(mgcv::gam(data = lineage_expression_data, formula = as.formula(paste0(gene, " ~ s(", latent_col,", bs = 'cs', k = 5)")),
+                   weights = lineage, family = nb(link='log'), method = 'REML', control = gam.control(maxit = 10000)))
+}
+
+CalcGamConfidence <- function(gam){
+  # Line of 'best fit'
+  fit_gam <- predict.gam(gam, type = 'response')
+  
+  fit_gam_se <- predict.gam(gam, type = 'response', se.fit = TRUE)
+  
+  # 1.96*se
+  fit_gam_ci <- fit_gam_se %>% as.data.frame() %>%
+    mutate(upper = fit + (1.96*se.fit)) %>%
+    mutate(lower = fit - (1.96*se.fit))
+  
+  return(fit_gam_ci)
+}
+
+
+RunLineageGamConfidence <- function(object, gene, slot = 'data', assay = 'RNA', lineage, latent_col = 'latent_time'){
+  lineage_expression_data <- PrepareLineageGamData(object = object, gene = gene, slot = slot, assay = assay, lineage = lineage, latent_col = latent_col)
+  gam <- LineageGam(lineage_expression_data, gene = gene, latent_col = latent_col)
+  gam_ci <- CalcGamConfidence(gam)
+  gam_ci <- cbind(gam_ci, lineage_expression_data[,latent_col, drop = FALSE])
+  gam_ci <- gam_ci %>% mutate(!!sym(latent_col) := round(!!sym(latent_col), digits = 2))
+  return(gam_ci)
+}
+
+
+MultiRunLineageGamConfidence <- function(object, gene, slot = 'data', assay = 'RNA', lineage_cols='auto', latent_col = 'latent_time'){
+  if(lineage_cols == 'auto'){
+    lineage_cols <- grep('lineage_', colnames(object@meta.data), value = TRUE)
+  } else if (!all(lineage_cols %in% colnames(object@meta.data))){
+    stop('lineage_cols missing from object metadata - please check metadata column names and rerun')
+  }
+  
+  gams <- list()
+  for(lineage in lineage_cols){
+    gams[[lineage]] <- RunLineageGamConfidence(object = object, gene = gene, lineage = lineage) %>%
+      group_by(!!sym(latent_col)) %>% summarise(upper = max(upper), lower = min(lower), fit = mean(fit))
+  }
+  return(gams)
+}
+
+
+CoexpressionUMAP <- function(seurat_object, gene_1, gene_2, col.threshold = 0, two.colors = c('#FF0000', '#00ff00'), negative.color = 'gray80',
+                             highlight_cell_size = 1, show_legend = TRUE,
+                             axes_label_size = 12, axes_title_size = 10, axes_tick_size = 0.15){
+  
   dat <- t(as.matrix(GetAssayData(object = seurat_object, assay = 'RNA', slot = 'data')[c(gene_1, gene_2),]))
   dat <- apply(dat, 2, function(x) ifelse(!x, 0, as.integer((x - min(x)) / (max(x) - min(x)) * 100)))
   
@@ -138,26 +140,26 @@ coexpression_umap <- function(seurat_object, gene_1, gene_2, col.threshold = 0, 
           axis.title.y = element_text(size = axes_title_size),
           axis.text.y = element_text(size = axes_label_size),
           axis.ticks.length=unit(axes_tick_size,"cm"))
-
+  
   plot_data <- as.data.frame(seurat_object[["umap"]]@cell.embeddings)
   
   plot_data$cell_cols = cell_cols$cell_cols[match(rownames(plot_data), rownames(cell_cols))]
-
+  
   positive_cells = filter(plot_data, cell_cols != negative.color)
-
+  
   umap_plot <- ggplot(plot_data, aes(x = UMAP_1, y = UMAP_2, colour = rownames(positive_cells))) +
     geom_point(colour = negative.color, size = 2) +
     geom_point(data = positive_cells, size = highlight_cell_size) +
     scale_colour_manual(breaks = rownames(positive_cells), values=positive_cells$cell_cols) +
     theme_classic() +
     NoLegend()
-
-
+  
+  
   layout <- '
     BA
     B#
     '
-    return(wrap_plots(A = key_plot, B = umap_plot, design = layout, widths = c(4,1), heights = c(1,3)))
+  return(wrap_plots(A = key_plot, B = umap_plot, design = layout, widths = c(4,1), heights = c(1,3)))
 }
 
 
