@@ -1,5 +1,10 @@
 #!/usr/bin/env Rscript
 
+
+############################################################################################################################################################
+# Functions
+############################################################################################################################################################
+
 GeneModulePheatmap <- function (seurat_obj, metadata, col_order = metadata[1], custom_order = NULL, 
                                 custom_order_column = NULL, assay = "RNA", slot = "scale.data", 
                                 gene_modules, selected_genes = NULL, hide_annotation = NULL, 
@@ -123,7 +128,33 @@ GeneModulePheatmap <- function (seurat_obj, metadata, col_order = metadata[1], c
   
 }
 
-calc_latent_time_cutoff <- function(latent_time, lineage_probability, top_frac = 0.2, return = 'intercept'){
+ModelMultiLatentExpression <- function(object, goi, latent_col, lineage_col, assay = 'RNA', slot = 'data', cell_sub = colnames(object), padj_method = 'BH'){
+  # Get metadata
+  metadata <- object@meta.data[cell_sub, c(latent_col, lineage_col)]
+  
+  # Get expression data
+  expression_data <- GetAssayData(object, slot = slot, assay = assay)[goi, rownames(metadata)] %>% as.matrix() %>% t()
+  
+  # Make data long and run models
+  gam_dat <- cbind(metadata[latent_col], metadata[lineage_col], expression_data) %>%
+    as.data.frame() %>%
+    pivot_longer(!c(!!sym(latent_col), !!sym(lineage_col)), names_to = 'gene', values_to = 'expression') %>%
+    group_by(gene) %>%
+    do(model = mgcv::gam(expression ~ s(!!sym(latent_col)) + !!sym(lineage_col), data =., family = nb(link='log'), method = 'REML', control = gam.control(maxit = 10000)))
+  
+  # Get summary output from gams
+  gam_dat <- gam_dat %>%
+    mutate(slope = summary(model)$p.table[lineage_col, 'Estimate']) %>%
+    mutate(p_lineage = summary(model)$p.table[lineage_col, 'Pr(>|z|)']) %>%
+    mutate(p_time = as.data.frame(summary(model)$s.table)[['p-value']])
+  
+  gam_dat$padj_lineage <- p.adjust(gam_dat$p_lineage, padj_method)
+  gam_dat$padj_time <- p.adjust(gam_dat$p_time, padj_method)
+  
+  return(gam_dat)
+}
+
+CalcLatentTimeCutoff <- function(latent_time, lineage_probability, top_frac = 0.2, return = 'intercept', verbose=FALSE){
   data = data.frame(latent_time, lineage_probability)
   
   model_data <- data %>%
@@ -148,15 +179,87 @@ calc_latent_time_cutoff <- function(latent_time, lineage_probability, top_frac =
     
     return(p)
   }else if(return == 'intercept'){
-    if(x > max_latent_time){
+    if(x > max_latent_time & verbose == TRUE){
       cat('Predicted latent time is later than any cell observed that has reached full lineage absorbtion. Max latent time is set based on oldest cell at lineage_probability == 1')
       return(max_latent_time)
     }else{
       return(unname(x))
     }
-}else{
+  }else{
     stop('return must be one of intercept or plot')
   }
+}
+
+PrepareLineageGamData <- function(object, goi, slot = 'data', assay = 'RNA', lineage, latent_col = 'latent_time'){
+  
+  # Get metadata
+  metadata <- object@meta.data[, c('latent_time', lineage)]
+  colnames(metadata) <- c(latent_col, 'lineage')
+  
+  # Calculate latent_time_cutoff
+  latent_time_cutoff <- CalcLatentTimeCutoff(latent_time = object@meta.data[[latent_col]], lineage_probability = object@meta.data[[lineage]])
+  
+  # Get expression data
+  expression_data <- GetAssayData(object, slot = slot, assay = assay)[goi, rownames(metadata), drop = FALSE] %>% as.matrix() %>% t()
+  
+  if(length(goi) > 1){
+    expression_data <- data.frame(multi_gene = rowMeans(expression_data))
+  }
+  
+  # Filter cells below max_latent_time
+  lineage_expression_data <- cbind(metadata, expression_data) %>%
+    as.data.frame() %>%
+    filter(!!sym(latent_col) < latent_time_cutoff)
+  
+  return(lineage_expression_data)
+}
+
+
+LineageGam <- function(lineage_expression_data, goi, latent_col = 'latent_time'){
+  return(mgcv::gam(data = lineage_expression_data, formula = as.formula(paste0(goi, " ~ s(", latent_col,", bs = 'cs', k = 5)")),
+                   weights = lineage, family = nb(link='log'), method = 'REML', control = gam.control(maxit = 10000)))
+}
+
+CalcGamConfidence <- function(gam){
+  # Line of 'best fit'
+  fit_gam <- predict.gam(gam, type = 'response')
+  
+  fit_gam_se <- predict.gam(gam, type = 'response', se.fit = TRUE)
+  
+  # 1.96*se
+  fit_gam_ci <- fit_gam_se %>% as.data.frame() %>%
+    mutate(upper = fit + (1.96*se.fit)) %>%
+    mutate(lower = fit - (1.96*se.fit))
+  
+  return(fit_gam_ci)
+}
+
+
+RunLineageGamConfidence <- function(object, goi, slot = 'data', assay = 'RNA', lineage, latent_col = 'latent_time'){
+  lineage_expression_data <- PrepareLineageGamData(object = object, goi = goi, slot = slot, assay = assay, lineage = lineage, latent_col = latent_col)
+  gam <- LineageGam(lineage_expression_data, goi = ifelse(length(goi) > 1, 'multi_gene', goi), latent_col = latent_col)
+  gam_ci <- CalcGamConfidence(gam)
+  gam_ci <- cbind(gam_ci, lineage_expression_data[,latent_col, drop = FALSE])
+  gam_ci <- gam_ci %>% mutate(!!sym(latent_col) := round(!!sym(latent_col), digits = 2))
+  return(gam_ci)
+}
+
+
+MultiRunLineageGamConfidence <- function(object, goi, slot = 'data', assay = 'RNA', lineage_cols='auto', latent_col = 'latent_time'){
+  if(lineage_cols == 'auto'){
+    lineage_cols <- grep('lineage_', colnames(object@meta.data), value = TRUE)
+  } else if (!all(lineage_cols %in% colnames(object@meta.data))){
+    stop('lineage_cols missing from object metadata - please check metadata column names and rerun')
+  }
+  
+  if(length(goi) > 1){cat('A group of genes has been provided to plot gene dynamics, gene expression will be averaged for the group of genes. \n')}
+  
+  gams <- list()
+  for(lineage in lineage_cols){
+    gams[[lineage]] <- RunLineageGamConfidence(object = object, goi = goi, lineage = lineage, slot = slot, assay = assay) %>%
+      group_by(!!sym(latent_col)) %>% summarise(upper = max(upper), lower = min(lower), fit = mean(fit))
+  }
+  return(gams)
 }
 
 
@@ -329,178 +432,85 @@ graphics.off()
 
 ################## Calculate maximum latent time values ################## 
 png(paste0(plot_path, 'max_NC_latent_time.png'), width = 15, height = 10, res = 200, units = 'cm')
-calc_latent_time_cutoff(latent_time = seurat_data@meta.data[['latent_time']],
+CalcLatentTimeCutoff(latent_time = seurat_data@meta.data[['latent_time']],
                         lineage_probability = seurat_data@meta.data[['lineage_NC_probability']],
                         return = 'plot')
 graphics.off()
 
 png(paste0(plot_path, 'max_placodal_latent_time.png'), width = 15, height = 10, res = 200, units = 'cm')
-calc_latent_time_cutoff(latent_time = seurat_data@meta.data[['latent_time']],
+CalcLatentTimeCutoff(latent_time = seurat_data@meta.data[['latent_time']],
                         lineage_probability = seurat_data@meta.data[['lineage_placodal_probability']],
                         return = 'plot')
 graphics.off()
 
-max_NC <- calc_latent_time_cutoff(latent_time = seurat_data@meta.data[['latent_time']], lineage_probability = seurat_data@meta.data[['lineage_NC_probability']])
-max_placodal <- calc_latent_time_cutoff(latent_time = seurat_data@meta.data[['latent_time']], lineage_probability = seurat_data@meta.data[['lineage_placodal_probability']])
-
-
-
-# Iteratively get expression data for each gene module and bind to tidy dataframe
-lineage_expression_data <- data.frame()
-for(module in names(gms)){
-  temp <- GetAssayData(seurat_data, assay = 'RNA', slot = 'scale.data')[gms[[module]],]
-  
-  temp <- merge(t(temp), seurat_data@meta.data[,c('latent_time', 'lineage_NC_probability', 'lineage_placodal_probability'), drop=FALSE], by=0)
-  lineage_expression_data <- temp %>%
-    column_to_rownames('Row.names') %>%
-    pivot_longer(!c(latent_time, lineage_NC_probability, lineage_placodal_probability)) %>%
-    rename(scaled_expression = value) %>%
-    rename(gene = name) %>%
-    pivot_longer(cols = !c(latent_time, gene, scaled_expression)) %>%
-    mutate(module = module) %>%
-    rename(lineage_probability = value) %>%
-    rename(lineage = name) %>%
-    group_by(lineage) %>%
-    mutate(lineage = unlist(strsplit(lineage, '_'))[2]) %>%
-    bind_rows(lineage_expression_data) %>%
-    ungroup()
-}
-
 
 ########## Generate a GAM per lineage per gene for plotting ##########
-
-# GAMs
-gams <- lineage_expression_data %>%
-  group_by(gene, lineage) %>%
-  do(gams = gam(scaled_expression ~ s(latent_time, bs = "cs", k=5), weights = lineage_probability, data = .))
-
-
-# Add module column and max latent time to gam data
-extra_dat <- lineage_expression_data %>%
-  mutate(max_latent_time = ifelse(lineage == 'NC', max_NC, max_placodal)) %>%
-  group_by(lineage) %>%
-  filter(latent_time < max_latent_time) %>%
-  ungroup() %>%
-  dplyr::select(gene, lineage, module, max_latent_time) %>%
-  distinct() %>%
-  arrange(gene) 
-
-
-gams <- inner_join(gams, extra_dat)
-
-# Generate predicted values for each gam in tidy df -> output in long format
-plot_data <- data.frame()
-for(row in 1:nrow(gams)){
-  # Generate latent time values to predict gams on -> use max latent_time calculated per lineage
-  pdat <- tibble(latent_time = seq(0, gams[[row, 'max_latent_time']], length = 100))
-  new_data <- predict.gam(gams[[row,'gams']][[1]], newdata = pdat, se=TRUE)
-  plot_data <- rbind(plot_data, data.frame(gene = gams[[row, 'gene']],
-                                           lineage = gams[[row, 'lineage']],
-                                           module = gams[[row, 'module']],
-                                           scaled_expression = new_data[['fit']],
-                                           se = new_data[['se.fit']],
-                                           pdat))
-}
-
-# Generate a split list per gene for plotting
-plot_data <- plot_data %>% group_split(gene)
-
-# Plot module dynamics for every gene in every module
-for(gene in plot_data){
-  gene_id <- unique(gene$gene)
-  module <- unique(gene$module)
-  
-  curr_plot_path <- paste0(plot_path, 'gene_lineage_dynamics/', module, '/')
-  dir.create(curr_plot_path, recursive = TRUE, showWarnings = FALSE)
-  
-  p = ggplot(gene, aes(x = latent_time, y = scaled_expression, colour = lineage, fill = lineage)) +
-    geom_line(size = 2) +
-    geom_ribbon(aes(ymin=scaled_expression-se, ymax=scaled_expression+se), alpha = .3, colour = NA) +
-    scale_colour_manual(values=lineage_colours) +
-    scale_fill_manual(values=lineage_colours) +
-  labs(x = "Latent time", y = "Scaled Expression") +
-    theme_classic() +
-    theme(legend.key.size = unit(1,"cm"), 
-          legend.title = element_blank(),
-          axis.text.x = element_text(size = 20),
-          axis.text.y = element_text(size = 20),  
-          axis.title.x = element_text(size = 24),
-          axis.title.y = element_text(size = 24),
-          legend.text=element_text(size=20))
-  
-  png(paste0(curr_plot_path, gene_id, '.png'), width = 18, height = 12, res = 200, units = 'cm')
-  print(p)
-  graphics.off()
-}
-
-
-########## Generate a GAM per lineage per module for plotting ##########
-
-# GAMs
-gams <- lineage_expression_data %>%
-  group_by(module, lineage) %>%
-  do(gams = gam(scaled_expression ~ s(latent_time, bs = "cs", k=5), weights = lineage_probability, data = .))
-
-# Add module column and max latent time to gam data
-extra_dat <- lineage_expression_data %>%
-  mutate(max_latent_time = ifelse(lineage == 'NC', max_NC, max_placodal)) %>%
-  group_by(lineage) %>%
-  filter(latent_time < max_latent_time) %>%
-  ungroup() %>%
-  dplyr::select(lineage, module, max_latent_time) %>%
-  distinct()
-
-gams <- inner_join(gams, extra_dat)
-
-# Generate predicted values for each gam in tidy df -> output in long format
-plot_data <- data.frame()
-for(row in 1:nrow(gams)){
-  # Generate latent time values to predict gams on -> use max latent_time calculated per lineage
-  pdat <- tibble(latent_time = seq(0, gams[[row, 'max_latent_time']], length = 100))
-  new_data <- predict.gam(gams[[row,'gams']][[1]], newdata = pdat, se=TRUE)
-  plot_data <- rbind(plot_data, data.frame(lineage = gams[[row, 'lineage']],
-                                           module = gams[[row, 'module']],
-                                           scaled_expression = new_data[['fit']],
-                                           se = new_data[['se.fit']],
-                                           pdat))
-}
-
+lineage_names = c('lineage_NC_probability' = 'Neural crest', 'lineage_placodal_probability' = 'Placodal')
 
 # Plot module dynamics for every module
-for(gene in plot_data %>% group_split(module)){
-  module <- unique(gene$module)
+curr_plot_path <- paste0(plot_path, 'gm_lineage_dynamics/')
+dir.create(curr_plot_path, recursive = TRUE, showWarnings = FALSE)
+
+
+for(module in names(gms)){
+  gms_plot_data <- MultiRunLineageGamConfidence(seurat_data, goi = gms[[module]], slot = 'data') %>% dplyr::bind_rows(.id = 'id')
   
-  curr_plot_path <- paste0(plot_path, 'gene_lineage_dynamics/', module, '/')
-  
-  p = ggplot(gene, aes(x = latent_time, y = scaled_expression, colour = lineage, fill = lineage)) +
-    geom_line(size = 2) +
-    geom_ribbon(aes(ymin=scaled_expression-se, ymax=scaled_expression+se), alpha = .3, colour = NA) +
-    scale_colour_manual(values=lineage_colours) +
-    scale_fill_manual(values=lineage_colours) +
-  labs(x = "Latent time", y = "Scaled Expression") +
-    theme_classic() +
-    theme(legend.key.size = unit(1,"cm"), 
+  plot <-   ggplot(gms_plot_data, aes(latent_time, fit, colour = id, fill = id)) +
+    geom_ribbon(aes(ymax = upper, ymin = lower), alpha=0.4, colour = NA) +
+    geom_line() +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key.size = unit(0.8,"cm"), 
           legend.title = element_blank(),
-          axis.text.x = element_text(size = 20),
-          axis.text.y = element_text(size = 20),  
-          axis.title.x = element_text(size = 24),
-          axis.title.y = element_text(size = 24),
-          legend.text=element_text(size=20))
+          axis.text.x = element_text(size = 14),
+          axis.text.y = element_text(size = 14),  
+          axis.title.x = element_text(size = 16),
+          axis.title.y = element_text(size = 16),
+          legend.text=element_text(size=20)) +
+    ylab(paste0('Average Normalised Expression')) +
+    xlab('Latent Time') +
+    labs(color = "Lineage", 
+         fill = "Lineage") +
+    scale_fill_viridis(discrete = TRUE, end = 0.98,
+                       labels=lineage_names) +
+    scale_color_viridis(discrete = TRUE, end = 0.98,
+                        labels=lineage_names)
   
   png(paste0(curr_plot_path, module, '.png'), width = 18, height = 12, res = 200, units = 'cm')
-  print(p)
+  print(plot)
   graphics.off()
 }
+
+
+# Calculate average module expression for plotting feature plots
+curr_plot_path <- paste0(plot_path, 'gm_feature_plots/')
+dir.create(curr_plot_path)
+
+for(module in names(gms)){
+  seurat_data@meta.data[[module]] <-  colMeans(GetAssayData(seurat_data, assay = 'RNA', slot = 'data')[gms[[module]],])
+  
+  png(paste0(curr_plot_path, module, '_feature_plot.png'), width = 15, height = 15, units='cm', res=200)
+  print(
+    FeaturePlot(seurat_data, features = module, pt.size = 1.4) +
+      theme_void() +
+      theme(plot.title = element_blank(),
+            legend.text = element_text(size=16),
+            legend.key.size = unit(1, 'cm'))
+  ) 
+  graphics.off()
+}
+
 
 
 
 ############### Plot heatmap for NC modules of interest ############
 # Filter NC modules of interest and make wider for plotting heatmap
-hm_data <- plot_data %>%
-  filter(lineage == 'NC' & module %in% NC_gms) %>%
+hm_data <- gms_plot_data %>%
+  dplyr::bind_rows(.id = 'module') %>%
+  filter(grepl("NC", id) & module %in% NC_gms) %>%
   group_by(module) %>%
-  dplyr::select(!c(lineage, se)) %>%
-  pivot_wider(names_from = module, values_from = scaled_expression)
+  dplyr::select(!c(id, upper, lower)) %>%
+  pivot_wider(names_from = module, values_from = fit)
 
 
 # Generate latent time annotation bar
@@ -527,24 +537,24 @@ Heatmap(t(hm_data), cluster_rows = FALSE, cluster_columns = FALSE,
         row_title_gp = gpar(fontsize = 22),
         top_annotation = column_ha,
         heatmap_legend_param = list(
-        title = "Scaled Expression",
-        title_gp = gpar(fontsize = 18),
-        legend_height = unit(8, "cm"),
-        grid_width = unit(1, "cm"),
-        title_position = "leftcenter-rot",
-        labels_gp = gpar(fontsize = 16)),
+          title = "Scaled Expression",
+          title_gp = gpar(fontsize = 18),
+          legend_height = unit(8, "cm"),
+          grid_width = unit(1, "cm"),
+          title_position = "leftcenter-rot",
+          labels_gp = gpar(fontsize = 16)),
         raster_quality = 4)
 graphics.off()
 
 
 ############### Plot heatmap for placodal modules of interest ############
 # Filter placodal modules of interest and make wider for plotting heatmap
-hm_data <- plot_data %>%
-  filter(lineage == 'placodal' & module %in% PPR_gms) %>%
+hm_data <- gms_plot_data %>%
+  dplyr::bind_rows(.id = 'module') %>%
+  filter(grepl("placodal", id) & module %in% NC_gms) %>%
   group_by(module) %>%
-  dplyr::select(!c(lineage, se)) %>%
-  pivot_wider(names_from = module, values_from = scaled_expression)
-
+  dplyr::select(!c(id, upper, lower)) %>%
+  pivot_wider(names_from = module, values_from = fit)
 
 # Generate latent time annotation bar
 column_ha = HeatmapAnnotation(labels = anno_mark(at = c(2, 50, 99), labels = c("0", "Latent Time", paste(round(hm_data$latent_time[length(hm_data$latent_time)], digits = 1))), which = "column", side = "top", 
@@ -580,22 +590,5 @@ Heatmap(t(hm_data), cluster_rows = FALSE, cluster_columns = FALSE,
 graphics.off()
 
 
-
-#################### Calculate average module expression for plotting feature plots ####################
-curr_plot_path <- paste0(plot_path, 'feature_plots/')
-dir.create(curr_plot_path)
-for(module in names(gms)){
-  seurat_data@meta.data[[module]] <-  colMeans(GetAssayData(seurat_data, assay = 'RNA', slot = 'scale.data')[gms[[module]],])
-  
-  png(paste0(curr_plot_path, module, '_feature_plot.png'), width = 15, height = 12, units='cm', res=200)
-  print(
-    FeaturePlot(seurat_data, features = module, pt.size = 1.4) +
-      theme_void() +
-      theme(plot.title = element_blank(),
-        legend.text = element_text(size=16),
-        legend.key.size = unit(1.5, 'cm'))
-          ) 
-  graphics.off()
-}
 
 
