@@ -96,7 +96,7 @@ server <- function(input, output, session){
                                                 axis.title.x = element_text(size = 24),
                                                 axis.title.y = element_text(size = 24),
                                                 legend.text=element_text(size=20)) +
-                                          ylab(paste0('Scaled Expression')) +
+                                          ylab(paste0('Average Normalised Expression')) +
                                           xlab('Latent Time') +
                                           labs(color = "Lineage", 
                                                fill = "Lineage") +
