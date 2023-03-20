@@ -475,32 +475,6 @@ CalcLatentTimeCutoff(latent_time = seurat_data@meta.data[['latent_time']],
                         return = 'plot')
 graphics.off()
 
-max_NC <- CalcLatentTimeCutoff(latent_time = seurat_data@meta.data[['latent_time']], lineage_probability = seurat_data@meta.data[['lineage_NC_probability']])
-max_placodal <- CalcLatentTimeCutoff(latent_time = seurat_data@meta.data[['latent_time']], lineage_probability = seurat_data@meta.data[['lineage_placodal_probability']])
-max_neural <- CalcLatentTimeCutoff(latent_time = seurat_data@meta.data[['latent_time']], lineage_probability = seurat_data@meta.data[['lineage_neural_probability']])
-
-# Iteratively get expression data for each gene module and bind to tidy dataframe
-lineage_expression_data <- data.frame()
-for(module in names(gms)){
-  temp <- GetAssayData(seurat_data, assay = 'RNA', slot = 'scale.data')[gms[[module]],]
-  
-  temp <- merge(t(temp), seurat_data@meta.data[,c('latent_time', 'lineage_NC_probability', 'lineage_neural_probability', 'lineage_placodal_probability'), drop=FALSE], by=0)
-  lineage_expression_data <- temp %>%
-    column_to_rownames('Row.names') %>%
-    pivot_longer(!c(latent_time, lineage_NC_probability, lineage_neural_probability, lineage_placodal_probability)) %>%
-    rename(scaled_expression = value) %>%
-    rename(gene = name) %>%
-    pivot_longer(cols = !c(latent_time, gene, scaled_expression)) %>%
-    mutate(module = module) %>%
-    rename(lineage_probability = value) %>%
-    rename(lineage = name) %>%
-    group_by(lineage) %>%
-    mutate(lineage = unlist(strsplit(lineage, '_'))[2]) %>%
-    bind_rows(lineage_expression_data) %>%
-    ungroup()
-}
-
-
 ########## Generate a GAM per lineage per gene for plotting ##########
 
 
