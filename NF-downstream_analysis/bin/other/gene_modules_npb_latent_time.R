@@ -316,18 +316,18 @@ lineage_colours = c('placodal' = '#3F918C', 'NC' = '#DE4D00')
 #                           Read in data and combine into seurat object                  #
 #####################################################################################################
 
-cell_state_markers <- read.csv(list.files(data_path, full.names = TRUE, pattern = '*binary_knowledge_matrix.csv'), row.names = 1) %>% dplyr::select(!c(evidence))
-#cell_state_markers <- read.csv('./NF-downstream_analysis/binary_knowledge_matrix.csv', row.names = 1) %>% dplyr::select(!c(evidence))
+# cell_state_markers <- read.csv(list.files(data_path, full.names = TRUE, pattern = '*binary_knowledge_matrix.csv'), row.names = 1) %>% dplyr::select(!c(evidence))
+cell_state_markers <- read.csv('./NF-downstream_analysis/binary_knowledge_matrix.csv', row.names = 1) %>% dplyr::select(!c(evidence))
 
-metadata <- read.csv(list.files(data_path, pattern = "*metadata.csv", full.names = TRUE))
-# metadata <- read.csv('./output/NF-downstream_analysis_stacas/transfer_subset/transfer_ppr_nc_subset/cellrank/transfer_ppr_nc_subset_metadata.csv')
+# metadata <- read.csv(list.files(data_path, pattern = "*metadata.csv", full.names = TRUE))
+metadata <- read.csv('./output/NF-downstream_analysis/transfer_subset/transfer_ppr_nc_subset/cellrank/transfer_ppr_nc_subset_metadata.csv')
 
-seurat_data <- readRDS(list.files(data_path, pattern = "*.RDS", full.names = TRUE)[!list.files(data_path, pattern = "*.RDS") %>% grepl('antler', .)])
-# seurat_data <- readRDS('./output/NF-downstream_analysis_stacas/transfer_subset/transfer_ppr_nc_subset/seurat/transfer_cluster/rds_files/transfer_clustered_data.RDS')
+# seurat_data <- readRDS(list.files(data_path, pattern = "*.RDS", full.names = TRUE)[!list.files(data_path, pattern = "*.RDS") %>% grepl('antler', .)])
+seurat_data <- readRDS('./output/NF-downstream_analysis/transfer_subset/transfer_ppr_nc_subset/seurat/transfer_cluster/rds_files/transfer_clustered_data.RDS')
 
 # load antler data
-antler_data <- readRDS(list.files(data_path, pattern = "antler_out.RDS", full.names = TRUE))
-# antler_data <- readRDS('./output/NF-downstream_analysis_stacas/transfer_subset/transfer_ppr_nc_subset/antler/transfer_gene_modules/rds_files/antler_out.RDS')
+# antler_data <- readRDS(list.files(data_path, pattern = "antler_out.RDS", full.names = TRUE))
+antler_data <- readRDS('./output/NF-downstream_analysis/transfer_subset/transfer_ppr_nc_subset/antler/transfer_gene_modules/rds_files/antler_out.RDS')
 
 metadata$CellID <- paste0(metadata$CellID, "-1")
 
@@ -433,14 +433,14 @@ graphics.off()
 ################## Calculate maximum latent time values ################## 
 png(paste0(plot_path, 'max_NC_latent_time.png'), width = 15, height = 10, res = 200, units = 'cm')
 CalcLatentTimeCutoff(latent_time = seurat_data@meta.data[['latent_time']],
-                        lineage_probability = seurat_data@meta.data[['lineage_NC_probability']],
-                        return = 'plot')
+                     lineage_probability = seurat_data@meta.data[['lineage_NC_probability']],
+                     return = 'plot')
 graphics.off()
 
 png(paste0(plot_path, 'max_placodal_latent_time.png'), width = 15, height = 10, res = 200, units = 'cm')
 CalcLatentTimeCutoff(latent_time = seurat_data@meta.data[['latent_time']],
-                        lineage_probability = seurat_data@meta.data[['lineage_placodal_probability']],
-                        return = 'plot')
+                     lineage_probability = seurat_data@meta.data[['lineage_placodal_probability']],
+                     return = 'plot')
 graphics.off()
 
 
@@ -451,11 +451,11 @@ lineage_names = c('lineage_NC_probability' = 'Neural crest', 'lineage_placodal_p
 curr_plot_path <- paste0(plot_path, 'gm_lineage_dynamics/')
 dir.create(curr_plot_path, recursive = TRUE, showWarnings = FALSE)
 
-
+gms_plot_data <- list()
 for(module in names(gms)){
-  gms_plot_data <- MultiRunLineageGamConfidence(seurat_data, goi = gms[[module]], slot = 'data') %>% dplyr::bind_rows(.id = 'id')
+  gms_plot_data[[module]] <- MultiRunLineageGamConfidence(seurat_data, goi = gms[[module]], slot = 'data') %>% dplyr::bind_rows(.id = 'id')
   
-  plot <-   ggplot(gms_plot_data, aes(latent_time, fit, colour = id, fill = id)) +
+  plot <-   ggplot(gms_plot_data[[module]], aes(latent_time, fit, colour = id, fill = id)) +
     geom_ribbon(aes(ymax = upper, ymin = lower), alpha=0.4, colour = NA) +
     geom_line() +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
@@ -503,15 +503,32 @@ for(module in names(gms)){
 
 
 
-############### Plot heatmap for NC modules of interest ############
-# Filter NC modules of interest and make wider for plotting heatmap
-hm_data <- gms_plot_data %>%
-  dplyr::bind_rows(.id = 'module') %>%
-  filter(grepl("NC", id) & module %in% NC_gms) %>%
-  group_by(module) %>%
-  dplyr::select(!c(id, upper, lower)) %>%
-  pivot_wider(names_from = module, values_from = fit)
+############### Plot heatmap for NC and PPR modules of interest ############
+gms_expression <- lapply(gms, function(x) {
+  gm_expression <- GetAssayData(seurat_data, slot = 'scale.data', assay = 'RNA')[x,] %>% t()
+  seurat_meta <- seurat_data@meta.data[match(rownames(gm_expression), rownames(seurat_data@meta.data)), c('latent_time', 'lineage_NC_probability', 'lineage_placodal_probability')]
+  gm_expression <- cbind(seurat_meta, gm_expression)
+  gm_expression <- pivot_longer(gm_expression, cols = !c(latent_time, lineage_NC_probability, lineage_placodal_probability), values_to = 'scaled_expression', names_to = 'gene')
+  return(gm_expression)
+})
 
+
+##########################################################################################
+# GAMs NC
+latent_time_cutoff <- CalcLatentTimeCutoff(latent_time = seurat_data@meta.data[['latent_time']], lineage_probability = seurat_data@meta.data[['lineage_NC_probability']])
+
+gams <- dplyr::bind_rows(gms_expression, .id = 'module') %>%
+  group_by(module) %>%
+  filter(latent_time < latent_time_cutoff) %>%
+  do(gams = gam(scaled_expression ~ s(latent_time, bs = "cs", k=5), weights = lineage_NC_probability, data = .))
+
+
+# Generate predicted values for each gam in tidy df -> output in long format
+# Generate latent time values to predict gams on -> use max latent_time calculated per lineage
+pdat <- tibble(latent_time = seq(0, latent_time_cutoff, length = 100))
+gam_predict_data <- lapply(gams$gams, function(x)predict.gam(x, newdata = pdat, se=TRUE)[['fit']]) %>% do.call('cbind', .)
+colnames(gam_predict_data) <- gams$module
+hm_data <- cbind(pdat, gam_predict_data)
 
 # Generate latent time annotation bar
 column_ha = HeatmapAnnotation(labels = anno_mark(at = c(2, 50, 99), labels = c("0", "Latent Time", paste(round(hm_data$latent_time[length(hm_data$latent_time)], digits = 1))), which = "column", side = "top", 
@@ -526,8 +543,8 @@ hm_data <- dplyr::select(hm_data, !latent_time)
 hm_data[hm_data> 1] <- 1
 
 # order gms so in original order when they were selected
-hm_data <- hm_data[NC_gms]
 NC_gms <- factor(NC_gms, levels = NC_gms)
+hm_data <- hm_data[levels(NC_gms)]
 
 # Plot NC heatmap
 png(paste0(plot_path, 'NC_modules_heatmap.png'), width = 22, height = 12, units='cm', res=200)
@@ -547,14 +564,22 @@ Heatmap(t(hm_data), cluster_rows = FALSE, cluster_columns = FALSE,
 graphics.off()
 
 
-############### Plot heatmap for placodal modules of interest ############
-# Filter placodal modules of interest and make wider for plotting heatmap
-hm_data <- gms_plot_data %>%
-  dplyr::bind_rows(.id = 'module') %>%
-  filter(grepl("placodal", id) & module %in% NC_gms) %>%
+###############################################################################################################################################
+# GAMs placodal
+latent_time_cutoff <- CalcLatentTimeCutoff(latent_time = seurat_data@meta.data[['latent_time']], lineage_probability = seurat_data@meta.data[['lineage_placodal_probability']])
+
+gams <- dplyr::bind_rows(gms_expression, .id = 'module') %>%
   group_by(module) %>%
-  dplyr::select(!c(id, upper, lower)) %>%
-  pivot_wider(names_from = module, values_from = fit)
+  filter(latent_time < latent_time_cutoff) %>%
+  do(gams = gam(scaled_expression ~ s(latent_time, bs = "cs", k=5), weights = lineage_placodal_probability, data = .))
+
+
+# Generate predicted values for each gam in tidy df -> output in long format
+# Generate latent time values to predict gams on -> use max latent_time calculated per lineage
+pdat <- tibble(latent_time = seq(0, latent_time_cutoff, length = 100))
+gam_predict_data <- lapply(gams$gams, function(x) predict.gam(x, newdata = pdat, se=TRUE)[['fit']]) %>% do.call('cbind', .)
+colnames(gam_predict_data) <- gams$module
+hm_data <- cbind(pdat, gam_predict_data)
 
 # Generate latent time annotation bar
 column_ha = HeatmapAnnotation(labels = anno_mark(at = c(2, 50, 99), labels = c("0", "Latent Time", paste(round(hm_data$latent_time[length(hm_data$latent_time)], digits = 1))), which = "column", side = "top", 
@@ -570,7 +595,7 @@ hm_data[hm_data> 1] <- 1
 
 # order gms so in original order when they were selected
 PPR_gms <- factor(PPR_gms, levels = PPR_gms)
-hm_data <- hm_data[PPR_gms]
+hm_data <- hm_data[levels(PPR_gms)]
 
 # Plot placodal heatmap
 png(paste0(plot_path, 'placodal_modules_heatmap.png'), width = 22, height = 12, units='cm', res=200)
@@ -588,7 +613,4 @@ Heatmap(t(hm_data), cluster_rows = FALSE, cluster_columns = FALSE,
           labels_gp = gpar(fontsize = 16)),
         raster_quality = 4)
 graphics.off()
-
-
-
 
