@@ -57,8 +57,14 @@ PrepareLineageGamData <- function(object, gene, slot = 'data', assay = 'RNA', li
 }
 
 
-LineageGam <- function(lineage_expression_data, gene, latent_col = 'latent_time'){
-  return(mgcv::gam(data = lineage_expression_data, formula = as.formula(paste0(gene, " ~ s(", latent_col,", bs = 'cs', k = 5)")),
+LineageGam <- function(lineage_expression_data, goi, latent_col = 'latent_time'){
+  # Remove - from goi as it is a special character in mgcv
+  if(grepl("-", goi)){
+    names(lineage_expression_data)[names(lineage_expression_data) == goi] <- sub("-", "_", goi)
+    goi <- sub("-", "_", goi)
+  }
+  
+  return(mgcv::gam(data = lineage_expression_data, formula = as.formula(paste0(goi, " ~ s(", latent_col,", bs = 'cs', k = 5)")),
                    weights = lineage, family = nb(link='log'), method = 'REML', control = gam.control(maxit = 10000)))
 }
 
