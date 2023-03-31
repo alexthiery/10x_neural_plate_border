@@ -39,6 +39,12 @@ In this Shiny app, we are providing you with full access to our data which you c
 
 >Here you can visualise the co-expression of any two genes of interest in individual cells. Given that pairs of genes are co-expressed at different levels, we have added the option to threshold out cells with low co-expression of your genes of interest. This allows you to easily see which are the cells that co-expressing genes at the highest levels.
 
+</br>
+
+>##### Differential expression analysis
+
+>In this section you can select a dataset of interest and calculate differentially expressed genes between either cell states, cell clusters or developmental timepoints.
+
 ---
 </br>
 
