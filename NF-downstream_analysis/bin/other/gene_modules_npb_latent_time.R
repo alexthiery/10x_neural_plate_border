@@ -216,6 +216,12 @@ PrepareLineageGamData <- function(object, goi, slot = 'data', assay = 'RNA', lin
 
 
 LineageGam <- function(lineage_expression_data, goi, latent_col = 'latent_time'){
+  # Remove - from goi as it is a special character in mgcv
+  if(grepl("-", goi)){
+    names(lineage_expression_data)[names(lineage_expression_data) == goi] <- sub("-", "_", goi)
+    goi <- sub("-", "_", goi)
+  }
+  
   return(mgcv::gam(data = lineage_expression_data, formula = as.formula(paste0(goi, " ~ s(", latent_col,", bs = 'cs', k = 5)")),
                    weights = lineage, family = nb(link='log'), method = 'REML', control = gam.control(maxit = 10000)))
 }
@@ -316,18 +322,18 @@ lineage_colours = c('placodal' = '#3F918C', 'NC' = '#DE4D00')
 #                           Read in data and combine into seurat object                  #
 #####################################################################################################
 
-# cell_state_markers <- read.csv(list.files(data_path, full.names = TRUE, pattern = '*binary_knowledge_matrix.csv'), row.names = 1) %>% dplyr::select(!c(evidence))
-cell_state_markers <- read.csv('./NF-downstream_analysis/binary_knowledge_matrix.csv', row.names = 1) %>% dplyr::select(!c(evidence))
+cell_state_markers <- read.csv(list.files(data_path, full.names = TRUE, pattern = '*binary_knowledge_matrix.csv'), row.names = 1) %>% dplyr::select(!c(evidence))
+# cell_state_markers <- read.csv('./NF-downstream_analysis/binary_knowledge_matrix.csv', row.names = 1) %>% dplyr::select(!c(evidence))
 
-# metadata <- read.csv(list.files(data_path, pattern = "*metadata.csv", full.names = TRUE))
-metadata <- read.csv('./output/NF-downstream_analysis/transfer_subset/transfer_ppr_nc_subset/cellrank/transfer_ppr_nc_subset_metadata.csv')
+metadata <- read.csv(list.files(data_path, pattern = "*metadata.csv", full.names = TRUE))
+# metadata <- read.csv('./output/NF-downstream_analysis/transfer_subset/transfer_ppr_nc_subset/cellrank/transfer_ppr_nc_subset_metadata.csv')
 
-# seurat_data <- readRDS(list.files(data_path, pattern = "*.RDS", full.names = TRUE)[!list.files(data_path, pattern = "*.RDS") %>% grepl('antler', .)])
-seurat_data <- readRDS('./output/NF-downstream_analysis/transfer_subset/transfer_ppr_nc_subset/seurat/transfer_cluster/rds_files/transfer_clustered_data.RDS')
+seurat_data <- readRDS(list.files(data_path, pattern = "*.RDS", full.names = TRUE)[!list.files(data_path, pattern = "*.RDS") %>% grepl('antler', .)])
+# seurat_data <- readRDS('./output/NF-downstream_analysis/transfer_subset/transfer_ppr_nc_subset/seurat/transfer_cluster/rds_files/transfer_clustered_data.RDS')
 
 # load antler data
-# antler_data <- readRDS(list.files(data_path, pattern = "antler_out.RDS", full.names = TRUE))
-antler_data <- readRDS('./output/NF-downstream_analysis/transfer_subset/transfer_ppr_nc_subset/antler/transfer_gene_modules/rds_files/antler_out.RDS')
+antler_data <- readRDS(list.files(data_path, pattern = "antler_out.RDS", full.names = TRUE))
+# antler_data <- readRDS('./output/NF-downstream_analysis/transfer_subset/transfer_ppr_nc_subset/antler/transfer_gene_modules/rds_files/antler_out.RDS')
 
 metadata$CellID <- paste0(metadata$CellID, "-1")
 
@@ -451,21 +457,20 @@ lineage_names = c('lineage_NC_probability' = 'Neural crest', 'lineage_placodal_p
 curr_plot_path <- paste0(plot_path, 'gm_lineage_dynamics/')
 dir.create(curr_plot_path, recursive = TRUE, showWarnings = FALSE)
 
-gms_plot_data <- list()
 for(module in names(gms)){
-  gms_plot_data[[module]] <- MultiRunLineageGamConfidence(seurat_data, goi = gms[[module]], slot = 'data') %>% dplyr::bind_rows(.id = 'id')
+  gms_plot_data <- MultiRunLineageGamConfidence(seurat_data, goi = gms[[module]], slot = 'data') %>% dplyr::bind_rows(.id = 'id')
   
-  plot <-   ggplot(gms_plot_data[[module]], aes(latent_time, fit, colour = id, fill = id)) +
+  plot <-   ggplot(gms_plot_data, aes(latent_time, fit, colour = id, fill = id)) +
     geom_ribbon(aes(ymax = upper, ymin = lower), alpha=0.4, colour = NA) +
     geom_line() +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key.size = unit(0.8,"cm"), 
           legend.title = element_blank(),
-          axis.text.x = element_text(size = 14),
-          axis.text.y = element_text(size = 14),  
-          axis.title.x = element_text(size = 16),
-          axis.title.y = element_text(size = 16),
+          axis.text.x = element_text(size = 20),
+          axis.text.y = element_text(size = 20),  
+          axis.title.x = element_text(size = 20),
+          axis.title.y = element_text(size = 20),
           legend.text=element_text(size=20)) +
     ylab(paste0('Average Normalised Expression')) +
     xlab('Latent Time') +
@@ -481,6 +486,41 @@ for(module in names(gms)){
   graphics.off()
 }
 
+# Plot module dynamics for every gene in every module
+for(module in names(gms)){
+  curr_plot_path <- paste0(plot_path, 'gene_lineage_dynamics/', module, '/')
+  dir.create(curr_plot_path, recursive = TRUE, showWarnings = FALSE)
+  
+  for(gene in gms[[module]]){
+    gene_plot_data <- MultiRunLineageGamConfidence(seurat_data, goi = gene, slot = 'data') %>% dplyr::bind_rows(.id = 'id')
+    
+    plot <-   ggplot(gene_plot_data, aes(latent_time, fit, colour = id, fill = id)) +
+      geom_ribbon(aes(ymax = upper, ymin = lower), alpha=0.4, colour = NA) +
+      geom_line() +
+      theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+            panel.background = element_blank(), axis.line = element_line(colour = "black"),
+            legend.key.size = unit(0.8,"cm"), 
+            legend.title = element_blank(),
+            axis.text.x = element_text(size = 20),
+            axis.text.y = element_text(size = 20),  
+            axis.title.x = element_text(size = 20),
+            axis.title.y = element_text(size = 20),
+            legend.text=element_text(size=20)) +
+      ylab(paste0('Average Normalised Expression')) +
+      xlab('Latent Time') +
+      labs(color = "Lineage", 
+           fill = "Lineage") +
+      scale_fill_viridis(discrete = TRUE, end = 0.98,
+                         labels=lineage_names) +
+      scale_color_viridis(discrete = TRUE, end = 0.98,
+                          labels=lineage_names)
+    
+    png(paste0(curr_plot_path, gene, '.png'), width = 18, height = 12, res = 200, units = 'cm')
+    print(plot)
+    graphics.off()
+    
+  }
+}
 
 # Calculate average module expression for plotting feature plots
 curr_plot_path <- paste0(plot_path, 'gm_feature_plots/')

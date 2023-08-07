@@ -437,7 +437,7 @@ plot_data <- GeneModulePheatmap(seurat_obj = ss8,  metadata = c('scHelper_cell_t
 
 plot_data$ann_colours$scHelper_cell_type <- scHelper_cell_type_colours[names(plot_data$ann_colours$scHelper_cell_type)]
 
-goi <- which(rownames(plot_data$row_ann) %in% c("OLIG2", "PAX6", "SIX3", "PAX2", "WNT4", "HOXB1", "HOXB2", "SOX10", "LMO4", "TFAP2B", 
+goi <- which(rownames(plot_data$row_ann) %in% c("OLIG2", "PAX6", "SIX3", "PAX2", "SP5", "NKX6-2", "HESX1", "HOXB1", "SOX10", "LMO4", "TFAP2B", 
                                                 "ETS1", "PAX7", "SNAI2", "FOXD3", "MSX1", "DRAXIN", "BMP4", "DLX5", "SIX1", "EYA2", 
                                                 "HOMER2", "ZNF385C", "DLX6", "OTX2", "SOX21"))
 

@@ -216,6 +216,12 @@ PrepareLineageGamData <- function(object, goi, slot = 'data', assay = 'RNA', lin
 
 
 LineageGam <- function(lineage_expression_data, goi, latent_col = 'latent_time'){
+  # Remove - from goi as it is a special character in mgcv
+  if(grepl("-", goi)){
+    names(lineage_expression_data)[names(lineage_expression_data) == goi] <- sub("-", "_", goi)
+    goi <- sub("-", "_", goi)
+  }
+  
   return(mgcv::gam(data = lineage_expression_data, formula = as.formula(paste0(goi, " ~ s(", latent_col,", bs = 'cs', k = 5)")),
                    weights = lineage, family = nb(link='log'), method = 'REML', control = gam.control(maxit = 10000)))
 }
@@ -476,8 +482,6 @@ CalcLatentTimeCutoff(latent_time = seurat_data@meta.data[['latent_time']],
 graphics.off()
 
 ########## Generate a GAM per lineage per gene for plotting ##########
-
-
 lineage_names = c('lineage_NC_probability' = 'Neural crest', 'lineage_neural_probability' = 'Neural', 'lineage_placodal_probability' = 'Placodal')
 
 # Plot module dynamics for every module
@@ -495,10 +499,10 @@ for(module in names(gms)){
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key.size = unit(0.8,"cm"), 
           legend.title = element_blank(),
-          axis.text.x = element_text(size = 14),
-          axis.text.y = element_text(size = 14),  
-          axis.title.x = element_text(size = 16),
-          axis.title.y = element_text(size = 16),
+          axis.text.x = element_text(size = 20),
+          axis.text.y = element_text(size = 20),  
+          axis.title.x = element_text(size = 20),
+          axis.title.y = element_text(size = 20),
           legend.text=element_text(size=20)) +
     ylab(paste0('Average Normalised Expression')) +
     xlab('Latent Time') +
@@ -514,6 +518,41 @@ for(module in names(gms)){
   graphics.off()
 }
 
+# Plot module dynamics for every gene in every module
+for(module in names(gms)){
+  curr_plot_path <- paste0(plot_path, 'gene_lineage_dynamics/', module, '/')
+  dir.create(curr_plot_path, recursive = TRUE, showWarnings = FALSE)
+
+  for(gene in gms[[module]]){
+    gene_plot_data <- MultiRunLineageGamConfidence(seurat_data, goi = gene, slot = 'data') %>% dplyr::bind_rows(.id = 'id')
+    
+    plot <-   ggplot(gene_plot_data, aes(latent_time, fit, colour = id, fill = id)) +
+      geom_ribbon(aes(ymax = upper, ymin = lower), alpha=0.4, colour = NA) +
+      geom_line() +
+      theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+            panel.background = element_blank(), axis.line = element_line(colour = "black"),
+            legend.key.size = unit(0.8,"cm"), 
+            legend.title = element_blank(),
+            axis.text.x = element_text(size = 20),
+            axis.text.y = element_text(size = 20),  
+            axis.title.x = element_text(size = 20),
+            axis.title.y = element_text(size = 20),
+            legend.text=element_text(size=20)) +
+      ylab(paste0('Average Normalised Expression')) +
+      xlab('Latent Time') +
+      labs(color = "Lineage", 
+           fill = "Lineage") +
+      scale_fill_viridis(discrete = TRUE, end = 0.98,
+                         labels=lineage_names) +
+      scale_color_viridis(discrete = TRUE, end = 0.98,
+                          labels=lineage_names)
+    
+    png(paste0(curr_plot_path, gene, '.png'), width = 18, height = 12, res = 200, units = 'cm')
+    print(plot)
+    graphics.off()
+    
+  }
+}
 
 # Calculate average module expression for plotting feature plots
 curr_plot_path <- paste0(plot_path, 'gm_feature_plots/')
